@@ -92,6 +92,8 @@ Feature 级   → 这个功能的全流程产物                     迭代时�
 ```
 my-project/
 ├── docs/project.md        # 技术决策 + 共享约束
+├── docs/timeline.md       # 项目时间线（最近 10 条详细 + 更早压缩）
+├── docs/timeline/         # 时间线归档（按年/季度）
 ├── DESIGN.md              # 设计系统（颜色、间距、交互模式、组件模式）
 ├── AGENTS.md              # AI 行为指令（从 project.md + DESIGN.md 投影）
 └── CLAUDE.md              # Claude Code 入口（指向 AGENTS.md）
@@ -266,15 +268,18 @@ my-project/
 ├── docs/
 │   ├── project.md                    # Project 级（~100 行，很少变）
 │   │                                   技术决策 + 共享约束 + feature 索引
+│   ├── timeline.md                   # 项目时间线（最近 10 条详细，≤100 行）
+│   ├── timeline/                     # 时间线归档（按年/季度）
 │   │
 │   └── features/
 │       │
 │       ├── task-management/          # 一个功能 = 一棵文档树
 │       │   ├── contract.md           #   feature 级共享骨架（~80 行）
+│       │   ├── changelog.md          #   功能变更历史（最近 5 条，≤100 行）
+│       │   ├── changelog/            #   变更历史归档（旧版本）
 │       │   ├── api/                  #   API 领域
 │       │   │   ├── contract.md       #     只记 feature 特有决策
-│       │   │   ├── modules/          #     共享决策指向 project.md
-│       │   │   └── changelog.md
+│       │   │   └── modules/          #     共享决策指向 project.md
 │       │   ├── frontend/             #   前端领域
 │       │   ├── database/             #   数据库领域
 │       │   ├── testing/              #   测试领域
@@ -635,36 +640,89 @@ AI：（加载 deploy skill）
 | "React 升级到 20" | forge-technical-design + 受影响领域 | 技术栈变更影响项目级 + 下游 |
 | "整个重写" | 全部 skill | 等同于重新走一遍完整流程 |
 
-### changelog.md 格式
+### 历史记录（自动维护）
+
+每次文档变更后，AI 自动更新两层历史记录，不需要 skill，不需要人工触发。
+
+#### 两层结构
+
+| 文件 | 受众 | 粒度 | 回答 |
+|------|------|------|------|
+| `docs/timeline.md` | 人 + AI | 一条 = 一次发布 | 项目怎么演进的？ |
+| `docs/features/<feature>/changelog.md` | AI | 一条 = 一个决策 | 这个功能怎么变过来的？ |
+
+#### timeline.md 格式（项目级）
 
 ```markdown
-## v1.1 — 2026-05-25 — 新增 task labels
+# 项目时间线
 
-### 影响领域
-- api: 新增 modules/labels.md（POST/GET /tasks/:id/labels）
-- frontend: 新增 modules/labels.md（LabelsPanel 组件）
-- database: 追加 labels 表
-- testing: 追加标签测试
+## 最近记录（详细，最多 10 条）
 
-### 决策变更
-- api/D8: labels 作为 task 子资源
+### 2026-05-25 — v1.2 任务标签
+- 新增：标签功能（API + 前端 + DB）
+- 触发：用户反馈需要分类筛选
+- 影响：3 个领域，+1 个决策（D8）
 
-### 类型
-- 纯追加，不影响已有功能
+### 2026-05-22 — v1.1 分页改为 cursor
+- 变更：api/contract.md D2（page → cursor）
+- 触发：数据量增长，page 分页性能退化
+- 影响：api/modules/* + frontend/modules/task-list.md
 
 ---
 
-## v1.0 — 2026-05-22 — 初始版本
+## 更早（压缩，每年一段）
 
-### 影响领域
-- 全部领域首次建立
+### 2026-Q1
+v1.0 初始发布（任务管理 CRUD）→ v1.1 分页优化 → v1.2 标签功能
+详见 timeline/2026-q1.md
+```
 
-### 决策
-- api: D1-D7 确定
-- frontend: F1-F5 确定
-- database: DB1-DB5 确定
-- testing: T1-T5 确定
-- deploy: DP1-DP5 确定
+#### changelog.md 格式（feature 级）
+
+```markdown
+# Task Management — Changelog
+
+## 最近 5 个版本（详细）
+
+### v1.2 — 2026-05-25 — 任务标签
+- **触发**：用户反馈重复创建类似任务
+- **决策**：D8 标签作为 task 子资源（备选：独立资源）
+- **影响**：api +modules/labels.md, frontend +modules/labels.md, database +labels 表
+- **类型**：纯追加，不影响已有功能
+
+---
+
+## 更早（索引）
+
+v1.0-v1.1 → changelog/v1.0-v1.1.md
+```
+
+#### 自动触发规则
+
+| 时机 | AI 自动做 |
+|------|----------|
+| 任意 contract.md / modules/*.md 变更 | 追加 feature changelog.md 一条记录 |
+| `/forge-plan` 或 `/forge-deploy` 完成 | 追加 timeline.md 一条记录 |
+| 新增 feature | 新建 changelog.md，追加 timeline.md |
+| 跨 feature 的共享决策变更 | 追加 timeline.md，标注影响的 feature |
+
+#### 压缩规则（膨胀控制）
+
+| 文件 | 上限 | 超出时 |
+|------|------|--------|
+| `timeline.md` | 100 行 | 旧条目压缩成年度摘要，详细移到 `timeline/年.md` |
+| `changelog.md` | 100 行 | 旧版本移到 `changelog/v*.md` 归档 |
+| `timeline/年.md` | 200 行 | 按季度拆分 |
+
+#### AI 怎么用历史记录
+
+```
+场景：改分页逻辑
+
+AI 行为：
+  1. 读 timeline.md → 看到 v1.1 改过 page → cursor（触发原因：性能）
+  2. 读 changelog.md → 看到 v1.1 的详细决策和备选方案
+  3. 如果要改 D2 → 知道上次为什么选 cursor，避免重复犯错
 ```
 
 ---
@@ -694,10 +752,12 @@ my-project/
 ├── CLAUDE.md          ← AI 入口："读 AGENTS.md"
 ├── AGENTS.md          ← 告诉 AI：在这个项目里怎么工作
 ├── docs/project.md    ← 技术决策（用什么框架、什么数据库）
+├── docs/timeline.md   ← 项目时间线（近期详细 + 远期压缩）
 ├── DESIGN.md          ← 设计语言（什么颜色、什么组件模式）
 └── docs/features/
     └── task-management/
         ├── contract.md
+        ├── changelog.md           ← 功能变更历史
         └── api/modules/tasks.md  ← AI 写代码时读这个
 ```
 
@@ -742,9 +802,13 @@ AI 的行为：
   1. 读 CLAUDE.md → "读 AGENTS.md"
   2. 读项目的 AGENTS.md → 知道工作流程
   3. 读 docs/project.md → 知道技术栈
-  4. 读 docs/features/task-management/contract.md → 知道已有结构
-  5. 参考 api/modules/tasks.md → 知道模块格式
-  6. 写 api/modules/labels.md + 生成代码
+  4. 读 docs/timeline.md → 知道项目近期演进（避免重复决策）
+  5. 读 docs/features/task-management/contract.md → 知道已有结构
+  6. 读 docs/features/task-management/changelog.md → 知道这个功能的变更历史
+  7. 参考 api/modules/tasks.md → 知道模块格式
+  8. 写 api/modules/labels.md + 生成代码
+  9. 自动追加 changelog.md 一条记录（触发 + 决策 + 影响）
+  10. 自动追加 timeline.md 一条记录
 ```
 
 **Forge 的 AGENTS.md 只在 `forge init` 时被加载，之后项目靠自己的文件运转。**

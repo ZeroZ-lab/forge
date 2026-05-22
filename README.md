@@ -259,15 +259,18 @@ my-project/
 │
 ├── docs/
 │   ├── project.md                    # Project 级（技术决策 + 共享约束）
+│   ├── timeline.md                   # 项目时间线（最近 10 条详细，≤100 行）
+│   ├── timeline/                     # 时间线归档（按年/季度）
 │   │
 │   └── features/
 │       │
 │       ├── task-management/          # 一个功能 = 一棵文档树
 │       │   ├── contract.md           #   feature 级共享骨架
+│       │   ├── changelog.md          #   功能变更历史（最近 5 条，≤100 行）
+│       │   ├── changelog/            #   变更历史归档
 │       │   ├── api/                  #   API 领域
 │       │   │   ├── contract.md
-│       │   │   ├── modules/
-│       │   │   └── changelog.md
+│       │   │   └── modules/
 │       │   ├── frontend/             #   前端领域
 │       │   ├── database/             #   数据库领域
 │       │   ├── testing/              #   测试领域
