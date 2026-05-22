@@ -1,6 +1,6 @@
 ---
-name: db-design
-description: 数据库设计决策协议——引导 5 个决策点的对话，产出数据库文档
+name: forge-db-design
+description: 引导数据库设计（DB1-DB5）——选型、ID 策略、索引、迁移、软删除，产出数据库文档。用户说"数据库设计"、"表结构"、"数据模型"、"索引策略"、运行 /forge-detail、或需要设计 schema 和迁移方案时触发。
 ---
 
 # Database Design — 决策协议
@@ -147,3 +147,47 @@ id: primary key
 created_at: timestamp, not null, default now()
 updated_at: timestamp, not null, default now()
 ```
+
+## 模板
+
+使用以下共享模板：
+- `${CLAUDE_SKILL_DIR}/../shared/contract-template.md` — contract.md 结构
+- `${CLAUDE_SKILL_DIR}/../shared/changelog-template.md` — changelog.md 结构
+
+## 入口/出口条件
+
+**入口条件**：
+- 有 project.md（来自 /forge-init）
+- 有 api/contract.md（来自 api-design）
+- 或用户已有技术选型和 API 详设（跳过前置阶段）
+
+**出口条件**：
+- 生成了 database/contract.md（DB1-DB5 决策完整）
+- 表清单已定义（引用 api/ 共享数据模型）
+- 索引规划表已填写
+- 迁移规则已明确
+- 用户确认是否继续（进入 /forge-plan 
+
+## 何时不使用
+
+- 纯前端项目（没有数据库）
+- 已有完整的数据库详设（直接进入 /forge-plan 
+- 简单 CRUD（可简化决策流程）
+
+## 红旗清单
+
+- 没有选择理由 → 强制补充（"为什么选这个数据库？被拒方案是什么？"）
+- ID 用自增 → 强制评估（"暴露自增 ID = 暴露业务量 + 可枚举攻击面"）
+- 索引无规划 → 强制补充（"查询模式是什么？哪些列需要索引？"）
+- 迁移不可回滚 → 强制补充（"down 脚本在哪里？"）
+- 没有软删除策略 → 强制评估（"删除的数据需要恢复吗？"）
+
+## 验证清单
+
+- [ ] DB1-DB5 是否都有选择 + 理由 + 被拒方案？
+- [ ] 每张表是否有通用列（id / created_at / updated_at）？
+- [ ] 索引是否服务于查询（不是服务于字段）？
+- [ ] 迁移是否版本化（和代码一起提交）？
+- [ ] 迁移是否可回滚（有 down 脚本）？
+- [ ] 表名是否 snake_case 复数？
+- [ ] 软删除策略是否明确（哪些表需要）？

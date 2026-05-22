@@ -1,6 +1,6 @@
 ---
-name: frontend-design
-description: 前端设计决策协议——引导 5 个决策点的对话，产出前端文档树
+name: forge-frontend-design
+description: 引导前端设计（F1-F5）——框架选型、状态管理、样式方案、数据请求、表单处理，产出前端文档树。用户说"前端设计"、"组件设计"、"页面结构"、运行 /forge-detail、或需要设计前端架构和组件规格时触发。
 ---
 
 # Frontend Design — 决策协议
@@ -168,3 +168,49 @@ src/
 ├── lib/            # 工具函数
 └── types/          # 共享类型（从 api/ 复用）
 ```
+
+## 模板
+
+使用以下共享模板：
+- `${CLAUDE_SKILL_DIR}/../shared/contract-template.md` — contract.md 结构
+- `${CLAUDE_SKILL_DIR}/../shared/module-template.md` — modules/*.md 结构
+- `${CLAUDE_SKILL_DIR}/../shared/changelog-template.md` — changelog.md 结构
+
+## 入口/出口条件
+
+**入口条件**：
+- 有 project.md（来自 /forge-init）
+- 有 PRD.md（来自 /forge-requirements）
+- 有 interaction-spec.md（来自 /forge-design）
+- 或用户已有技术选型、需求和交互设计（跳过前置阶段）
+
+**出口条件**：
+- 生成了 frontend/contract.md（F1-F5 决策完整）
+- 每个页面/组件有 modules/*.md
+- 技术选型表已填写
+- 共享约束已明确（性能 + 可访问性）
+- 用户确认是否继续（进入 /forge-plan 
+
+## 何时不使用
+
+- 纯后端 API（没有前端）
+- 已有完整的前端详设（直接进入 /forge-plan 
+- 简单管理后台（可简化决策流程）
+
+## 红旗清单
+
+- 没有选择理由 → 强制补充（"为什么选这个框架？被拒方案是什么？"）
+- 服务端状态和客户端状态混在一起 → 强制分离（"哪些数据来自 API？哪些是 UI 状态？"）
+- 没有设计系统但选了运行时 CSS 方案 → 强制评估（"样式怎么保持一致？"）
+- 表单数量多但没有表单方案 → 强制补充（"表单验证怎么做？"）
+- 没有数据请求策略 → 强制评估（"API 调用怎么缓存？怎么重试？"）
+
+## 验证清单
+
+- [ ] F1-F5 是否都有选择 + 理由 + 被拒方案？
+- [ ] 服务端状态和客户端状态是否分离？
+- [ ] 样式方案是否能消费 DESIGN.md 的 Design Token？
+- [ ] 每个页面/组件是否有对应的 module 文件？
+- [ ] 组件树是否清晰（每层职责单一）？
+- [ ] 数据流是否明确（hooks / queries / mutations）？
+- [ ] 是否有性能约束（首屏加载、交互响应）？

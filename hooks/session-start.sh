@@ -22,15 +22,20 @@ boot_message="Forge — 文档即源代码
 
 核心原则：
 - 文档是源代码，代码是投影。模型越强，同一份文档生成的代码越好。
-- Skill 不教模型做事，而是在关键决策点引导人类选择，把决策固化成 contract.md。
-- 每个决策记录：选了什么、为什么选、拒绝什么。
+- 决策留痕：每个技术选择记录选了什么、为什么选、拒绝什么。
+- 人类决策，AI 执行：Skill 在关键决策点引导人类选择，把决策固化成 contract.md。
 
-工作流：
-- 用户说「设计 API」「设计数据模型」等 → 加载对应 skill
-- Skill 引导决策对话，产出 docs/features/<feature>/contract.md
-- 后续实现从 contract.md 生成
+8 阶段 × 14 Skill：
+- ⓪ 探索(brainstorm) → ① 定义(business-alignment, requirements)
+- ② 设计(interaction, visual, technical) → ③ 详设(api, frontend, db)
+- ④ 任务(plan) → ⑤ 构建(codegen) → ⑥ 测试(test-strategy, test-cases)
+- ⑦ 交付(deploy)
 
-CANON.md 包含 3 条不可变宪法。AGENTS.md 是项目入口。"
+6 个决策 Command：
+- /brainstorm → /init → /define → /design → /detail → /plan
+- 执行阶段（生成代码、写测试、发布）用自然语言触发。
+
+AGENTS.md 是项目入口。"
 
 escaped=$(printf '%s' "$boot_message" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read()))')
 printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":%s}}\n' "$escaped"

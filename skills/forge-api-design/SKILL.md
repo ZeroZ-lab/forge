@@ -1,6 +1,6 @@
 ---
-name: api-design
-description: API 合约设计决策协议——引导 7 个决策点的对话，产出能重建系统的文档树
+name: forge-api-design
+description: 引导 API 合约设计（D1-D7）——资源建模、分页、错误格式、权限、幂等、并发、认证，产出能重建系统的文档树。用户说"API 设计"、"设计端点"、"API 合约"、运行 /forge-detail、或需要设计 REST/GraphQL API 时触发。
 ---
 
 # API Design — 决策协议
@@ -188,3 +188,48 @@ METHOD /path
 - Error code: UPPER_SNAKE_CASE
 - 时间: ISO 8601
 - ID: string（不暴露数据库自增）
+
+## 模板
+
+使用以下共享模板：
+- `${CLAUDE_SKILL_DIR}/../shared/contract-template.md` — contract.md 结构
+- `${CLAUDE_SKILL_DIR}/../shared/module-template.md` — modules/*.md 结构
+- `${CLAUDE_SKILL_DIR}/../shared/changelog-template.md` — changelog.md 结构
+
+## 入口/出口条件
+
+**入口条件**：
+- 有 project.md（来自 /forge-init）
+- 有 PRD.md（来自 /forge-requirements）
+- 或用户已有技术选型和需求文档（跳过 init 和 define）
+
+**出口条件**：
+- 生成了 api/contract.md（D1-D7 决策完整）
+- 每个模块有 modules/*.md（接口合约完整）
+- 共享数据模型已定义
+- 代码映射已明确
+- 用户确认是否继续（进入 /forge-plan 
+
+## 何时不使用
+
+- 纯前端项目（没有 API）
+- 已有完整的 API 详设（直接进入 /forge-plan 
+- GraphQL 项目（资源导向不完全适用，需要调整）
+
+## 红旗清单
+
+- 没有选择理由 → 强制补充（"为什么选这个？被拒方案是什么？"）
+- 接口合约缺字段 → 强制补充（"Auth？Request？Response？Errors？"）
+- 资源嵌套超过 2 层 → 强制扁平化（"能不能用查询参数替代？"）
+- 错误码不统一 → 强制规范（"UPPER_SNAKE_CASE + HTTP status"）
+- 没有幂等策略 → 强制评估（"重复执行最坏会怎样？"）
+
+## 验证清单
+
+- [ ] D1-D7 是否都有选择 + 理由 + 被拒方案？
+- [ ] 每个端点是否有完整接口合约（Auth/Request/Response/Errors）？
+- [ ] 资源命名是否用复数名词？
+- [ ] 嵌套深度是否 ≤ 2 层？
+- [ ] 错误格式是否结构化（不是纯字符串）？
+- [ ] 有副作用的写操作是否有幂等策略？
+- [ ] 共享数据模型是否完整（字段 + 类型 + 约束）？
