@@ -885,11 +885,6 @@ forge/
 │       ├── contract-template.md
 │       ├── module-template.md
 │       └── changelog-template.md
-│
-├── hooks/                          # 插件钩子
-│   ├── session-start.sh
-│   └── careful.sh
-│
 ├── .claude-plugin/plugin.json      # Claude Code 插件
 └── .codex-plugin/plugin.json       # Codex CLI 插件
 ```
@@ -957,10 +952,10 @@ forge/
 - ✅ /forge-plan 后自动推导测试用例（testing/test-cases 不再需要手动触发）
 - ✅ project-charter 合入 project.md（小项目不需要独立文件）
 - ✅ Skill 抽象化：只含方法论 + 业务问题 + 不变原则，不写死具体技术
-- ✅ 多领域架构已通过 task-management 验证（15 个文件，5 个领域）
+- ✅ task-management 文档树覆盖 5 个领域，可作为结构样例；implementation/ 是投影示例，不作为可运行验证证据
 - ✅ 三层文档体系已建立（Root / Project / Feature）
 - ✅ Command 编排已合入 AGENTS.md（消除 command/skill 重复，编排逻辑内联）
 - ✅ 双触发模式（决策用 command 或自然语言，执行用自然语言）
 - ✅ 投影链机制已明确（Forge AGENTS.md → 项目 AGENTS.md → 代码）
-- ✅ Plugin 配置已就绪（.claude-plugin + .codex-plugin + hooks）
-- ✅ session-start.sh 已更新（对齐 8 阶段架构，移除 CANON.md 引用）
+- ✅ Plugin 配置已就绪（.claude-plugin + .codex-plugin；不再维护 hooks）
+- ✅ hooks 已移除，Forge 核心保持为 skills + 文档协议

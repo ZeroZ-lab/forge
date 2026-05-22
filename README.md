@@ -33,6 +33,14 @@ claude plugin install --path .
 
 安装后在任意项目中启动 Claude Code，Forge 的 18 个 skill 自动可用。
 
+### 仓库自检
+
+```bash
+node scripts/validate.mjs
+```
+
+自检会校验版本同步、18 个 `forge-*` skill、frontmatter 名称、skill 行数上限、关键编排顺序、测试用例路径，以及示例 implementation 的非运行边界。
+
 ### 方式二：个人 Skill 安装
 
 ```bash
@@ -287,6 +295,8 @@ my-project/
 ├── src/                              # 全部由 AI 从文档生成
 └── tests/                            # 全部由 AI 从文档生成
 ```
+
+本仓库自带的 `docs/features/task-management/` 是文档树示例；其中 `implementation/` 是从合约投影出的结构示例，不是可直接运行的 sample app。它没有独立依赖、入口和可执行测试，不能作为构建通过的证据。
 
 ## 核心原则
 
