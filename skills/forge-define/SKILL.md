@@ -1,6 +1,6 @@
 ---
-name: forge-requirements
-description: 从业务需求推导可验收的 PRD——定义功能范围、验收条件、优先级和范围排除。用户说"写 PRD"、"定义需求"、"用户故事"、"验收条件"、运行 /forge-requirements、或需要明确做什么不做什么时触发。
+name: forge-define
+description: 从业务需求推导可验收的 PRD——定义功能范围、验收条件、优先级和范围排除。用户说"写 PRD"、"定义需求"、"用户故事"、"验收条件"、运行 /forge-define、或需要明确做什么不做什么时触发。
 ---
 
 # Requirements — 定义阶段（需求层）

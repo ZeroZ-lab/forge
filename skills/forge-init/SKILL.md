@@ -44,7 +44,7 @@ my-project/
 ✅ 项目初始化完成！project.md + DESIGN.md 已生成。
 
 下一步你可以：
-  /forge-requirements — 定义第一个功能的需求
+  /forge-define — 定义第一个功能的需求
   /forge-detail       — 跳过需求，直接做技术详设
   自然语言            — 直接说"做任务管理功能"
 ```

@@ -162,7 +162,7 @@ description: 定义用户流程、信息架构和组件复用——先画用户�
 ## 入口/出口条件
 
 **入口条件**：
-- 有 PRD.md（来自 /forge-requirements）
+- 有 PRD.md（来自 /forge-define）
 - 或用户已有明确需求（跳过 define）
 
 **出口条件**：

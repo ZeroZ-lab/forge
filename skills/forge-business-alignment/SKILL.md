@@ -95,7 +95,7 @@ description: 验证需求真实性，确认项目章程，建立成功标准。�
 5. 资源约束（团队、时间、预算、技术）
 
 不应包含：
-- 具体功能列表（那是 /forge-requirements 的事）
+- 具体功能列表（那是 /forge-define 的事）
 - 交互设计（那是 /forge-design 的事）
 - 技术选型（那是 /forge-init 的事）
 

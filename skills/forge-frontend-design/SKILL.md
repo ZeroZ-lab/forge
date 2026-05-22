@@ -180,7 +180,7 @@ src/
 
 **入口条件**：
 - 有 project.md（来自 /forge-init）
-- 有 PRD.md（来自 /forge-requirements）
+- 有 PRD.md（来自 /forge-define）
 - 有 interaction-spec.md（来自 /forge-design）
 - 或用户已有技术选型、需求和交互设计（跳过前置阶段）
 

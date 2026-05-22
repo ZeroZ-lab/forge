@@ -200,7 +200,7 @@ METHOD /path
 
 **入口条件**：
 - 有 project.md（来自 /forge-init）
-- 有 PRD.md（来自 /forge-requirements）
+- 有 PRD.md（来自 /forge-define）
 - 或用户已有技术选型和需求文档（跳过 init 和 define）
 
 **出口条件**：

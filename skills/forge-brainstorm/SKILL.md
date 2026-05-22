@@ -71,7 +71,7 @@ description: 引导可能性探索——从模糊想法展开方向空间，圈�
 
 **idea-brief.md 不应包含：**
 - 具体技术选型（那是 /forge-init 的事）
-- 详细功能列表（那是 /forge-requirements 的事）
+- 详细功能列表（那是 /forge-define 的事）
 - 交互设计（那是 /forge-design 的事）
 - 代码实现（那是 生成代码 的事）
 

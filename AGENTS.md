@@ -113,7 +113,7 @@ forge/skills/
 ├── forge-brainstorm/               # ⓪ 可能性探索（B1-B5）
 ├── forge-init/                     # 项目初始化编排
 ├── forge-business-alignment/       # ① 业务对齐（BA1-BA5）
-├── forge-requirements/             # ① 需求文档（R1-R5）
+├── forge-define/             # ① 需求文档（R1-R5）
 ├── forge-design/                   # 设计阶段编排
 ├── forge-interaction-design/       # ② 交互设计（I1-I5）
 ├── forge-visual-design/            # ② 视觉设计（V1-V5）
@@ -421,7 +421,7 @@ AI 按需加载：
 |---------|------|--------|-------------|
 | `/forge-brainstorm` | ⓪ 探索 | 发散可能性 + 圈定方向（可选） | brainstorm |
 | `/forge-init` | 项目初始化 | 业务目标 + 技术选型 + 设计系统 → project.md + DESIGN.md | business-alignment + technical-design + visual-design |
-| `/forge-requirements` | ① 定义 | 需求分析 + PRD 编写 | requirements |
+| `/forge-define` | ① 定义 | 需求分析 + PRD 编写 | requirements |
 | `/forge-design` | ② 设计 | 交互规格 + 视觉规范 | interaction-design + visual-design |
 | `/forge-detail` | ③ 详设 | 按需加载领域 skill | api-design + db-design（+ frontend-design 按需） |
 | `/forge-plan` | ④ 任务 | 垂直切片 + 依赖图 + 自动推导测试 | plan + test-cases |
@@ -434,7 +434,7 @@ AI 按需加载：
 |---------|---------|------|
 | `/forge-brainstorm` | B1→B5 逐步引导 | `idea-brief.md` |
 | `/forge-init` | Phase 1 业务对齐（BA1-BA5）→ Phase 2 技术选型（TD1-TD5）→ Phase 3 设计系统（V1-V5），一次对话完成 | `project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
-| `/forge-requirements` | R1→R5 逐步引导 | `PRD.md` |
+| `/forge-define` | R1→R5 逐步引导 | `PRD.md` |
 | `/forge-design` | Phase 1 交互设计（I1-I5）→ Phase 2 视觉设计（V1-V5） | `interaction-spec.md` + 更新 `DESIGN.md` |
 | `/forge-detail` | Phase 1 数据库（DB1-DB5）→ Phase 2 API（D1-D7）→ Phase 3 前端（F1-F5，按需） | `contract.md` + `modules/*.md` |
 | `/forge-plan` | P1→P5 逐步引导，完成后自动推导 test-cases | `plan.md` + `test-cases.md` |
@@ -470,7 +470,7 @@ AI 按需加载：
                                                                      → 搜索方案 → 推荐 → 确认
                                                                      → 生成项目级文件（如不存在）
 
-/requirements 任务管理            "先做任务管理功能的需求"          →  加载 requirements skill
+/forge-define 任务管理            "先做任务管理功能的需求"          →  加载 forge-define skill
                                                                      → 引导需求分析（用户角色？场景？验收条件？）
                                                                      → 生成 PRD.md
 
@@ -523,9 +523,9 @@ AI：（加载 3 个 skill，一次对话）
   → 视觉设计：品牌？气质？暗色模式？
   → 生成项目级文件（project.md / DESIGN.md / AGENTS.md / CLAUDE.md）
 
-你：/requirements 任务管理
+你：/forge-define 任务管理
 
-AI：（加载 requirements skill）
+AI：（加载 forge-define skill）
   → 用户角色有哪些？核心场景 TOP 5？
   → 验收条件怎么定？优先级怎么排？
   → 生成：PRD.md
@@ -599,7 +599,7 @@ AI：读 deploy contract → 生成发布清单 → 执行发布
 |---------|-------------|------|
 | `/forge-brainstorm` | forge-brainstorm | 探索阶段，产出方向地图 |
 | `/forge-init` | forge-business-alignment + forge-technical-design + forge-visual-design | 项目级决策需要业务 + 技术 + 设计三方对齐 |
-| `/forge-requirements` | forge-requirements | 需求定义是独立阶段，产出 PRD |
+| `/forge-define` | forge-define | 需求定义是独立阶段，产出 PRD |
 | `/forge-design` | forge-interaction-design + forge-visual-design | 交互和视觉通常同步进行 |
 | `/forge-detail` | forge-api-design + forge-db-design（+ forge-frontend-design 按需） | 根据项目上下文选择加载：有前端加 forge-frontend-design，纯后端不加 |
 | `/forge-plan` | forge-plan + forge-test-cases | 任务分解后自动推导测试用例 |
@@ -779,7 +779,7 @@ forge/
 │   ├── forge-brainstorm/           # ⓪ 可能性探索
 │   ├── forge-init/                 # 项目初始化编排
 │   ├── forge-business-alignment/   # ① 业务对齐
-│   ├── forge-requirements/         # ① 需求文档
+│   ├── forge-define/         # ① 需求文档
 │   ├── forge-design/               # 设计阶段编排
 │   ├── forge-interaction-design/   # ② 交互设计
 │   ├── forge-visual-design/        # ② 视觉设计
