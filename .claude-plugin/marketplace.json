@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "forge",
-      "description": "17 个决策协议 skill，覆盖从 brainstorm 到 deploy 的全生命周期。文档是源代码，代码是投影。",
+      "description": "18 个决策协议 skill，覆盖从 brainstorm 到 deploy 的全生命周期。文档是源代码，代码是投影。",
       "source": "./"
     }
   ]
