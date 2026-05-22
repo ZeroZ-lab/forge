@@ -202,3 +202,22 @@ src/
 - [ ] 是否有错误处理（400、401、404、500）？
 - [ ] 依赖是否从 technical-design 推导？
 - [ ] 配置是否有默认值？
+
+## 历史维护（自动）
+
+完成后自动执行，不需要人工触发：
+
+1. **追加 feature changelog.md**：
+   ```markdown
+   ### v{版本} — {日期} — 代码生成
+   - **触发**：{用户说的一句话}
+   - **产出**：src/（{N} 个文件）+ tests/（{M} 个测试）
+   ```
+
+2. **追加 docs/timeline.md**：
+   ```markdown
+   ### {日期} — {feature} 代码生成
+   - 新增：src/ + tests/（{N} 个文件）
+   ```
+
+3. **检查膨胀**：timeline.md 或 changelog.md 超过 100 行时，旧记录归档。

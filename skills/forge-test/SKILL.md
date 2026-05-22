@@ -31,6 +31,25 @@ docs/features/<feature>/
 - 已有 testing/contract.md → Phase 1 只更新 feature 相关的部分
 - /forge-plan 已自动推导 test-cases.md → Phase 2 只补充遗漏场景
 
+## 历史维护（自动）
+
+完成后自动执行，不需要人工触发：
+
+1. **追加 feature changelog.md**：
+   ```markdown
+   ### v{版本} — {日期} — 测试规划
+   - **触发**：{用户说的一句话}
+   - **产出**：testing/contract.md + test-cases.md（{N} 个测试用例）
+   ```
+
+2. **追加 docs/timeline.md**：
+   ```markdown
+   ### {日期} — {feature} 测试规划
+   - 新增：testing/contract.md + test-cases.md
+   ```
+
+3. **检查膨胀**：timeline.md 或 changelog.md 超过 100 行时，旧记录归档。
+
 ## 完成提示
 
 完成后向用户展示：

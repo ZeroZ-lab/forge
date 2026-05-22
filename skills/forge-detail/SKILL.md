@@ -48,6 +48,26 @@ docs/features/<feature>/
     └── contract.md
 ```
 
+## 历史维护（自动）
+
+完成后自动执行，不需要人工触发：
+
+1. **追加 feature changelog.md**（如不存在则创建）：
+   ```markdown
+   ### v{版本} — {日期} — 技术详设
+   - **触发**：{用户说的一句话}
+   - **产出**：contract.md + modules/（{N} 个模块）
+   - **决策**：{关键决策编号，如 D1-D7, DB1-DB5, F1-F5}
+   ```
+
+2. **追加 docs/timeline.md**（如不存在则创建）：
+   ```markdown
+   ### {日期} — {feature} 技术详设
+   - 新增：contract.md + {N} 个模块
+   ```
+
+3. **检查膨胀**：timeline.md 或 changelog.md 超过 100 行时，旧记录归档。
+
 ## 完成提示
 
 完成后向用户展示：

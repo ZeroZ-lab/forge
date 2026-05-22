@@ -782,6 +782,12 @@ Forge 的 skill 在一次 `forge init` 对话中，把所有方法论投影成�
 - 改决策 → 更新 contract.md，重新生成受影响文件
 - 每个关键逻辑分支注释决策编号（D1-D7, AC1-AC8）
 
+## 历史维护（自动，每次文档变更后执行）
+- 改完文档 → 追加 docs/features/<feature>/changelog.md（触发 + 产出 + 决策）
+- 完成阶段 → 追加 docs/timeline.md（一条 = 一次发布）
+- 每次开发前 → 读 timeline.md + changelog.md 了解上下文
+- timeline.md 或 changelog.md 超 100 行 → 旧记录归档到 timeline/ 或 changelog/
+
 ## 设计约束（来自 DESIGN.md）
 - 主色: #2563EB
 - 间距: 4px 基准网格

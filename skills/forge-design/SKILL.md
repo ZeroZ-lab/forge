@@ -29,6 +29,25 @@ DESIGN.md（更新）                               # 来自 Phase 2
 - 纯后端 API → 跳过整个阶段，直接进入 `/forge-detail`
 - 已有 DESIGN.md → Phase 2 只更新 feature 相关的部分
 
+## 历史维护（自动）
+
+完成后自动执行，不需要人工触发：
+
+1. **追加 feature changelog.md**（如不存在则创建）：
+   ```markdown
+   ### v{版本} — {日期} — 交互+视觉设计
+   - **触发**：{用户说的一句话}
+   - **产出**：interaction-spec.md + DESIGN.md 更新
+   ```
+
+2. **追加 docs/timeline.md**（如不存在则创建）：
+   ```markdown
+   ### {日期} — {feature} 设计完成
+   - 新增：interaction-spec.md + DESIGN.md 更新
+   ```
+
+3. **检查膨胀**：timeline.md 或 changelog.md 超过 100 行时，旧记录归档。
+
 ## 完成提示
 
 完成后向用户展示：
