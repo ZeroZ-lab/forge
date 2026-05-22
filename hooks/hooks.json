@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c '\nimport json, os, sys\nfrom pathlib import Path\n\nhook = sys.argv[1]\nhome = Path.home()\ncwd = Path.cwd()\n\n# Find plugin root: env var → cwd parents → installed_plugins.json\nroots = []\nfor v in (\"CLAUDE_PLUGIN_ROOT\", \"CODEX_PLUGIN_ROOT\"):\n    if os.environ.get(v): roots.append(Path(os.environ[v]))\nroots += [cwd] + list(cwd.parents)\n\ninstalled = home / \".claude/plugins/installed_plugins.json\"\nif installed.is_file():\n    data = json.loads(installed.read_text())\n    for e in data.get(\"plugins\", {}).get(\"forge@forge\", []):\n        if e.get(\"installPath\"): roots.append(Path(e[\"installPath\"]))\n\nscript = next((r / \"hooks\" / hook for r in roots if (r / \"AGENTS.md\").is_file() and (r / \"hooks\" / hook).is_file()), None)\nif script:\n    os.environ[\"CLAUDE_PLUGIN_ROOT\"] = str(script.parents[1])\n    os.execvp(\"bash\", [\"bash\", str(script)])\nprint(json.dumps({}))\n' session-start.sh",
+            "async": false
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c '\nimport json, os, sys\nfrom pathlib import Path\n\nhook = sys.argv[1]\nhome = Path.home()\ncwd = Path.cwd()\n\nroots = []\nfor v in (\"CLAUDE_PLUGIN_ROOT\", \"CODEX_PLUGIN_ROOT\"):\n    if os.environ.get(v): roots.append(Path(os.environ[v]))\nroots += [cwd] + list(cwd.parents)\n\ninstalled = home / \".claude/plugins/installed_plugins.json\"\nif installed.is_file():\n    data = json.loads(installed.read_text())\n    for e in data.get(\"plugins\", {}).get(\"forge@forge\", []):\n        if e.get(\"installPath\"): roots.append(Path(e[\"installPath\"]))\n\nscript = next((r / \"hooks\" / hook for r in roots if (r / \"AGENTS.md\").is_file() and (r / \"hooks\" / hook).is_file()), None)\nif script:\n    os.environ[\"CLAUDE_PLUGIN_ROOT\"] = str(script.parents[1])\n    os.execvp(\"bash\", [\"bash\", str(script)])\nprint(json.dumps({\"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"[forge] cannot resolve plugin root for \" + hook}))\n' careful.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

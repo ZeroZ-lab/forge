@@ -1,0 +1,14 @@
+{
+  "name": "forge",
+  "description": "文档是源代码，代码是投影。模型越强，同一份文档生成的代码越好。",
+  "author": {
+    "name": "ZeroZ-lab",
+    "url": "https://github.com/ZeroZ-lab/forge"
+  },
+  "version": "0.1.0",
+  "homepage": "https://github.com/ZeroZ-lab/forge",
+  "compatibility": {
+    "claude-code": ">=1.0.0",
+    "codex": ">=0.1.0"
+  }
+}
