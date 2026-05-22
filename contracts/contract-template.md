@@ -1,153 +1,158 @@
+# contract-template.md — 共享骨架模板
+
+> 每个 feature 的 contract.md 用这个模板。只放共享部分，模块细节放 modules/*.md。
+> 目标：~100 行，几乎不变。
+
+---
+
 # <Feature Name>
 
 > 一句话：这个 feature 做什么、为谁做。
 
-## 需求（WHAT）
+## 共享决策
 
-### 功能需求
+| # | 决策 | 选择 | 详情 |
+|---|------|------|------|
+| D1 | 资源建模 | （父子/扁平/图） | 资源列表 + 关系 |
+| D2 | 分页 | （page/cursor/混合） | 默认 pageSize + 排序 |
+| D3 | 错误格式 | （RFC 9457/轻量/自定义） | schema + code 规范 |
+| D4 | 权限失败 | （403/404/混合） | 哪些资源用哪种 |
+| D5 | 幂等 | （Idempotency-Key/业务去重/不处理） | 哪些端点需要 |
+| D6 | 并发 | （version/ETag/不处理） | 哪些资源需要 |
+| D7 | 认证 | （JWT/Session/API Key） | 过期策略 |
 
-- F1: 用户可以...
-- F2: 系统应该...
-
-### 验收条件
-
-- AC1: 当 X 时，Y 必须发生
-- AC2: 当 Z 时，返回错误
-
----
-
-## 决策（WHY）
+> 每个决策的完整理由和被拒方案记录在下方。
 
 ### D1: 资源建模
 
-**选择**：B — 父子资源  
-**理由**：User 和 Task 是 1:N 关系，嵌套 URL 更清晰  
-**拒绝**：A（扁平）— 查询参数不够直观
+**选择**：  
+**理由**：  
+**拒绝**：  
 
 ### D2: 分页策略
 
-**选择**：A — page/pageSize  
-**理由**：数据量预估 < 10 万，后台管理场景  
-**拒绝**：B（cursor）— 不需要实时 feed，增加复杂度
+**选择**：  
+**理由**：  
+**拒绝**：  
+**默认排序**：  
 
 ### D3: 错误格式
 
-**选择**：B — 轻量 `{ code, message, details }`  
-**理由**：项目规模小，不需要 RFC 9457 的复杂度  
-**拒绝**：A（RFC 9457）— 过重
+**选择**：  
+**理由**：  
+**拒绝**：  
+**格式**：  
+```json
+{
+  "type": "https://api.example.com/errors/<error-type>",
+  "title": "Human Readable Title",
+  "status": 400,
+  "detail": "Specific error description.",
+  "extensions": {
+    "code": "UPPER_SNAKE_CASE",
+    "requestId": "req_xxx"
+  }
+}
+```
 
 ### D4: 权限失败策略
 
-**选择**：C — 混合  
-**理由**：User 私有数据用 404 隐藏，系统配置用 403  
-**拒绝**：A（全 403）— 暴露资源存在性
+**选择**：  
+**理由**：  
+**拒绝**：  
 
 ### D5: 幂等策略
 
-**选择**：A — Idempotency-Key  
-**理由**：创建订单是关键业务，必须防重复  
-**拒绝**：C（不处理）— 重复扣款风险
+**选择**：  
+**理由**：  
+**拒绝**：  
+**规则**：  
 
 ### D6: 并发控制
 
-**选择**：A — version 字段  
-**理由**：简单，项目无 HTTP 缓存基础设施  
-**拒绝**：B（ETag）— 增加复杂度
+**选择**：  
+**理由**：  
+**拒绝**：  
+**规则**：  
 
 ### D7: 认证方式
 
-**选择**：A — Bearer token（JWT）  
-**理由**：无状态，适合微服务  
-**拒绝**：B（Session）— 无 session 基础设施
+**选择**：  
+**理由**：  
+**拒绝**：  
+**规则**：  
 
 ---
 
-## 架构（HOW）
+## 共享数据模型
 
-### 数据模型
-
-```
-User: { id, email, name, createdAt }
-Task: { id, userId, title, status, version, createdAt }
-```
-
-### 接口合约
+> 多个模块共用的数据模型（如 User）。模块专属模型放 modules/*.md。
 
 ```
-GET /users/:id/tasks
-  Auth: Bearer token
-  Request: { page: 1, pageSize: 20, sort: "createdAt" }
-  Response: { data: Task[], total: 100, page: 1, pageSize: 20 }
-  Errors: USER_NOT_FOUND (404), UNAUTHORIZED (401)
-  Pagination: page/pageSize, default sort createdAt desc
-
-POST /users/:id/tasks
-  Auth: Bearer token
-  Idempotency: required (Idempotency-Key header)
-  Request: { title: "Fix bug", description: "..." }
-  Response: Task
-  Errors: USER_NOT_FOUND (404), TASK_TITLE_REQUIRED (422), IDEMPOTENCY_KEY_CONFLICT (409)
-
-PATCH /users/:id/tasks/:taskId
-  Auth: Bearer token
-  Concurrency: version field required
-  Request: { title: "Updated", version: 1 }
-  Response: Task
-  Errors: TASK_NOT_FOUND (404), VERSION_CONFLICT (409)
+User: {
+  id: string (ULID)
+  email: string (unique)
+  name: string
+  role: "admin" | "member"
+  tenantId: string
+  createdAt: string (ISO 8601)
+  updatedAt: string (ISO 8601)
+}
 ```
-
-### 技术选型
-
-- Runtime: Node.js + Hono
-- Validation: Zod
-- Database: PostgreSQL + Drizzle
-- Auth: JWT (jsonwebtoken)
 
 ---
 
-## 约束（CONSTRAINTS）
+## 共享约束
 
 ### 安全
 
-- 多租户隔离：所有查询必须带 userId
-- 权限失败：User 私有数据返回 404
-- 不暴露内部字段：passwordHash、deletedAt、internalNotes
+- 多租户隔离：所有查询必须带 tenantId（从认证上下文中提取）
+- 不暴露内部字段：tenantId、deletedAt 不出现在 API 响应中
 
 ### 性能
 
-- GET /users/:id/tasks p99 < 200ms
-- 列表默认 pageSize 20，最大 100
-- total 计算走索引，避免全表扫描
+- 列表查询必须走索引
+- pageSize 上限 100
 
 ### 兼容性
 
-- 不删除已有字段
+- 不删除已有 response 字段
 - 新增字段必须可选
 - 不修改已有字段的类型或语义
-- 不修改默认排序、错误格式、error code
+- breaking change 必须版本化
 
 ---
 
-## 支撑材料
+## 技术选型
 
-- `evidence/competitive-analysis.md` — 竞品 API 设计调研
-- `evidence/best-practices.md` — 行业最佳实践扫描
-- `evidence/user-research.md` — 用户需求访谈记录
+| 层 | 选择 | 理由 |
+|---|------|------|
+| Runtime | | |
+| Framework | | |
+| Validation | | |
+| Database | | |
+| ORM | | |
+| Auth | | |
+| ID | | |
 
 ---
 
-## 实现
+## 模块索引
 
-> 这部分由模型从 contract.md 生成，不手写。
+| 模块 | 文件 | 端点数 | 说明 |
+|------|------|--------|------|
+| | modules/xxx.md | | |
+
+---
+
+## 代码映射
 
 ```
-src/
-├── routes/
-│   └── tasks.ts
-├── schemas/
-│   └── task.schema.ts
-├── services/
-│   └── task.service.ts
-└── tests/
-    └── tasks.contract.test.ts
+contract.md ──────────→ src/middleware/  (auth, error, idempotency)
+                         src/db/schema.ts (所有模块的表)
+
+modules/<name>.md ────→ src/routes/<name>.ts
+                         src/schemas/<name>.schema.ts
+                         src/services/<name>.service.ts
+                         tests/<name>.contract.test.ts
 ```
