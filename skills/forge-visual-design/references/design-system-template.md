@@ -183,3 +183,45 @@ info:    bg=info/10    text=info
 | 默认尺寸 | 20px |
 | 风格 | outline / filled / duotone |
 | 颜色 | currentColor（跟随文本） |
+
+---
+
+## 响应式
+
+### 断点策略
+
+| 断点 | 宽度 | 说明 |
+|------|------|------|
+| mobile | < 640px | 基础样式（mobile-first） |
+| tablet | ≥ 768px | 布局增强 |
+| desktop | ≥ 1024px | 完整布局 |
+
+> 断点从内容推导，不从设备清单推导。当内容在当前宽度下变得难以阅读或操作时，就是加断点的时机。
+
+### 移动端约束
+
+- 触控目标 ≥ 44×44pt（Apple HIG）/ 48×48dp（Material Design）
+- 正文 ≥ 16px（避免 iOS 自动缩放输入框）
+- 主 CTA 在拇指区（屏幕中下 1/3）
+- 表单单列排列
+- 表格水平滚动或卡片化
+
+### 响应式 Token 示例
+
+```css
+/* 基础（移动端） */
+:root {
+  --section-padding: 32px;
+  --card-gap: 16px;
+  --body-size: 16px;
+}
+
+/* 桌面增强 */
+@media (min-width: 1024px) {
+  :root {
+    --section-padding: 64px;
+    --card-gap: 24px;
+    --body-size: 14px;
+  }
+}
+```
