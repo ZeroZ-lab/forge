@@ -20,19 +20,43 @@ Forge：文档是源代码，代码是文档在某个模型能力下的投影
 
 ## 安装
 
+### 方式一：插件安装（推荐）
+
 ```bash
 # 克隆 Forge
 git clone https://github.com/ZeroZ-lab/forge.git
 cd forge
 
-# 安装到 Claude Code
-ln -s "$(pwd)" ~/.claude/plugins/forge
-
-# 或使用 Codex CLI
-ln -s "$(pwd)" ~/.codex/plugins/forge
+# 注册为 Claude Code 插件
+claude plugin install --path .
 ```
 
-安装后，在任意项目中启动 Claude Code 或 Codex，Forge 会自动加载。
+安装后在任意项目中启动 Claude Code，Forge 的 17 个 skill 自动可用。
+
+### 方式二：个人 Skill 安装
+
+```bash
+# 克隆 Forge
+git clone https://github.com/ZeroZ-lab/forge.git
+cd forge
+
+# 把所有 skill 软链到个人 skills 目录
+for skill in skills/forge-*/; do
+  ln -s "$(pwd)/$skill" "$HOME/.claude/skills/$(basename $skill)"
+done
+```
+
+### 方式三：项目级安装
+
+```bash
+# 在你的项目目录下
+mkdir -p .claude/skills
+
+# 把需要的 skill 软链进来
+ln -s /path/to/forge/skills/forge-init .claude/skills/forge-init
+ln -s /path/to/forge/skills/forge-detail .claude/skills/forge-detail
+# ... 按需添加
+```
 
 ## 快速开始
 
@@ -42,19 +66,19 @@ ln -s "$(pwd)" ~/.codex/plugins/forge
 
 | 流程 | 适用场景 | Command 链 |
 |------|---------|-----------|
-| **完整** | 新项目从零开始 | brainstorm → init → define → design → detail → plan |
-| **标准** | 已有项目，新功能 | define → detail → plan |
-| **快速** | 已有项目，小功能 | detail → plan |
-| **最小** | 加一个端点 | detail |
+| **完整** | 新项目从零开始 | forge-brainstorm → forge-init → forge-define → forge-design → forge-detail → forge-plan |
+| **标准** | 已有项目，新功能 | forge-define → forge-detail → forge-plan |
+| **快速** | 已有项目，小功能 | forge-detail → forge-plan |
+| **最小** | 加一个端点 | forge-detail |
 
-**跳过原则**：已有 project.md → 跳过 /init；需求明确 → 跳过 /define；纯后端 → 跳过 /design。
+**跳过原则**：已有 project.md → 跳过 /forge-init；需求明确 → 跳过 /forge-define；纯后端 → 跳过 /forge-design。
 
 以下以完整流程为例：
 
 ### 1. 探索想法
 
 ```
-/brainstorm 我想做一个团队协作工具
+/forge-brainstorm 我想做一个团队协作工具
 ```
 
 Forge 会引导你探索：
@@ -68,7 +92,7 @@ Forge 会引导你探索：
 ### 2. 初始化项目
 
 ```
-/init 任务管理系统
+/forge-init 任务管理系统
 ```
 
 Forge 一次对话完成：
@@ -81,7 +105,7 @@ Forge 一次对话完成：
 ### 3. 定义需求
 
 ```
-/define 任务管理
+/forge-define 任务管理
 ```
 
 引导需求分析：
@@ -95,7 +119,7 @@ Forge 一次对话完成：
 ### 4. 设计系统
 
 ```
-/design 任务管理
+/forge-design 任务管理
 ```
 
 交互设计 + 视觉设计：
@@ -109,7 +133,7 @@ Forge 一次对话完成：
 ### 5. 技术详设
 
 ```
-/detail 任务管理
+/forge-detail 任务管理
 ```
 
 按需加载领域 skill：
@@ -121,7 +145,7 @@ Forge 一次对话完成：
 ### 6. 任务分解
 
 ```
-/plan 任务管理
+/forge-plan 任务管理
 ```
 
 垂直切片：
@@ -156,7 +180,7 @@ AI 读取 `contract.md` 验收条件，生成测试用例。
 
 AI 读取 `deploy/contract.md`，生成发布清单 + 回滚方案。
 
-## 8 阶段 × 14 个 Skill
+## 8 阶段 × 17 个 Skill
 
 | 阶段 | Skill | 产出 |
 |------|-------|------|
@@ -181,12 +205,12 @@ AI 读取 `deploy/contract.md`，生成发布清单 + 回滚方案。
 
 | Command | 做什么 |
 |---------|--------|
-| `/brainstorm` | 发散可能性 + 圈定方向 |
-| `/init` | 业务目标 + 技术选型 + 设计系统 → project.md + DESIGN.md |
-| `/define` | 需求分析 + PRD 编写 |
-| `/design` | 交互规格 + 视觉规范 |
-| `/detail` | 按需加载领域 skill（API + DB + 前端按需） |
-| `/plan` | 垂直切片 + 依赖图 + 自动推导测试用例 |
+| `/forge-brainstorm` | 发散可能性 + 圈定方向 |
+| `/forge-init` | 业务目标 + 技术选型 + 设计系统 → project.md + DESIGN.md |
+| `/forge-define` | 需求分析 + PRD 编写 |
+| `/forge-design` | 交互规格 + 视觉规范 |
+| `/forge-detail` | 按需加载领域 skill（API + DB + 前端按需） |
+| `/forge-plan` | 垂直切片 + 依赖图 + 自动推导测试用例 |
 
 ## 自然语言触发（无需决策）
 
