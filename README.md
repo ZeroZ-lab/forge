@@ -31,7 +31,7 @@ cd forge
 claude plugin install --path .
 ```
 
-安装后在任意项目中启动 Claude Code，Forge 的 17 个 skill 自动可用。
+安装后在任意项目中启动 Claude Code，Forge 的 18 个 skill 自动可用。
 
 ### 方式二：个人 Skill 安装
 
@@ -164,23 +164,32 @@ Forge 一次对话完成：
 
 AI 读取 `plan.md`，按任务序列生成 `src/` + `tests/`。
 
-### 8. 写测试（自然语言）
+### 8. 测试规划
 
 ```
-写测试
+/forge-test 任务管理
 ```
 
-AI 读取 `contract.md` 验收条件，生成测试用例。
+测试策略 + 测试用例：
+- 测试类型 + 覆盖策略 + Mock 策略
+- 从验收条件推导测试场景
 
-### 9. 发布（自然语言）
+产出：`testing/contract.md` + `test-cases.md`
+
+### 9. 发布规划
 
 ```
-发布
+/forge-deploy 任务管理
 ```
 
-AI 读取 `deploy/contract.md`，生成发布清单 + 回滚方案。
+灰度策略 + 回滚方案 + 监控告警：
+- 运行环境 + 容器化 + CI/CD
+- 回滚步骤（具体命令）
+- 健康检查 + 告警
 
-## 8 阶段 × 17 个 Skill
+产出：`deploy/contract.md`
+
+## 8 阶段 × 18 个 Skill
 
 | 阶段 | Skill | 产出 |
 |------|-------|------|
@@ -199,7 +208,7 @@ AI 读取 `deploy/contract.md`，生成发布清单 + 回滚方案。
 | | test-cases | test-cases.md |
 | ⑦ 交付 | deploy | deploy/contract.md |
 
-## 6 个决策 Command
+## 9 个决策 Command
 
 只有需要决策的阶段才用 command。command 加载 skill，引导人类做选择。
 
@@ -211,14 +220,14 @@ AI 读取 `deploy/contract.md`，生成发布清单 + 回滚方案。
 | `/forge-design` | 交互规格 + 视觉规范 |
 | `/forge-detail` | 按需加载领域 skill（API + DB + 前端按需） |
 | `/forge-plan` | 垂直切片 + 依赖图 + 自动推导测试用例 |
+| `/forge-test` | 测试策略 + 测试用例 |
+| `/forge-deploy` | 灰度策略 + 回滚方案 + 监控告警 |
 
 ## 自然语言触发（无需决策）
 
 | 你说 | AI 做什么 |
 |------|----------|
 | "生成代码" | 读 plan.md → 按任务序列生成 src/ + tests/ |
-| "写测试" | 读 contract.md 验收条件 → 生成测试用例 |
-| "发布" | 读 deploy contract → 生成发布清单 |
 | "创建任务报 500" | 读 contract.md + 代码 → 找分歧 → 修代码 |
 | "给任务加标签" | detail + build 的组合（加模块） |
 | "分页换成 cursor" | 改决策 → 级联更新文档 + 重新生成 |

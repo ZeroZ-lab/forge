@@ -177,6 +177,6 @@ Task-06 (删除任务 API)
 
 下一步你可以：
   生成代码       — 按任务序列生成 src/ + tests/
-  /forge-test-cases — 从验收条件推导测试用例
-  自然语言       — 直接说"开始写代码"
+  /forge-test    — 测试策略 + 测试用例
+  /forge-deploy  — 灰度策略 + 回滚方案 + 监控告警
 ```
