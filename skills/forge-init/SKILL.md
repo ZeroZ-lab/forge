@@ -30,6 +30,53 @@ my-project/
 └── CLAUDE.md              # Claude Code 入口（指向 AGENTS.md）
 ```
 
+## 模板
+
+| 文件 | 模板 | 来源 |
+|------|------|------|
+| docs/project.md | `forge-business-alignment/references/project-template.md` | Phase 1 business-alignment |
+| DESIGN.md | `forge-visual-design/references/design-system-template.md` | Phase 3 visual-design |
+| AGENTS.md | `${CLAUDE_SKILL_DIR}/references/agents-template.md` | Phase 1+2+3 投影 |
+| CLAUDE.md | `${CLAUDE_SKILL_DIR}/references/claude-template.md` | 入口指针 |
+
+## AGENTS.md 生成规则
+
+从 Phase 1+2+3 的决策投影生成，不要手写。结构：
+
+1. **角色** — 一句话定义项目身份
+2. **技术栈** — 从 project.md 技术选型段提取
+3. **命令** — 构建、测试、类型检查的具体命令
+4. **项目结构** — 目录树
+5. **工作流** — Forge 方法论（固定）
+6. **代码标准** — 从 project.md 共享约束提取
+7. **设计约束** — 从 DESIGN.md 提取核心值
+8. **边界** — Always / Ask First / Never 三级
+9. **历史维护** — 自动追加 changelog + timeline（固定）
+10. **文档引用** — 关键文件指针
+
+## CLAUDE.md 生成规则
+
+极简入口，< 20 行：
+
+```markdown
+@AGENTS.md
+
+# {项目名} — Claude Code 入口
+
+## 上下文
+- 技术决策 → docs/project.md
+- 项目演进 → docs/timeline.md（每次开发前必读）
+- 设计系统 → DESIGN.md
+- 功能合约 → docs/features/<feature>/contract.md
+
+## 开发流程
+1. 读 AGENTS.md 了解技术栈和工作流
+2. 读 docs/timeline.md 了解项目近期演进
+3. 读相关 feature 的 contract.md + changelog.md
+4. 按 contract.md 写代码，注释决策编号
+5. 改完文档后自动追加 changelog.md + timeline.md
+```
+
 ## 跳过规则
 
 - 纯后端 API → 跳过 Phase 3

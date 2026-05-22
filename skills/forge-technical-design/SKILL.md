@@ -124,6 +124,10 @@ description: 架构权衡与技术选型——单体还是微服务、选什么�
 - 数据库：Redis（缓存）
 ```
 
+## 模板
+
+使用 `${CLAUDE_SKILL_DIR}/../forge-business-alignment/references/project-template.md` 作为产出结构参考。technical-design 填充其中的架构模式、技术选型、服务划分、部署架构段落。
+
 ## 入口/出口条件
 
 **入口条件**：

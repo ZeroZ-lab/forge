@@ -113,9 +113,9 @@ my-project/
 ```
 forge/skills/
 ├── forge-brainstorm/               # ⓪ 可能性探索（B1-B5）
-├── forge-init/                     # 项目初始化编排
+├── forge-init/                     # 项目初始化编排（+ agents-template + claude-template）
 ├── forge-business-alignment/       # ① 业务对齐（BA1-BA5）
-├── forge-define/             # ① 需求文档（R1-R5）
+├── forge-define/                   # ① 需求文档（R1-R5）
 ├── forge-design/                   # 设计阶段编排
 ├── forge-interaction-design/       # ② 交互设计（I1-I5）
 ├── forge-visual-design/            # ② 视觉设计（V1-V5）
@@ -129,7 +129,8 @@ forge/skills/
 ├── forge-test/                     # 测试阶段编排
 ├── forge-test-strategy/            # ⑥ 测试策略（T1-T5）
 ├── forge-test-cases/               # ⑥ 测试用例（TC1-TC5）
-└── forge-deploy/                   # ⑦ 部署发布（RL1-RL5）
+├── forge-deploy/                   # ⑦ 部署发布（RL1-RL5）
+└── shared/                         # 共享模板（contract + module + changelog）
 ```
 
 > **Flat list 纪律**：Claude Code 只发现 `skills/` 一级子目录的 SKILL.md，不支持嵌套。Skill 目录名全局唯一，用命名前缀区分阶段归属。
@@ -832,17 +833,17 @@ Forge AGENTS.md     →  编译器源码
 
 ### 资源引用链
 
-**Skill 不引用资源。** Skill 是纯方法论，只定义"问什么问题、怎么思考、记录什么"。
+**决策 Skill 不引用资源。** 只有编排型 Skill（forge-init）引用模板。
 
 ```
-Skill（抽象）        →  "问日活多少，推荐方案，记录决策"
-forge init（执行器） →  加载 skill + 模板 → 生成项目文件
-项目 AGENTS.md       →  告诉 AI 文件在哪、格式是什么
+决策 Skill（抽象）     →  "问日活多少，推荐方案，记录决策"
+forge-init（编排器）   →  加载子 skill + 模板 → 生成项目文件（project.md, AGENTS.md, CLAUDE.md）
+项目 AGENTS.md        →  告诉 AI 文件在哪、格式是什么
 ```
 
 **原因：**
-- Skill 引用模板 = 把执行逻辑混进方法论
-- 破坏了"Skill 永远抽象"的原则
+- 决策 Skill 引用模板 = 把执行逻辑混进方法论
+- 编排型 Skill 是唯一可以引用模板的（它的职责就是生成文件）
 - 模板和文件路径是项目级决策，不是方法论
 
 **引用关系只存在于项目文件中：**
@@ -859,37 +860,29 @@ forge/
 ├── AGENTS.md                       # 本文件（含核心理念）
 │
 ├── skills/                         # 决策协议（18 个，flat list）
-│   ├── forge-brainstorm/           # ⓪ 可能性探索
-│   ├── forge-init/                 # 项目初始化编排
-│   ├── forge-business-alignment/   # ① 业务对齐
-│   ├── forge-define/         # ① 需求文档
+│   ├── forge-brainstorm/           # ⓪ 可能性探索（references/idea-brief-template.md）
+│   ├── forge-init/                 # 项目初始化编排（references/agents-template.md + claude-template.md）
+│   ├── forge-business-alignment/   # ① 业务对齐（references/project-template.md）
+│   ├── forge-define/               # ① 需求文档（references/prd-template.md）
 │   ├── forge-design/               # 设计阶段编排
-│   ├── forge-interaction-design/   # ② 交互设计
-│   ├── forge-visual-design/        # ② 视觉设计
+│   ├── forge-interaction-design/   # ② 交互设计（references/interaction-template.md）
+│   ├── forge-visual-design/        # ② 视觉设计（references/design-system-template.md）
 │   ├── forge-technical-design/     # ② 技术设计
 │   ├── forge-detail/               # 详设阶段编排
 │   ├── forge-api-design/           # ③ API 详设（D1-D7）
 │   ├── forge-frontend-design/      # ③ 前端详设（F1-F5）
 │   ├── forge-db-design/            # ③ 数据库详设（DB1-DB5）
-│   ├── forge-plan/                 # ④ 任务分解
+│   ├── forge-plan/                 # ④ 任务分解（references/plan-template.md）
 │   ├── forge-codegen/              # ⑤ 代码生成
 │   ├── forge-test/                 # 测试阶段编排
 │   ├── forge-test-strategy/        # ⑥ 测试策略（T1-T5）
-│   ├── forge-test-cases/           # ⑥ 测试用例
-│   └── forge-deploy/               # ⑦ 部署发布
-│
-├── contracts/                      # 文档模板（11 个）
-│   ├── idea-brief-template.md      # 方向简报模板
-│   ├── prd-template.md             # 需求文档模板
-│   ├── interaction-template.md     # 交互规格模板
-│   ├── design-system-template.md   # 设计系统模板
-│   ├── project-template.md         # 项目技术决策模板（含业务目标段落）
-│   ├── contract-template.md        # 技术合约模板
-│   ├── module-template.md          # 模块模板
-│   ├── plan-template.md            # 任务分解模板
-│   ├── test-cases-template.md      # 测试用例模板
-│   ├── release-template.md         # 发布清单模板
-│   └── changelog-template.md       # 迭代日志模板
+│   ├── forge-test-cases/           # ⑥ 测试用例（references/test-cases-template.md）
+│   ├── forge-deploy/               # ⑦ 部署发布（references/release-template.md）
+│   │
+│   └── shared/                     # 共享模板（3 个）
+│       ├── contract-template.md
+│       ├── module-template.md
+│       └── changelog-template.md
 │
 ├── hooks/                          # 插件钩子
 │   ├── session-start.sh
@@ -954,7 +947,9 @@ forge/
 - ✅ 全生命周期架构已设计（8 阶段 × 18 个 skill）
 - ✅ 18 个 Skill 全部完成（SKILL.md 均已编写，flat list 结构）
 - ✅ 9 个 Command 编排已合入 AGENTS.md（brainstorm / init / define / design / detail / plan / test / deploy + 4 个编排型 skill）
-- ✅ 11 个文档模板已完成（idea-brief / PRD / interaction / design-system / project / contract / module / plan / test-cases / release / changelog）
+- ✅ 13 个文档模板已完成（+agents-template + claude-template，分散在各 skill references/）
+- ✅ forge-init 模板链完整（project.md + DESIGN.md + AGENTS.md + CLAUDE.md 各有模板）
+- ✅ 自动历史记录系统（timeline.md + changelog.md，规则内嵌 skill + 项目 AGENTS.md 模板）
 - ✅ 流程选择机制已加入（完整 / 标准 / 快速 / 最小 4 种流程）
 - ✅ /detail 按需加载（根据项目上下文选择领域 skill）
 - ✅ /plan 后自动推导测试用例（test-cases 不再需要手动触发）
