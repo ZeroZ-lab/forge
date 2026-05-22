@@ -35,7 +35,7 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 决策协议（skill）→ 产物文档 → 下游消费（代码/设计稿/任务清单/测试用例...）
 ```
 
-### 8 阶段 × 18 个 Skill
+### 8 阶段 × 14 个领域 Skill + 4 个编排 Skill
 
 | 阶段 | Skill | 核心方法论 | 参与角色 | 产出 |
 |------|-------|-----------|---------|------|
@@ -53,6 +53,8 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 | **⑥ 测试** | test-strategy | 风险分层 | QA + 开发 | 测试策略 |
 | | test-cases | 场景覆盖 | QA | 测试用例 |
 | **⑦ 交付** | deploy | 可逆发布 | DevOps + 开发 | 发布清单 |
+
+编排 skill：`forge-init`、`forge-design`、`forge-detail`、`forge-test`。它们不新增方法论，只负责按上下文加载领域 skill、合并产物和维护汇总历史。
 
 ### 阶段间的产物传递
 
@@ -114,7 +116,7 @@ my-project/
 forge/skills/
 ├── forge-brainstorm/               # ⓪ 可能性探索（B1-B5）
 ├── forge-init/                     # 项目初始化编排（+ agents-template + claude-template）
-├── forge-business-alignment/       # ① 业务对齐（BA1-BA5）
+├── forge-business-alignment/       # ① 业务对齐（BA1-BA4）
 ├── forge-define/                   # ① 需求文档（R1-R5）
 ├── forge-design/                   # 设计阶段编排
 ├── forge-interaction-design/       # ② 交互设计（I1-I5）
@@ -415,10 +417,10 @@ AI 按需加载：
 | **最小** | detail | 已有项目，加一个端点 |
 
 **跳过原则**：
-- 已有 project.md + DESIGN.md → 跳过 /init
-- 需求已经很明确 → 跳过 /brainstorm 和 /define
-- 纯后端 API → 跳过 /design
-- 只有一个端点 → 跳过 /plan
+- 已有 project.md + DESIGN.md → 跳过 /forge-init
+- 需求已经很明确 → 跳过 /forge-brainstorm 和 /forge-define
+- 纯后端 API → 跳过 /forge-design
+- 只有一个端点 → 跳过 /forge-plan
 
 ### Command 体系（决策编排）
 
@@ -442,17 +444,17 @@ AI 按需加载：
 | Command | 执行顺序 | 产出 |
 |---------|---------|------|
 | `/forge-brainstorm` | B1→B5 逐步引导 | `idea-brief.md` |
-| `/forge-init` | Phase 1 业务对齐（BA1-BA5）→ Phase 2 技术选型（TD1-TD5）→ Phase 3 设计系统（V1-V5），一次对话完成 | `project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
+| `/forge-init` | Phase 1 业务对齐（BA1-BA4）→ Phase 2 技术选型（TD1-TD5）→ Phase 3 设计系统（V1-V5），一次对话完成 | `project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
 | `/forge-define` | R1→R5 逐步引导 | `PRD.md` |
 | `/forge-design` | Phase 1 交互设计（I1-I5）→ Phase 2 视觉设计（V1-V5） | `interaction-spec.md` + 更新 `DESIGN.md` |
-| `/forge-detail` | Phase 1 数据库（DB1-DB5）→ Phase 2 API（D1-D7）→ Phase 3 前端（F1-F5，按需） | `contract.md` + `modules/*.md` |
-| `/forge-plan` | P1→P5 逐步引导，完成后自动推导 test-cases | `plan.md` + `test-cases.md` |
-| `/forge-test` | Phase 1 测试策略（T1-T5）→ Phase 2 测试用例（TC1-TC5） | `testing/contract.md` + `test-cases.md` |
+| `/forge-detail` | Phase 1 API（D1-D7）→ Phase 2 数据库（DB1-DB5）→ Phase 3 前端（F1-F5，按需） | `contract.md` + `modules/*.md` |
+| `/forge-plan` | P1→P5 逐步引导，完成后自动推导 testing/test-cases | `plan.md` + `testing/test-cases.md` |
+| `/forge-test` | Phase 1 测试策略（T1-T5）→ Phase 2 测试用例（TC1-TC5） | `testing/contract.md` + `testing/test-cases.md` |
 | `/forge-deploy` | RL1→RL5 逐步引导 | `deploy/contract.md` |
 
 **detail 按需加载判断**：读 project.md 技术选型 → 有没有前端框架？读已有文档 → 有没有 frontend/ 目录？不确定 → 问用户。
 
-> 编排逻辑已内联到 AGENTS.md，不再需要独立的 command 文件。用户可通过自然语言（"做技术详设"）或直接调用 `/forge-brainstorm`、`/init` 等 skill 触发。
+> 编排逻辑已内联到 AGENTS.md，不再需要独立的 command 文件。用户可通过自然语言（"做技术详设"）或直接调用 `/forge-brainstorm`、`/forge-init` 等 skill 触发。
 
 ### 自然语言（无需决策，AI 直接执行）
 
@@ -470,11 +472,11 @@ AI 按需加载：
 ```
 显式触发                              自然语言触发                        AI 在背后做的
 ────────────────────────────────────────────────────────────────────────────────────
-/forge-brainstorm 团队提效    "我们想做个内部工具"              →  加载 brainstorm skill
+/forge-brainstorm 团队提效    "我们想做个内部工具"              →  加载 forge-brainstorm
                                                                      → 引导痛点探索 + 方向展开
                                                                      → 生成 idea-brief.md
 
-/forge-init                       "我要做任务管理系统"              →  加载 business-alignment + technical-design + visual-design
+/forge-init                       "我要做任务管理系统"              →  加载 forge-business-alignment + forge-technical-design + forge-visual-design
                                                                      → 一次对话问完所有业务问题
                                                                      → 搜索方案 → 推荐 → 确认
                                                                      → 生成项目级文件（如不存在）
@@ -483,25 +485,25 @@ AI 按需加载：
                                                                      → 引导需求分析（用户角色？场景？验收条件？）
                                                                      → 生成 PRD.md
 
-/forge-design 任务管理            "做任务管理的交互设计"            →  加载 interaction-design + visual-design
+/forge-design 任务管理            "做任务管理的交互设计"            →  加载 forge-interaction-design + forge-visual-design
                                                                      → 引导交互设计 + 视觉规范
                                                                      → 生成 interaction-spec.md + 更新 DESIGN.md
 
-/forge-detail 任务管理            "做任务管理的技术详设"            →  加载 api-design + frontend-design + db-design
+/forge-detail 任务管理            "做任务管理的技术详设"            →  加载 forge-api-design + forge-db-design + forge-frontend-design
                                                                      → 按领域逐个引导详设
                                                                      → 生成 contract.md + modules/*.md
 
-/forge-plan 任务管理              "拆分任务管理的任务"              →  加载 plan skill
+/forge-plan 任务管理              "拆分任务管理的任务"              →  加载 forge-plan + forge-test-cases
                                                                      → 垂直切片 + 依赖图 + 执行顺序
-                                                                     → 生成 plan.md
+                                                                     → 生成 plan.md + testing/test-cases.md
 
                                   "生成代码"                        →  读 plan.md → 按任务序列生成 src/ + tests/
 
-/forge-test 任务管理              "做任务管理的测试规划"            →  加载 test-strategy + test-cases
+/forge-test 任务管理              "做任务管理的测试规划"            →  加载 forge-test-strategy + forge-test-cases
                                                                      → 测试策略 + 测试用例
-                                                                     → 生成 testing/contract.md + test-cases.md
+                                                                     → 生成 testing/contract.md + testing/test-cases.md
 
-/forge-deploy 任务管理            "做任务管理的发布规划"            →  加载 deploy skill
+/forge-deploy 任务管理            "做任务管理的发布规划"            →  加载 forge-deploy
                                                                      → 灰度策略 + 回滚方案 + 监控告警
                                                                      → 生成 deploy/contract.md
 
@@ -521,7 +523,7 @@ AI 按需加载：
 ```
 你：/forge-brainstorm 我们团队想做一个内部工具提效
 
-AI：（加载 brainstorm skill）
+AI：（加载 forge-brainstorm）
   → 痛点具体是什么？当前工作流？想过哪些方向？
   → 搜索：行业里怎么解决类似问题的？
   → 展开 3-5 个方向
@@ -545,24 +547,24 @@ AI：（加载 forge-define skill）
 
 你：/forge-design 任务管理
 
-AI：（加载 interaction-design + visual-design）
+AI：（加载 forge-interaction-design + forge-visual-design）
   → 核心操作路径？导航模式？
   → 组件复用？色彩系统？
   → 生成：interaction-spec.md + 更新 DESIGN.md
 
 你：/forge-detail 任务管理
 
-AI：（加载 api-design + frontend-design + db-design）
+AI：（加载 forge-api-design + forge-db-design + forge-frontend-design）
   → API: D1-D7 → contract.md + modules/tasks.md
-  → 前端: F1-F5 → contract.md + modules/*.md
   → 数据库: DB1-DB5 → contract.md
+  → 前端: F1-F5 → contract.md + modules/*.md
 
 你：/forge-plan 任务管理
 
-AI：（加载 plan skill）
+AI：（加载 forge-plan + forge-test-cases）
   → contract.md 有哪些模块？依赖关系？
   → 垂直切片：每个任务 = 一个完整用户路径
-  → 生成：plan.md（任务清单 + 执行顺序）
+  → 生成：plan.md（任务清单 + 执行顺序）+ testing/test-cases.md
 
 你："生成代码"
 
@@ -570,14 +572,14 @@ AI：读 plan.md → 按任务序列生成 src/ + tests/
 
 你：/forge-test 任务管理
 
-AI：（加载 test-strategy + test-cases）
+AI：（加载 forge-test-strategy + forge-test-cases）
   → 测试策略：测试类型？覆盖范围？Mock 策略？
   → 测试用例：正常路径？边界情况？错误处理？
-  → 生成：testing/contract.md + test-cases.md
+  → 生成：testing/contract.md + testing/test-cases.md
 
 你：/forge-deploy 任务管理
 
-AI：（加载 deploy skill）
+AI：（加载 forge-deploy）
   → 运行环境？容器化？CI/CD？灰度策略？
   → 回滚方案？监控告警？
   → 生成：deploy/contract.md
@@ -946,13 +948,13 @@ forge/
 
 - ✅ 全生命周期架构已设计（8 阶段 × 18 个 skill）
 - ✅ 18 个 Skill 全部完成（SKILL.md 均已编写，flat list 结构）
-- ✅ 9 个 Command 编排已合入 AGENTS.md（brainstorm / init / define / design / detail / plan / test / deploy + 4 个编排型 skill）
+- ✅ 8 个 Command 编排已合入 AGENTS.md（brainstorm / init / define / design / detail / plan / test / deploy）
 - ✅ 13 个文档模板已完成（+agents-template + claude-template，分散在各 skill references/）
 - ✅ forge-init 模板链完整（project.md + DESIGN.md + AGENTS.md + CLAUDE.md 各有模板）
 - ✅ 自动历史记录系统（timeline.md + changelog.md，规则内嵌 skill + 项目 AGENTS.md 模板）
 - ✅ 流程选择机制已加入（完整 / 标准 / 快速 / 最小 4 种流程）
-- ✅ /detail 按需加载（根据项目上下文选择领域 skill）
-- ✅ /plan 后自动推导测试用例（test-cases 不再需要手动触发）
+- ✅ /forge-detail 按需加载（根据项目上下文选择领域 skill）
+- ✅ /forge-plan 后自动推导测试用例（testing/test-cases 不再需要手动触发）
 - ✅ project-charter 合入 project.md（小项目不需要独立文件）
 - ✅ Skill 抽象化：只含方法论 + 业务问题 + 不变原则，不写死具体技术
 - ✅ 多领域架构已通过 task-management 验证（15 个文件，5 个领域）

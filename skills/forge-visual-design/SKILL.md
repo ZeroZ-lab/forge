@@ -17,7 +17,7 @@ description: 设计决策系统——从内容目标推导页面结构、布局�
 
 ## 与上下游的边界
 
-**上游**：读 interaction-spec（交互规格），知道页面结构和组件行为
+**上游**：feature 设计模式读 interaction-spec（交互规格），知道页面结构和组件行为；项目初始化模式读 docs/project.md 的业务目标、目标用户、产品气质和技术约束，生成项目级最小设计系统。
 **下游**：DESIGN.md 交给 /forge-detail（前端实现）和代码生成
 
 **和 interaction-design 的切法**：
@@ -151,7 +151,7 @@ description: 设计决策系统——从内容目标推导页面结构、布局�
 
 ## 入口/出口条件
 
-**入口**：有 interaction-spec.md（来自 interaction-design）或用户已有交互设计
+**入口**：有 interaction-spec.md（来自 forge-interaction-design）、用户已有交互设计，或由 forge-init 调用并已有项目级业务目标。
 **出口**：DESIGN.md 已生成 · 每个选择有推导链 · 通过反 AI 味检查 · design-preview.html 已生成并验证 · 用户确认进入 /forge-detail
 
 ## 何时不使用

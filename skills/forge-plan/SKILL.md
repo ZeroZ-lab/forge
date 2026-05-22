@@ -16,14 +16,14 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 ## 与上下游的边界
 
 **上游**：读 contract.md + modules/（来自 /forge-detail），知道有哪些模块和接口合约
-**下游**：plan.md 交给代码生成（按任务序列生成 src/ + tests/）· 从验收条件自动推导 test-cases.md（详见 forge-test-cases skill）
+**下游**：plan.md 交给代码生成（按任务序列生成 src/ + tests/）· 从验收条件自动推导 testing/test-cases.md（详见 forge-test-cases skill）
 
 **和 detail 的切法**：detail 定义**做什么**（合约+模块），plan 定义**怎么做**（任务+顺序）
 **和 codegen 的切法**：plan 定义**任务序列**（目标+步骤+验证），codegen 定义**具体实现**（代码）
 
 ## 方法论：识别→切片→排序→验证→检查
 
-### 第一步：识别（Identify）
+### P1: 识别（Identify）
 
 读 contract.md + modules/，建立模块全景。不知道有什么就切不好。
 
@@ -36,7 +36,7 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 
 **记录**：模块清单 + 依赖图 + 风险标记
 
-### 第二步：切片（Slice）
+### P2: 切片（Slice）
 
 把每个模块拆成垂直切片——每个切片是一个完整、可独立验证的用户价值。
 
@@ -51,7 +51,7 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 
 **记录**：任务清单（目标 + 文件 + 步骤）
 
-### 第三步：排序（Order）
+### P3: 排序（Order）
 
 确定任务间的依赖关系、执行顺序和风险优先级。
 
@@ -66,7 +66,7 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 
 **记录**：拓扑顺序 + 并行矩阵 + 关键路径 + 风险排序
 
-### 第四步：验证（Verify）
+### P4: 验证（Verify）
 
 为每个任务定义验证标准。有业务逻辑的任务用 TDD，其他用验收条件直接验证。
 
@@ -81,7 +81,7 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 
 **记录**：每任务验证方式（TDD 或直接验证）+ 验收条件
 
-### 第五步：检查（Checkpoint）
+### P5: 检查（Checkpoint）
 
 在关键节点设置人工审查门。
 
@@ -124,7 +124,7 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 ## 入口/出口条件
 
 **入口**：有 contract.md + modules/（来自 /forge-detail）或用户已有详设文档
-**出口**：plan.md 已生成 · 自动推导 test-cases.md（从验收条件 + 验证方式） · 用户确认进入代码生成
+**出口**：plan.md 已生成 · 自动推导 testing/test-cases.md（从验收条件 + 验证方式） · 用户确认进入代码生成
 
 ## 何时不使用
 
@@ -154,7 +154,7 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 
 ## 历史维护（自动）
 
-完成后追加 `docs/timeline.md`：`### {日期} — {feature} 任务分解 · plan.md（{N} 个任务）`。追加 `changelog.md`。超 100 行时归档。
+完成后追加 `docs/timeline.md`：`### {日期} — {feature} 任务分解 · plan.md（{N} 个任务）+ testing/test-cases.md`。追加 `changelog.md`。超 100 行时归档。自动推导测试用例时加载 `forge-test-cases`，但历史由 `forge-plan` 写一条汇总记录，避免重复。
 
 ## 完成提示
 

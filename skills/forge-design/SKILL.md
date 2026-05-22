@@ -12,10 +12,10 @@ description: 设计阶段编排——交互规格 + 视觉规范，一次对话�
 按以下顺序依次执行，每个 phase 完成后向用户确认再进入下一个：
 
 **Phase 1: 交互设计**
-加载 `interaction-design` skill，完成 I1-I5 决策点。
+加载 `forge-interaction-design` skill，完成 I1-I5 决策点。
 
 **Phase 2: 视觉设计**
-加载 `visual-design` skill，完成 V1-V5 决策点。
+加载 `forge-visual-design` skill，完成 V1-V5 决策点。
 
 ## 产出
 
@@ -47,6 +47,8 @@ DESIGN.md（更新）                               # 来自 Phase 2
    ```
 
 3. **检查膨胀**：timeline.md 或 changelog.md 超过 100 行时，旧记录归档。
+
+**边界**：由 `forge-design` 追加本次设计阶段的一条汇总历史。`forge-interaction-design` 和 `forge-visual-design` 作为子阶段运行时不再各自追加历史；只有直接调用这些子 skill 时才维护自己的历史。
 
 ## 完成提示
 

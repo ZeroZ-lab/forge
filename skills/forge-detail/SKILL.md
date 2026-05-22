@@ -16,22 +16,22 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 3. 如果不确定 → 问用户："这个项目有前端吗？"
 
 **加载组合**：
-- **有前端** → `db-design` + `api-design` + `frontend-design`
-- **纯后端** → `db-design` + `api-design`
-- **纯前端** → `frontend-design`
+- **有前端** → `forge-api-design` + `forge-db-design` + `forge-frontend-design`
+- **纯后端** → `forge-api-design` + `forge-db-design`
+- **纯前端** → `forge-frontend-design`
 
 ## 流程
 
 按以下顺序依次执行，每个 phase 完成后向用户确认再进入下一个：
 
-**Phase 1: 数据库设计**（如有后端）
-加载 `db-design` skill，完成 DB1-DB5 决策点。
+**Phase 1: API 设计**（如有后端）
+加载 `forge-api-design` skill，完成 D1-D7 决策点。先确定资源模型、端点、错误、权限、幂等、并发和认证。
 
-**Phase 2: API 设计**（如有后端）
-加载 `api-design` skill，完成 D1-D7 决策点。
+**Phase 2: 数据库设计**（如有后端）
+加载 `forge-db-design` skill，完成 DB1-DB5 决策点。数据库设计消费 Phase 1 的资源模型和查询模式，不在缺少 API 合约时先行表设计。
 
 **Phase 3: 前端设计**（如有前端）
-加载 `frontend-design` skill，完成 F1-F5 决策点。
+加载 `forge-frontend-design` skill，完成 F1-F5 决策点。
 
 ## 产出
 
@@ -44,7 +44,7 @@ docs/features/<feature>/
 ├── frontend/                # 有前端时
 │   ├── contract.md
 │   └── modules/*.md
-└── database/                # 复杂项目单独拆出
+└── database/                # 有后端时
     └── contract.md
 ```
 
@@ -67,6 +67,8 @@ docs/features/<feature>/
    ```
 
 3. **检查膨胀**：timeline.md 或 changelog.md 超过 100 行时，旧记录归档。
+
+**边界**：由 `forge-detail` 追加本次详设的一条汇总历史。`forge-api-design`、`forge-db-design`、`forge-frontend-design` 作为子阶段运行时不再各自追加历史；只有直接调用这些子 skill 时才维护自己的历史。
 
 ## 完成提示
 

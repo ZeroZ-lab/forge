@@ -16,14 +16,14 @@ description: 从 contract.md 验收条件推导测试场景——正常路径、
 ## 与上下游的边界
 
 **上游**：读 contract.md + modules/（验收条件 + 业务规则）+ plan.md（任务序列）
-**下游**：test-cases.md 交给 codegen（测试代码生成）和 test-strategy（测试策略）
+**下游**：testing/test-cases.md 交给 codegen（测试代码生成）和 test-strategy（测试策略）
 
 **和 test-strategy 的切法**：test-strategy 定义**怎么测**（类型+覆盖+Mock），test-cases 定义**测什么**（具体用例）
 **和 codegen 的切法**：test-cases 定义测试场景（输入+预期+验证点），codegen 按场景生成测试代码
 
 ## 方法论：场景覆盖
 
-### 第一步：映射（Map）
+### TC1: 映射（Map）
 
 从验收条件建立测试范围矩阵——确保每个验收条件都有对应测试。
 
@@ -36,7 +36,7 @@ description: 从 contract.md 验收条件推导测试场景——正常路径、
 
 **记录**：测试范围矩阵（验收条件 → 测试用例 → 优先级）
 
-### 第二步：正常（Happy Path）
+### TC2: 正常（Happy Path）
 
 为每个验收条件定义正常路径——功能在正常输入下按预期工作。
 
@@ -49,7 +49,7 @@ description: 从 contract.md 验收条件推导测试场景——正常路径、
 
 **记录**：正常路径测试清单（输入 + 预期输出 + 验证点）
 
-### 第三步：边界（Edge Cases）
+### TC3: 边界（Edge Cases）
 
 识别每个功能的边界值——空值、最大值、最小值、初始状态、并发。
 
@@ -62,7 +62,7 @@ description: 从 contract.md 验收条件推导测试场景——正常路径、
 
 **记录**：边界测试清单（边界值 + 预期行为 + 验证点）
 
-### 第四步：错误（Error Handling）
+### TC4: 错误（Error Handling）
 
 定义每种错误类型的处理方式——输入错误、权限错误、系统错误、超时。
 
@@ -75,7 +75,7 @@ description: 从 contract.md 验收条件推导测试场景——正常路径、
 
 **记录**：错误测试清单（错误类型 + 触发条件 + 预期响应）
 
-### 第五步：数据（Test Data）
+### TC5: 数据（Test Data）
 
 设计测试数据的构造、隔离和清理策略。
 
@@ -109,15 +109,15 @@ description: 从 contract.md 验收条件推导测试场景——正常路径、
 
 ```
 docs/features/<feature>/
-├── test-cases.md      # 测试范围矩阵 + 测试用例清单 + 数据策略
 └── testing/
-    └── contract.md    # 测试策略（来自 test-strategy）
+    ├── contract.md     # 测试策略（来自 test-strategy）
+    └── test-cases.md   # 测试范围矩阵 + 测试用例清单 + 数据策略
 ```
 
 ## 文档约束
 
-**test-cases.md 必须包含**：测试范围矩阵 · 正常/边界/错误测试用例 · 数据构造+隔离+清理策略 · 优先级（P0/P1/P2）
-**test-cases.md 不应包含**：具体测试代码（codegen）· 测试框架选择（test-strategy）· CI/CD 配置（deploy）
+**testing/test-cases.md 必须包含**：测试范围矩阵 · 正常/边界/错误测试用例 · 数据构造+隔离+清理策略 · 优先级（P0/P1/P2）
+**testing/test-cases.md 不应包含**：具体测试代码（codegen）· 测试框架选择（test-strategy）· CI/CD 配置（deploy）
 
 ## 模板
 
@@ -126,7 +126,7 @@ docs/features/<feature>/
 ## 入口/出口条件
 
 **入口**：有 contract.md + modules/ + plan.md（或用户已有代码）
-**出口**：test-cases.md 已生成 · 所有验收条件都有测试用例 · 正常+边界+错误全覆盖 · 数据策略已确定
+**出口**：testing/test-cases.md 已生成 · 所有验收条件都有测试用例 · 正常+边界+错误全覆盖 · 数据策略已确定
 
 ## 何时不使用
 
@@ -151,12 +151,12 @@ docs/features/<feature>/
 
 ## 历史维护（自动）
 
-完成后追加 `docs/timeline.md`：`### {日期} — {feature} 测试用例 · test-cases.md（{N} 验收条件 → {M} 测试用例）`。追加 `changelog.md`。超 100 行时归档。
+完成后追加 `docs/timeline.md`：`### {日期} — {feature} 测试用例 · testing/test-cases.md（{N} 验收条件 → {M} 测试用例）`。追加 `changelog.md`。超 100 行时归档。作为 `forge-test` 或 `forge-plan` 子阶段运行时不单独追加历史，由编排 skill 写汇总记录。
 
 ## 完成提示
 
 ```
-✅ 测试用例完成！test-cases.md 已生成。
+✅ 测试用例完成！testing/test-cases.md 已生成。
 
 下一步你可以：
   /forge-codegen  — 按测试用例生成测试代码

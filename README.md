@@ -152,9 +152,9 @@ Forge 一次对话完成：
 - 模块识别 + 依赖图
 - 每个任务 = 一个完整用户路径（schema + API + UI）
 - 拓扑排序（串行/并行/门控）
-- **自动推导测试用例**（test-cases.md）
+- **自动推导测试用例**（testing/test-cases.md）
 
-产出：`plan.md` + `test-cases.md`
+产出：`plan.md` + `testing/test-cases.md`
 
 ### 7. 生成代码（自然语言）
 
@@ -174,7 +174,7 @@ AI 读取 `plan.md`，按任务序列生成 `src/` + `tests/`。
 - 测试类型 + 覆盖策略 + Mock 策略
 - 从验收条件推导测试场景
 
-产出：`testing/contract.md` + `test-cases.md`
+产出：`testing/contract.md` + `testing/test-cases.md`
 
 ### 9. 发布规划
 
@@ -189,7 +189,7 @@ AI 读取 `plan.md`，按任务序列生成 `src/` + `tests/`。
 
 产出：`deploy/contract.md`
 
-## 8 阶段 × 18 个 Skill
+## 8 阶段 × 14 个领域 Skill
 
 | 阶段 | Skill | 产出 |
 |------|-------|------|
@@ -205,10 +205,12 @@ AI 读取 `plan.md`，按任务序列生成 `src/` + `tests/`。
 | ④ 任务 | plan | plan.md |
 | ⑤ 构建 | codegen | src/ + tests/ |
 | ⑥ 测试 | test-strategy | testing/contract.md |
-| | test-cases | test-cases.md |
+| | test-cases | testing/test-cases.md |
 | ⑦ 交付 | deploy | deploy/contract.md |
 
-## 9 个决策 Command
+另有 4 个编排 skill：`forge-init`、`forge-design`、`forge-detail`、`forge-test`。安装后总计 18 个 `forge-*` skill。
+
+## 8 个决策 Command
 
 只有需要决策的阶段才用 command。command 加载 skill，引导人类做选择。
 

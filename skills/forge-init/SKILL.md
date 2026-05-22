@@ -12,13 +12,13 @@ description: 项目初始化——一次对话完成业务对齐 + 技术选型 
 按以下顺序依次执行，每个 phase 完成后向用户确认再进入下一个：
 
 **Phase 1: 业务对齐**
-加载 `business-alignment` skill，完成 BA1-BA5 决策点。
+加载 `forge-business-alignment` skill，完成 BA1-BA4 决策点。
 
 **Phase 2: 技术选型**
-加载 `technical-design` skill，完成 TD1-TD5 决策点。
+加载 `forge-technical-design` skill，完成 TD1-TD5 决策点。
 
 **Phase 3: 设计系统**
-加载 `visual-design` skill，完成 V1-V5 决策点。
+加载 `forge-visual-design` skill，完成 V1-V5 决策点。项目初始化没有 interaction-spec 时，按项目级模式生成 DESIGN.md：从业务目标、产品气质、目标用户和页面类型推导最小设计系统，不要求 feature 级交互规格。
 
 ## 产出
 
@@ -82,6 +82,10 @@ my-project/
 - 纯后端 API → 跳过 Phase 3
 - 已有 project.md → 从缺失的 phase 开始
 - 内部工具 → Phase 3 简化为最小设计系统
+
+## 历史维护边界
+
+`forge-init` 作为编排 skill 负责写入本次初始化的一条 timeline 记录。被加载的子 skill 只更新对应产物内容；除非用户直接调用子 skill，否则不单独追加 timeline，避免同一次初始化生成多条重复历史。
 
 ## 完成提示
 
