@@ -25,13 +25,13 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 按以下顺序依次执行，每个 phase 完成后向用户确认再进入下一个：
 
 **Phase 1: API 设计**（如有后端）
-加载 `forge-api-design` skill，完成 D1-D7 决策点。先确定资源模型、端点、错误、权限、幂等、并发和认证。
+加载 `forge-api-design` skill，走完 D1-D7 方法论步骤。先确定资源模型、端点、错误、权限、幂等、并发和认证。
 
 **Phase 2: 数据库设计**（如有后端）
-加载 `forge-db-design` skill，完成 DB1-DB5 决策点。数据库设计消费 Phase 1 的资源模型和查询模式，不在缺少 API 合约时先行表设计。
+加载 `forge-db-design` skill，走完 DB1-DB5 方法论步骤。数据库设计消费 Phase 1 的资源模型和查询模式，不在缺少 API 合约时先行表设计。
 
 **Phase 3: 前端设计**（如有前端）
-加载 `forge-frontend-design` skill，完成 F1-F5 决策点。
+加载 `forge-frontend-design` skill，走完 F1-F5 方法论步骤。
 
 ## 产出
 
@@ -50,25 +50,7 @@ docs/features/<feature>/
 
 ## 历史维护（自动）
 
-完成后自动执行，不需要人工触发：
-
-1. **追加 feature changelog.md**（如不存在则创建）：
-   ```markdown
-   ### v{版本} — {日期} — 技术详设
-   - **触发**：{用户说的一句话}
-   - **产出**：contract.md + modules/（{N} 个模块）
-   - **决策**：{关键决策编号，如 D1-D7, DB1-DB5, F1-F5}
-   ```
-
-2. **追加 docs/timeline.md**（如不存在则创建）：
-   ```markdown
-   ### {日期} — {feature} 技术详设
-   - 新增：contract.md + {N} 个模块
-   ```
-
-3. **检查膨胀**：timeline.md 或 changelog.md 超过 100 行时，旧记录归档。
-
-**边界**：由 `forge-detail` 追加本次详设的一条汇总历史。`forge-api-design`、`forge-db-design`、`forge-frontend-design` 作为子阶段运行时不再各自追加历史；只有直接调用这些子 skill 时才维护自己的历史。
+完成后追加 `docs/timeline.md` + feature `changelog.md`（一条汇总记录）。`forge-api-design`、`forge-db-design`、`forge-frontend-design` 作为子阶段时不单独追加历史。超 100 行时归档。
 
 ## 完成提示
 

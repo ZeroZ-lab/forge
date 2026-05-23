@@ -12,10 +12,10 @@ description: 设计阶段编排——交互规格 + 视觉规范，一次对话�
 按以下顺序依次执行，每个 phase 完成后向用户确认再进入下一个：
 
 **Phase 1: 交互设计**
-加载 `forge-interaction-design` skill，完成 I1-I5 决策点。
+加载 `forge-interaction-design` skill，走完 I1-I5 方法论步骤。
 
 **Phase 2: 视觉设计**
-加载 `forge-visual-design` skill，完成 V1-V5 决策点。
+加载 `forge-visual-design` skill，走完 V1-V5 方法论步骤。
 
 ## 产出
 
@@ -31,24 +31,7 @@ DESIGN.md（更新）                               # 来自 Phase 2
 
 ## 历史维护（自动）
 
-完成后自动执行，不需要人工触发：
-
-1. **追加 feature changelog.md**（如不存在则创建）：
-   ```markdown
-   ### v{版本} — {日期} — 交互+视觉设计
-   - **触发**：{用户说的一句话}
-   - **产出**：interaction-spec.md + DESIGN.md 更新
-   ```
-
-2. **追加 docs/timeline.md**（如不存在则创建）：
-   ```markdown
-   ### {日期} — {feature} 设计完成
-   - 新增：interaction-spec.md + DESIGN.md 更新
-   ```
-
-3. **检查膨胀**：timeline.md 或 changelog.md 超过 100 行时，旧记录归档。
-
-**边界**：由 `forge-design` 追加本次设计阶段的一条汇总历史。`forge-interaction-design` 和 `forge-visual-design` 作为子阶段运行时不再各自追加历史；只有直接调用这些子 skill 时才维护自己的历史。
+完成后追加 `docs/timeline.md` + feature `changelog.md`（一条汇总记录）。`forge-interaction-design` 和 `forge-visual-design` 作为子阶段时不单独追加历史。超 100 行时归档。
 
 ## 完成提示
 
