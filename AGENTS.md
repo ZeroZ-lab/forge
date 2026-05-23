@@ -37,24 +37,26 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 
 ### 8 阶段 × 14 个领域 Skill + 4 个编排 Skill
 
-| 阶段 | Skill | 核心方法论 | 参与角色 | 产出 |
-|------|-------|-----------|---------|------|
+| 阶段 | Skill | 方法论 | 角色 | 产出 |
+|------|-------|--------|------|------|
 | **⓪ 探索** | brainstorm | 可能性展开 | 产品 + 业务方 | 方向简报 |
 | **① 定义** | business-alignment | 需求验证 | 产品 + 业务方 | 项目章程 |
 | | requirements | 约束定义 | 产品 + 开发 | PRD |
 | **② 设计** | interaction-design | 流程优先 | 产品 + 设计师 | 交互规格 |
-| | visual-design | 系统化一致 | 设计师 | 设计系统 |
+| | visual-design | 设计决策系统 | 设计师 | 设计系统 |
 | | technical-design | 架构权衡 | 架构师 + 开发 | 技术方案 |
 | **③ 详设** | api-design | 资源导向 | 后端开发 | API 合约 |
 | | frontend-design | 组件驱动 | 前端开发 | 组件规格 |
 | | db-design | 模型驱动 | 后端开发 | 数据模型 |
 | **④ 任务** | plan | 垂直切片 | 开发 | 任务分解 |
-| **⑤ 构建** | codegen | 文档驱动 | AI | src/ + tests/ |
+| **⑤ 构建** | codegen | 文档投影 | AI | src/ + tests/ |
 | **⑥ 测试** | test-strategy | 风险分层 | QA + 开发 | 测试策略 |
 | | test-cases | 场景覆盖 | QA | 测试用例 |
 | **⑦ 交付** | deploy | 可逆发布 | DevOps + 开发 | 发布清单 |
 
-编排 skill：`forge-init`、`forge-design`、`forge-detail`、`forge-test`。它们不新增方法论，只负责按上下文加载领域 skill、合并产物和维护汇总历史。
+编排 skill：`forge-init`、`forge-design`、`forge-detail`、`forge-test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。
+
+> 每个 skill 的完整方法论、AI 角色、边界声明和引导技巧见 `skills/forge-*/SKILL.md`。
 
 ### 阶段间的产物传递
 
@@ -77,16 +79,6 @@ Project 级   → 这个项目的技术选型和设计语言              很少
 Feature 级   → 这个功能的全流程产物                     迭代时变
 ```
 
-```
-改动频率：
-  AGENTS.md       核心原则永远不改
-  project.md      项目建立时写一次，技术栈升级时改
-  DESIGN.md       项目建立时写一次，设计语言升级时改
-  PRD.md          功能立项时写，需求变更时改
-  contract.md     技术设计时写，大重构时改
-  modules/*.md    每次迭代都可能改
-```
-
 ### 项目级文件
 
 项目级文件在各阶段按需生成，不存在则自动创建：
@@ -101,7 +93,7 @@ my-project/
 └── CLAUDE.md              # Claude Code 入口（指向 AGENTS.md）
 ```
 
-**project.md 是源头，AGENTS.md / CLAUDE.md 是它的投影。** 跟代码一样 — contract.md 生成代码，project.md 生成项目配置文件。
+**project.md 是源头，AGENTS.md / CLAUDE.md 是它的投影。** contract.md 生成代码，project.md 生成项目配置文件。
 
 | 文件 | 告诉 AI | 生成来源 |
 |------|---------|---------|
@@ -110,176 +102,36 @@ my-project/
 | AGENTS.md | 你应该怎么工作 | project.md + DESIGN.md 投影 |
 | CLAUDE.md | 读 AGENTS.md | 入口指针 |
 
-### Skill 目录结构
-
-```
-forge/skills/
-├── forge-brainstorm/               # ⓪ 可能性探索（B1-B5）
-├── forge-init/                     # 项目初始化编排（+ agents-template + claude-template）
-├── forge-business-alignment/       # ① 业务对齐（BA1-BA4）
-├── forge-define/                   # ① 需求文档（R1-R5）
-├── forge-design/                   # 设计阶段编排
-├── forge-interaction-design/       # ② 交互设计（I1-I5）
-├── forge-visual-design/            # ② 视觉设计（V1-V5）
-├── forge-technical-design/         # ② 技术设计（TD1-TD5）
-├── forge-detail/                   # 详设阶段编排
-├── forge-api-design/               # ③ API 详设（D1-D7）
-├── forge-frontend-design/          # ③ 前端详设（F1-F5）
-├── forge-db-design/                # ③ 数据库详设（DB1-DB5）
-├── forge-plan/                     # ④ 任务分解（P1-P5）
-├── forge-codegen/                  # ⑤ 代码生成
-├── forge-test/                     # 测试阶段编排
-├── forge-test-strategy/            # ⑥ 测试策略（T1-T5）
-├── forge-test-cases/               # ⑥ 测试用例（TC1-TC5）
-├── forge-deploy/                   # ⑦ 部署发布（RL1-RL5）
-└── shared/                         # 共享模板（contract + module + changelog）
-```
-
-> **Flat list 纪律**：Claude Code 只发现 `skills/` 一级子目录的 SKILL.md，不支持嵌套。Skill 目录名全局唯一，用命名前缀区分阶段归属。
-
-### 各阶段 Skill 详述
-
-#### ⓪ 探索（Explore）
-
-**brainstorm（可能性探索）**
-- **角色**：产品 + 业务方
-- **方法论**：发散收敛 — 先展开可能性空间，再圈定值得深入的方向
-- **问**：痛点具体是什么？当前怎么解决的？想过哪些方向？有没有参考产品？
-- **原则**：发散阶段不评判不收敛 · 每个方向要有"什么场景下它是对的" · 探索产出是判断标准不是决策
-- **记录**：方向地图（3-5 个方向 + 各自适用场景）+ 判断标准 + 下一步行动
-
-#### ① 定义（Define）
-
-**business-alignment（业务对齐）**
-- **角色**：产品 + 业务方
-- **方法论**：需求验证 — 在写代码之前验证假设
-- **问**：要解决什么问题？当前用户怎么做的？MVP 最小可以是什么？成功的衡量标准？
-- **原则**：先验证需求再验证方案 · 最贵的错误是做了没人用的东西
-- **记录**：目标 + 用户画像 + MVP 范围 + 成功指标
-
-**requirements（需求文档）**
-- **角色**：产品 + 开发
-- **方法论**：约束定义 — 需求不是说"要什么"，是说"不要什么"
-- **问**：有哪些用户角色？核心场景 TOP 5？非功能约束（性能/安全/合规）？优先级？
-- **原则**：每个需求必须有验收条件 · 不验收的需求 = 不存在的需求
-- **记录**：用户故事 + 验收条件 + 优先级 + 范围排除
-
-#### ② 设计（Design）
-
-**interaction-design（交互设计）**
-- **角色**：产品 + 设计师
-- **方法论**：流程优先 — 先画用户怎么走，再画界面长什么样
-- **问**：核心操作路径？每步需要什么信息 + 能做什么操作？异常流程？导航模式？
-- **原则**：核心操作 3 步内完成 · 每个操作必须有反馈 · 错误处理 > 错误预防
-- **记录**：用户流程 + 信息架构 + 核心线框 + 组件复用清单
-
-**visual-design（视觉设计）**
-- **角色**：设计师
-- **方法论**：系统化一致 — 不是每个页面单独设计，而是建立系统后消费
-- **问**：有品牌指南吗？产品气质？暗色模式？多平台？无障碍要求？
-- **原则**：一致性 > 创意 · 设计系统 > 单页面设计 · 留白是最强的设计工具
-- **记录**：色板 + 字体 + 间距系统 + 组件库规范
-
-**technical-design（技术设计）**
-- **角色**：架构师 + 开发
-- **方法论**：架构权衡 — 每个选择都是 trade-off，不存在最优解
-- **问**：读写比？一致性要求？流量 + 性能要求？团队技术栈？单体还是微服务？
-- **原则**：架构决策不可逆要慎重 · 组件选择可替换可以大胆 · 简单方案优先
-- **记录**：系统架构 + 技术栈 + 服务划分 + 部署架构
-
-#### ③ 详设（Detail）
-
-**api-design（API 详设）**
-- D1-D7: 资源建模 / 分页 / 错误 / 权限 / 幂等 / 并发 / 认证
-
-**frontend-design（前端详设）**
-- F1-F5: 框架 / 状态管理 / 样式 / 数据请求 / 表单
-
-**db-design（数据库详设）**
-- DB1-DB5: 选型 / ID策略 / 索引 / 迁移 / 软删除
-
-#### ④ 任务（Plan）
-
-**plan（任务分解）**
-- **角色**：开发
-- **方法论**：垂直切片 — 每个任务交付一个完整、可独立验证的用户路径
-- **问**：contract.md 里有哪些模块？模块间的依赖关系？哪些可以并行？
-- **原则**：垂直切片不水平分层 · 每个任务 3-7 步 · 禁止占位符（TBD/TODO） · RED → GREEN → REFACTOR
-- **记录**：依赖图 + 任务清单（每任务：目标 + 文件 + 步骤 + 验证标准）+ 拓扑（serial/parallel/gated）
-
-#### ⑤ 构建（Build）
-
-**codegen（代码生成）**
-- **角色**：AI
-- **方法论**：文档驱动 — 代码是 contract.md 的投影，不是手写的
-- **问**：（无业务问题，从文档推导）
-- **原则**：生成代码必须注释决策编号 · 两次生成应该行为一致
-- **记录**：ADR（架构决策记录）
-
-#### ⑥ 测试（Test）
-
-**test-strategy（测试策略）**
-- T1-T5: 测试类型 / 覆盖策略 / 测试数据 / Mock / CI 集成
-
-**test-cases（测试用例）**
-- **角色**：QA + 开发
-- **方法论**：场景覆盖 — 测试用例不是代码的翻译，是用户场景的投影
-- **问**：PRD 验收条件有哪些？正常流程？边界值？异常场景？并发？
-- **原则**：测试用例 = 验收条件的可执行版本 · 先写正常再写边界再写异常
-- **记录**：用例清单（按场景分类）+ 优先级 + 预期结果
-
-#### ⑦ 交付（Ship）
-
-**deploy（部署发布）**
-- **角色**：DevOps + 开发
-- **方法论**：可逆发布 — 每次发布都必须能在 5 分钟内回滚
-- **问**：发布频率？审批流程？灰度策略？回滚方案？值班安排？
-- **原则**：发布清单 = 上线前的最后防线 · 没有回滚方案 = 不允许发布
-- **记录**：发布清单 + 灰度策略 + 回滚步骤 + 监控告警
-
 ### Skill vs 产物文档
 
 **Skill 永远抽象，产物文档永远具体。** 这是 Forge 架构的核心分离。
 
-```
-Skill（抽象，不过期）              产物文档（具体，每个项目不同）
-───────────────────────────────────────────────────────────────
-方法论："资源导向设计"              本项目选了什么：父子资源
-不变原则："团队经验 > 技术先进性"    本项目团队熟悉：React 19
-业务问题："日活多少？"              本项目答案：< 10 万
-                                  ↓
-                                  模型搜索后推荐具体方案
-                                  人类确认
-                                  写入产物文档（PRD / contract.md / plan.md）
-```
-
 **Skill 里只有三样东西：**
-
 1. **方法论** — 恒久不变的设计思想（需求验证、流程优先、架构权衡、测试金字塔、可逆发布）
 2. **业务问题** — 只有人类能回答的（用户是谁、场景是什么、数据量多大、谁来做）
 3. **不变原则** — 永远成立的判断（"团队经验 > 技术先进性""没有测试 = 不存在的功能"）
 
-**Skill 里不写具体技术。** 不写 React、PostgreSQL、Docker。具体技术由模型搜索最新方案后推荐，人类确认后写入产物文档。
+**Skill 里不写具体技术。** 具体技术由模型搜索最新方案后推荐，人类确认后写入产物文档。这样 skill 不会因为技术更替而过期。
 
-这样 skill 不会因为技术更替而过期。2027 年 Solid.js 比 React 好了，skill 不需要改，模型自然会推荐新方案。
+---
 
-### 实际项目中的文档结构
+## 文档结构
+
+### 实际项目
 
 ```
 my-project/
 │
 ├── docs/
 │   ├── project.md                    # Project 级（~100 行，很少变）
-│   │                                   技术决策 + 共享约束 + feature 索引
-│   ├── timeline.md                   # 项目时间线（最近 10 条详细，≤100 行）
-│   ├── timeline/                     # 时间线归档（按年/季度）
+│   ├── timeline.md                   # 项目时间线（最近 10 条，≤100 行）
+│   ├── timeline/                     # 时间线归档
 │   │
 │   └── features/
-│       │
 │       ├── task-management/          # 一个功能 = 一棵文档树
 │       │   ├── contract.md           #   feature 级共享骨架（~80 行）
 │       │   ├── changelog.md          #   功能变更历史（最近 5 条，≤100 行）
-│       │   ├── changelog/            #   变更历史归档（旧版本）
+│       │   ├── changelog/            #   变更历史归档
 │       │   ├── api/                  #   API 领域
 │       │   │   ├── contract.md       #     只记 feature 特有决策
 │       │   │   └── modules/          #     共享决策指向 project.md
@@ -287,31 +139,13 @@ my-project/
 │       │   ├── database/             #   数据库领域
 │       │   ├── testing/              #   测试领域
 │       │   └── deploy/               #   部署领域
-│       │
 │       └── billing/                  # 另一个功能，同样结构
 │
 ├── DESIGN.md                         # Project 级（设计系统）
-├── AGENTS.md                         # Project 级（AI 行为指令，从 project.md 投影）
+├── AGENTS.md                         # Project 级（AI 行为指令）
 ├── CLAUDE.md                         # Project 级（入口指针）
-│
 ├── src/                              # 全部由 AI 从文档生成
 └── tests/                            # 全部由 AI 从文档生成
-```
-
-**Feature 级文档引用 Project 级：**
-
-```markdown
-# Task Management — API
-
-> 继承 project.md 共享决策，本文件只记录 feature 特有内容。
-
-## Feature 特有决策
-
-| # | 决策 | 选择 | 理由 |
-|---|------|------|------|
-| D1 | 资源建模 | 父子（Task + Comment） | 评论从属于任务 |
-
-> 分页、错误格式、认证、幂等、并发 → 见 project.md，不重复。
 ```
 
 ### 领域间的引用关系
@@ -345,9 +179,7 @@ deploy/contract.md ────────→ Dockerfile, .github/workflows/
 testing/contract.md ───────→ tests/ 结构和策略
 ```
 
----
-
-## feature 级 contract.md
+### Feature 级 contract.md
 
 每个功能的顶层 contract.md 放跨领域共享信息：
 
@@ -385,7 +217,6 @@ api/contract.md         ~100 行   几乎不变
 api/modules/*.md        100-200 行  迭代时修改
 frontend/contract.md    ~80 行    几乎不变
 frontend/modules/*.md   100-200 行  迭代时修改
-...
 ```
 
 AI 按需加载：
@@ -403,58 +234,37 @@ AI 按需加载：
 
 ---
 
-## 完整使用流程
+## 命令系统
 
 ### 流程选择
 
-不是每个项目都需要走完 8 个阶段。根据场景选择：
+不是每个项目都需要走完 8 个阶段：
 
-| 流程 | Command 链 | 适用场景 |
-|------|-----------|---------|
+| 流程 | 链路 | 适用场景 |
+|------|------|---------|
 | **完整** | brainstorm → init → define → design → detail → plan | 新项目从零开始 |
 | **标准** | define → detail → plan | 已有项目，新功能 |
 | **快速** | detail → plan | 已有项目，小功能迭代 |
 | **最小** | detail | 已有项目，加一个端点 |
 
-**跳过原则**：
-- 已有 project.md + DESIGN.md → 跳过 /forge-init
-- 需求已经很明确 → 跳过 /forge-brainstorm 和 /forge-define
-- 纯后端 API → 跳过 /forge-design
-- 只有一个端点 → 跳过 /forge-plan
+**跳过原则**：已有 project.md + DESIGN.md → 跳过 /forge-init · 需求明确 → 跳过 brainstorm 和 define · 纯后端 → 跳过 design · 一个端点 → 跳过 plan
 
-### Command 体系（决策编排）
+### 决策编排
 
-只有需要决策的阶段才用 command。command 是编排概念——加载对应 skill，引导人类做选择。可通过自然语言（"做技术详设"）或直接调用 skill（`/api-design`）触发。
+只有需要决策的阶段才用 command。决策用 command，执行用自然语言。
 
-| Command | 阶段 | 做什么 | 加载的 skill |
-|---------|------|--------|-------------|
-| `/forge-brainstorm` | ⓪ 探索 | 发散可能性 + 圈定方向（可选） | brainstorm |
-| `/forge-init` | 项目初始化 | 业务目标 + 技术选型 + 设计系统 → project.md + DESIGN.md | business-alignment + technical-design + visual-design |
-| `/forge-define` | ① 定义 | 需求分析 + PRD 编写 | requirements |
-| `/forge-design` | ② 设计 | 交互规格 + 视觉规范 | interaction-design + visual-design |
-| `/forge-detail` | ③ 详设 | 按需加载领域 skill | api-design + db-design（+ frontend-design 按需） |
-| `/forge-plan` | ④ 任务 | 垂直切片 + 依赖图 + 自动推导测试 | plan + test-cases |
-| `/forge-test` | ⑥ 测试 | 测试策略 + 测试用例 | test-strategy + test-cases |
-| `/forge-deploy` | ⑦ 交付 | 灰度策略 + 回滚方案 + 监控告警 | deploy |
+| Command | 阶段 | 做什么 | 加载的 skill | 产出 |
+|---------|------|--------|-------------|------|
+| `/forge-brainstorm` | ⓪ 探索 | 发散可能性 + 圈定方向 | brainstorm | `idea-brief.md` |
+| `/forge-init` | 初始化 | 业务 + 技术 + 设计 | business-alignment + technical-design + visual-design | `project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
+| `/forge-define` | ① 定义 | 需求分析 + PRD | requirements | `PRD.md` |
+| `/forge-design` | ② 设计 | 交互 + 视觉 | interaction-design + visual-design | `interaction-spec.md` + `DESIGN.md` |
+| `/forge-detail` | ③ 详设 | API + DB + 前端（按需） | api-design + db-design (+ frontend-design) | `contract.md` + `modules/` |
+| `/forge-plan` | ④ 任务 | 垂直切片 + 自动推导测试 | plan + test-cases | `plan.md` + `testing/test-cases.md` |
+| `/forge-test` | ⑥ 测试 | 测试策略 + 测试用例 | test-strategy + test-cases | `testing/contract.md` + `testing/test-cases.md` |
+| `/forge-deploy` | ⑦ 交付 | 灰度 + 回滚 + 监控 | deploy | `deploy/contract.md` |
 
-**原则：决策用 command，执行用自然语言。**
-
-#### 编排细节
-
-| Command | 执行顺序 | 产出 |
-|---------|---------|------|
-| `/forge-brainstorm` | B1→B5 逐步引导 | `idea-brief.md` |
-| `/forge-init` | Phase 1 业务对齐（BA1-BA4）→ Phase 2 技术选型（TD1-TD5）→ Phase 3 设计系统（V1-V5），一次对话完成 | `project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
-| `/forge-define` | R1→R5 逐步引导 | `PRD.md` |
-| `/forge-design` | Phase 1 交互设计（I1-I5）→ Phase 2 视觉设计（V1-V5） | `interaction-spec.md` + 更新 `DESIGN.md` |
-| `/forge-detail` | Phase 1 API（D1-D7）→ Phase 2 数据库（DB1-DB5）→ Phase 3 前端（F1-F5，按需） | `contract.md` + `modules/*.md` |
-| `/forge-plan` | P1→P5 逐步引导，完成后自动推导 testing/test-cases | `plan.md` + `testing/test-cases.md` |
-| `/forge-test` | Phase 1 测试策略（T1-T5）→ Phase 2 测试用例（TC1-TC5） | `testing/contract.md` + `testing/test-cases.md` |
-| `/forge-deploy` | RL1→RL5 逐步引导 | `deploy/contract.md` |
-
-**detail 按需加载判断**：读 project.md 技术选型 → 有没有前端框架？读已有文档 → 有没有 frontend/ 目录？不确定 → 问用户。
-
-> 编排逻辑已内联到 AGENTS.md，不再需要独立的 command 文件。用户可通过自然语言（"做技术详设"）或直接调用 `/forge-brainstorm`、`/forge-init` 等 skill 触发。
+**detail 按需加载**：读 project.md → 有前端框架？读已有文档 → 有 frontend/ 目录？不确定 → 问用户。
 
 ### 自然语言（无需决策，AI 直接执行）
 
@@ -467,266 +277,30 @@ AI 按需加载：
 | "React 升级到 20" | 改 project.md → 级联更新 → 重新生成 |
 | "整个重写" | 重写所有 contract.md → 删代码 → 重新生成 |
 
-### 用户视角 vs AI 视角
-
-```
-显式触发                              自然语言触发                        AI 在背后做的
-────────────────────────────────────────────────────────────────────────────────────
-/forge-brainstorm 团队提效    "我们想做个内部工具"              →  加载 forge-brainstorm
-                                                                     → 引导痛点探索 + 方向展开
-                                                                     → 生成 idea-brief.md
-
-/forge-init                       "我要做任务管理系统"              →  加载 forge-business-alignment + forge-technical-design + forge-visual-design
-                                                                     → 一次对话问完所有业务问题
-                                                                     → 搜索方案 → 推荐 → 确认
-                                                                     → 生成项目级文件（如不存在）
-
-/forge-define 任务管理            "先做任务管理功能的需求"          →  加载 forge-define skill
-                                                                     → 引导需求分析（用户角色？场景？验收条件？）
-                                                                     → 生成 PRD.md
-
-/forge-design 任务管理            "做任务管理的交互设计"            →  加载 forge-interaction-design + forge-visual-design
-                                                                     → 引导交互设计 + 视觉规范
-                                                                     → 生成 interaction-spec.md + 更新 DESIGN.md
-
-/forge-detail 任务管理            "做任务管理的技术详设"            →  加载 forge-api-design + forge-db-design + forge-frontend-design
-                                                                     → 按领域逐个引导详设
-                                                                     → 生成 contract.md + modules/*.md
-
-/forge-plan 任务管理              "拆分任务管理的任务"              →  加载 forge-plan + forge-test-cases
-                                                                     → 垂直切片 + 依赖图 + 执行顺序
-                                                                     → 生成 plan.md + testing/test-cases.md
-
-                                  "生成代码"                        →  读 plan.md → 按任务序列生成 src/ + tests/
-
-/forge-test 任务管理              "做任务管理的测试规划"            →  加载 forge-test-strategy + forge-test-cases
-                                                                     → 测试策略 + 测试用例
-                                                                     → 生成 testing/contract.md + testing/test-cases.md
-
-/forge-deploy 任务管理            "做任务管理的发布规划"            →  加载 forge-deploy
-                                                                     → 灰度策略 + 回滚方案 + 监控告警
-                                                                     → 生成 deploy/contract.md
-
-                                  "创建任务时报 500"                →  读 contract.md + 代码 → 找分歧 → 修代码
-
-                                  "给任务加标签功能"                →  detail + build 的组合（加模块）
-
-                                  "分页换成 cursor"                 →  改决策 → 级联更新文档 + 重新生成
-
-                                  "React 升级到 20"                 →  改 project.md → 级联更新 → 重新生成
-
-                                  "整个重写"                        →  重写所有 contract.md → 删代码 → 重新生成
-```
-
-### 完整对话示例
-
-```
-你：/forge-brainstorm 我们团队想做一个内部工具提效
-
-AI：（加载 forge-brainstorm）
-  → 痛点具体是什么？当前工作流？想过哪些方向？
-  → 搜索：行业里怎么解决类似问题的？
-  → 展开 3-5 个方向
-  → 你判断：任务管理方向值得做
-  → 生成：idea-brief.md
-
-你：/forge-init 团队协作任务管理系统，面向中小企业，1000 DAU，5 人团队
-
-AI：（加载 3 个 skill，一次对话）
-  → 业务对齐：目标用户？MVP 范围？成功指标？
-  → 技术设计：读写比？一致性？团队技术栈？
-  → 视觉设计：品牌？气质？暗色模式？
-  → 生成项目级文件（project.md / DESIGN.md / AGENTS.md / CLAUDE.md）
-
-你：/forge-define 任务管理
-
-AI：（加载 forge-define skill）
-  → 用户角色有哪些？核心场景 TOP 5？
-  → 验收条件怎么定？优先级怎么排？
-  → 生成：PRD.md
-
-你：/forge-design 任务管理
-
-AI：（加载 forge-interaction-design + forge-visual-design）
-  → 核心操作路径？导航模式？
-  → 组件复用？色彩系统？
-  → 生成：interaction-spec.md + 更新 DESIGN.md
-
-你：/forge-detail 任务管理
-
-AI：（加载 forge-api-design + forge-db-design + forge-frontend-design）
-  → API: D1-D7 → contract.md + modules/tasks.md
-  → 数据库: DB1-DB5 → contract.md
-  → 前端: F1-F5 → contract.md + modules/*.md
-
-你：/forge-plan 任务管理
-
-AI：（加载 forge-plan + forge-test-cases）
-  → contract.md 有哪些模块？依赖关系？
-  → 垂直切片：每个任务 = 一个完整用户路径
-  → 生成：plan.md（任务清单 + 执行顺序）+ testing/test-cases.md
-
-你："生成代码"
-
-AI：读 plan.md → 按任务序列生成 src/ + tests/
-
-你：/forge-test 任务管理
-
-AI：（加载 forge-test-strategy + forge-test-cases）
-  → 测试策略：测试类型？覆盖范围？Mock 策略？
-  → 测试用例：正常路径？边界情况？错误处理？
-  → 生成：testing/contract.md + testing/test-cases.md
-
-你：/forge-deploy 任务管理
-
-AI：（加载 forge-deploy）
-  → 运行环境？容器化？CI/CD？灰度策略？
-  → 回滚方案？监控告警？
-  → 生成：deploy/contract.md
-```
-
-### 迭代模式
-
-```
-"给任务加标签功能"：
-  AI：
-    → 加载相关领域 skill
-    → 参考已有模块模式
-    → api/modules/labels.md（新建）
-    → frontend/modules/labels.md（新建）
-    → database/（追加表）
-    → 各 changelog.md 追加
-    → 生成新文件
-
-"分页从 page 换成 cursor"：
-  AI：
-    → 加载受影响的 skill
-    → 改 api/contract.md D2
-    → 改所有 api/modules（分页参数）
-    → 改 frontend/modules（分页组件）
-    → 追加各 changelog.md
-    → 重新生成受影响文件
-
-"整个重写"：
-  AI：
-    → 重写各领域 contract.md
-    → 删 src/ + tests/ + infra/
-    → 重新生成全部
-```
-
-### Skill 加载策略
-
-| Command | 加载的 skill | 原因 |
-|---------|-------------|------|
-| `/forge-brainstorm` | forge-brainstorm | 探索阶段，产出方向地图 |
-| `/forge-init` | forge-business-alignment + forge-technical-design + forge-visual-design | 项目级决策需要业务 + 技术 + 设计三方对齐 |
-| `/forge-define` | forge-define | 需求定义是独立阶段，产出 PRD |
-| `/forge-design` | forge-interaction-design + forge-visual-design | 交互和视觉通常同步进行 |
-| `/forge-detail` | forge-api-design + forge-db-design（+ forge-frontend-design 按需） | 根据项目上下文选择加载：有前端加 forge-frontend-design，纯后端不加 |
-| `/forge-plan` | forge-plan + forge-test-cases | 任务分解后自动推导测试用例 |
-| `/forge-test` | forge-test-strategy + forge-test-cases | 测试策略 + 测试用例一次完成 |
-| `/forge-deploy` | forge-deploy | 发布规划是独立阶段 |
-
-**detail 加载判断依据**：
-- 读 project.md 技术选型 → 有没有前端框架？
-- 读已有文档 → 有没有 frontend/ 目录？
-- 如果不确定 → 问用户："这个项目有前端吗？"
-
-**以下操作无需 command，自然语言直接触发：**
-
-| 自然语言 | 加载的 skill | 原因 |
-|---------|-------------|------|
-| "生成代码" | forge-codegen | 代码生成从文档推导 |
-| "创建任务报 500" | 无（读 contract + 代码） | bug 修复是执行动作，不是决策 |
-| "给任务加标签" | forge-detail 相关领域 | 参考已有模式，追加新模块 |
-| "分页换成 cursor" | 受影响领域 | 级联更新所有引用该决策的文件 |
-| "React 升级到 20" | forge-technical-design + 受影响领域 | 技术栈变更影响项目级 + 下游 |
-| "整个重写" | 全部 skill | 等同于重新走一遍完整流程 |
-
-### 历史记录（自动维护）
-
-每次文档变更后，AI 自动更新两层历史记录，不需要 skill，不需要人工触发。
-
-#### 两层结构
-
-| 文件 | 受众 | 粒度 | 回答 |
-|------|------|------|------|
-| `docs/timeline.md` | 人 + AI | 一条 = 一次发布 | 项目怎么演进的？ |
-| `docs/features/<feature>/changelog.md` | AI | 一条 = 一个决策 | 这个功能怎么变过来的？ |
-
-#### timeline.md 格式（项目级）
-
-```markdown
-# 项目时间线
-
-## 最近记录（详细，最多 10 条）
-
-### 2026-05-25 — v1.2 任务标签
-- 新增：标签功能（API + 前端 + DB）
-- 触发：用户反馈需要分类筛选
-- 影响：3 个领域，+1 个决策（D8）
-
-### 2026-05-22 — v1.1 分页改为 cursor
-- 变更：api/contract.md D2（page → cursor）
-- 触发：数据量增长，page 分页性能退化
-- 影响：api/modules/* + frontend/modules/task-list.md
+> 完整对话示例和迭代模式详见 `references/usage-examples.md`。
 
 ---
 
-## 更早（压缩，每年一段）
+## 历史记录（自动维护）
 
-### 2026-Q1
-v1.0 初始发布（任务管理 CRUD）→ v1.1 分页优化 → v1.2 标签功能
-详见 timeline/2026-q1.md
-```
+每次文档变更后，AI 自动更新两层历史记录。
 
-#### changelog.md 格式（feature 级）
+| 文件 | 粒度 | 格式 |
+|------|------|------|
+| `docs/timeline.md` | 一条 = 一次发布 | 日期 + 变更摘要 + 触发原因 + 影响范围 |
+| `docs/features/<feature>/changelog.md` | 一条 = 一个决策 | 触发 + 决策 + 影响 + 类型 |
 
-```markdown
-# Task Management — Changelog
+**触发规则**：contract.md / modules/*.md 变更 → 追加 changelog · 阶段完成 → 追加 timeline · 新增 feature → 新建 changelog + 追加 timeline · 跨 feature 共享决策变更 → 追加 timeline 并标注影响
 
-## 最近 5 个版本（详细）
-
-### v1.2 — 2026-05-25 — 任务标签
-- **触发**：用户反馈重复创建类似任务
-- **决策**：D8 标签作为 task 子资源（备选：独立资源）
-- **影响**：api +modules/labels.md, frontend +modules/labels.md, database +labels 表
-- **类型**：纯追加，不影响已有功能
-
----
-
-## 更早（索引）
-
-v1.0-v1.1 → changelog/v1.0-v1.1.md
-```
-
-#### 自动触发规则
-
-| 时机 | AI 自动做 |
-|------|----------|
-| 任意 contract.md / modules/*.md 变更 | 追加 feature changelog.md 一条记录 |
-| `/forge-plan` 或 `/forge-deploy` 完成 | 追加 timeline.md 一条记录 |
-| 新增 feature | 新建 changelog.md，追加 timeline.md |
-| 跨 feature 的共享决策变更 | 追加 timeline.md，标注影响的 feature |
-
-#### 压缩规则（膨胀控制）
+**压缩规则**：
 
 | 文件 | 上限 | 超出时 |
 |------|------|--------|
-| `timeline.md` | 100 行 | 旧条目压缩成年度摘要，详细移到 `timeline/年.md` |
-| `changelog.md` | 100 行 | 旧版本移到 `changelog/v*.md` 归档 |
+| `timeline.md` | 100 行 | 旧条目压缩成年度摘要，移到 `timeline/年.md` |
+| `changelog.md` | 100 行 | 旧版本移到 `changelog/v*.md` |
 | `timeline/年.md` | 200 行 | 按季度拆分 |
 
-#### AI 怎么用历史记录
-
-```
-场景：改分页逻辑
-
-AI 行为：
-  1. 读 timeline.md → 看到 v1.1 改过 page → cursor（触发原因：性能）
-  2. 读 changelog.md → 看到 v1.1 的详细决策和备选方案
-  3. 如果要改 D2 → 知道上次为什么选 cursor，避免重复犯错
-```
+**AI 怎么用**：改分页逻辑 → 读 timeline.md 看到 v1.1 改过 page → cursor（触发：性能）→ 读 changelog.md 看详细决策 → 知道上次为什么选 cursor，避免重复犯错。
 
 ---
 
@@ -739,85 +313,13 @@ Forge 的 AGENTS.md 和项目实际使用的 AGENTS.md 是**不同的文件**。
 ```
 Forge 的 AGENTS.md（方法论）
        │
-       │ 各阶段按需生成
+       │ forge-init 投影生成
        ▼
 项目的 AGENTS.md（具体指令）  ← 实际项目开发读的是这个
        │
        │ 每次 AI session
        ▼
 代码
-```
-
-**实际项目里，AI 读的是项目自己的文件，不是 Forge 的：**
-
-```
-my-project/
-├── CLAUDE.md          ← AI 入口："读 AGENTS.md"
-├── AGENTS.md          ← 告诉 AI：在这个项目里怎么工作
-├── docs/project.md    ← 技术决策（用什么框架、什么数据库）
-├── docs/timeline.md   ← 项目时间线（近期详细 + 远期压缩）
-├── DESIGN.md          ← 设计语言（什么颜色、什么组件模式）
-└── docs/features/
-    └── task-management/
-        ├── contract.md
-        ├── changelog.md           ← 功能变更历史
-        └── api/modules/tasks.md  ← AI 写代码时读这个
-```
-
-### forge init 生成项目的 AGENTS.md
-
-Forge 的 skill 在一次 `forge init` 对话中，把所有方法论投影成项目专属指令：
-
-```markdown
-# my-project — AI 行为指令
-
-> 从 project.md + DESIGN.md 投影生成，不要手写。
-
-## 技术栈（来自 project.md）
-- API: Hono + TypeScript
-- 前端: React 19 + Tailwind CSS
-- 数据库: PostgreSQL 16 + Drizzle
-- 测试: Vitest + testcontainers
-
-## 工作流程（来自 Forge 方法论）
-- 新功能 → 先写 contract.md，再生成代码
-- 加模块 → 参考已有模块模式，追加 modules/*.md
-- 改决策 → 更新 contract.md，重新生成受影响文件
-- 每个关键逻辑分支注释决策编号（D1-D7, AC1-AC8）
-
-## 历史维护（自动，每次文档变更后执行）
-- 改完文档 → 追加 docs/features/<feature>/changelog.md（触发 + 产出 + 决策）
-- 完成阶段 → 追加 docs/timeline.md（一条 = 一次发布）
-- 每次开发前 → 读 timeline.md + changelog.md 了解上下文
-- timeline.md 或 changelog.md 超 100 行 → 旧记录归档到 timeline/ 或 changelog/
-
-## 设计约束（来自 DESIGN.md）
-- 主色: #2563EB
-- 间距: 4px 基准网格
-- 组件模式: 受控组件 + 组合模式
-
-## 文档引用
-- 技术决策 → docs/project.md
-- 设计系统 → DESIGN.md
-- 功能合约 → docs/features/<feature>/contract.md
-```
-
-### 实际开发时，AI 只读项目文件
-
-```
-你（在 my-project 目录）："加一个标签功能"
-
-AI 的行为：
-  1. 读 CLAUDE.md → "读 AGENTS.md"
-  2. 读项目的 AGENTS.md → 知道工作流程
-  3. 读 docs/project.md → 知道技术栈
-  4. 读 docs/timeline.md → 知道项目近期演进（避免重复决策）
-  5. 读 docs/features/task-management/contract.md → 知道已有结构
-  6. 读 docs/features/task-management/changelog.md → 知道这个功能的变更历史
-  7. 参考 api/modules/tasks.md → 知道模块格式
-  8. 写 api/modules/labels.md + 生成代码
-  9. 自动追加 changelog.md 一条记录（触发 + 决策 + 影响）
-  10. 自动追加 timeline.md 一条记录
 ```
 
 **Forge 的 AGENTS.md 只在 `forge init` 时被加载，之后项目靠自己的文件运转。**
@@ -831,7 +333,7 @@ Forge AGENTS.md     →  编译器源码
 项目代码            →  输出
 ```
 
-用户不需要安装 Forge 源码来运行项目，就像用户不需要编译器源码来运行程序。各阶段 command 就是"编译"步骤——把方法论编译成项目专属指令。
+用户不需要安装 Forge 源码来运行项目，就像不需要编译器源码来运行程序。
 
 ### 资源引用链
 
@@ -839,55 +341,11 @@ Forge AGENTS.md     →  编译器源码
 
 ```
 决策 Skill（抽象）     →  "问日活多少，推荐方案，记录决策"
-forge-init（编排器）   →  加载子 skill + 模板 → 生成项目文件（project.md, AGENTS.md, CLAUDE.md）
+forge-init（编排器）   →  加载子 skill + 模板 → 生成项目文件
 项目 AGENTS.md        →  告诉 AI 文件在哪、格式是什么
 ```
 
-**原因：**
-- 决策 Skill 引用模板 = 把执行逻辑混进方法论
-- 编排型 Skill 是唯一可以引用模板的（它的职责就是生成文件）
-- 模板和文件路径是项目级决策，不是方法论
-
-**引用关系只存在于项目文件中：**
-- 项目 AGENTS.md → 引用 project.md 和 DESIGN.md
-- Feature contract.md → 引用领域级 contract.md
-- 模块文件 → 互相引用（api/modules/*.md ↔ frontend/modules/*.md）
-
----
-
-## Forge 项目本身
-
-```
-forge/
-├── AGENTS.md                       # 本文件（含核心理念）
-│
-├── skills/                         # 决策协议（18 个，flat list）
-│   ├── forge-brainstorm/           # ⓪ 可能性探索（references/idea-brief-template.md）
-│   ├── forge-init/                 # 项目初始化编排（references/agents-template.md + claude-template.md）
-│   ├── forge-business-alignment/   # ① 业务对齐（references/project-template.md）
-│   ├── forge-define/               # ① 需求文档（references/prd-template.md）
-│   ├── forge-design/               # 设计阶段编排
-│   ├── forge-interaction-design/   # ② 交互设计（references/interaction-template.md）
-│   ├── forge-visual-design/        # ② 视觉设计（references/design-system-template.md）
-│   ├── forge-technical-design/     # ② 技术设计
-│   ├── forge-detail/               # 详设阶段编排
-│   ├── forge-api-design/           # ③ API 详设（D1-D7）
-│   ├── forge-frontend-design/      # ③ 前端详设（F1-F5）
-│   ├── forge-db-design/            # ③ 数据库详设（DB1-DB5）
-│   ├── forge-plan/                 # ④ 任务分解（references/plan-template.md）
-│   ├── forge-codegen/              # ⑤ 代码生成
-│   ├── forge-test/                 # 测试阶段编排
-│   ├── forge-test-strategy/        # ⑥ 测试策略（T1-T5）
-│   ├── forge-test-cases/           # ⑥ 测试用例（references/test-cases-template.md）
-│   ├── forge-deploy/               # ⑦ 部署发布（references/release-template.md）
-│   │
-│   └── shared/                     # 共享模板（3 个）
-│       ├── contract-template.md
-│       ├── module-template.md
-│       └── changelog-template.md
-├── .claude-plugin/plugin.json      # Claude Code 插件
-└── .codex-plugin/plugin.json       # Codex CLI 插件
-```
+引用关系只存在于项目文件中：项目 AGENTS.md → project.md + DESIGN.md · Feature contract.md → 领域 contract.md · 模块文件 → 互相引用。
 
 ---
 
@@ -900,62 +358,46 @@ forge/
 | 层 | 回答的问题 | 如果缺失 |
 |---|-----------|---------|
 | WHAT（需求 + 验收条件） | 做什么？怎么算对？ | 测试无法推导，边界条件遗漏 |
-| WHY（决策 + 理由 + 拒绝） | 为什么不用 cursor 分页？ | 新 session 会重新做一遍决策，且可能选不同方案 |
+| WHY（决策 + 理由 + 拒绝） | 为什么不用 cursor 分页？ | 新 session 会重新做决策，可能选不同方案 |
 | HOW（数据模型 + 接口合约 + 技术栈） | 字段叫什么？状态码多少？ | 两次生成的实现会 diverge |
-| CONSTRAINTS（安全 + 性能 + 兼容） | 多租户怎么隔离？索引怎么建？ | 生成的代码缺少非功能性考量 |
+| CONSTRAINTS（安全 + 性能 + 兼容） | 多租户怎么隔离？ | 生成的代码缺少非功能性考量 |
 
-**WHY 层是 Forge 独有的价值。** 传统文档只记 WHAT 和 HOW。但"为什么选 page 而不是 cursor""为什么错误用 RFC 9457 而不是轻量格式"——这些信息一旦丢失，未来模型无法做出一致的扩展决策。
+**WHY 层是 Forge 独有的价值。** 传统文档只记 WHAT 和 HOW——但选择理由一旦丢失，未来模型无法做出一致的扩展决策。
 
-### 接口合约段的格式足够结构化
+**关键教训**：接口合约用缩进伪代码（人类可读 > 机器可解析）· 目录路径必须无歧义 · 代码注释引用决策编号（D1-D7）形成可追溯链 · 验证文档完备性的唯一方法是删除代码后重建。
 
-缩进伪代码描述（Auth / Request / Response / Errors / Notes），不是 YAML 也不是 JSON Schema，但两次独立生成的 AI 都正确解析了。人类可读 > 机器可解析。
-
-### 目录结构路径必须无歧义
-
-**踩坑**：contract.md 写了 `tests/` 在 `src/` 外面，但 agent 生成为 `src/tests/`。
-
-**修复**：目录结构段用完整路径，或在结构图上方加说明。
-
-### 代码注释引用决策编号 = 可追溯链
-
-生成代码时，每个关键逻辑分支注释对应的决策编号（D1-D7、AC1-AC8）。人类审查代码时可直接跳转 contract.md 理解 WHY。
-
-### 验证文档完备性的唯一方法
-
-**删除代码后重建。** 两个隔离 session 只读同一份 contract.md 能生成行为一致的 API = 文档完备。
-
-### 两次生成结果
-
-| 维度 | 一致性 |
-|------|--------|
-| 文件结构 | 13/14（测试目录位置有偏差） |
-| 技术栈 | ✅ 完全一致 |
-| 业务逻辑 | ✅ 一致 |
-| 错误码 | ✅ 一致 |
-| 测试覆盖 | ✅ 一致 |
-| 代码风格 | 差异 ~20%，不影响 API 行为 |
-
-**API 行为一致性 100%。**
+> 详细验证结果见 `references/validation-lessons.md`。
 
 ---
 
-## 状态
+## Forge 项目本身
 
-- ✅ 全生命周期架构已设计（8 阶段 × 18 个 skill）
-- ✅ 18 个 Skill 全部完成（SKILL.md 均已编写，flat list 结构）
-- ✅ 8 个 Command 编排已合入 AGENTS.md（brainstorm / init / define / design / detail / plan / test / deploy）
-- ✅ 13 个文档模板已完成（+agents-template + claude-template，分散在各 skill references/）
-- ✅ forge-init 模板链完整（project.md + DESIGN.md + AGENTS.md + CLAUDE.md 各有模板）
-- ✅ 自动历史记录系统（timeline.md + changelog.md，规则内嵌 skill + 项目 AGENTS.md 模板）
-- ✅ 流程选择机制已加入（完整 / 标准 / 快速 / 最小 4 种流程）
-- ✅ /forge-detail 按需加载（根据项目上下文选择领域 skill）
-- ✅ /forge-plan 后自动推导测试用例（testing/test-cases 不再需要手动触发）
-- ✅ project-charter 合入 project.md（小项目不需要独立文件）
-- ✅ Skill 抽象化：只含方法论 + 业务问题 + 不变原则，不写死具体技术
-- ✅ task-management 文档树覆盖 5 个领域，可作为结构样例；implementation/ 是投影示例，不作为可运行验证证据
-- ✅ 三层文档体系已建立（Root / Project / Feature）
-- ✅ Command 编排已合入 AGENTS.md（消除 command/skill 重复，编排逻辑内联）
-- ✅ 双触发模式（决策用 command 或自然语言，执行用自然语言）
-- ✅ 投影链机制已明确（Forge AGENTS.md → 项目 AGENTS.md → 代码）
-- ✅ Plugin 配置已就绪（.claude-plugin + .codex-plugin；不再维护 hooks）
-- ✅ hooks 已移除，Forge 核心保持为 skills + 文档协议
+```
+forge/
+├── AGENTS.md                        # 本文件
+├── references/                      # 补充文档（使用示例、验证教训）
+├── skills/                          # 18 个决策协议（flat list）
+│   ├── forge-brainstorm/            # ⓪ 探索
+│   ├── forge-init/                  # 初始化编排（+ agents/claude 模板）
+│   ├── forge-business-alignment/    # ① 业务对齐
+│   ├── forge-define/                # ① 需求文档
+│   ├── forge-design/                # 设计编排
+│   ├── forge-interaction-design/    # ② 交互设计
+│   ├── forge-visual-design/         # ② 视觉设计
+│   ├── forge-technical-design/      # ② 技术设计
+│   ├── forge-detail/                # 详设编排
+│   ├── forge-api-design/            # ③ API 详设
+│   ├── forge-frontend-design/       # ③ 前端详设
+│   ├── forge-db-design/             # ③ 数据库详设
+│   ├── forge-plan/                  # ④ 任务分解
+│   ├── forge-codegen/               # ⑤ 代码生成
+│   ├── forge-test/                  # 测试编排
+│   ├── forge-test-strategy/         # ⑥ 测试策略
+│   ├── forge-test-cases/            # ⑥ 测试用例
+│   ├── forge-deploy/                # ⑦ 部署发布
+│   └── shared/                      # 共享模板（contract + module + changelog）
+├── .claude-plugin/plugin.json       # Claude Code 插件
+└── .codex-plugin/plugin.json        # Codex CLI 插件
+```
+
+> **Flat list 纪律**：Claude Code 只发现 `skills/` 一级子目录的 SKILL.md，不支持嵌套。Skill 目录名全局唯一，用命名前缀区分阶段归属。
