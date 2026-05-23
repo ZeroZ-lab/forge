@@ -15,7 +15,26 @@
     "ai-agent",
     "contract-first"
   ],
-  "skills": "./skills/",
+  "skills": [
+    "./skills/forge-brainstorm",
+    "./skills/forge-init",
+    "./skills/forge-business-alignment",
+    "./skills/forge-define",
+    "./skills/forge-design",
+    "./skills/forge-interaction-design",
+    "./skills/forge-visual-design",
+    "./skills/forge-technical-design",
+    "./skills/forge-detail",
+    "./skills/forge-api-design",
+    "./skills/forge-db-design",
+    "./skills/forge-frontend-design",
+    "./skills/forge-plan",
+    "./skills/forge-codegen",
+    "./skills/forge-test",
+    "./skills/forge-test-strategy",
+    "./skills/forge-test-cases",
+    "./skills/forge-deploy"
+  ],
   "interface": {
     "displayName": "Forge",
     "shortDescription": "文档即源代码——决策协议驱动的 AI 开发工作流",

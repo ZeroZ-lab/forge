@@ -53,7 +53,6 @@ assert(
 );
 
 assert(packageJson.scripts?.validate === 'node scripts/validate.mjs', 'package.json: missing scripts.validate');
-assert(claudePlugin.skills === './skills/', '.claude-plugin/plugin.json: skills must point to ./skills/');
 
 const skillsDir = path.join(root, 'skills');
 const forgeSkillDirs = fs
@@ -63,6 +62,15 @@ const forgeSkillDirs = fs
   .sort();
 
 assert(forgeSkillDirs.length === 18, `expected 18 forge-* skills, found ${forgeSkillDirs.length}`);
+
+const expectedSkillPaths = forgeSkillDirs.map((skillName) => `./skills/${skillName}`).sort();
+const manifestSkillPaths = Array.isArray(claudePlugin.skills) ? [...claudePlugin.skills].sort() : [];
+
+assert(Array.isArray(claudePlugin.skills), '.claude-plugin/plugin.json: skills must explicitly enumerate installed skills');
+assert(
+  JSON.stringify(manifestSkillPaths) === JSON.stringify(expectedSkillPaths),
+  '.claude-plugin/plugin.json: skills list must match skills/forge-* exactly',
+);
 
 for (const skillName of forgeSkillDirs) {
   const skillPath = `skills/${skillName}/SKILL.md`;
