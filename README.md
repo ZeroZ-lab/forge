@@ -37,7 +37,7 @@ claude plugin install --path .
 node scripts/validate.mjs
 ```
 
-自检会校验版本同步、21 个 `forge-*` skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及示例 implementation 的非运行边界。
+自检会校验版本同步、21 个 `forge-*` skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 投影回流。
 
 ### 个人 Skill 安装
 
@@ -157,7 +157,7 @@ my-project/
 └── tests/
 ```
 
-本仓库自带的 `docs/features/task-management/` 是文档树示例；其中 `implementation/` 是从合约投影出的结构示例，不是可直接运行的 sample app。它没有独立依赖、入口和可执行测试，不能作为构建通过的证据。
+本仓库自带的 `docs/features/task-management/` 是文档树示例，只保留 contract、modules、testing 和 deploy 等文档产物。
 
 ## 核心原则
 

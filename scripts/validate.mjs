@@ -15,6 +15,18 @@ function exists(relativePath) {
   return fs.existsSync(path.join(root, relativePath));
 }
 
+function filesUnder(relativePath) {
+  const absolutePath = path.join(root, relativePath);
+  if (!fs.existsSync(absolutePath)) return [];
+
+  return fs.readdirSync(absolutePath, { withFileTypes: true }).flatMap((entry) => {
+    const childPath = path.join(relativePath, entry.name);
+    if (entry.isDirectory()) return filesUnder(childPath);
+    if (entry.isFile()) return [childPath];
+    return [];
+  });
+}
+
 function fail(message) {
   failures.push(message);
 }
@@ -220,24 +232,16 @@ for (const marker of ['### RL1:', '### RL2:', '### RL3:', '### RL4:', '### RL5:'
   assert(deploySkill.includes(marker), `skills/forge-deploy/SKILL.md: missing ${marker}`);
 }
 
-const implementationReadme = 'docs/features/task-management/implementation/README.md';
-assert(exists(implementationReadme), `${implementationReadme}: missing boundary README`);
-if (exists(implementationReadme)) {
-  const content = read(implementationReadme);
-  assert(content.includes('not a runnable sample application'), `${implementationReadme}: must state non-runnable boundary`);
-  assert(content.includes('Do not cite it as evidence'), `${implementationReadme}: must forbid runtime validation claims`);
-}
-
-const implementationFiles = fs
-  .readdirSync(path.join(root, 'docs/features/task-management/implementation/src/tests'), { withFileTypes: true })
-  .filter((entry) => entry.isFile())
-  .map((entry) => `docs/features/task-management/implementation/src/tests/${entry.name}`);
-
-const hasPlaceholderTests = implementationFiles.some((file) => read(file).includes('expect(true).toBe(true)'));
 assert(
-  !hasPlaceholderTests || exists(implementationReadme),
-  'implementation placeholder tests require a boundary README',
+  !exists('docs/features/task-management/implementation'),
+  'docs/features/task-management/implementation: remove non-runnable projection examples from the repo',
 );
+
+for (const file of filesUnder('docs/features')) {
+  if (file.includes('/implementation/src/tests/') && read(file).includes('expect(true).toBe(true)')) {
+    fail(`${file}: placeholder implementation test is not allowed`);
+  }
+}
 
 if (failures.length > 0) {
   console.error('Forge validation failed:\n');
