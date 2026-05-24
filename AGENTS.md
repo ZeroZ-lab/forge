@@ -54,7 +54,7 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 | **⑥ 测试** | test-strategy | 风险分层 | QA + 开发 | 测试策略 |
 | | test-cases | 场景覆盖 | QA | 测试用例 |
 | | fe-accept | 四维验收 | QA + 设计 | 验收报告 |
-| **⑥.5 审查** | review | 文档驱动审查 | AI + 用户 | 审查报告 |
+| **⑥.5 审查** | review | subagent 独立审查 | AI + 用户 | 审查报告 |
 | **⑦ 交付** | deploy | 可逆发布 | DevOps + 开发 | 发布清单 |
 
 编排 skill：`forge-init`、`forge-design`、`forge-detail`、`forge-test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。
@@ -454,7 +454,7 @@ forge/
 │   ├── forge-test-strategy/         # ⑥ 测试策略
 │   ├── forge-test-cases/            # ⑥ 测试用例
 │   ├── forge-fe-accept/             # ⑥ 前端质量验收
-│   ├── forge-review/                # ⑥.5 文档驱动审查（投影+约束+决策+契约）
+│   ├── forge-review/                # ⑥.5 subagent 独立审查（文档审查+代码审查）
 │   ├── forge-deploy/                # ⑦ 部署发布
 │   └── shared/                      # 共享模板（contract + module + changelog）
 ├── .claude-plugin/plugin.json       # Claude Code 插件

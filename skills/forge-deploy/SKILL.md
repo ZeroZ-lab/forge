@@ -126,7 +126,7 @@ docs/features/<feature>/deploy/
 
 ## 入口/出口条件
 
-**入口**：有 src/ + tests/ + testing/test-cases.md（或用户已有代码和测试）· forge-review 审查报告通过（如有）
+**入口**：有 src/ + tests/ + testing/test-cases.md（或用户已有代码和测试）· forge-review 代码审查通过（subagent 独立审查，如有）
 **出口**：deploy/contract.md 已生成 · 部署流程已定义 · 回滚步骤已明确（具体命令）· 监控告警已配置 · 发布清单已就绪
 
 ## 何时不使用
