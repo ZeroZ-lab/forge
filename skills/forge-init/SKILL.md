@@ -34,7 +34,7 @@ my-project/
 
 | 文件 | 模板 | 来源 |
 |------|------|------|
-| docs/project.md | `forge-business-alignment/references/project-template.md` | Phase 1 business-alignment |
+| docs/project.md | `shared/project-template.md` | Phase 1 business-alignment |
 | DESIGN.md | `forge-fe-system/references/design-system-template.md` | Phase 3 fe-system |
 | AGENTS.md | `${CLAUDE_SKILL_DIR}/references/agents-template.md` | Phase 1+2+3 投影 |
 | CLAUDE.md | `${CLAUDE_SKILL_DIR}/references/claude-template.md` | 入口指针 |

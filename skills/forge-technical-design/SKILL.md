@@ -143,7 +143,7 @@ description: 架构权衡与技术选型——每个选择都是 trade-off，不
 
 ## 模板
 
-使用 `${CLAUDE_SKILL_DIR}/../forge-business-alignment/references/project-template.md` 填充「技术决策」段落。核心结构：
+使用 `${CLAUDE_SKILL_DIR}/../shared/project-template.md` 填充「技术决策」段落。核心结构：
 1. **架构模式表** — 选择 × 理由 × 被拒方案
 2. **技术选型表** — 层 × 选择 × 版本 × 理由 × 被拒方案
 3. **服务划分表** — 服务 × 职责 × 通信方式 × 数据库

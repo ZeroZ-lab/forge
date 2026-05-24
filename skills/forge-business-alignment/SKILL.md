@@ -133,7 +133,7 @@ brainstorm 回答"这个方向值得探索吗"，business-alignment 回答"我�
 
 ## 模板
 
-使用 `${CLAUDE_SKILL_DIR}/references/project-template.md` 填充「业务目标」段落。核心结构：
+使用 `${CLAUDE_SKILL_DIR}/../shared/project-template.md` 填充「业务目标」段落。核心结构：
 1. **用户画像表** — 角色 × 描述 × 核心诉求 × 使用场景
 2. **成功指标表** — 指标 × 当前值 × 目标值 × 评估时间
 
