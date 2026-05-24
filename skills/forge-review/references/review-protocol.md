@@ -1,0 +1,85 @@
+# Review Protocol
+
+## 文档审查维度
+
+### 1. 文档完整性
+
+- 是否有 WHAT：需求、验收条件、边界。
+- 是否有 WHY：选择理由、拒绝方案、决策编号。
+- 是否有 HOW：数据模型、接口、状态码、目录映射。
+- 是否有 CONSTRAINTS：安全、性能、兼容、权限、租户。
+
+### 2. 跨文档一致
+
+- project.md 技术选型是否和 contract.md 一致。
+- DESIGN.md 是否被 frontend modules 消费。
+- API modules 是否和 database contract 对齐。
+- plan 是否覆盖所有 modules 和验收条件。
+- testing 是否从 contract 和 modules 推导，而不是另起一套。
+
+### 3. 可消费性
+
+- 路径是否无歧义。
+- 入口文件是否明确。
+- 公共接口和内部函数是否区分。
+- 参数类型签名是否完整。
+- 模块依赖关系是否可重建。
+
+## 代码审查维度
+
+### 1. 投影一致
+
+- 路由、schema、service、db、tests 是否来自合约。
+- 错误码、响应结构、权限、幂等是否一致。
+- 共享约束是否贯穿所有相关文件。
+
+### 2. 决策遵循
+
+- 关键逻辑是否引用决策编号。
+- 代码是否偷偷做了未记录的新决策。
+- 文档变更是否追加 changelog/timeline。
+
+### 3. 测试真实性
+
+- 测试是否覆盖正常、边界、错误。
+- 是否存在 placeholder 测试。
+- 是否只验证实现细节而没验证合约行为。
+
+## 报告格式
+
+```markdown
+# Review Report — {feature}
+
+## Findings
+### [P0/P1/P2] {问题}
+- File:
+- Evidence:
+- Impact:
+- Recommendation:
+
+## Open Questions
+- ...
+
+## Summary
+- Scope:
+- Files reviewed:
+- Residual risk:
+```
+
+## Subagent Prompt 要点
+
+让独立审查者明确：
+
+- 你的任务是找失败模式，不是改代码。
+- 优先报告 P0/P1。
+- 每个问题必须有文件、证据、影响和修复建议。
+- 不要把缺少运行证据说成通过。
+- 如果文档和代码冲突，以文档作为源头，除非文档本身缺失或矛盾。
+
+## 复审规则
+
+阻塞项修复后必须重新审查同一范围。复审报告只需覆盖：
+
+- 原问题是否关闭。
+- 是否引入新问题。
+- 是否仍有残余风险。

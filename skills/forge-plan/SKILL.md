@@ -1,6 +1,6 @@
 ---
 name: plan
-description: 把 contract.md 拆成可执行任务序列——垂直切片、依赖图、拓扑排序、关键路径。用户说"拆任务"、"任务分解"、"执行计划"、运行 /plan 或有 contract.md 需要转成开发计划时触发。
+description: 把 contract.md 拆成可执行任务序列——垂直切片、依赖图、拓扑排序、关键路径。用户说"拆任务"、"任务分解"、"执行计划"、或有 contract.md 需要转成开发计划时触发。
 ---
 
 # Plan — 任务阶段
@@ -15,7 +15,7 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 
 ## 与上下游的边界
 
-**上游**：读 contract.md + modules/（来自 /detail），知道有哪些模块和接口合约
+**上游**：读 contract.md + modules/（来自 detail 阶段），知道有哪些模块和接口合约
 **下游**：plan.md 交给代码生成（按任务序列生成 src/ + tests/）· 从验收条件自动推导 testing/test-cases.md（详见 forge-test-cases skill）
 
 **和 detail 的切法**：detail 定义**做什么**（合约+模块），plan 定义**怎么做**（任务+顺序）
@@ -123,7 +123,7 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 
 ## 入口/出口条件
 
-**入口**：有 contract.md + modules/（来自 /detail）或用户已有详设文档
+**入口**：有 contract.md + modules/（来自 detail 阶段）或用户已有详设文档
 **出口**：plan.md 已生成 · 自动推导 testing/test-cases.md（从验收条件 + 验证方式） · 用户确认进入代码生成
 
 ## 何时不使用
@@ -163,6 +163,6 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 
 下一步你可以：
   生成代码       — 按任务序列生成 src/ + tests/
-  /test    — 测试策略 + 测试用例
-  /deploy  — 灰度策略 + 回滚方案 + 监控告警
+  test 阶段    — 测试策略 + 测试用例
+  发布规划 — 灰度策略 + 回滚方案 + 监控告警
 ```

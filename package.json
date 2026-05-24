@@ -1,6 +1,6 @@
 {
   "name": "forge",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "文档是源代码，代码是投影。模型越强，同一份文档生成的代码越好。",
   "scripts": {
     "validate": "node scripts/validate.mjs"

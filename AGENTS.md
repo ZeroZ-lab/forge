@@ -237,7 +237,7 @@ AI 按需加载：
 
 ---
 
-## 命令系统
+## 使用流程
 
 ### 流程选择
 
@@ -250,26 +250,26 @@ AI 按需加载：
 | **快速** | detail → plan | 已有项目，小功能迭代 |
 | **最小** | detail | 已有项目，加一个端点 |
 
-**跳过原则**：已有 project.md + DESIGN.md → 跳过 /init · 需求明确 → 跳过 brainstorm 和 define · 纯后端 → 跳过 design · 一个端点 → 跳过 plan
+**跳过原则**：已有 project.md + DESIGN.md → 跳过 init · 需求明确 → 跳过 brainstorm 和 define · 纯后端 → 跳过 design · 一个端点 → 跳过 plan
 
-### 决策编排
+### Skill 编排
 
-只有需要决策的阶段才用 command。决策用 command，执行用自然语言。
+Forge 不维护独立的指令层。用户用自然语言表达目标，运行时由 skill 描述触发对应协议。需要人类决策的阶段由 skill 停下来呈现选项；不需要决策的执行动作由 AI 直接完成。
 
-| Command | 阶段 | 做什么 | 加载的 skill | 产出 |
-|---------|------|--------|-------------|------|
-| `/brainstorm` | ⓪ 探索 | 发散可能性 + 圈定方向 | brainstorm | `idea-brief.md` |
-| `/init` | 初始化 | 业务 + 技术 + 设计 | business-alignment + technical-design + fe-system | `project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
-| `/define` | ① 定义 | 需求分析 + PRD | requirements | `PRD.md` |
-| `/design` | ② 设计 | 交互 + 视觉 | interaction-design + fe-system | `interaction-spec.md` + `DESIGN.md` |
-| `/detail` | ③ 详设 | API + DB + 前端（按需） | api-design + db-design (+ frontend-design) | `contract.md` + `modules/` |
-| `/plan` | ④ 任务 | 垂直切片 + 自动推导测试 | plan + test-cases | `plan.md` + `testing/test-cases.md` |
-| `/test` | ⑥ 测试 | 测试策略 + 测试用例 | test-strategy + test-cases | `testing/contract.md` + `testing/test-cases.md` |
-| `/deploy` | ⑦ 交付 | 灰度 + 回滚 + 监控 | deploy | `deploy/contract.md` |
+| 阶段 | 做什么 | 加载的 skill | 产出 |
+|------|--------|-------------|------|
+| ⓪ 探索 | 发散可能性 + 圈定方向 | brainstorm | `idea-brief.md` |
+| 初始化 | 业务 + 技术 + 设计 | business-alignment + technical-design + fe-system | `project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
+| ① 定义 | 需求分析 + PRD | requirements | `PRD.md` |
+| ② 设计 | 交互 + 视觉 | interaction-design + fe-system | `interaction-spec.md` + `DESIGN.md` |
+| ③ 详设 | API + DB + 前端（按需） | api-design + db-design (+ frontend-design) | `contract.md` + `modules/` |
+| ④ 任务 | 垂直切片 + 自动推导测试 | plan + test-cases | `plan.md` + `testing/test-cases.md` |
+| ⑥ 测试 | 测试策略 + 测试用例 | test-strategy + test-cases | `testing/contract.md` + `testing/test-cases.md` |
+| ⑦ 交付 | 灰度 + 回滚 + 监控 | deploy | `deploy/contract.md` |
 
 **detail 按需加载**：读 project.md → 有前端框架？读已有文档 → 有 frontend/ 目录？不确定 → 问用户。
 
-### 自然语言（无需决策，AI 直接执行）
+### 自然语言执行
 
 | 你说 | AI 做什么 |
 |------|----------|
@@ -369,9 +369,7 @@ forge-init（编排器）   →  加载子 skill + 模板 → 生成项目文件
 
 **WHY 层是 Forge 独有的价值。** 传统文档只记 WHAT 和 HOW——但选择理由一旦丢失，未来模型无法做出一致的扩展决策。
 
-### 验证 #2 — 2026-05-24 十轮迭代后重建
-
-Robot Simulation 项目：从零设计 → MVP → 10 轮迭代（激光雷达、自主漫游、航点、A* 寻路、轨迹、多机器人避障、统计、录制回放、主题、帮助）→ 删除代码 → 从文档重建 → 对比。
+### 验证 #2 — 多轮迭代后重建
 
 #### 重建结果
 
@@ -383,7 +381,7 @@ Robot Simulation 项目：从零设计 → MVP → 10 轮迭代（激光雷达�
 | 数据模型一致率 | 95% |
 | 总代码行偏差 | -6% |
 
-#### 文档做得好的（重建成功）
+#### 文档做得好的
 
 - **模块边界清晰** — 每个 .md 一个模块，职责单一
 - **数据模型精确** — 字段和类型被完整重建
@@ -391,7 +389,7 @@ Robot Simulation 项目：从零设计 → MVP → 10 轮迭代（激光雷达�
 - **changelog 全量覆盖** — 10 轮迭代的功能都被完整保留
 - **设计系统 token** — CSS 变量被完整复用
 
-#### 文档缺失导致的问题（改进方向）
+#### 文档缺失导致的问题
 
 | 问题 | 原因 | 改进 |
 |------|------|------|
@@ -422,9 +420,9 @@ Robot Simulation 项目：从零设计 → MVP → 10 轮迭代（激光雷达�
 
 ### 通用教训
 
-**关键教训**：接口合约用缩进伪代码（人类可读 > 机器可解析）· 目录路径必须无歧义 · 代码注释引用决策编号（D1-D7）形成可追溯链 · 验证文档完备性的唯一方法是删除代码后重建 · 迭代 10 轮后文档仍然是唯一的信息源 · 编排层（入口 + 事件绑定 + 调用链）是最容易丢失的部分。
+**关键教训**：接口合约用缩进伪代码（人类可读 > 机器可解析）· 目录路径必须无歧义 · 代码注释引用决策编号（D1-D7）形成可追溯链 · 验证文档完备性的唯一方法是删除代码后重建 · 多轮迭代后文档仍然是唯一的信息源 · 编排层（入口 + 事件绑定 + 调用链）是最容易丢失的部分。
 
-> 详细验证结果见 `references/validation-lessons.md` 和 `demos/robot-sim/VERIFICATION-REPORT.md`。
+> 详细验证方法见 `references/validation-lessons.md`。
 
 ---
 

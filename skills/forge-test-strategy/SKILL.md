@@ -159,6 +159,6 @@ docs/features/<feature>/testing/
 ✅ 测试策略完成！testing/contract.md 已生成。
 
 下一步你可以：
-  /deploy  — 发布规划（灰度 + 回滚 + 监控）
+  发布规划 — 灰度 + 回滚 + 监控
   自然语言       — 直接说"生成代码"或"写测试"
 ```

@@ -1,6 +1,6 @@
 ---
 name: detail
-description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill，产出 contract.md + modules/。用户说"技术详设"、"详细设计"、"设计 API"、运行 /detail、或需要从 PRD/设计文档产出技术合约时触发。
+description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill，产出 contract.md + modules/。用户说"技术详设"、"详细设计"、"设计 API"、或需要从 PRD/设计文档产出技术合约时触发。
 ---
 
 # Forge Detail — 详设阶段编排
@@ -60,6 +60,6 @@ docs/features/<feature>/
 ✅ 详设完成！contract.md + modules/ 已生成。
 
 下一步你可以：
-  /plan    — 把详设拆成可执行任务
+  plan 阶段    — 把详设拆成可执行任务
   自然语言       — 直接说"生成代码"跳过任务分解
 ```

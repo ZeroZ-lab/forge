@@ -61,7 +61,7 @@ const forgeSkillDirs = fs
   .map((entry) => entry.name)
   .sort();
 
-assert(forgeSkillDirs.length === 18, `expected 18 forge-* skills, found ${forgeSkillDirs.length}`);
+assert(forgeSkillDirs.length === 21, `expected 21 forge-* skills, found ${forgeSkillDirs.length}`);
 
 const expectedSkillPaths = forgeSkillDirs.map((skillName) => `./skills/${skillName}`).sort();
 const manifestSkillPaths = Array.isArray(claudePlugin.skills) ? [...claudePlugin.skills].sort() : [];
@@ -79,14 +79,23 @@ for (const skillName of forgeSkillDirs) {
 
   const content = read(skillPath);
   const declaredName = content.match(/^name:\s*(.+)$/m)?.[1]?.trim();
-  assert(declaredName === skillName, `${skillPath}: frontmatter name "${declaredName}" does not match directory`);
+  const shortName = skillName.replace(/^forge-/, '');
+  assert(
+    declaredName === shortName,
+    `${skillPath}: frontmatter name "${declaredName}" must match short skill name "${shortName}"`,
+  );
   assert(lineCount(content) <= 200, `${skillPath}: exceeds 200 lines`);
 }
 
 const stalePatterns = [
   ['AGENTS.md', /BA1-BA5/],
-  ['README.md', /9 个决策 Command|9 个 Command|8 阶段 × 18 个 Skill/],
+  ['README.md', /9 个决策 Command|9 个 Command|8 阶段 × 18 个 Skill|18 个 skill|18 个 `forge-\*` skill/],
   ['AGENTS.md', /Phase 1 数据库|Phase 2 API/],
+  ['README.md', /Command 链|决策 Command|\/(brainstorm|init|define|design|detail|plan|test|deploy)(?![-\w])/],
+  ['AGENTS.md', /命令系统|Command|\/(brainstorm|init|define|design|detail|plan|test|deploy)(?![-\w])/],
+  ['references/usage-examples.md', /\/(brainstorm|init|define|design|detail|plan|test|deploy)(?![-\w])/],
+  ['AGENTS.md', /demos\/robot-sim|Robot Simulation/],
+  ['README.md', /demos\/robot-sim|Robot Simulation/],
   ['README.md', /产出：`plan\.md` \+ `test-cases\.md`|testing\/contract\.md` \+ `test-cases\.md`/],
   ['AGENTS.md', /产出：`plan\.md` \+ `test-cases\.md`|testing\/contract\.md` \+ `test-cases\.md`/],
 ];
