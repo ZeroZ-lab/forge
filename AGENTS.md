@@ -35,7 +35,7 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 决策协议（skill）→ 产物文档 → 下游消费（代码/设计稿/任务清单/测试用例...）
 ```
 
-### 8 阶段 × 16 个领域 Skill + 4 个编排 Skill
+### 8 阶段 × 17 个领域 Skill + 4 个编排 Skill
 
 | 阶段 | Skill | 方法论 | 角色 | 产出 |
 |------|-------|--------|------|------|
@@ -54,6 +54,7 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 | **⑥ 测试** | test-strategy | 风险分层 | QA + 开发 | 测试策略 |
 | | test-cases | 场景覆盖 | QA | 测试用例 |
 | | fe-accept | 四维验收 | QA + 设计 | 验收报告 |
+| **⑥.5 审查** | review | 四维审查 | AI + 用户 | 审查报告 |
 | **⑦ 交付** | deploy | 可逆发布 | DevOps + 开发 | 发布清单 |
 
 编排 skill：`forge-init`、`forge-design`、`forge-detail`、`forge-test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。
@@ -67,8 +68,8 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 方向简报  →  项目章程 → PRD    →    交互规格 + 设计系统 + 技术方案    →    contract + modules/
                                                                               │
                                                                               ↓
-⑦ 交付          ⑥ 测试                     ⑤ 构建         ④ 任务
-发布清单  ←   测试策略 + 测试用例   ←   src/ + tests/  ←   plan.md（任务分解）
+⑦ 交付          ⑥.5 审查        ⑥ 测试                     ⑤ 构建         ④ 任务
+发布清单  ←   审查报告   ←   测试策略 + 测试用例   ←   src/ + tests/  ←   plan.md（任务分解）
 ```
 
 每个阶段的产物是下一阶段的输入。PRD 约束技术方案，技术方案约束详设，详设驱动编码，编码驱动测试。
@@ -433,7 +434,7 @@ Robot Simulation 项目：从零设计 → MVP → 10 轮迭代（激光雷达�
 forge/
 ├── AGENTS.md                        # 本文件
 ├── references/                      # 补充文档（使用示例、验证教训）
-├── skills/                          # 20 个决策协议（flat list）
+├── skills/                          # 21 个决策协议（flat list）
 │   ├── forge-brainstorm/            # ⓪ 探索
 │   ├── forge-init/                  # 初始化编排（+ agents/claude 模板）
 │   ├── forge-business-alignment/    # ① 业务对齐
@@ -453,6 +454,7 @@ forge/
 │   ├── forge-test-strategy/         # ⑥ 测试策略
 │   ├── forge-test-cases/            # ⑥ 测试用例
 │   ├── forge-fe-accept/             # ⑥ 前端质量验收
+│   ├── forge-review/                # ⑥.5 四维审查（文档对齐+安全+架构+集成）
 │   ├── forge-deploy/                # ⑦ 部署发布
 │   └── shared/                      # 共享模板（contract + module + changelog）
 ├── .claude-plugin/plugin.json       # Claude Code 插件
