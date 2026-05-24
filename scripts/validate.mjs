@@ -42,9 +42,26 @@ function indexOfOrFail(text, needle, file) {
   return index;
 }
 
+function assertIncludes(relativePath, markers) {
+  const content = read(relativePath);
+  for (const marker of markers) {
+    assert(content.includes(marker), `${relativePath}: missing "${marker}"`);
+  }
+}
+
+function referencedMarkdownFiles(skillName, content) {
+  const matches = content.matchAll(/(?:^|[\s`(])((?:forge-[\w-]+\/)?references\/[\w.-]+\.md)\b/gm);
+  return [...matches].map((match) => {
+    const referencePath = match[1];
+    if (referencePath.startsWith('forge-')) return `skills/${referencePath}`;
+    return `skills/${skillName}/${referencePath}`;
+  });
+}
+
 const packageJson = json('package.json');
 const claudePlugin = json('.claude-plugin/plugin.json');
 const codexPlugin = json('.codex-plugin/plugin.json');
+const claudeMarketplace = json('.claude-plugin/marketplace.json');
 
 assert(
   packageJson.version === claudePlugin.version &&
@@ -79,13 +96,63 @@ for (const skillName of forgeSkillDirs) {
 
   const content = read(skillPath);
   const declaredName = content.match(/^name:\s*(.+)$/m)?.[1]?.trim();
+  const description = content.match(/^description:\s*(.+)$/m)?.[1]?.trim();
   const shortName = skillName.replace(/^forge-/, '');
   assert(
     declaredName === shortName,
     `${skillPath}: frontmatter name "${declaredName}" must match short skill name "${shortName}"`,
   );
+  assert(Boolean(description), `${skillPath}: frontmatter description is required`);
   assert(lineCount(content) <= 200, `${skillPath}: exceeds 200 lines`);
+
+  for (const referencePath of referencedMarkdownFiles(skillName, content)) {
+    assert(exists(referencePath), `${skillPath}: referenced file is missing: ${referencePath}`);
+  }
 }
+
+const requiredProtocols = {
+  'forge-fe-system': {
+    path: 'skills/forge-fe-system/references/fe-system-protocol.md',
+    markers: ['# Fe System Protocol', '## Token 结构', '### Primitive', '### Semantic', '### Component'],
+  },
+  'forge-fe-artifact': {
+    path: 'skills/forge-fe-artifact/references/fe-artifact-protocol.md',
+    markers: ['# Fe Artifact Protocol', '## 五层翻译详解', '### 1. 意图层', '### 5. 适配层'],
+  },
+  'forge-fe-accept': {
+    path: 'skills/forge-fe-accept/references/fe-accept-protocol.md',
+    markers: ['# Fe Accept Protocol', '## 四维验收', '## 报告格式', '## 执行证据'],
+  },
+  'forge-review': {
+    path: 'skills/forge-review/references/review-protocol.md',
+    markers: ['# Review Protocol', '## 文档审查维度', '## 代码审查维度', '## 报告格式'],
+  },
+};
+
+for (const [skillName, protocol] of Object.entries(requiredProtocols)) {
+  const skillPath = `skills/${skillName}/SKILL.md`;
+  const referenceName = protocol.path.replace(`skills/${skillName}/`, '');
+  assert(read(skillPath).includes(referenceName), `${skillPath}: must reference ${referenceName}`);
+  assert(exists(protocol.path), `${protocol.path}: missing`);
+  if (exists(protocol.path)) assertIncludes(protocol.path, protocol.markers);
+}
+
+assertIncludes('skills/shared/module-template.md', ['## 入口', '## 公共接口', '## 内部函数', '## 依赖关系']);
+assertIncludes('skills/shared/contract-template.md', [
+  '## 模块索引',
+  '## 代码映射',
+  '## 编排',
+  '### 入口文件',
+  '### 事件绑定',
+]);
+
+const marketplaceDescription = claudeMarketplace.plugins?.find((plugin) => plugin.name === 'forge')?.description ?? '';
+assert(
+  marketplaceDescription.includes('21 个决策协议 skill'),
+  '.claude-plugin/marketplace.json: forge description must mention "21 个决策协议 skill"',
+);
+assert(read('README.md').includes('8 阶段 × 21 个 Skill'), 'README.md: must document 8 阶段 × 21 个 Skill');
+assert(read('AGENTS.md').includes('21 个决策协议'), 'AGENTS.md: must document 21 个决策协议');
 
 const stalePatterns = [
   ['AGENTS.md', /BA1-BA5/],
