@@ -90,7 +90,7 @@ const forgeSkillDirs = fs
   .map((entry) => entry.name)
   .sort();
 
-assert(forgeSkillDirs.length === 21, `expected 21 forge-* skills, found ${forgeSkillDirs.length}`);
+assert(forgeSkillDirs.length === 22, `expected 22 forge-* skills, found ${forgeSkillDirs.length}`);
 
 const expectedSkillPaths = forgeSkillDirs.map((skillName) => `./skills/${skillName}`).sort();
 const manifestSkillPaths = Array.isArray(claudePlugin.skills) ? [...claudePlugin.skills].sort() : [];
@@ -137,7 +137,7 @@ const requiredProtocols = {
   },
   'forge-review': {
     path: 'skills/forge-review/references/review-protocol.md',
-    markers: ['# Review Protocol', '## 文档审查维度', '## 代码审查维度', '## 报告格式'],
+    markers: ['# Review Protocol', '## 文档审查维度', '## 代码审查维度', '## 偏差归因维度', '## 报告格式'],
   },
 };
 
@@ -160,6 +160,7 @@ assert(
 );
 assertIncludes('skills/shared/contract-template.md', [
   '## 模块索引',
+  '## 下游依赖',
   '## 代码映射',
   '## 编排',
   '### 入口文件',
@@ -176,11 +177,12 @@ assertIncludes('skills/shared/contract-orchestration-template.md', [
 
 const marketplaceDescription = claudeMarketplace.plugins?.find((plugin) => plugin.name === 'forge')?.description ?? '';
 assert(
-  marketplaceDescription.includes('21 个决策协议 skill'),
-  '.claude-plugin/marketplace.json: forge description must mention "21 个决策协议 skill"',
+  marketplaceDescription.includes('22 个决策协议 skill'),
+  '.claude-plugin/marketplace.json: forge description must mention "22 个决策协议 skill"',
 );
-assert(read('README.md').includes('8 阶段 × 21 个 Skill'), 'README.md: must document 8 阶段 × 21 个 Skill');
-assert(read('AGENTS.md').includes('21 个决策协议'), 'AGENTS.md: must document 21 个决策协议');
+assert(read('README.md').includes('8 阶段 × 22 个 Skill'), 'README.md: must document 8 阶段 × 22 个 Skill');
+assert(read('AGENTS.md').includes('22 个决策协议'), 'AGENTS.md: must document 22 个决策协议');
+assert(read('AGENTS.md').includes('信号传递'), 'AGENTS.md: must document signal passing between control loops');
 
 const stalePatterns = [
   ['AGENTS.md', /BA1-BA5/],
@@ -230,6 +232,16 @@ assert(testCasesSkill.includes('testing/test-cases.md'), 'skills/forge-test-case
 const deploySkill = read('skills/forge-deploy/SKILL.md');
 for (const marker of ['### RL1:', '### RL2:', '### RL3:', '### RL4:', '### RL5:']) {
   assert(deploySkill.includes(marker), `skills/forge-deploy/SKILL.md: missing ${marker}`);
+}
+
+const learnSkill = read('skills/forge-learn/SKILL.md');
+for (const marker of ['### L1:', '### L2:', '### L3:', '### L4:']) {
+  assert(learnSkill.includes(marker), `skills/forge-learn/SKILL.md: missing ${marker}`);
+}
+
+const codegenSkill = read('skills/forge-codegen/SKILL.md');
+for (const marker of ['L0（噪声）', 'L1（偏差）', 'L2（漂移）', '前馈', '信号传递', '健康检查', '归因：']) {
+  assert(codegenSkill.includes(marker), `skills/forge-codegen/SKILL.md: missing cybernetic marker "${marker}"`);
 }
 
 assert(

@@ -29,7 +29,7 @@ cd forge
 claude plugin install --path .
 ```
 
-安装后在任意项目中启动 Claude Code，Forge 的 21 个 skill 自动可用。
+安装后在任意项目中启动 Claude Code，Forge 的 22 个 skill 自动可用。
 
 ### 仓库自检
 
@@ -37,7 +37,7 @@ claude plugin install --path .
 node scripts/validate.mjs
 ```
 
-自检会校验版本同步、21 个 `forge-*` skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 投影回流。
+自检会校验版本同步、22 个 `forge-*` skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 投影回流。
 
 ### 个人 Skill 安装
 
@@ -89,7 +89,7 @@ Forge 不维护独立的指令层。用户用自然语言表达当前目标，�
 
 跳过原则：已有 `docs/project.md` 和 `DESIGN.md` 可跳过 init；需求明确可跳过 brainstorm 和 define；纯后端可跳过 design；改动很小时可跳过 plan。
 
-## 8 阶段 × 21 个 Skill
+## 8 阶段 × 22 个 Skill
 
 | 阶段 | Skill | 产出 |
 |------|-------|------|

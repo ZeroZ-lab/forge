@@ -35,7 +35,7 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 决策协议（skill）→ 产物文档 → 下游消费（代码/设计稿/任务清单/测试用例...）
 ```
 
-### 8 阶段 × 17 个领域 Skill + 4 个编排 Skill
+### 8 阶段 × 18 个领域 Skill + 4 个编排 Skill
 
 | 阶段 | Skill | 方法论 | 角色 | 产出 |
 |------|-------|--------|------|------|
@@ -56,6 +56,7 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 | | fe-accept | 四维验收 | QA + 设计 | 验收报告 |
 | **⑥.5 审查** | review | subagent 独立审查 | AI + 用户 | 审查报告 |
 | **⑦ 交付** | deploy | 可逆发布 | DevOps + 开发 | 发布清单 |
+| **⑧ 进化** | learn | 偏差驱动进化 | AI + 用户 | 方法论改进 |
 
 编排 skill：`forge-init`、`forge-design`、`forge-detail`、`forge-test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。
 
@@ -73,6 +74,22 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 ```
 
 每个阶段的产物是下一阶段的输入。PRD 约束技术方案，技术方案约束详设，详设驱动编码，编码驱动测试。
+
+### 三层控制回路
+
+Forge 是闭环系统——文档是 setpoint，代码是投影，偏差信号驱动修正。
+
+| 回路 | 速度 | 机制 | 信号传递 |
+|------|------|------|---------|
+| **快回路** | 单任务 | codegen 生成 → 四维对照 → L0/L1/L2 分级 → 修正 → 收敛 | 同类 L1 ≥ 2 → 触发中回路 |
+| **中回路** | 单次迭代 | detail 改 contract → 读下游依赖表 → 漂移检测 → 级联更新 | 偏差归因 → 喂给慢回路 |
+| **慢回路** | 跨项目 | review 偏差归因 → forge-learn 聚合 → 修改 skill 方法论 | 方法论变更 → 影响所有回路 |
+
+**前馈机制**：detail 阶段从历史偏差提取高频失误 → 写入 contract「已知风险」→ codegen 读 contract 时自然获得，零额外成本。
+
+**自适应频率**：codegen 按任务复杂度选择对照频率——简单任务整任务对照，复杂任务逐函数对照。连续零偏差触发健康检查（验证检查机制本身是否有效）。
+
+**控制论映射**：contract = setpoint · codegen = actuator · 四维对照 = sensor · 偏差信号 = error signal · 修正循环 = controller。
 
 ### 三层文档体系
 
@@ -432,7 +449,7 @@ forge-init（编排器）   →  加载子 skill + 模板 → 生成项目文件
 forge/
 ├── AGENTS.md                        # 本文件
 ├── references/                      # 补充文档（使用示例、验证教训）
-├── skills/                          # 21 个决策协议（flat list）
+├── skills/                          # 22 个决策协议（flat list）
 │   ├── forge-brainstorm/            # ⓪ 探索
 │   ├── forge-init/                  # 初始化编排（+ agents/claude 模板）
 │   ├── forge-business-alignment/    # ① 业务对齐
@@ -454,6 +471,7 @@ forge/
 │   ├── forge-fe-accept/             # ⑥ 前端质量验收
 │   ├── forge-review/                # ⑥.5 subagent 独立审查（文档审查+代码审查）
 │   ├── forge-deploy/                # ⑦ 部署发布
+│   ├── forge-learn/                 # ⑧ 方法论进化
 │   └── shared/                      # 共享模板（contract + module + changelog）
 ├── .claude-plugin/plugin.json       # Claude Code 插件
 └── .codex-plugin/plugin.json        # Codex CLI 插件

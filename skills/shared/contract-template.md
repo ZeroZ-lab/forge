@@ -145,6 +145,19 @@ User: {
 
 ---
 
+## 下游依赖
+
+> 哪些下游文档依赖本 contract。detail 编排阶段用此表做漂移检测。
+
+| 下游文档 | 依赖内容 | 最后同步 |
+|---------|---------|---------|
+| frontend/modules/*.md | 端点合约、响应格式 | |
+| database/contract.md | 数据模型、索引 | |
+| testing/test-cases.md | 验收条件 | |
+| deploy/contract.md | 运行依赖 | |
+
+---
+
 ## 代码映射
 
 ```
