@@ -138,12 +138,28 @@ for (const [skillName, protocol] of Object.entries(requiredProtocols)) {
 }
 
 assertIncludes('skills/shared/module-template.md', ['## 入口', '## 公共接口', '## 内部函数', '## 依赖关系']);
+assert(
+  lineCount(read('skills/shared/module-template.md')) <= 200,
+  'skills/shared/module-template.md: exceeds 200 lines',
+);
+assert(
+  lineCount(read('skills/shared/contract-template.md')) <= 200,
+  'skills/shared/contract-template.md: exceeds 200 lines',
+);
 assertIncludes('skills/shared/contract-template.md', [
   '## 模块索引',
   '## 代码映射',
   '## 编排',
   '### 入口文件',
+  'contract-orchestration-template.md',
+]);
+assert(exists('skills/shared/contract-orchestration-template.md'), 'skills/shared/contract-orchestration-template.md: missing');
+assertIncludes('skills/shared/contract-orchestration-template.md', [
+  '### 入口文件',
+  '### 启动序列',
+  '### 主循环 / 请求处理',
   '### 事件绑定',
+  '### 模式优先级',
 ]);
 
 const marketplaceDescription = claudeMarketplace.plugins?.find((plugin) => plugin.name === 'forge')?.description ?? '';
