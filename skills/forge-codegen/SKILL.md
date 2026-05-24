@@ -23,6 +23,8 @@ disable-model-invocation: true
 **和 detail 的切法**：detail 定义**做什么**（合约+模块），codegen 定义**代码怎么投影**（从文档到实现）
 **和 test 的切法**：codegen 生成基础测试（从验收条件推导），test 阶段补充测试策略和覆盖
 
+**和 forge-fe-artifact 的关系**：codegen 遇到前端文件（组件、页面、hooks、样式）时加载 `forge-fe-artifact` 作为前端子协议。codegen 负责通用投影规则（读→生→验→修），fe-artifact 负责前端特化的五层翻译逻辑。
+
 ## 方法论：读→生→验→修
 
 ### 第一步：读（Read）

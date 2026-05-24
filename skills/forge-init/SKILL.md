@@ -18,7 +18,7 @@ description: 项目初始化——一次对话完成业务对齐 + 技术选型 
 加载 `forge-technical-design` skill，走完 TD1-TD5 方法论步骤。
 
 **Phase 3: 设计系统**
-加载 `forge-visual-design` skill，走完 V1-V5 方法论步骤。项目初始化没有 interaction-spec 时，按项目级模式生成 DESIGN.md：从业务目标、产品气质、目标用户和页面类型推导最小设计系统，不要求 feature 级交互规格。
+加载 `forge-fe-system` skill，走完 S1-S5 方法论步骤。项目初始化没有 interaction-spec 时，按项目级模式生成 DESIGN.md：从业务目标、产品气质、目标用户和页面类型推导最小设计系统，不要求 feature 级交互规格。
 
 ## 产出
 
@@ -35,7 +35,7 @@ my-project/
 | 文件 | 模板 | 来源 |
 |------|------|------|
 | docs/project.md | `forge-business-alignment/references/project-template.md` | Phase 1 business-alignment |
-| DESIGN.md | `forge-visual-design/references/design-system-template.md` | Phase 3 visual-design |
+| DESIGN.md | `forge-fe-system/references/design-system-template.md` | Phase 3 fe-system |
 | AGENTS.md | `${CLAUDE_SKILL_DIR}/references/agents-template.md` | Phase 1+2+3 投影 |
 | CLAUDE.md | `${CLAUDE_SKILL_DIR}/references/claude-template.md` | 入口指针 |
 

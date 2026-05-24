@@ -16,11 +16,11 @@ description: 设计用户怎么走——流程优先，先画路径再画界面�
 ## 与上下游的边界
 
 **上游**：读 PRD（forge-define 产出），不重复需求定义
-**下游**：交互规格交给 visual-design（定义外观）和 /forge-detail（技术实现）
+**下游**：交互规格交给 fe-system（定义外观）和 /forge-detail（技术实现）
 
-**和 visual-design 的切法**：
+**和 fe-system 的切法**：
 - interaction 定义**组件做什么**（行为、组合规则、交互模式）
-- visual 定义**组件长什么样**（外观、色彩、间距、状态样式）
+- fe-system 定义**组件长什么样**（外观、色彩、间距、状态样式）
 
 ## 方法论：流程→结构→模式→细节
 
@@ -131,7 +131,7 @@ description: 设计用户怎么走——流程优先，先画路径再画界面�
 
 **interaction-spec.md 必须包含**：用户流程图（核心+异常）· 信息架构图 · 页面线框图 · 组件清单（行为+组合）· 交互细节 · 响应式策略
 
-**不应包含**：视觉设计（visual-design）· 技术实现（/forge-detail）· 组件外观（visual-design）
+**不应包含**：视觉设计（fe-system）· 技术实现（/forge-detail）· 组件外观（fe-system）
 
 ## 模板
 
@@ -144,12 +144,12 @@ description: 设计用户怎么走——流程优先，先画路径再画界面�
 ## 入口/出口条件
 
 **入口**：有 PRD.md（来自 /forge-define）或用户已有明确需求
-**出口**：interaction-spec.md 已生成 · 用户流程已定义 · 信息架构已明确 · 用户确认进入 visual-design 或 /forge-detail
+**出口**：interaction-spec.md 已生成 · 用户流程已定义 · 信息架构已明确 · 用户确认进入 fe-system 或 /forge-detail
 
 ## 何时不使用
 
 - 纯后端 API（没有用户界面）
-- 已有完整交互设计（直接进入 visual-design）
+- 已有完整交互设计（直接进入 fe-system）
 - 小功能迭代（简化交互流程）
 
 ## 红旗清单
@@ -159,7 +159,7 @@ description: 设计用户怎么走——流程优先，先画路径再画界面�
 - 组件复用率低 → 强制抽象（"哪些交互模式重复出现？"）
 - 信息架构超过 3 层 → 强制扁平化（"能不能减少层级？"）
 - 没有空状态设计 → 强制补充（"第一次使用时展示什么？"）
-- 和 visual-design 职责重叠 → 拉回（"这是行为还是外观？"）
+- 和 fe-system 职责重叠 → 拉回（"这是行为还是外观？"）
 
 ## 验证清单
 

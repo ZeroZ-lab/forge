@@ -35,7 +35,7 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 决策协议（skill）→ 产物文档 → 下游消费（代码/设计稿/任务清单/测试用例...）
 ```
 
-### 8 阶段 × 14 个领域 Skill + 4 个编排 Skill
+### 8 阶段 × 16 个领域 Skill + 4 个编排 Skill
 
 | 阶段 | Skill | 方法论 | 角色 | 产出 |
 |------|-------|--------|------|------|
@@ -43,15 +43,17 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 | **① 定义** | business-alignment | 需求验证 | 产品 + 业务方 | 项目章程 |
 | | requirements | 约束定义 | 产品 + 开发 | PRD |
 | **② 设计** | interaction-design | 流程优先 | 产品 + 设计师 | 交互规格 |
-| | visual-design | 设计决策系统 | 设计师 | 设计系统 |
+| | fe-system | 三层 Token | 设计师 | 设计系统 |
 | | technical-design | 架构权衡 | 架构师 + 开发 | 技术方案 |
 | **③ 详设** | api-design | 资源导向 | 后端开发 | API 合约 |
 | | frontend-design | 组件驱动 | 前端开发 | 组件规格 |
 | | db-design | 模型驱动 | 后端开发 | 数据模型 |
 | **④ 任务** | plan | 垂直切片 | 开发 | 任务分解 |
 | **⑤ 构建** | codegen | 文档投影 | AI | src/ + tests/ |
+| | fe-artifact | 五层翻译 | AI | 前端代码 |
 | **⑥ 测试** | test-strategy | 风险分层 | QA + 开发 | 测试策略 |
 | | test-cases | 场景覆盖 | QA | 测试用例 |
+| | fe-accept | 四维验收 | QA + 设计 | 验收报告 |
 | **⑦ 交付** | deploy | 可逆发布 | DevOps + 开发 | 发布清单 |
 
 编排 skill：`forge-init`、`forge-design`、`forge-detail`、`forge-test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。
@@ -98,7 +100,7 @@ my-project/
 | 文件 | 告诉 AI | 生成来源 |
 |------|---------|---------|
 | project.md | 技术上怎么做 | technical-design 的共享决策 |
-| DESIGN.md | 视觉上怎么呈现 | visual-design 决策 |
+| DESIGN.md | 视觉上怎么呈现 | fe-system 决策 |
 | AGENTS.md | 你应该怎么工作 | project.md + DESIGN.md 投影 |
 | CLAUDE.md | 读 AGENTS.md | 入口指针 |
 
@@ -256,9 +258,9 @@ AI 按需加载：
 | Command | 阶段 | 做什么 | 加载的 skill | 产出 |
 |---------|------|--------|-------------|------|
 | `/forge-brainstorm` | ⓪ 探索 | 发散可能性 + 圈定方向 | brainstorm | `idea-brief.md` |
-| `/forge-init` | 初始化 | 业务 + 技术 + 设计 | business-alignment + technical-design + visual-design | `project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
+| `/forge-init` | 初始化 | 业务 + 技术 + 设计 | business-alignment + technical-design + fe-system | `project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
 | `/forge-define` | ① 定义 | 需求分析 + PRD | requirements | `PRD.md` |
-| `/forge-design` | ② 设计 | 交互 + 视觉 | interaction-design + visual-design | `interaction-spec.md` + `DESIGN.md` |
+| `/forge-design` | ② 设计 | 交互 + 视觉 | interaction-design + fe-system | `interaction-spec.md` + `DESIGN.md` |
 | `/forge-detail` | ③ 详设 | API + DB + 前端（按需） | api-design + db-design (+ frontend-design) | `contract.md` + `modules/` |
 | `/forge-plan` | ④ 任务 | 垂直切片 + 自动推导测试 | plan + test-cases | `plan.md` + `testing/test-cases.md` |
 | `/forge-test` | ⑥ 测试 | 测试策略 + 测试用例 | test-strategy + test-cases | `testing/contract.md` + `testing/test-cases.md` |
@@ -431,14 +433,14 @@ Robot Simulation 项目：从零设计 → MVP → 10 轮迭代（激光雷达�
 forge/
 ├── AGENTS.md                        # 本文件
 ├── references/                      # 补充文档（使用示例、验证教训）
-├── skills/                          # 18 个决策协议（flat list）
+├── skills/                          # 20 个决策协议（flat list）
 │   ├── forge-brainstorm/            # ⓪ 探索
 │   ├── forge-init/                  # 初始化编排（+ agents/claude 模板）
 │   ├── forge-business-alignment/    # ① 业务对齐
 │   ├── forge-define/                # ① 需求文档
 │   ├── forge-design/                # 设计编排
 │   ├── forge-interaction-design/    # ② 交互设计
-│   ├── forge-visual-design/         # ② 视觉设计
+│   ├── forge-fe-system/             # ② 设计系统落地（含原 visual-design）
 │   ├── forge-technical-design/      # ② 技术设计
 │   ├── forge-detail/                # 详设编排
 │   ├── forge-api-design/            # ③ API 详设
@@ -446,9 +448,11 @@ forge/
 │   ├── forge-db-design/             # ③ 数据库详设
 │   ├── forge-plan/                  # ④ 任务分解
 │   ├── forge-codegen/               # ⑤ 代码生成
+│   ├── forge-fe-artifact/           # ⑤ 前端代码生成（codegen 子协议）
 │   ├── forge-test/                  # 测试编排
 │   ├── forge-test-strategy/         # ⑥ 测试策略
 │   ├── forge-test-cases/            # ⑥ 测试用例
+│   ├── forge-fe-accept/             # ⑥ 前端质量验收
 │   ├── forge-deploy/                # ⑦ 部署发布
 │   └── shared/                      # 共享模板（contract + module + changelog）
 ├── .claude-plugin/plugin.json       # Claude Code 插件
