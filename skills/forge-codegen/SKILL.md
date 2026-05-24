@@ -1,5 +1,5 @@
 ---
-name: forge-codegen
+name: codegen
 description: 从 contract.md 和 modules/ 生成 src/ 和 tests/——文档是源代码，代码是投影。用户说"生成代码"、"写代码"、"build"、或有 plan.md 需要生成实现代码时触发。
 disable-model-invocation: true
 ---
@@ -162,8 +162,8 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 ✅ 代码生成完成！src/ + tests/ 已生成。
 
 下一步你可以：
-  /forge-test    — 测试策略 + 测试用例
+  /test    — 测试策略 + 测试用例
   自然语言       — 说"审查代码"进入 forge-review（四维审查）
-  /forge-deploy  — 发布规划（灰度 + 回滚 + 监控）
+  /deploy  — 发布规划（灰度 + 回滚 + 监控）
   自然语言       — 直接说"跑测试"或"修 bug"
 ```

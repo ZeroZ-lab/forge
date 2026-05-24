@@ -1,6 +1,6 @@
 ---
-name: forge-business-alignment
-description: 从探索方向到项目承诺——定义用户画像、成功指标、资源约束，做出 Go/No-Go 决策。用户说"验证需求"、"项目目标"、"成功指标"、运行 /forge-init、或需要从方向变成承诺时触发。
+name: business-alignment
+description: 从探索方向到项目承诺——定义用户画像、成功指标、资源约束，做出 Go/No-Go 决策。用户说"验证需求"、"项目目标"、"成功指标"、运行 /init、或需要从方向变成承诺时触发。
 ---
 
 # Business Alignment — 定义阶段（业务层）
@@ -129,7 +129,7 @@ brainstorm 回答"这个方向值得探索吗"，business-alignment 回答"我�
 
 必须包含：用户画像表 · 成功指标表 · 资源约束 · Go/No-Go 决策
 
-不应包含：方向探索（brainstorm 已做）· 具体功能列表（/forge-define）· 技术选型（/forge-init 技术阶段）
+不应包含：方向探索（brainstorm 已做）· 具体功能列表（/define）· 技术选型（/init 技术阶段）
 
 ## 模板
 
@@ -145,7 +145,7 @@ brainstorm 回答"这个方向值得探索吗"，business-alignment 回答"我�
 ## 何时不使用
 
 - 只是技术探索（不需要业务承诺）
-- 已有完整 PRD（直接进入 /forge-design）
+- 已有完整 PRD（直接进入 /design）
 - 已有项目级 project.md（跳过，直接进入新功能）
 
 ## 红旗清单
@@ -184,7 +184,7 @@ brainstorm 回答"这个方向值得探索吗"，business-alignment 回答"我�
 ```
 ✅ 业务对齐完成！project.md「业务目标」已填写。
 
-下一步（/forge-init 自动继续）：
+下一步（/init 自动继续）：
   技术选型   — 架构模式 + 技术栈 + 服务划分
   设计系统   — 色彩 + 字体 + 组件模式
 ```

@@ -1,5 +1,5 @@
 ---
-name: forge-fe-accept
+name: fe-accept
 description: 前端质量验收——四维判定前端产物是否合格，产出验收报告 + 修复建议。用户说"验收前端"、"检查页面"、"前端质量"、或需要判定前端代码/页面质量时触发。
 ---
 
@@ -312,6 +312,6 @@ modules/*.md 检查：
 
 下一步你可以：
   自然语言       — 说"修复 {问题}"让 fe-artifact 重新生成
-  /forge-deploy  — 发布规划（全部通过时）
-  /forge-test    — 补充测试策略
+  /deploy  — 发布规划（全部通过时）
+  /test    — 补充测试策略
 ```

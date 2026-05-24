@@ -1,5 +1,5 @@
 ---
-name: forge-fe-artifact
+name: fe-artifact
 description: 前端代码生成——从组件规格 + 设计系统生成生产级前端代码。forge-codegen 的前端子协议，用户说"生成前端代码"、"写组件"、或由 codegen 自动调用时触发。
 ---
 
@@ -326,5 +326,5 @@ DESIGN.md 完整性检查清单：
 
 下一步你可以：
   自然语言       — 说"验收前端"进入 fe-accept
-  /forge-test    — 测试策略 + 测试用例
+  /test    — 测试策略 + 测试用例
 ```

@@ -1,6 +1,6 @@
 ---
-name: forge-define
-description: 从业务需求推导可验收的 PRD——定义约束、场景覆盖和验收条件。用户说"写 PRD"、"定义需求"、"用户故事"、"验收条件"、运行 /forge-define、或需要明确做什么不做什么时触发。
+name: define
+description: 从业务需求推导可验收的 PRD——定义约束、场景覆盖和验收条件。用户说"写 PRD"、"定义需求"、"用户故事"、"验收条件"、运行 /define、或需要明确做什么不做什么时触发。
 ---
 
 # Requirements — 定义阶段（需求层）
@@ -118,7 +118,7 @@ description: 从业务需求推导可验收的 PRD——定义约束、场景覆
 
 **PRD.md 必须包含**：用户故事（排序）· 验收条件（Given-When-Then）· 非功能需求（量化）· 范围排除 · 验收计划 · 依赖图 · 风险评估
 
-**PRD.md 不应包含**：交互设计（/forge-design）· 技术选型（/forge-init）· 具体实现（/forge-detail）
+**PRD.md 不应包含**：交互设计（/design）· 技术选型（/init）· 具体实现（/detail）
 
 ## 模板
 
@@ -135,7 +135,7 @@ description: 从业务需求推导可验收的 PRD——定义约束、场景覆
 ## 何时不使用
 
 - 只是技术探索（不需要需求定义）
-- 已有完整 PRD（直接进入 /forge-design）
+- 已有完整 PRD（直接进入 /design）
 - 小功能迭代（简化需求流程）
 
 ## 红旗清单
@@ -184,7 +184,7 @@ description: 从业务需求推导可验收的 PRD——定义约束、场景覆
 ✅ 需求定义完成！PRD.md 已生成。
 
 下一步你可以：
-  /forge-design  — 做交互设计 + 视觉设计
-  /forge-detail  — 跳过设计，直接做技术详设
+  /design  — 做交互设计 + 视觉设计
+  /detail  — 跳过设计，直接做技术详设
   自然语言       — 直接说"做 API 设计"进入某个领域
 ```

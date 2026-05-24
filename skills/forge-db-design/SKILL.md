@@ -1,6 +1,6 @@
 ---
-name: forge-db-design
-description: 数据模型驱动的数据库设计——DB1-DB5 决策点，产出数据库文档。用户说"数据库设计"、"表结构"、"数据模型"、"索引策略"、运行 /forge-detail、或需要设计 schema 和迁移方案时触发。
+name: db-design
+description: 数据模型驱动的数据库设计——DB1-DB5 决策点，产出数据库文档。用户说"数据库设计"、"表结构"、"数据模型"、"索引策略"、运行 /detail、或需要设计 schema 和迁移方案时触发。
 ---
 
 # Database Design — 详设阶段（数据库层）
@@ -16,7 +16,7 @@ description: 数据模型驱动的数据库设计——DB1-DB5 决策点，产�
 ## 与上下游的边界
 
 **上游**：读 api/contract.md（共享数据模型+接口合约）
-**下游**：database/contract.md 交给 /forge-plan（任务分解）和代码生成
+**下游**：database/contract.md 交给 /plan（任务分解）和代码生成
 
 **和 api-design 的切法**：
 - api-design 定义**资源是什么、怎么暴露**（接口层）
@@ -161,7 +161,7 @@ updated_at: timestamp, not null, default now()
 ```
 ✅ 数据库详设完成！database/contract.md 已生成。
 
-下一步（/forge-detail 自动继续）：
+下一步（/detail 自动继续）：
   前端详设     — 组件 + 数据流 + 状态管理（如有前端）
-  /forge-plan  — 跳过前端，直接进入任务分解
+  /plan  — 跳过前端，直接进入任务分解
 ```

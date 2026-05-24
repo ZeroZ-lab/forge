@@ -61,8 +61,8 @@ done
 mkdir -p .claude/skills
 
 # 把需要的 skill 软链进来
-ln -s /path/to/forge/skills/forge-init .claude/skills/forge-init
-ln -s /path/to/forge/skills/forge-detail .claude/skills/forge-detail
+ln -s /path/to/forge/skills/init .claude/skills/init
+ln -s /path/to/forge/skills/detail .claude/skills/detail
 # ... 按需添加
 ```
 
@@ -79,14 +79,14 @@ ln -s /path/to/forge/skills/forge-detail .claude/skills/forge-detail
 | **快速** | 已有项目，小功能 | forge-detail → forge-plan |
 | **最小** | 加一个端点 | forge-detail |
 
-**跳过原则**：已有 project.md → 跳过 /forge-init；需求明确 → 跳过 /forge-define；纯后端 → 跳过 /forge-design。
+**跳过原则**：已有 project.md → 跳过 /init；需求明确 → 跳过 /define；纯后端 → 跳过 /design。
 
 以下以完整流程为例：
 
 ### 1. 探索想法
 
 ```
-/forge-brainstorm 我想做一个团队协作工具
+/brainstorm 我想做一个团队协作工具
 ```
 
 Forge 会引导你探索：
@@ -100,7 +100,7 @@ Forge 会引导你探索：
 ### 2. 初始化项目
 
 ```
-/forge-init 任务管理系统
+/init 任务管理系统
 ```
 
 Forge 一次对话完成：
@@ -113,7 +113,7 @@ Forge 一次对话完成：
 ### 3. 定义需求
 
 ```
-/forge-define 任务管理
+/define 任务管理
 ```
 
 引导需求分析：
@@ -127,7 +127,7 @@ Forge 一次对话完成：
 ### 4. 设计系统
 
 ```
-/forge-design 任务管理
+/design 任务管理
 ```
 
 交互设计 + 视觉设计：
@@ -141,7 +141,7 @@ Forge 一次对话完成：
 ### 5. 技术详设
 
 ```
-/forge-detail 任务管理
+/detail 任务管理
 ```
 
 按需加载领域 skill：
@@ -153,7 +153,7 @@ Forge 一次对话完成：
 ### 6. 任务分解
 
 ```
-/forge-plan 任务管理
+/plan 任务管理
 ```
 
 垂直切片：
@@ -175,7 +175,7 @@ AI 读取 `plan.md`，按任务序列生成 `src/` + `tests/`。
 ### 8. 测试规划
 
 ```
-/forge-test 任务管理
+/test 任务管理
 ```
 
 测试策略 + 测试用例：
@@ -187,7 +187,7 @@ AI 读取 `plan.md`，按任务序列生成 `src/` + `tests/`。
 ### 9. 发布规划
 
 ```
-/forge-deploy 任务管理
+/deploy 任务管理
 ```
 
 灰度策略 + 回滚方案 + 监控告警：
@@ -224,14 +224,14 @@ AI 读取 `plan.md`，按任务序列生成 `src/` + `tests/`。
 
 | Command | 做什么 |
 |---------|--------|
-| `/forge-brainstorm` | 发散可能性 + 圈定方向 |
-| `/forge-init` | 业务目标 + 技术选型 + 设计系统 → project.md + DESIGN.md |
-| `/forge-define` | 需求分析 + PRD 编写 |
-| `/forge-design` | 交互规格 + 视觉规范 |
-| `/forge-detail` | 按需加载领域 skill（API + DB + 前端按需） |
-| `/forge-plan` | 垂直切片 + 依赖图 + 自动推导测试用例 |
-| `/forge-test` | 测试策略 + 测试用例 |
-| `/forge-deploy` | 灰度策略 + 回滚方案 + 监控告警 |
+| `/brainstorm` | 发散可能性 + 圈定方向 |
+| `/init` | 业务目标 + 技术选型 + 设计系统 → project.md + DESIGN.md |
+| `/define` | 需求分析 + PRD 编写 |
+| `/design` | 交互规格 + 视觉规范 |
+| `/detail` | 按需加载领域 skill（API + DB + 前端按需） |
+| `/plan` | 垂直切片 + 依赖图 + 自动推导测试用例 |
+| `/test` | 测试策略 + 测试用例 |
+| `/deploy` | 灰度策略 + 回滚方案 + 监控告警 |
 
 ## 自然语言触发（无需决策）
 

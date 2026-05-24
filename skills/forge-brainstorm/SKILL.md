@@ -1,6 +1,6 @@
 ---
-name: forge-brainstorm
-description: 引导可能性探索——从模糊想法展开方向空间，圈定值得深入的领域。用户说"想做个东西"、"探索方向"、"brainstorm"、运行 /forge-brainstorm、或想法还很模糊需要发散时触发。
+name: brainstorm
+description: 引导可能性探索——从模糊想法展开方向空间，圈定值得深入的领域。用户说"想做个东西"、"探索方向"、"brainstorm"、运行 /brainstorm、或想法还很模糊需要发散时触发。
 ---
 
 # Brainstorm — 探索阶段
@@ -122,7 +122,7 @@ AI 在不同阶段扮演不同角色，主动推进探索而不是被动回答�
 
 **idea-brief.md 必须包含**：核心痛点 · 方向地图（3-5 个）· 推荐方向+理由 · MVP 定义 · 假设清单+验证计划 · 决策标准 · 下一步行动
 
-**idea-brief.md 不应包含**：技术选型（/forge-init）· 详细功能列表（/forge-define）· 交互设计（/forge-design）· 代码（生成代码）
+**idea-brief.md 不应包含**：技术选型（/init）· 详细功能列表（/define）· 交互设计（/design）· 代码（生成代码）
 
 ## 模板
 
@@ -136,13 +136,13 @@ idea-brief.md 的三个核心结构（详见模板）：
 ## 入口/出口条件
 
 **入口**：用户有模糊想法或痛点，尚未明确方向
-**出口**：生成 idea-brief.md + 推荐方向 + 验证计划，用户确认进入 /forge-init
+**出口**：生成 idea-brief.md + 推荐方向 + 验证计划，用户确认进入 /init
 
 ## 何时不使用
 
-- 方向已经明确（跳过 brainstorm，直接进入 /forge-init）
-- 只是技术实现问题（直接进入 /forge-detail）
-- 已有完整的 PRD（直接进入 /forge-design）
+- 方向已经明确（跳过 brainstorm，直接进入 /init）
+- 只是技术实现问题（直接进入 /detail）
+- 已有完整的 PRD（直接进入 /design）
 
 ## 红旗清单
 
@@ -188,7 +188,7 @@ idea-brief.md 的三个核心结构（详见模板）：
 ✅ 探索完成！idea-brief.md 已生成。
 
 下一步你可以：
-  /forge-init    — 初始化项目（业务对齐 + 技术选型 + 设计系统）
+  /init    — 初始化项目（业务对齐 + 技术选型 + 设计系统）
   继续探索       — 对某个方向深入 brainstorm
   自然语言       — 直接说"做任务管理系统"跳过初始化
 ```

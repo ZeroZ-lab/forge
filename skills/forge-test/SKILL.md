@@ -1,6 +1,6 @@
 ---
-name: forge-test
-description: 测试阶段编排——测试策略 + 测试用例，一次对话完成测试规划。用户说"做测试"、"测试阶段"、"测试规划"、运行 /forge-test、或需要从 contract.md 产出测试策略和测试用例时触发。
+name: test
+description: 测试阶段编排——测试策略 + 测试用例，一次对话完成测试规划。用户说"做测试"、"测试阶段"、"测试规划"、运行 /test、或需要从 contract.md 产出测试策略和测试用例时触发。
 ---
 
 # Forge Test — 测试阶段编排
@@ -29,7 +29,7 @@ docs/features/<feature>/
 ## 跳过规则
 
 - 已有 testing/contract.md → Phase 1 只更新 feature 相关的部分
-- /forge-plan 已自动推导 testing/test-cases.md → Phase 2 只补充遗漏场景
+- /plan 已自动推导 testing/test-cases.md → Phase 2 只补充遗漏场景
 
 ## 历史维护（自动）
 
@@ -43,6 +43,6 @@ docs/features/<feature>/
 ✅ 测试阶段完成！testing/contract.md + testing/test-cases.md 已生成。
 
 下一步你可以：
-  /forge-deploy  — 规划发布流程（灰度 + 回滚 + 监控）
+  /deploy  — 规划发布流程（灰度 + 回滚 + 监控）
   自然语言       — 直接说"生成代码"进入构建阶段
 ```

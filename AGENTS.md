@@ -250,7 +250,7 @@ AI 按需加载：
 | **快速** | detail → plan | 已有项目，小功能迭代 |
 | **最小** | detail | 已有项目，加一个端点 |
 
-**跳过原则**：已有 project.md + DESIGN.md → 跳过 /forge-init · 需求明确 → 跳过 brainstorm 和 define · 纯后端 → 跳过 design · 一个端点 → 跳过 plan
+**跳过原则**：已有 project.md + DESIGN.md → 跳过 /init · 需求明确 → 跳过 brainstorm 和 define · 纯后端 → 跳过 design · 一个端点 → 跳过 plan
 
 ### 决策编排
 
@@ -258,14 +258,14 @@ AI 按需加载：
 
 | Command | 阶段 | 做什么 | 加载的 skill | 产出 |
 |---------|------|--------|-------------|------|
-| `/forge-brainstorm` | ⓪ 探索 | 发散可能性 + 圈定方向 | brainstorm | `idea-brief.md` |
-| `/forge-init` | 初始化 | 业务 + 技术 + 设计 | business-alignment + technical-design + fe-system | `project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
-| `/forge-define` | ① 定义 | 需求分析 + PRD | requirements | `PRD.md` |
-| `/forge-design` | ② 设计 | 交互 + 视觉 | interaction-design + fe-system | `interaction-spec.md` + `DESIGN.md` |
-| `/forge-detail` | ③ 详设 | API + DB + 前端（按需） | api-design + db-design (+ frontend-design) | `contract.md` + `modules/` |
-| `/forge-plan` | ④ 任务 | 垂直切片 + 自动推导测试 | plan + test-cases | `plan.md` + `testing/test-cases.md` |
-| `/forge-test` | ⑥ 测试 | 测试策略 + 测试用例 | test-strategy + test-cases | `testing/contract.md` + `testing/test-cases.md` |
-| `/forge-deploy` | ⑦ 交付 | 灰度 + 回滚 + 监控 | deploy | `deploy/contract.md` |
+| `/brainstorm` | ⓪ 探索 | 发散可能性 + 圈定方向 | brainstorm | `idea-brief.md` |
+| `/init` | 初始化 | 业务 + 技术 + 设计 | business-alignment + technical-design + fe-system | `project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
+| `/define` | ① 定义 | 需求分析 + PRD | requirements | `PRD.md` |
+| `/design` | ② 设计 | 交互 + 视觉 | interaction-design + fe-system | `interaction-spec.md` + `DESIGN.md` |
+| `/detail` | ③ 详设 | API + DB + 前端（按需） | api-design + db-design (+ frontend-design) | `contract.md` + `modules/` |
+| `/plan` | ④ 任务 | 垂直切片 + 自动推导测试 | plan + test-cases | `plan.md` + `testing/test-cases.md` |
+| `/test` | ⑥ 测试 | 测试策略 + 测试用例 | test-strategy + test-cases | `testing/contract.md` + `testing/test-cases.md` |
+| `/deploy` | ⑦ 交付 | 灰度 + 回滚 + 监控 | deploy | `deploy/contract.md` |
 
 **detail 按需加载**：读 project.md → 有前端框架？读已有文档 → 有 frontend/ 目录？不确定 → 问用户。
 

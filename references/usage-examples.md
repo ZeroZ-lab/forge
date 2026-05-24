@@ -5,7 +5,7 @@
 ## 完整对话示例
 
 ```
-你：/forge-brainstorm 我们团队想做一个内部工具提效
+你：/brainstorm 我们团队想做一个内部工具提效
 
 AI：（加载 forge-brainstorm）
   → 痛点具体是什么？当前工作流？想过哪些方向？
@@ -14,7 +14,7 @@ AI：（加载 forge-brainstorm）
   → 你判断：任务管理方向值得做
   → 生成：idea-brief.md
 
-你：/forge-init 团队协作任务管理系统，面向中小企业，1000 DAU，5 人团队
+你：/init 团队协作任务管理系统，面向中小企业，1000 DAU，5 人团队
 
 AI：（加载 3 个 skill，一次对话）
   → 业务对齐：目标用户？MVP 范围？成功指标？
@@ -22,28 +22,28 @@ AI：（加载 3 个 skill，一次对话）
   → 视觉设计：品牌？气质？暗色模式？
   → 生成项目级文件（project.md / DESIGN.md / AGENTS.md / CLAUDE.md）
 
-你：/forge-define 任务管理
+你：/define 任务管理
 
 AI：（加载 forge-define skill）
   → 用户角色有哪些？核心场景 TOP 5？
   → 验收条件怎么定？优先级怎么排？
   → 生成：PRD.md
 
-你：/forge-design 任务管理
+你：/design 任务管理
 
 AI：（加载 forge-interaction-design + forge-visual-design）
   → 核心操作路径？导航模式？
   → 组件复用？色彩系统？
   → 生成：interaction-spec.md + 更新 DESIGN.md
 
-你：/forge-detail 任务管理
+你：/detail 任务管理
 
 AI：（加载 forge-api-design + forge-db-design + forge-frontend-design）
   → API: D1-D7 → contract.md + modules/tasks.md
   → 数据库: DB1-DB5 → contract.md
   → 前端: F1-F5 → contract.md + modules/*.md
 
-你：/forge-plan 任务管理
+你：/plan 任务管理
 
 AI：（加载 forge-plan + forge-test-cases）
   → contract.md 有哪些模块？依赖关系？
@@ -54,14 +54,14 @@ AI：（加载 forge-plan + forge-test-cases）
 
 AI：读 plan.md → 按任务序列生成 src/ + tests/
 
-你：/forge-test 任务管理
+你：/test 任务管理
 
 AI：（加载 forge-test-strategy + forge-test-cases）
   → 测试策略：测试类型？覆盖范围？Mock 策略？
   → 测试用例：正常路径？边界情况？错误处理？
   → 生成：testing/contract.md + testing/test-cases.md
 
-你：/forge-deploy 任务管理
+你：/deploy 任务管理
 
 AI：（加载 forge-deploy）
   → 运行环境？容器化？CI/CD？灰度策略？

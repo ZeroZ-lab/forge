@@ -1,6 +1,6 @@
 ---
-name: forge-init
-description: 项目初始化——一次对话完成业务对齐 + 技术选型 + 设计系统，生成 project.md + DESIGN.md。用户说"初始化项目"、"新项目"、"项目启动"、运行 /forge-init、或从零开始建立项目时触发。
+name: init
+description: 项目初始化——一次对话完成业务对齐 + 技术选型 + 设计系统，生成 project.md + DESIGN.md。用户说"初始化项目"、"新项目"、"项目启动"、运行 /init、或从零开始建立项目时触发。
 ---
 
 # Forge Init — 项目初始化编排
@@ -95,7 +95,7 @@ my-project/
 ✅ 项目初始化完成！project.md + DESIGN.md 已生成。
 
 下一步你可以：
-  /forge-define — 定义第一个功能的需求
-  /forge-detail       — 跳过需求，直接做技术详设
+  /define — 定义第一个功能的需求
+  /detail       — 跳过需求，直接做技术详设
   自然语言            — 直接说"做任务管理功能"
 ```

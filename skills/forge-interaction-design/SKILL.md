@@ -1,6 +1,6 @@
 ---
-name: forge-interaction-design
-description: 设计用户怎么走——流程优先，先画路径再画界面。用户说"交互设计"、"用户流程"、"信息架构"、"线框图"、运行 /forge-design、或需要规划操作路径和导航模式时触发。
+name: interaction-design
+description: 设计用户怎么走——流程优先，先画路径再画界面。用户说"交互设计"、"用户流程"、"信息架构"、"线框图"、运行 /design、或需要规划操作路径和导航模式时触发。
 ---
 
 # Interaction Design — 设计阶段（交互层）
@@ -16,7 +16,7 @@ description: 设计用户怎么走——流程优先，先画路径再画界面�
 ## 与上下游的边界
 
 **上游**：读 PRD（forge-define 产出），不重复需求定义
-**下游**：交互规格交给 fe-system（定义外观）和 /forge-detail（技术实现）
+**下游**：交互规格交给 fe-system（定义外观）和 /detail（技术实现）
 
 **和 fe-system 的切法**：
 - interaction 定义**组件做什么**（行为、组合规则、交互模式）
@@ -131,7 +131,7 @@ description: 设计用户怎么走——流程优先，先画路径再画界面�
 
 **interaction-spec.md 必须包含**：用户流程图（核心+异常）· 信息架构图 · 页面线框图 · 组件清单（行为+组合）· 交互细节 · 响应式策略
 
-**不应包含**：视觉设计（fe-system）· 技术实现（/forge-detail）· 组件外观（fe-system）
+**不应包含**：视觉设计（fe-system）· 技术实现（/detail）· 组件外观（fe-system）
 
 ## 模板
 
@@ -143,8 +143,8 @@ description: 设计用户怎么走——流程优先，先画路径再画界面�
 
 ## 入口/出口条件
 
-**入口**：有 PRD.md（来自 /forge-define）或用户已有明确需求
-**出口**：interaction-spec.md 已生成 · 用户流程已定义 · 信息架构已明确 · 用户确认进入 fe-system 或 /forge-detail
+**入口**：有 PRD.md（来自 /define）或用户已有明确需求
+**出口**：interaction-spec.md 已生成 · 用户流程已定义 · 信息架构已明确 · 用户确认进入 fe-system 或 /detail
 
 ## 何时不使用
 
@@ -189,6 +189,6 @@ description: 设计用户怎么走——流程优先，先画路径再画界面�
 ✅ 交互设计完成！interaction-spec.md 已生成。
 
 下一步你可以：
-  /forge-detail        — 跳过视觉设计，直接做技术详设
+  /detail        — 跳过视觉设计，直接做技术详设
   继续视觉设计          — 建立设计系统（色彩 + 字体 + 间距 + 组件外观）
 ```

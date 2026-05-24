@@ -1,6 +1,6 @@
 ---
-name: forge-fe-system
-description: 设计系统落地——从产品意图推导可消费的 DESIGN.md + CSS tokens + 交互模式库。用户说"设计系统"、"配色"、"设计规范"、运行 /forge-design、或需要建立/更新 DESIGN.md 时触发。
+name: fe-system
+description: 设计系统落地——从产品意图推导可消费的 DESIGN.md + CSS tokens + 交互模式库。用户说"设计系统"、"配色"、"设计规范"、运行 /design、或需要建立/更新 DESIGN.md 时触发。
 ---
 
 # FE System — 设计系统落地
@@ -263,6 +263,6 @@ DESIGN.md 完成后，输出一份统计摘要供下游 Skill 消费：
 ✅ 设计系统完成！DESIGN.md + design-preview.html 已生成。
 
 下一步你可以：
-  /forge-detail  — 做技术详设（API + 数据库 + 前端）
+  /detail  — 做技术详设（API + 数据库 + 前端）
   自然语言       — 直接说"生成前端代码"进入 fe-artifact
 ```

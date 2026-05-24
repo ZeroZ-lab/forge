@@ -1,6 +1,6 @@
 ---
-name: forge-design
-description: 设计阶段编排——交互规格 + 视觉规范，一次对话完成交互和视觉设计。用户说"做设计"、"交互设计"、"设计阶段"、运行 /forge-design、或需要从 PRD 产出交互规格和设计系统时触发。
+name: design
+description: 设计阶段编排——交互规格 + 视觉规范，一次对话完成交互和视觉设计。用户说"做设计"、"交互设计"、"设计阶段"、运行 /design、或需要从 PRD 产出交互规格和设计系统时触发。
 ---
 
 # Forge Design — 设计阶段编排
@@ -26,7 +26,7 @@ DESIGN.md（更新）                               # 来自 Phase 2
 
 ## 跳过规则
 
-- 纯后端 API → 跳过整个阶段，直接进入 `/forge-detail`
+- 纯后端 API → 跳过整个阶段，直接进入 `/detail`
 - 已有 DESIGN.md → Phase 2 只更新 feature 相关的部分
 
 ## 历史维护（自动）
@@ -41,6 +41,6 @@ DESIGN.md（更新）                               # 来自 Phase 2
 ✅ 设计阶段完成！interaction-spec.md + DESIGN.md 已更新。
 
 下一步你可以：
-  /forge-detail  — 做技术详设（API + 数据库 + 前端）
+  /detail  — 做技术详设（API + 数据库 + 前端）
   自然语言       — 直接说"设计 API"或"设计数据库"单独进入某个领域
 ```

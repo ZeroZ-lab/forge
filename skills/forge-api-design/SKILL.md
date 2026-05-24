@@ -1,6 +1,6 @@
 ---
-name: forge-api-design
-description: 资源导向的 API 合约设计——D1-D7 决策点，产出能重建系统的文档树。用户说"API 设计"、"设计端点"、"API 合约"、运行 /forge-detail、或需要设计 REST/GraphQL API 时触发。
+name: api-design
+description: 资源导向的 API 合约设计——D1-D7 决策点，产出能重建系统的文档树。用户说"API 设计"、"设计端点"、"API 合约"、运行 /detail、或需要设计 REST/GraphQL API 时触发。
 ---
 
 # API Design — 详设阶段（API 层）
@@ -16,7 +16,7 @@ description: 资源导向的 API 合约设计——D1-D7 决策点，产出能�
 ## 与上下游的边界
 
 **上游**：读 project.md（技术选型+共享约束）+ PRD.md（用户故事+验收条件）
-**下游**：api/contract.md + modules/*.md 交给 db-design（数据模型）、frontend-design（消费接口）、/forge-plan（任务分解）
+**下游**：api/contract.md + modules/*.md 交给 db-design（数据模型）、frontend-design（消费接口）、/plan（任务分解）
 
 **和 db-design 的切法**：
 - api-design 定义**资源是什么、怎么暴露**（接口层）
@@ -191,7 +191,7 @@ METHOD /path
 ```
 ✅ API 详设完成！api/contract.md + modules/ 已生成。
 
-下一步（/forge-detail 自动继续）：
+下一步（/detail 自动继续）：
   数据库详设   — 表结构 + 索引 + 迁移
   前端详设     — 组件 + 数据流 + 状态管理（如有前端）
 ```

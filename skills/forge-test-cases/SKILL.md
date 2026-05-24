@@ -1,5 +1,5 @@
 ---
-name: forge-test-cases
+name: test-cases
 description: 从 contract.md 验收条件推导测试场景——正常路径、边界情况、错误处理全覆盖。用户说"写测试用例"、"测试场景"、"测试覆盖"、或需要从验收条件系统推导测试用例时触发。
 ---
 
@@ -159,7 +159,7 @@ docs/features/<feature>/
 ✅ 测试用例完成！testing/test-cases.md 已生成。
 
 下一步你可以：
-  /forge-codegen  — 按测试用例生成测试代码
-  /forge-deploy   — 发布规划（灰度 + 回滚 + 监控）
+  /codegen  — 按测试用例生成测试代码
+  /deploy   — 发布规划（灰度 + 回滚 + 监控）
   自然语言        — 直接说"生成代码"
 ```

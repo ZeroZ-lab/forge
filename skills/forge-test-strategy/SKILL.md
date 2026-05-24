@@ -1,5 +1,5 @@
 ---
-name: forge-test-strategy
+name: test-strategy
 description: 引导测试策略（T1-T5）——测试类型、覆盖策略、测试数据、Mock 策略、CI 集成，产出测试文档。用户说"测试策略"、"测试覆盖"、"Mock 策略"、或需要规划测试方案和质量门禁时触发。
 ---
 
@@ -159,6 +159,6 @@ docs/features/<feature>/testing/
 ✅ 测试策略完成！testing/contract.md 已生成。
 
 下一步你可以：
-  /forge-deploy  — 发布规划（灰度 + 回滚 + 监控）
+  /deploy  — 发布规划（灰度 + 回滚 + 监控）
   自然语言       — 直接说"生成代码"或"写测试"
 ```

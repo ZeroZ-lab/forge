@@ -1,6 +1,6 @@
 ---
-name: forge-frontend-design
-description: 组件驱动的前端设计——F1-F5 决策点，产出前端文档树。用户说"前端设计"、"组件设计"、"页面结构"、运行 /forge-detail、或需要设计前端架构和组件规格时触发。
+name: frontend-design
+description: 组件驱动的前端设计——F1-F5 决策点，产出前端文档树。用户说"前端设计"、"组件设计"、"页面结构"、运行 /detail、或需要设计前端架构和组件规格时触发。
 ---
 
 # Frontend Design — 详设阶段（前端层）
@@ -24,7 +24,7 @@ description: 组件驱动的前端设计——F1-F5 决策点，产出前端文�
 ## 与上下游的边界
 
 **上游**：读 interaction-spec（交互规格）+ api/contract.md（接口合约）+ DESIGN.md（设计系统）
-**下游**：frontend/contract.md + modules/*.md 交给 /forge-plan（任务分解）和代码生成
+**下游**：frontend/contract.md + modules/*.md 交给 /plan（任务分解）和代码生成
 
 **和 api-design 的切法**：
 - api-design 定义**接口合约**（端点+请求+响应）
@@ -181,5 +181,5 @@ src/
 ✅ 前端详设完成！frontend/contract.md + modules/ 已生成。
 
 下一步你可以：
-  /forge-plan  — 进入任务分解（垂直切片 + 依赖图 + 测试推导）
+  /plan  — 进入任务分解（垂直切片 + 依赖图 + 测试推导）
 ```
