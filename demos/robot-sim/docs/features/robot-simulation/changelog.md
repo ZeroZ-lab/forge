@@ -1,5 +1,38 @@
 # Robot Simulation — Changelog
 
+## v1.5 — 2026-05-24 (Round 15)
+
+- **新增**: 数据导出 (exporter.js) — 导出仿真状态（机器人、统计、轨迹）为 JSON 文件
+- **决策**: 使用 Blob + URL.createObjectURL 触发下载，下载后自动释放
+- **影响**: +exporter.js, sim-engine.js (onExport callback), controls.js (export button)
+
+## v1.4 — 2026-05-24 (Round 14)
+
+- **新增**: 粒子特效 (particles.js) — 碰撞红色火花 + 航点到达青色爆炸
+- **决策**: 粒子上限 200，FIFO 丢弃最老的，世界坐标绘制（受相机变换影响）
+- **决策**: 粒子位置和机器人位置使用相同坐标系（grid * cellSize），保持一致性
+- **影响**: +particles.js, renderer.js (drawParticles in world space), sim-engine.js (spawn + update)
+
+## v1.3 — 2026-05-24 (Round 13)
+
+- **新增**: 音效系统 (sound.js) — Web Audio API 合成音效，碰撞 beep + 航点到达双音
+- **决策**: 默认静音（需用户主动开启），AudioContext 延迟初始化，碰撞音效 100ms 节流
+- **影响**: +sound.js, sim-engine.js (collision/waypoint sound triggers), controls.js (sound button)
+
+## v1.2 — 2026-05-24 (Round 12)
+
+- **新增**: 缩略地图 (minimap.js) — Canvas 右上角总览，显示机器人、航点、视口框
+- **决策**: 固定尺寸 160×120px，世界坐标按比例缩放，点击缩略图可跳转相机位置
+- **决策**: 缩略图点击优先级高于航点设置（避免误设航点）
+- **影响**: +minimap.js, renderer.js (drawMinimap at end), sim-engine.js (minimapConfig + click handler)
+
+## v1.1 — 2026-05-24 (Round 11)
+
+- **新增**: 相机视口 (camera.js) — 滚轮缩放 + 中键拖拽平移
+- **决策**: 屏幕坐标与世界坐标分离，renderFrame 应用相机变换后绘制世界，HUD 在重置变换后绘制
+- **决策**: canvasClickToGrid 接受 camera 参数，点击坐标先转世界坐标再转网格坐标
+- **影响**: +camera.js, renderer.js (applyCameraTransform), sim-engine.js (setupCameraControls), waypoints.js (camera param)
+
 ## v1.0 — 2026-05-24 (Round 10)
 
 - **新增**: 帮助面板 (help.js)，H 键打开

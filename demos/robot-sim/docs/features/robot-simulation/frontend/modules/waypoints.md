@@ -60,8 +60,8 @@ getCurrentWaypoint(state: WaypointState): Waypoint | null
 advanceWaypoint(state: WaypointState, robot: RobotState): boolean
   → 检查是否到达当前航点（距离 < 0.5），到达则切换到下一个
 
-canvasClickToGrid(event: MouseEvent, canvas: HTMLCanvasElement, grid: GridConfig): { x: number, y: number }
-  → Canvas 点击坐标转网格坐标（取单元格中心）
+canvasClickToGrid(event: MouseEvent, canvas: HTMLCanvasElement, grid: GridConfig, camera: CameraState): { x: number, y: number }
+  → Canvas 点击坐标转网格坐标，考虑相机偏移和缩放
 
 drawWaypoints(config: RenderConfig, waypointState: WaypointState, cellSize: number): void
   → 绘制航点菱形 + 序号 + 虚线路径

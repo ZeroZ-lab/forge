@@ -69,6 +69,11 @@
 | recorder | modules/recorder.md | 轨迹录制回放 |
 | theme | modules/theme.md | 暗色/亮色主题切换 |
 | help | modules/help.md | 帮助面板 |
+| camera | modules/camera.md | 相机视口（平移 + 缩放） |
+| minimap | modules/minimap.md | 缩略地图（右上角总览） |
+| sound | modules/sound.md | 音效系统（Web Audio API） |
+| particles | modules/particles.md | 粒子特效（碰撞 + 航点） |
+| exporter | modules/exporter.md | 数据导出（JSON 文件下载） |
 
 ## 模块依赖图
 
@@ -83,7 +88,12 @@
                     ├── stats.js
                     ├── trail.js
                     ├── recorder.js
-                    ├── renderer.js ──→ lidar.js, waypoints.js, trail.js, pathfinder.js
+                    ├── camera.js
+                    ├── minimap.js
+                    ├── sound.js
+                    ├── particles.js
+                    ├── exporter.js
+                    ├── renderer.js ──→ lidar.js, waypoints.js, trail.js, pathfinder.js, camera.js, minimap.js, particles.js
                     ├── controls.js
                     ├── theme.js
                     └── help.js
@@ -92,9 +102,9 @@
 ## 代码映射
 
 ```
-engine/       → sim-engine.js（游戏循环 + 物理）
+engine/       → sim-engine.js（游戏循环 + 物理）+ sound.js（音效）+ exporter.js（数据导出）
 entities/     → robot.js（机器人）
-rendering/    → renderer.js（Canvas 绘制）+ map.js（网格/障碍物）
+rendering/    → renderer.js（Canvas 绘制）+ camera.js（相机视口）+ minimap.js（缩略图）+ particles.js（粒子特效）+ map.js（网格/障碍物）
 ui/           → controls.js（控制面板）
 styles/       → style.css（全局样式 + 设计 token）
 ```

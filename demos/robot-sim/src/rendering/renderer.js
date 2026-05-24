@@ -1,9 +1,16 @@
-// renderer.js — Canvas 2D rendering
-// Layer order: background → grid → obstacles → trail → lidar → path → waypoints → robots → HUD
+// renderer.js — Canvas rendering
+// Dependencies: lidar.js, waypoints.js, trail.js, pathfinder.js, camera.js, minimap.js, particles.js
+
+import { castRays, drawLidar } from '../entities/lidar.js';
+import { drawWaypoints } from '../entities/waypoints.js';
+import { drawTrail } from './trail.js';
+import { drawPath } from '../engine/pathfinder.js';
+import { applyCameraTransform } from './camera.js';
+import { drawMinimap } from './minimap.js';
+import { drawParticles } from './particles.js';
 
 /**
- * Initialize the renderer: set canvas size with DPR scaling
- * @returns {{ canvas, ctx, dpr }}
+ * initRenderer(canvas, grid): RenderConfig
  */
 export function initRenderer(canvas, grid) {
   const dpr = window.devicePixelRatio || 1;
@@ -18,185 +25,210 @@ export function initRenderer(canvas, grid) {
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  return { canvas, ctx, dpr, width, height };
+  return { canvas, ctx, width, height, dpr };
 }
 
 /**
- * Resize the canvas to fill its container, maintaining grid proportions
+ * Internal: clear
  */
-export function resizeCanvas(renderConfig, container, grid) {
-  const dpr = window.devicePixelRatio || 1;
-  const w = container.clientWidth;
-  const h = container.clientHeight;
-
-  renderConfig.canvas.width = w * dpr;
-  renderConfig.canvas.height = h * dpr;
-  renderConfig.canvas.style.width = w + 'px';
-  renderConfig.canvas.style.height = h + 'px';
-  renderConfig.width = w;
-  renderConfig.height = h;
-  renderConfig.dpr = dpr;
-
-  const ctx = renderConfig.ctx;
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.scale(dpr, dpr);
-
-  // Recalculate cell size to fill available space
-  grid.cellSize = Math.floor(
-    Math.min(w / grid.cols, h / grid.rows)
-  );
-}
-
-/**
- * Clear the canvas and fill with background color
- */
-export function clear(ctx, width, height) {
-  const bgColor = getCSSVar('--bg-primary') || '#0a0e17';
-  ctx.fillStyle = bgColor;
+function clear(config) {
+  const { ctx, width, height } = config;
+  const bg = getComputedStyle(document.documentElement)
+    .getPropertyValue('--bg-primary')
+    .trim() || '#0a0e17';
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, width, height);
 }
 
 /**
- * Draw the grid lines and coordinate labels
+ * Internal: drawGrid
  */
-export function drawGrid(ctx, grid) {
+function drawGrid(config, grid) {
+  const { ctx, width, height } = config;
   const { cols, rows, cellSize } = grid;
-  const lineColor = getCSSVar('--bg-tertiary') || '#1a2035';
-  const textColor = getCSSVar('--text-muted') || '#64748b';
 
-  ctx.strokeStyle = lineColor;
-  ctx.lineWidth = 0.5;
+  ctx.strokeStyle = getComputedStyle(document.documentElement)
+    .getPropertyValue('--bg-tertiary')
+    .trim() || '#1a2035';
+  ctx.lineWidth = 1;
 
-  // Vertical lines
   for (let x = 0; x <= cols; x++) {
     ctx.beginPath();
     ctx.moveTo(x * cellSize, 0);
-    ctx.lineTo(x * cellSize, rows * cellSize);
+    ctx.lineTo(x * cellSize, height);
     ctx.stroke();
   }
-
-  // Horizontal lines
   for (let y = 0; y <= rows; y++) {
     ctx.beginPath();
     ctx.moveTo(0, y * cellSize);
-    ctx.lineTo(cols * cellSize, y * cellSize);
+    ctx.lineTo(width, y * cellSize);
     ctx.stroke();
   }
 
-  // Coordinate labels
-  ctx.fillStyle = textColor;
-  ctx.font = '9px JetBrains Mono, monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-  for (let x = 0; x < cols; x += 5) {
-    ctx.fillText(String(x), x * cellSize + cellSize / 2, 2);
+  const muted = getComputedStyle(document.documentElement)
+    .getPropertyValue('--text-muted')
+    .trim() || '#64748b';
+  ctx.fillStyle = muted;
+  ctx.font = '10px "JetBrains Mono", monospace';
+
+  for (let x = 0; x < cols; x++) {
+    ctx.textAlign = 'center';
+    ctx.fillText(String(x), x * cellSize + cellSize / 2, 10);
   }
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  for (let y = 0; y < rows; y += 5) {
-    ctx.fillText(String(y), 2, y * cellSize + cellSize / 2);
+  for (let y = 1; y < rows; y++) {
+    ctx.textAlign = 'left';
+    ctx.fillText(String(y), 2, y * cellSize + 12);
   }
 }
 
 /**
- * Draw a single obstacle as a rounded solid block
+ * Internal: drawRobot
  */
-export function drawObstacle(ctx, obs, cellSize) {
-  const color = getCSSVar('--text-muted') || '#64748b';
-  const x = obs.x * cellSize + 1;
-  const y = obs.y * cellSize + 1;
-  const w = obs.width * cellSize - 2;
-  const h = obs.height * cellSize - 2;
-  const r = 3;
-
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-
-  ctx.fillStyle = color;
-  ctx.fill();
-}
-
-/**
- * Draw a robot as a triangle pointing in its heading direction, with glow
- */
-export function drawRobot(ctx, robot, cellSize) {
-  const accentColor = getCSSVar('--accent-primary') || '#00d4ff';
-  const dangerColor = getCSSVar('--accent-danger') || '#ff3366';
-  const color = robot.colliding ? dangerColor : accentColor;
-
-  const px = robot.x * cellSize;
-  const py = robot.y * cellSize;
+function drawRobot(config, robot, cellSize) {
+  const { ctx } = config;
+  const cx = robot.x * cellSize + cellSize / 2;
+  const cy = robot.y * cellSize + cellSize / 2;
   const size = cellSize * 0.35;
-  const rad = (robot.heading * Math.PI) / 180;
+  const headingRad = (robot.heading * Math.PI) / 180;
 
-  // Triangle vertices
-  const nose = {
-    x: px + Math.cos(rad) * size,
-    y: py + Math.sin(rad) * size,
-  };
-  const left = {
-    x: px + Math.cos(rad + (2.4)) * size * 0.7,
-    y: py + Math.sin(rad + (2.4)) * size * 0.7,
-  };
-  const right = {
-    x: px + Math.cos(rad - (2.4)) * size * 0.7,
-    y: py + Math.sin(rad - (2.4)) * size * 0.7,
-  };
+  const color = robot.colliding ? '#ff3366' : '#00d4ff';
 
-  // Glow effect
-  ctx.save();
   ctx.shadowColor = color;
-  ctx.shadowBlur = 10;
+  ctx.shadowBlur = 8;
 
-  ctx.beginPath();
-  ctx.moveTo(nose.x, nose.y);
-  ctx.lineTo(left.x, left.y);
-  ctx.lineTo(right.x, right.y);
-  ctx.closePath();
   ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(
+    cx + Math.cos(headingRad) * size,
+    cy + Math.sin(headingRad) * size
+  );
+  ctx.lineTo(
+    cx + Math.cos(headingRad + 2.4) * size * 0.7,
+    cy + Math.sin(headingRad + 2.4) * size * 0.7
+  );
+  ctx.lineTo(
+    cx + Math.cos(headingRad - 2.4) * size * 0.7,
+    cy + Math.sin(headingRad - 2.4) * size * 0.7
+  );
+  ctx.closePath();
   ctx.fill();
 
-  ctx.restore();
-
-  // Direction line extending from nose
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(nose.x, nose.y);
+  ctx.moveTo(cx, cy);
   ctx.lineTo(
-    px + Math.cos(rad) * size * 1.5,
-    py + Math.sin(rad) * size * 1.5
+    cx + Math.cos(headingRad) * size * 1.2,
+    cy + Math.sin(headingRad) * size * 1.2
   );
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.5;
   ctx.stroke();
+
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
 }
 
 /**
- * Draw HUD overlay (FPS counter and tick number) in top-left corner
+ * Internal: drawObstacle
  */
-export function drawHUD(ctx, state, fps) {
-  const textColor = getCSSVar('--text-secondary') || '#94a3b8';
+function drawObstacle(config, obstacle, cellSize) {
+  const { ctx } = config;
+  const x = obstacle.x * cellSize;
+  const y = obstacle.y * cellSize;
+  const w = obstacle.width * cellSize;
+  const h = obstacle.height * cellSize;
+
+  ctx.fillStyle = getComputedStyle(document.documentElement)
+    .getPropertyValue('--text-muted')
+    .trim() || '#64748b';
+  ctx.beginPath();
+  ctx.roundRect(x + 2, y + 2, w - 4, h - 4, 4);
+  ctx.fill();
+}
+
+/**
+ * Internal: drawHUD
+ */
+function drawHUD(config, state) {
+  const { ctx, height } = config;
+  const textColor = getComputedStyle(document.documentElement)
+    .getPropertyValue('--text-secondary')
+    .trim() || '#94a3b8';
   ctx.fillStyle = textColor;
-  ctx.font = '11px JetBrains Mono, monospace';
+  ctx.font = '11px "JetBrains Mono", monospace';
   ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
-  ctx.fillText(`FPS: ${fps}`, 8, 8);
-  ctx.fillText(`Tick: ${state.tick}`, 8, 22);
+
+  const y = height - 10;
+  ctx.fillText(
+    'FPS: ' + Math.round(state.fps) +
+    '  |  Tick: ' + state.tick +
+    '  |  Robots: ' + state.robots.length,
+    8,
+    y
+  );
 }
 
 /**
- * Read a CSS custom property value from :root
+ * renderFrame(config, state, grid, camera, minimapConfig): void
+ * Full frame render: reset transform → clear → camera → world → reset → HUD → minimap
  */
-function getCSSVar(name) {
-  return getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim();
+export function renderFrame(config, state, grid, camera, minimapConfig) {
+  const { ctx } = config;
+  const { cellSize } = grid;
+
+  // 0. Reset transform + clear
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(config.dpr, config.dpr);
+  clear(config);
+
+  // 1. Apply camera transform
+  if (camera) {
+    applyCameraTransform(ctx, camera);
+  }
+
+  // 2. Grid
+  drawGrid(config, grid);
+
+  // 3. Obstacles
+  for (const obs of state.obstacles) {
+    drawObstacle(config, obs, cellSize);
+  }
+
+  // 4. Waypoints
+  drawWaypoints(config, state.waypoints, cellSize);
+
+  // 5. A* path
+  drawPath(config, state.currentPath, cellSize);
+
+  // 6. Trails
+  for (const trail of state.trails) {
+    drawTrail(config, trail, cellSize);
+  }
+
+  // 7-8. LiDAR + Robots
+  for (let i = 0; i < state.robots.length; i++) {
+    const robot = state.robots[i];
+
+    if (state.lidarEnabled) {
+      const readings = castRays(robot, state.obstacles, grid);
+      robot.lidarReadings = readings;
+      drawLidar(config, robot, readings, cellSize);
+    }
+
+    drawRobot(config, robot, cellSize);
+  }
+
+  // 9. Particles (world space)
+  if (state.particles) {
+    drawParticles(config, state.particles);
+  }
+
+  // 10. Reset transform for HUD (screen space)
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(config.dpr, config.dpr);
+  drawHUD(config, state);
+
+  // 11. Minimap (screen space)
+  if (minimapConfig) {
+    drawMinimap(config, minimapConfig, state, grid, camera);
+  }
 }

@@ -43,8 +43,8 @@ RenderConfig {
 initRenderer(canvas: HTMLCanvasElement, grid: GridConfig): RenderConfig
   → 设置 Canvas 尺寸和 DPR 缩放
 
-renderFrame(config: RenderConfig, state: SimState, grid: GridConfig): void
-  → 完整渲染一帧：按层级顺序调用 clear → drawGrid → drawWaypoints → drawPath → drawTrail → drawLidar → drawRobot → drawObstacle → drawHUD
+renderFrame(config: RenderConfig, state: SimState, grid: GridConfig, camera: CameraState, minimapConfig: MinimapConfig): void
+  → 完整渲染一帧：reset transform → clear → apply camera → world → reset transform → HUD → minimap
 ```
 
 ## 内部函数
@@ -72,10 +72,13 @@ drawHUD(config: RenderConfig, state: SimState): void
 ## 依赖关系
 
 ```
-from lidar.js:    castRays, drawLidar
+from lidar.js:     castRays, drawLidar
 from waypoints.js: drawWaypoints
-from trail.js:    drawTrail
+from trail.js:     drawTrail
 from pathfinder.js: drawPath
+from camera.js:    applyCameraTransform
+from minimap.js:   drawMinimap
+from particles.js: drawParticles
 ```
 
 ## 绘制层级（从底到顶，renderFrame 内顺序）

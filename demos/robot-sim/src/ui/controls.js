@@ -1,290 +1,268 @@
-// controls.js — Control panel UI and keyboard bindings
-// Creates DOM, binds events, updates display each frame
-
-// Module-level key state for continuous movement input
-const heldKeys = new Set();
+// controls.js — Control panel UI (no external imports, callbacks for engine communication)
 
 /**
- * Create the control panel DOM inside the given container.
- * @param {HTMLElement} container
- * @param {object} callbacks - Event handlers for all controls
- * @returns {{ container: HTMLElement, callbacks: object }}
+ * createControlPanel(container, callbacks): ControlPanel
  */
 export function createControlPanel(container, callbacks) {
-  container.innerHTML = `
-    <h2 class="panel-title">Robot Sim</h2>
+  container.innerHTML = '';
 
-    <div class="control-section">
-      <div class="btn-group">
-        <button id="btn-play">▶ Play</button>
-        <button id="btn-step">⏭ Step</button>
-        <button id="btn-reset">↺ Reset</button>
-      </div>
-    </div>
+  const panel = document.createElement('div');
+  panel.className = 'control-panel';
 
-    <div class="control-section">
-      <div class="slider-control">
-        <label>Speed <span class="slider-value" id="speed-value">1x</span></label>
-        <input type="range" id="speed-slider" min="1" max="10" value="1">
-      </div>
-      <div class="slider-control">
-        <label>Robots <span class="slider-value" id="robot-count-value">1</span></label>
-        <input type="range" id="robot-count-slider" min="1" max="10" value="1">
-      </div>
-    </div>
+  // --- Control buttons ---
+  const btnGroup = document.createElement('div');
+  btnGroup.className = 'control-group';
 
-    <div class="control-section">
-      <div class="grid-size">
-        <span>Grid</span>
-        <input type="number" id="grid-cols" value="20" min="5" max="50">
-        <span>×</span>
-        <input type="number" id="grid-rows" value="15" min="5" max="50">
-      </div>
-    </div>
-
-    <div class="control-section">
-      <div class="toggle-control">
-        <input type="checkbox" id="autopilot-toggle">
-        <label for="autopilot-toggle">Autopilot</label>
-      </div>
-      <div class="toggle-control">
-        <input type="checkbox" id="trail-toggle" checked>
-        <label for="trail-toggle">Show Trail</label>
-      </div>
-    </div>
-
-    <div class="control-section">
-      <div class="btn-group">
-        <button id="btn-record" class="record-btn">⏺ Record</button>
-        <button id="btn-playback">▶ Playback</button>
-      </div>
-    </div>
-
-    <div class="control-section">
-      <button id="btn-theme" class="theme-btn">☀ Light Theme</button>
-    </div>
-
-    <div class="control-section">
-      <button id="btn-help" class="theme-btn">? Help</button>
-    </div>
-
-    <div class="control-section robot-info">
-      <h3 class="section-title">Robots</h3>
-      <div id="robot-cards"></div>
-    </div>
-  `;
-
-  // --- Bind button events ---
-  container.querySelector('#btn-play').addEventListener('click', () => {
-    callbacks.onPlay();
-  });
-  container.querySelector('#btn-step').addEventListener('click', () => {
-    callbacks.onStep();
-  });
-  container.querySelector('#btn-reset').addEventListener('click', () => {
-    callbacks.onReset();
+  const btnPlay = document.createElement('button');
+  btnPlay.id = 'btn-play';
+  btnPlay.className = 'btn';
+  btnPlay.textContent = '▶ 播放';
+  btnPlay.addEventListener('click', () => {
+    if (btnPlay.classList.contains('playing')) {
+      callbacks.onPause();
+    } else {
+      callbacks.onPlay();
+    }
   });
 
-  // Speed slider
-  const speedSlider = container.querySelector('#speed-slider');
-  const speedValue = container.querySelector('#speed-value');
+  const btnStep = document.createElement('button');
+  btnStep.id = 'btn-step';
+  btnStep.className = 'btn';
+  btnStep.textContent = '⏭ 单步';
+  btnStep.addEventListener('click', callbacks.onStep);
+
+  const btnReset = document.createElement('button');
+  btnReset.id = 'btn-reset';
+  btnReset.className = 'btn';
+  btnReset.textContent = '↺ 重置';
+  btnReset.addEventListener('click', callbacks.onReset);
+
+  const btnAutopilot = document.createElement('button');
+  btnAutopilot.id = 'btn-autopilot';
+  btnAutopilot.className = 'btn';
+  btnAutopilot.textContent = '🤖 自动驾驶';
+  btnAutopilot.addEventListener('click', () => {
+    const active = btnAutopilot.classList.toggle('active');
+    callbacks.onAutopilotToggle(active);
+  });
+
+  const btnRecord = document.createElement('button');
+  btnRecord.id = 'btn-record';
+  btnRecord.className = 'btn';
+  btnRecord.textContent = '⏺ 录制';
+  btnRecord.addEventListener('click', () => {
+    const recording = btnRecord.classList.toggle('active');
+    callbacks.onRecordToggle(recording);
+  });
+
+  const btnPlayback = document.createElement('button');
+  btnPlayback.id = 'btn-playback';
+  btnPlayback.className = 'btn';
+  btnPlayback.textContent = '⏮ 回放';
+  btnPlayback.addEventListener('click', callbacks.onPlayback);
+
+  const btnSound = document.createElement('button');
+  btnSound.id = 'btn-sound';
+  btnSound.className = 'btn';
+  btnSound.textContent = '🔇 音效';
+  btnSound.addEventListener('click', () => {
+    const active = btnSound.classList.toggle('active');
+    btnSound.textContent = active ? '🔊 音效' : '🔇 音效';
+    callbacks.onSoundToggle(active);
+  });
+
+  const btnExport = document.createElement('button');
+  btnExport.id = 'btn-export';
+  btnExport.className = 'btn';
+  btnExport.textContent = '📥 导出';
+  btnExport.addEventListener('click', callbacks.onExport);
+
+  btnGroup.append(btnPlay, btnStep, btnReset, btnAutopilot, btnRecord, btnPlayback, btnSound, btnExport);
+
+  // --- Sliders ---
+  const sliderGroup = document.createElement('div');
+  sliderGroup.className = 'control-group';
+
+  const speedLabel = document.createElement('label');
+  speedLabel.textContent = '速度';
+  const speedVal = document.createElement('span');
+  speedVal.id = 'speed-value';
+  speedVal.className = 'mono';
+  speedVal.textContent = '1x';
+  const speedSlider = document.createElement('input');
+  speedSlider.type = 'range';
+  speedSlider.id = 'speed-slider';
+  speedSlider.min = '1';
+  speedSlider.max = '10';
+  speedSlider.value = '1';
   speedSlider.addEventListener('input', () => {
-    const speed = parseInt(speedSlider.value, 10);
-    speedValue.textContent = speed + 'x';
-    callbacks.onSpeedChange(speed);
+    const v = Number(speedSlider.value);
+    speedVal.textContent = v + 'x';
+    callbacks.onSpeedChange(v);
   });
 
-  // Robot count slider
-  const robotSlider = container.querySelector('#robot-count-slider');
-  const robotCountValue = container.querySelector('#robot-count-value');
-  robotSlider.addEventListener('input', () => {
-    const count = parseInt(robotSlider.value, 10);
-    robotCountValue.textContent = count;
-    callbacks.onRobotCountChange(count);
+  const rcLabel = document.createElement('label');
+  rcLabel.textContent = '机器人数';
+  const rcVal = document.createElement('span');
+  rcVal.id = 'robot-count-value';
+  rcVal.className = 'mono';
+  rcVal.textContent = '1';
+  const rcSlider = document.createElement('input');
+  rcSlider.type = 'range';
+  rcSlider.id = 'robot-count';
+  rcSlider.min = '1';
+  rcSlider.max = '10';
+  rcSlider.value = '1';
+  rcSlider.addEventListener('input', () => {
+    const v = Number(rcSlider.value);
+    rcVal.textContent = v;
+    callbacks.onRobotCountChange(v);
   });
 
-  // Grid size inputs
-  const gridCols = container.querySelector('#grid-cols');
-  const gridRows = container.querySelector('#grid-rows');
-  const handleGridChange = () => {
-    const cols = Math.max(5, Math.min(50, parseInt(gridCols.value) || 20));
-    const rows = Math.max(5, Math.min(50, parseInt(gridRows.value) || 15));
-    callbacks.onGridChange(cols, rows);
+  sliderGroup.append(
+    speedLabel, speedVal, speedSlider,
+    rcLabel, rcVal, rcSlider
+  );
+
+  // --- Grid config ---
+  const gridGroup = document.createElement('div');
+  gridGroup.className = 'control-group grid-config';
+
+  const gcLabel = document.createElement('label');
+  gcLabel.textContent = '地图大小';
+  const colsInput = document.createElement('input');
+  colsInput.type = 'number';
+  colsInput.id = 'grid-cols';
+  colsInput.value = '20';
+  colsInput.min = '5';
+  colsInput.max = '50';
+  const sep = document.createElement('span');
+  sep.textContent = '×';
+  const rowsInput = document.createElement('input');
+  rowsInput.type = 'number';
+  rowsInput.id = 'grid-rows';
+  rowsInput.value = '15';
+  rowsInput.min = '5';
+  rowsInput.max = '50';
+  const btnGrid = document.createElement('button');
+  btnGrid.id = 'btn-apply-grid';
+  btnGrid.className = 'btn';
+  btnGrid.textContent = '应用';
+  btnGrid.addEventListener('click', () => {
+    callbacks.onGridChange(Number(colsInput.value), Number(rowsInput.value));
+  });
+
+  gridGroup.append(gcLabel, colsInput, sep, rowsInput, btnGrid);
+
+  // --- Theme ---
+  const themeGroup = document.createElement('div');
+  themeGroup.className = 'control-group';
+  const btnTheme = document.createElement('button');
+  btnTheme.id = 'btn-theme';
+  btnTheme.className = 'btn';
+  btnTheme.textContent = '🌓 切换主题';
+  btnTheme.addEventListener('click', callbacks.onThemeToggle);
+  themeGroup.appendChild(btnTheme);
+
+  // --- Robot info ---
+  const infoGroup = document.createElement('div');
+  infoGroup.className = 'control-group';
+  const robotInfo = document.createElement('div');
+  robotInfo.id = 'robot-info';
+  infoGroup.appendChild(robotInfo);
+
+  panel.append(btnGroup, sliderGroup, gridGroup, themeGroup, infoGroup);
+  container.appendChild(panel);
+
+  const controlPanel = {
+    container,
+    btnPlay,
+    btnAutopilot,
+    btnRecord,
+    btnPlayback,
+    btnSound,
+    btnExport,
+    robotInfo,
+    speedSlider,
+    speedVal,
+    rcSlider,
+    rcVal,
+    cleanupKeyboard: () => {},
+    setPlaying(playing) {
+      btnPlay.textContent = playing ? '⏸ 暂停' : '▶ 播放';
+      if (playing) btnPlay.classList.add('playing');
+      else btnPlay.classList.remove('playing');
+    },
   };
-  gridCols.addEventListener('change', handleGridChange);
-  gridRows.addEventListener('change', handleGridChange);
 
-  // Autopilot toggle
-  container.querySelector('#autopilot-toggle').addEventListener('change', (e) => {
-    callbacks.onAutopilotToggle(e.target.checked);
-  });
-
-  // Trail toggle
-  container.querySelector('#trail-toggle').addEventListener('change', (e) => {
-    callbacks.onTrailToggle(e.target.checked);
-  });
-
-  // Record / Playback
-  container.querySelector('#btn-record').addEventListener('click', () => {
-    callbacks.onRecordToggle();
-  });
-  container.querySelector('#btn-playback').addEventListener('click', () => {
-    callbacks.onPlayback();
-  });
-
-  // Theme
-  container.querySelector('#btn-theme').addEventListener('click', () => {
-    callbacks.onThemeToggle();
-  });
-
-  // Help
-  container.querySelector('#btn-help').addEventListener('click', () => {
-    callbacks.onHelpToggle();
-  });
-
-  return { container, callbacks };
+  return controlPanel;
 }
 
 /**
- * Update the control panel display to reflect current simulation state.
- * Called every frame.
+ * updateControlPanel(panel, state): void
  */
 export function updateControlPanel(panel, state) {
-  const { container } = panel;
+  const info = panel.robotInfo;
+  if (!info) return;
 
-  // Play/Pause button label
-  const playBtn = container.querySelector('#btn-play');
-  if (playBtn) {
-    playBtn.textContent = state.running ? '⏸ Pause' : '▶ Play';
-  }
-
-  // Record button state
-  const recordBtn = container.querySelector('#btn-record');
-  if (recordBtn) {
-    if (state.recorder && state.recorder.recording) {
-      recordBtn.classList.add('recording');
-      recordBtn.textContent = ' Stop';
-    } else {
-      recordBtn.classList.remove('recording');
-      recordBtn.textContent = '⏺ Record';
-    }
-  }
-
-  // Autopilot toggle sync
-  const autopilotToggle = container.querySelector('#autopilot-toggle');
-  if (autopilotToggle && state.autopilot) {
-    autopilotToggle.checked = state.autopilot.enabled;
-  }
-
-  // Trail toggle sync
-  const trailToggle = container.querySelector('#trail-toggle');
-  if (trailToggle && state.trails && state.trails[0]) {
-    trailToggle.checked = state.trails[0].enabled;
-  }
-
-  // Update robot info cards
-  const cardsContainer = container.querySelector('#robot-cards');
-  if (cardsContainer && state.robots) {
-    cardsContainer.innerHTML = '';
-    state.robots.forEach((robot, i) => {
-      const stats = state.stats ? state.stats[i] : null;
+  const existingCards = info.querySelectorAll('.robot-card');
+  if (existingCards.length !== state.robots.length) {
+    info.innerHTML = '';
+    for (const robot of state.robots) {
       const card = document.createElement('div');
       card.className = 'robot-card';
-
-      const statusLabel = robot.colliding
-        ? 'Colliding'
-        : state.running
-          ? 'Running'
-          : 'Stopped';
-
-      card.innerHTML = `
-        <div class="robot-card-header">
-          <span class="robot-dot ${robot.colliding ? 'colliding' : ''}"></span>
-          <span>${robot.id}</span>
-        </div>
-        <div class="robot-card-body">
-          Pos: (${robot.x.toFixed(1)}, ${robot.y.toFixed(1)})<br>
-          Heading: ${Math.round(robot.heading)}°<br>
-          Status: ${statusLabel}
-          ${stats ? `<br>Distance: ${stats.distance.toFixed(1)} cells<br>Collisions: ${stats.collisionCount}` : ''}
-        </div>
-      `;
-      cardsContainer.appendChild(card);
-    });
+      card.dataset.robotId = robot.id;
+      card.innerHTML =
+        '<div class="robot-card-header">' +
+          '<span class="robot-id">' + robot.id + '</span>' +
+          '<span class="status-indicator"></span>' +
+        '</div>' +
+        '<div class="robot-data">' +
+          '<span class="mono robot-pos"></span>' +
+          '<span class="mono robot-heading"></span>' +
+          '<span class="mono robot-distance"></span>' +
+          '<span class="mono robot-collisions"></span>' +
+        '</div>';
+      info.appendChild(card);
+    }
   }
+
+  const cards = info.querySelectorAll('.robot-card');
+  cards.forEach((card, i) => {
+    if (i >= state.robots.length) return;
+    const robot = state.robots[i];
+    const stats = state.stats && state.stats[i] ? state.stats[i] : null;
+
+    const indicator = card.querySelector('.status-indicator');
+    indicator.className = 'status-indicator';
+    if (robot.colliding) indicator.classList.add('colliding');
+    else if (state.running && !state.paused) indicator.classList.add('running');
+    else if (state.paused) indicator.classList.add('paused');
+
+    card.querySelector('.robot-pos').textContent =
+      '(' + robot.x.toFixed(1) + ', ' + robot.y.toFixed(1) + ')';
+    card.querySelector('.robot-heading').textContent =
+      '朝向: ' + Math.round(robot.heading) + '°';
+    card.querySelector('.robot-distance').textContent =
+      '距离: ' + (stats ? stats.distance.toFixed(1) : '0.0');
+    card.querySelector('.robot-collisions').textContent =
+      '碰撞: ' + (stats ? stats.collisionCount : 0);
+  });
 }
 
 /**
- * Bind global keyboard shortcuts.
- * Ignores keypresses when an input/select/textarea is focused.
- * @returns {function} Cleanup function to remove listeners
+ * bindKeyboard(callbacks): () => void
  */
-export function createKeyboardBindings(callbacks) {
-  const keydownHandler = (e) => {
-    if (
-      e.target.tagName === 'INPUT' ||
-      e.target.tagName === 'SELECT' ||
-      e.target.tagName === 'TEXTAREA'
-    ) {
-      return;
-    }
-
-    // Track held keys for continuous movement
-    if (['ArrowUp', 'w', 'W'].includes(e.key)) heldKeys.add('forward');
-    if (['ArrowDown', 'x', 'X'].includes(e.key)) heldKeys.add('backward');
-    if (['ArrowLeft', 'a', 'A'].includes(e.key)) heldKeys.add('left');
-    if (['ArrowRight', 'd', 'D'].includes(e.key)) heldKeys.add('right');
-
-    // One-shot actions
-    switch (e.key) {
-      case ' ':
-        e.preventDefault();
-        callbacks.onPlay();
-        break;
-      case 'r':
-      case 'R':
-        callbacks.onReset();
-        break;
-      case 'h':
-      case 'H':
-        callbacks.onHelpToggle();
-        break;
-      case 'Escape':
-        callbacks.onHelpToggle();
-        break;
-      case 's':
-      case 'S':
-        callbacks.onStep();
-        break;
+export function bindKeyboard(callbacks) {
+  const handler = (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.code === 'Space') {
+      e.preventDefault();
+      callbacks.onPlay();
+    } else if (e.code === 'KeyR') {
+      callbacks.onReset();
     }
   };
-
-  const keyupHandler = (e) => {
-    if (['ArrowUp', 'w', 'W'].includes(e.key)) heldKeys.delete('forward');
-    if (['ArrowDown', 'x', 'X'].includes(e.key)) heldKeys.delete('backward');
-    if (['ArrowLeft', 'a', 'A'].includes(e.key)) heldKeys.delete('left');
-    if (['ArrowRight', 'd', 'D'].includes(e.key)) heldKeys.delete('right');
-  };
-
-  document.addEventListener('keydown', keydownHandler);
-  document.addEventListener('keyup', keyupHandler);
-
-  return () => {
-    document.removeEventListener('keydown', keydownHandler);
-    document.removeEventListener('keyup', keyupHandler);
-    heldKeys.clear();
-  };
-}
-
-/**
- * Get the currently held movement key direction.
- * Checked each frame by the engine for continuous input.
- * @returns {'forward'|'backward'|'left'|'right'|null}
- */
-export function getPressedKey() {
-  if (heldKeys.has('forward')) return 'forward';
-  if (heldKeys.has('backward')) return 'backward';
-  if (heldKeys.has('left')) return 'left';
-  if (heldKeys.has('right')) return 'right';
-  return null;
+  document.addEventListener('keydown', handler);
+  return () => document.removeEventListener('keydown', handler);
 }

@@ -1,97 +1,77 @@
-// map.js — Grid and obstacle management
-// Data models: GridConfig { cols, rows, cellSize }, Obstacle { id, x, y, width, height }
+// map.js — Grid and obstacles (no external imports)
 
 /**
- * Create a grid configuration
- * @param {number} cols - Number of columns (default 20)
- * @param {number} rows - Number of rows (default 15)
- * @param {number} cellSize - Cell size in pixels (default 40)
- * @returns {GridConfig}
+ * createGrid(cols, rows, cellSize): GridConfig
  */
 export function createGrid(cols = 20, rows = 15, cellSize = 40) {
   return { cols, rows, cellSize };
 }
 
 /**
- * Place an obstacle at the given grid position
- * @returns {Obstacle|null} The new obstacle, or null if position is occupied
+ * isInBounds(x, y, grid): boolean
  */
-export function placeObstacle(obstacles, x, y, w = 1, h = 1) {
-  for (const obs of obstacles) {
-    if (
-      x < obs.x + obs.width &&
-      x + w > obs.x &&
-      y < obs.y + obs.height &&
-      y + h > obs.y
-    ) {
-      return null; // position conflict
-    }
-  }
-  const obstacle = {
-    id: `obs-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-    x, y,
-    width: w,
-    height: h,
-  };
-  obstacles.push(obstacle);
-  return obstacle;
+export function isInBounds(x, y, grid) {
+  return x >= 0 && x < grid.cols && y >= 0 && y < grid.rows;
 }
 
 /**
- * Remove an obstacle by ID
- * @returns {Obstacle[]} Updated obstacle list
+ * isOccupied(x, y, obstacles): boolean
+ */
+export function isOccupied(x, y, obstacles) {
+  const ix = Math.floor(x);
+  const iy = Math.floor(y);
+  for (const obs of obstacles) {
+    if (ix >= obs.x && ix < obs.x + obs.width &&
+        iy >= obs.y && iy < obs.y + obs.height) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * placeObstacle(obstacles, x, y, w, h): Obstacle | null
+ */
+export function placeObstacle(obstacles, x, y, w = 1, h = 1) {
+  for (let dx = 0; dx < w; dx++) {
+    for (let dy = 0; dy < h; dy++) {
+      if (isOccupied(x + dx, y + dy, obstacles)) return null;
+    }
+  }
+  const obs = { id: 'obs-' + (obstacles.length + 1), x, y, width: w, height: h };
+  obstacles.push(obs);
+  return obs;
+}
+
+/**
+ * removeObstacle(obstacles, id): Obstacle[]
  */
 export function removeObstacle(obstacles, id) {
   return obstacles.filter((o) => o.id !== id);
 }
 
 /**
- * Check if a grid cell is occupied by any obstacle
+ * generateRandomObstacles(count, grid, excludeCenter): Obstacle[]
  */
-export function isOccupied(x, y, obstacles) {
-  const gx = Math.floor(x);
-  const gy = Math.floor(y);
-  return obstacles.some(
-    (o) =>
-      gx >= o.x &&
-      gx < o.x + o.width &&
-      gy >= o.y &&
-      gy < o.y + o.height
-  );
-}
-
-/**
- * Check if coordinates are within grid bounds
- */
-export function isInBounds(x, y, gridConfig) {
-  return x >= 0 && x < gridConfig.cols && y >= 0 && y < gridConfig.rows;
-}
-
-/**
- * Generate random obstacles, avoiding the center region
- * @param {number} count - Number of obstacles to generate
- * @param {GridConfig} gridConfig
- * @param {{x: number, y: number}} excludeCenter - Center point to avoid
- * @returns {Obstacle[]}
- */
-export function generateRandomObstacles(count, gridConfig, excludeCenter) {
+export function generateRandomObstacles(count, grid, excludeCenter = 2) {
   const obstacles = [];
-  const cx = excludeCenter ? excludeCenter.x : Math.floor(gridConfig.cols / 2);
-  const cy = excludeCenter ? excludeCenter.y : Math.floor(gridConfig.rows / 2);
+  const cx = Math.floor(grid.cols / 2);
+  const cy = Math.floor(grid.rows / 2);
   let attempts = 0;
 
-  while (obstacles.length < count && attempts < count * 20) {
-    const x = Math.floor(Math.random() * gridConfig.cols);
-    const y = Math.floor(Math.random() * gridConfig.rows);
+  while (obstacles.length < count && attempts < count * 10) {
+    const x = Math.floor(Math.random() * grid.cols);
+    const y = Math.floor(Math.random() * grid.rows);
     attempts++;
 
-    // Avoid center region (±2 cells)
-    if (Math.abs(x - cx) <= 2 && Math.abs(y - cy) <= 2) continue;
+    if (Math.abs(x - cx) <= excludeCenter && Math.abs(y - cy) <= excludeCenter) continue;
+    if (isOccupied(x, y, obstacles)) continue;
 
-    const obs = placeObstacle(obstacles, x, y);
-    if (obs) {
-      // push already happened inside placeObstacle
-    }
+    const w = Math.random() < 0.3 ? 2 : 1;
+    const h = Math.random() < 0.3 ? 2 : 1;
+    if (x + w >= grid.cols || y + h >= grid.rows) continue;
+
+    obstacles.push({ id: 'obs-' + obstacles.length, x, y, width: w, height: h });
   }
 
   return obstacles;

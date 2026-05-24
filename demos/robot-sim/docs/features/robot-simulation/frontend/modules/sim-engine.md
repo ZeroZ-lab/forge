@@ -80,6 +80,9 @@ setRobotCount(count: number): void
 changeGrid(cols: number, rows: number): void
 updateStatusBar(): void
 setupRobotKeyboard(): void
+
+setupCameraControls(): void
+  → 绑定 wheel 缩放 + 中键拖拽平移事件
 ```
 
 ## 依赖关系
@@ -96,6 +99,11 @@ from trail.js:      createTrail, recordPosition
 from recorder.js:   createRecorder, recordFrame, startPlayback, advancePlayback, stopPlayback
 from lidar.js:      (通过 renderer.js 间接调用)
 from renderer.js:   initRenderer, renderFrame
+from camera.js:     createCamera, panCamera, zoomCamera, resetCamera
+from minimap.js:    createMinimapConfig, minimapClickToCamera
+from sound.js:      createSoundState, playCollisionSound, playWaypointSound, setSoundEnabled
+from particles.js:  createParticleState, updateParticles, spawnCollisionParticles, spawnWaypointParticles
+from exporter.js:   exportSimulationData
 from controls.js:   createControlPanel, updateControlPanel
 from theme.js:      initTheme, toggleTheme
 from help.js:       createHelpOverlay, toggleHelp

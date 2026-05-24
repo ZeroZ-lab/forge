@@ -1,57 +1,80 @@
-// lidar.js — Laser range finder sensor
-// 12 rays, 360°, max 5 cells, slab method ray-AABB intersection
-
-const DEG_TO_RAD = Math.PI / 180;
+// lidar.js — Lidar sensor (no external imports, data via parameters)
 
 /**
- * Create a lidar configuration
+ * rayRectIntersect(ox, oy, dx, dy, rect): number (internal)
+ * Slab method ray-rectangle intersection
  */
-export function createLidarConfig(rayCount = 12, maxRange = 5) {
-  return { rayCount, maxRange };
+function rayRectIntersect(ox, oy, dx, dy, rect) {
+  const x1 = rect.x, y1 = rect.y;
+  const x2 = rect.x + rect.width, y2 = rect.y + rect.height;
+
+  let tmin = -Infinity, tmax = Infinity;
+
+  if (dx !== 0) {
+    const tx1 = (x1 - ox) / dx;
+    const tx2 = (x2 - ox) / dx;
+    tmin = Math.max(tmin, Math.min(tx1, tx2));
+    tmax = Math.min(tmax, Math.max(tx1, tx2));
+  } else if (ox < x1 || ox > x2) {
+    return Infinity;
+  }
+
+  if (dy !== 0) {
+    const ty1 = (y1 - oy) / dy;
+    const ty2 = (y2 - oy) / dy;
+    tmin = Math.max(tmin, Math.min(ty1, ty2));
+    tmax = Math.min(tmax, Math.max(ty1, ty2));
+  } else if (oy < y1 || oy > y2) {
+    return Infinity;
+  }
+
+  if (tmin > tmax || tmax < 0) return Infinity;
+  return tmin >= 0 ? tmin : tmax;
 }
 
 /**
- * Cast rays from the robot position and return distance readings.
- * Uses the slab method for ray-AABB intersection with each obstacle.
- * @returns {LidarReading[]} Array of { angle, distance, hit }
+ * rayBoundaryIntersect(ox, oy, dx, dy, grid): number (internal)
+ */
+function rayBoundaryIntersect(ox, oy, dx, dy, grid) {
+  let t = Infinity;
+  if (dx > 0) t = Math.min(t, (grid.cols - ox) / dx);
+  if (dx < 0) t = Math.min(t, -ox / dx);
+  if (dy > 0) t = Math.min(t, (grid.rows - oy) / dy);
+  if (dy < 0) t = Math.min(t, -oy / dy);
+  return t < 0 ? Infinity : t;
+}
+
+/**
+ * castRays(robot, obstacles, grid, config): LidarReading[]
  */
 export function castRays(robot, obstacles, grid, config) {
+  const rayCount = (config && config.rayCount) || 12;
+  const maxRange = (config && config.maxRange) || 5;
   const readings = [];
-  const angleStep = 360 / config.rayCount;
 
-  for (let i = 0; i < config.rayCount; i++) {
-    const angle = i * angleStep;
-    const rad = angle * DEG_TO_RAD;
-    const dirX = Math.cos(rad);
-    const dirY = Math.sin(rad);
+  for (let i = 0; i < rayCount; i++) {
+    const angle = robot.heading + (i * 360) / rayCount;
+    const rad = (angle * Math.PI) / 180;
+    const dx = Math.cos(rad);
+    const dy = Math.sin(rad);
 
-    let minDist = config.maxRange;
+    let minDist = maxRange;
     let hit = false;
 
-    // Check intersection with each obstacle (AABB)
+    // Check obstacles
     for (const obs of obstacles) {
-      const dist = rayAABB(
-        robot.x, robot.y,
-        dirX, dirY,
-        obs.x, obs.y,
-        obs.x + obs.width, obs.y + obs.height
-      );
-      if (dist !== null && dist < minDist && dist > 0) {
-        minDist = dist;
+      const t = rayRectIntersect(robot.x, robot.y, dx, dy, obs);
+      if (t < minDist) {
+        minDist = t;
         hit = true;
       }
     }
 
-    // Check grid boundaries as walls
-    const bounds = [
-      rayAxis(dirX, robot.x, 0, grid.cols),
-      rayAxis(dirY, robot.y, 0, grid.rows),
-    ];
-    for (const t of bounds) {
-      if (t !== null && t > 0.001 && t < minDist) {
-        minDist = t;
-        hit = true;
-      }
+    // Check boundaries
+    const tb = rayBoundaryIntersect(robot.x, robot.y, dx, dy, grid);
+    if (tb < minDist) {
+      minDist = tb;
+      hit = true;
     }
 
     readings.push({ angle, distance: minDist, hit });
@@ -61,76 +84,29 @@ export function castRays(robot, obstacles, grid, config) {
 }
 
 /**
- * Slab method: ray-AABB intersection
- * Returns distance along ray to intersection, or null if no hit
+ * drawLidar(config, robot, readings, cellSize): void
  */
-function rayAABB(ox, oy, dx, dy, minX, minY, maxX, maxY) {
-  let tmin = -Infinity;
-  let tmax = Infinity;
+export function drawLidar(config, robot, readings, cellSize) {
+  const { ctx } = config;
 
-  if (Math.abs(dx) < 1e-8) {
-    if (ox < minX || ox > maxX) return null;
-  } else {
-    const t1 = (minX - ox) / dx;
-    const t2 = (maxX - ox) / dx;
-    tmin = Math.max(tmin, Math.min(t1, t2));
-    tmax = Math.min(tmax, Math.max(t1, t2));
-    if (tmin > tmax) return null;
-  }
+  for (const r of readings) {
+    const rad = (r.angle * Math.PI) / 180;
+    const endX = (robot.x + Math.cos(rad) * r.distance) * cellSize;
+    const endY = (robot.y + Math.sin(rad) * r.distance) * cellSize;
+    const startX = robot.x * cellSize + cellSize / 2;
+    const startY = robot.y * cellSize + cellSize / 2;
 
-  if (Math.abs(dy) < 1e-8) {
-    if (oy < minY || oy > maxY) return null;
-  } else {
-    const t1 = (minY - oy) / dy;
-    const t2 = (maxY - oy) / dy;
-    tmin = Math.max(tmin, Math.min(t1, t2));
-    tmax = Math.min(tmax, Math.max(t1, t2));
-    if (tmin > tmax) return null;
-  }
-
-  return tmin >= 0 ? tmin : tmax > 0 ? tmax : null;
-}
-
-/**
- * Ray vs a single axis boundary (for grid edge detection)
- */
-function rayAxis(dirComponent, origin, minBound, maxBound) {
-  if (Math.abs(dirComponent) < 1e-8) return null;
-  const tMin = (minBound - origin) / dirComponent;
-  const tMax = (maxBound - origin) / dirComponent;
-  return Math.max(tMin, tMax);
-}
-
-/**
- * Draw lidar rays on the canvas
- */
-export function drawLidar(ctx, robot, readings, cellSize) {
-  const rx = robot.x * cellSize;
-  const ry = robot.y * cellSize;
-
-  for (const reading of readings) {
-    const rad = reading.angle * DEG_TO_RAD;
-    const endX = rx + Math.cos(rad) * reading.distance * cellSize;
-    const endY = ry + Math.sin(rad) * reading.distance * cellSize;
-
+    ctx.strokeStyle = r.hit ? 'rgba(255, 51, 102, 0.6)' : 'rgba(0, 212, 255, 0.3)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(rx, ry);
+    ctx.moveTo(startX, startY);
     ctx.lineTo(endX, endY);
-
-    if (reading.hit) {
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.6)';
-      ctx.lineWidth = 1;
-    } else {
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.2)';
-      ctx.lineWidth = 1;
-    }
     ctx.stroke();
 
-    // Red dot at hit point
-    if (reading.hit) {
+    if (r.hit) {
+      ctx.fillStyle = '#ff3366';
       ctx.beginPath();
       ctx.arc(endX, endY, 3, 0, Math.PI * 2);
-      ctx.fillStyle = '#ff3366';
       ctx.fill();
     }
   }

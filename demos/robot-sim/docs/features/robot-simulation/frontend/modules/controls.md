@@ -18,6 +18,8 @@
 - F7: 自动驾驶开关
 - F8: 录制/回放按钮
 - F9: 主题切换按钮
+- F10: 音效开关按钮
+- F11: 数据导出按钮
 
 ## 验收条件
 
@@ -50,6 +52,8 @@ ControlCallbacks {
   onRecordToggle: (recording: boolean) => void
   onPlayback: () => void
   onThemeToggle: () => void
+  onSoundToggle: (enabled: boolean) => void
+  onExport: () => void
 }
 ```
 
@@ -91,6 +95,8 @@ bindKeyboard(callbacks: { onPlay, onPause, onReset, onStep }): () => void
     <button id="btn-autopilot">🤖 自动驾驶</button>
     <button id="btn-record">⏺ 录制</button>
     <button id="btn-playback">⏮ 回放</button>
+    <button id="btn-sound">🔇 音效</button>
+    <button id="btn-export">📥 导出</button>
   </div>
   <div class="control-group">  <!-- 参数滑块 -->
     <label>速度</label><input type="range" id="speed-slider">

@@ -1,132 +1,126 @@
-// pathfinder.js — A* pathfinding on the grid
-// 8-directional movement, Manhattan distance heuristic, diagonal wall-cutting prevention
-
-import { isOccupied } from '../entities/map.js';
-
-const DIRECTIONS = [
-  { dx: 1, dy: 0, cost: 1 },
-  { dx: -1, dy: 0, cost: 1 },
-  { dx: 0, dy: 1, cost: 1 },
-  { dx: 0, dy: -1, cost: 1 },
-  { dx: 1, dy: 1, cost: Math.SQRT2 },
-  { dx: -1, dy: 1, cost: Math.SQRT2 },
-  { dx: 1, dy: -1, cost: Math.SQRT2 },
-  { dx: -1, dy: -1, cost: Math.SQRT2 },
-];
-
-function heuristic(ax, ay, bx, by) {
-  return Math.abs(ax - bx) + Math.abs(ay - by);
-}
-
-function isBlocked(x, y, obstacles, grid) {
-  if (x < 0 || x >= grid.cols || y < 0 || y >= grid.rows) return true;
-  return isOccupied(x, y, obstacles);
-}
-
-function reconstructPath(node) {
-  const path = [];
-  let current = node;
-  while (current) {
-    path.unshift({ x: current.x, y: current.y });
-    current = current.parent;
-  }
-  return path;
-}
+// pathfinder.js — A* pathfinding (no external imports, data via parameters)
 
 /**
- * Find a path from start to goal using A*.
- * @returns {Array<{x: number, y: number}>} Path coordinates, or empty array if no path
+ * findPath(startX, startY, goalX, goalY, obstacles, grid): Array<{x, y}>
  */
 export function findPath(startX, startY, goalX, goalY, obstacles, grid) {
-  const sx = Math.round(startX);
-  const sy = Math.round(startY);
-  const gx = Math.round(goalX);
-  const gy = Math.round(goalY);
+  if (startX === goalX && startY === goalY) return [];
 
-  if (isBlocked(gx, gy, obstacles, grid)) return [];
-  if (sx === gx && sy === gy) return [];
+  const occupied = new Set();
+  for (const obs of obstacles) {
+    for (let dx = 0; dx < obs.width; dx++) {
+      for (let dy = 0; dy < obs.height; dy++) {
+        occupied.add((obs.x + dx) + ',' + (obs.y + dy));
+      }
+    }
+  }
 
-  const startNode = {
-    x: sx, y: sy,
-    g: 0,
-    h: heuristic(sx, sy, gx, gy),
-    f: heuristic(sx, sy, gx, gy),
+  if (occupied.has(goalX + ',' + goalY)) return [];
+
+  const key = (x, y) => x + ',' + y;
+  const heuristic = (x, y) => Math.abs(x - goalX) + Math.abs(y - goalY);
+
+  const open = new Map();
+  const closed = new Set();
+  const startKey = key(startX, startY);
+
+  open.set(startKey, {
+    x: startX, y: startY,
+    g: 0, h: heuristic(startX, startY),
+    f: heuristic(startX, startY),
     parent: null,
-  };
+  });
 
-  let openList = [startNode];
-  const closedSet = new Set();
+  const dirs = [
+    [1, 0], [-1, 0], [0, 1], [0, -1],
+    [1, 1], [1, -1], [-1, 1], [-1, -1],
+  ];
 
-  while (openList.length > 0) {
-    // Find node with lowest f
-    let bestIdx = 0;
-    for (let i = 1; i < openList.length; i++) {
-      if (openList[i].f < openList[bestIdx].f) bestIdx = i;
+  let iterations = 0;
+  const maxIter = grid.cols * grid.rows * 2;
+
+  while (open.size > 0 && iterations < maxIter) {
+    iterations++;
+
+    // Find lowest f in open set
+    let bestKey = null;
+    let bestF = Infinity;
+    for (const [k, node] of open) {
+      if (node.f < bestF) {
+        bestF = node.f;
+        bestKey = k;
+      }
     }
-    const current = openList[bestIdx];
-    openList.splice(bestIdx, 1);
 
-    // Goal reached
-    if (current.x === gx && current.y === gy) {
-      return reconstructPath(current);
+    const current = open.get(bestKey);
+    open.delete(bestKey);
+    closed.add(bestKey);
+
+    if (current.x === goalX && current.y === goalY) {
+      // Reconstruct path
+      const path = [];
+      let node = current;
+      while (node) {
+        path.unshift({ x: node.x, y: node.y });
+        node = node.parent;
+      }
+      return path;
     }
 
-    closedSet.add(`${current.x},${current.y}`);
+    for (const [dx, dy] of dirs) {
+      const nx = current.x + dx;
+      const ny = current.y + dy;
+      const nk = key(nx, ny);
 
-    for (const dir of DIRECTIONS) {
-      const nx = current.x + dir.dx;
-      const ny = current.y + dir.dy;
-      const key = `${nx},${ny}`;
+      if (nx < 0 || nx >= grid.cols || ny < 0 || ny >= grid.rows) continue;
+      if (closed.has(nk)) continue;
+      if (occupied.has(nk)) continue;
 
-      if (closedSet.has(key)) continue;
-      if (isBlocked(nx, ny, obstacles, grid)) continue;
-
-      // Prevent diagonal wall-cutting
-      if (dir.dx !== 0 && dir.dy !== 0) {
-        if (
-          isBlocked(current.x + dir.dx, current.y, obstacles, grid) ||
-          isBlocked(current.x, current.y + dir.dy, obstacles, grid)
-        ) {
+      // Diagonal: check both adjacent cells to prevent wall-cutting
+      if (dx !== 0 && dy !== 0) {
+        if (occupied.has(key(current.x + dx, current.y)) ||
+            occupied.has(key(current.x, current.y + dy))) {
           continue;
         }
       }
 
-      const g = current.g + dir.cost;
-      const h = heuristic(nx, ny, gx, gy);
-      const f = g + h;
+      const cost = (dx !== 0 && dy !== 0) ? 1.414 : 1;
+      const ng = current.g + cost;
+      const nh = heuristic(nx, ny);
 
-      // Check if already in open list with better g
-      const existingIdx = openList.findIndex((n) => n.x === nx && n.y === ny);
-      if (existingIdx !== -1 && openList[existingIdx].g <= g) continue;
+      const existing = open.get(nk);
+      if (existing && ng >= existing.g) continue;
 
-      const neighbor = { x: nx, y: ny, g, h, f, parent: current };
-
-      if (existingIdx !== -1) {
-        openList[existingIdx] = neighbor;
-      } else {
-        openList.push(neighbor);
-      }
+      open.set(nk, {
+        x: nx, y: ny,
+        g: ng, h: nh, f: ng + nh,
+        parent: current,
+      });
     }
   }
 
-  return []; // No path found
+  return [];
 }
 
 /**
- * Draw a computed path on the canvas as a yellow dashed line
+ * drawPath(config, path, cellSize): void
  */
-export function drawPath(ctx, path, cellSize) {
-  if (path.length < 2) return;
+export function drawPath(config, path, cellSize) {
+  if (!path || path.length < 2) return;
 
-  ctx.beginPath();
+  const { ctx } = config;
   ctx.setLineDash([6, 4]);
-  ctx.strokeStyle = 'rgba(255, 170, 0, 0.6)';
+  ctx.strokeStyle = '#ffaa00';
   ctx.lineWidth = 2;
-  ctx.moveTo(path[0].x * cellSize, path[0].y * cellSize);
+  ctx.beginPath();
 
-  for (let i = 1; i < path.length; i++) {
-    ctx.lineTo(path[i].x * cellSize, path[i].y * cellSize);
+  for (let i = 0; i < path.length; i++) {
+    const px = path[i].x * cellSize + cellSize / 2;
+    const py = path[i].y * cellSize + cellSize / 2;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
   }
+
   ctx.stroke();
   ctx.setLineDash([]);
 }

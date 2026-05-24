@@ -1,8 +1,7 @@
-// recorder.js — Trajectory recording and playback
-// Records per-frame snapshots of all robot states, replays them sequentially
+// recorder.js — Recording and playback (no external imports)
 
 /**
- * Create a recorder state
+ * createRecorder(): RecorderState
  */
 export function createRecorder() {
   return {
@@ -14,11 +13,11 @@ export function createRecorder() {
 }
 
 /**
- * Record a single frame snapshot of all robot states
+ * recordFrame(recorder, state): void
  */
 export function recordFrame(recorder, state) {
   if (!recorder.recording) return;
-  recorder.frames.push({
+  const snapshot = {
     tick: state.tick,
     robots: state.robots.map((r) => ({
       id: r.id,
@@ -27,40 +26,43 @@ export function recordFrame(recorder, state) {
       heading: r.heading,
       colliding: r.colliding,
     })),
-  });
+  };
+  recorder.frames.push(snapshot);
 }
 
 /**
- * Start playback from the first recorded frame
+ * startPlayback(recorder): boolean
  */
 export function startPlayback(recorder) {
-  if (recorder.frames.length === 0) return;
+  if (recorder.frames.length === 0) return false;
   recorder.playing = true;
+  recorder.playIndex = 0;
+  return true;
+}
+
+/**
+ * stopPlayback(recorder): void
+ */
+export function stopPlayback(recorder) {
+  recorder.playing = false;
   recorder.playIndex = 0;
 }
 
 /**
- * Advance playback by one frame, restoring robot states from the snapshot.
- * @returns {boolean} true if playback is still ongoing, false if finished
+ * advancePlayback(recorder, state): boolean
  */
 export function advancePlayback(recorder, state) {
-  if (!recorder.playing) return false;
-  if (recorder.playIndex >= recorder.frames.length) {
-    recorder.playing = false;
-    return false;
-  }
+  if (recorder.playIndex >= recorder.frames.length) return false;
 
   const frame = recorder.frames[recorder.playIndex];
-  for (const snap of frame.robots) {
-    const robot = state.robots.find((r) => r.id === snap.id);
-    if (robot) {
-      robot.x = snap.x;
-      robot.y = snap.y;
-      robot.heading = snap.heading;
-      robot.colliding = snap.colliding;
-    }
+  for (let i = 0; i < state.robots.length && i < frame.robots.length; i++) {
+    state.robots[i].x = frame.robots[i].x;
+    state.robots[i].y = frame.robots[i].y;
+    state.robots[i].heading = frame.robots[i].heading;
+    state.robots[i].colliding = frame.robots[i].colliding;
   }
   state.tick = frame.tick;
   recorder.playIndex++;
-  return true;
+
+  return recorder.playIndex < recorder.frames.length;
 }

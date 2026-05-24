@@ -1,118 +1,121 @@
-// robot.js — Robot entity
-// Data model: RobotState { id, x, y, heading, speed, radius, colliding, color }
-// Angle convention: 0=right, 90=down, 180=left, 270=up (degrees)
-
-import { isInBounds, isOccupied } from './map.js';
-
-const DEG_TO_RAD = Math.PI / 180;
+// robot.js — Robot entity (no external imports)
 
 /**
- * Create a robot at the given position and heading
+ * degToRad(deg): number (internal)
+ */
+function degToRad(deg) {
+  return (deg * Math.PI) / 180;
+}
+
+/**
+ * normalizeAngle(angle): number (internal)
+ */
+function normalizeAngle(angle) {
+  return ((angle % 360) + 360) % 360;
+}
+
+/**
+ * createRobot(id, x, y, heading): RobotState
  */
 export function createRobot(id, x, y, heading = 0) {
   return {
     id,
     x,
     y,
-    heading,
-    speed: 2, // cell/s
-    radius: 0.4, // cell
+    heading: normalizeAngle(heading),
+    speed: 0,
+    radius: 0.4,
     colliding: false,
-    color: null, // null = use accent-primary
+    color: '#00d4ff',
   };
 }
 
 /**
- * Move forward along heading direction
+ * moveForward(robot, dt, physics): void
  */
-export function moveForward(robot, dt, physicsConfig) {
-  const rad = robot.heading * DEG_TO_RAD;
-  const dx = Math.cos(rad) * physicsConfig.moveSpeed * dt;
-  const dy = Math.sin(rad) * physicsConfig.moveSpeed * dt;
-  robot.x += dx;
-  robot.y += dy;
+export function moveForward(robot, dt, physics) {
+  const rad = degToRad(robot.heading);
+  robot.x += Math.cos(rad) * physics.moveSpeed * dt;
+  robot.y += Math.sin(rad) * physics.moveSpeed * dt;
 }
 
 /**
- * Move backward (opposite of heading)
+ * moveBackward(robot, dt, physics): void
  */
-export function moveBackward(robot, dt, physicsConfig) {
-  const rad = robot.heading * DEG_TO_RAD;
-  const dx = Math.cos(rad) * physicsConfig.moveSpeed * dt;
-  const dy = Math.sin(rad) * physicsConfig.moveSpeed * dt;
-  robot.x -= dx;
-  robot.y -= dy;
+export function moveBackward(robot, dt, physics) {
+  const rad = degToRad(robot.heading);
+  robot.x -= Math.cos(rad) * physics.moveSpeed * dt;
+  robot.y -= Math.sin(rad) * physics.moveSpeed * dt;
 }
 
 /**
- * Turn left (heading decreases)
+ * turnLeft(robot, dt, physics): void
  */
-export function turnLeft(robot, dt, physicsConfig) {
-  robot.heading -= physicsConfig.turnSpeed * dt;
-  robot.heading = ((robot.heading % 360) + 360) % 360;
+export function turnLeft(robot, dt, physics) {
+  robot.heading = normalizeAngle(robot.heading - physics.turnSpeed * dt);
 }
 
 /**
- * Turn right (heading increases)
+ * turnRight(robot, dt, physics): void
  */
-export function turnRight(robot, dt, physicsConfig) {
-  robot.heading += physicsConfig.turnSpeed * dt;
-  robot.heading = ((robot.heading % 360) + 360) % 360;
+export function turnRight(robot, dt, physics) {
+  robot.heading = normalizeAngle(robot.heading + physics.turnSpeed * dt);
 }
 
 /**
- * Check collision with obstacles and grid boundaries.
- * Sets robot.colliding and reverts position on collision.
- * @returns {boolean} Whether the robot is colliding
+ * checkCollision(robot, obstacles, grid): boolean
  */
-export function checkCollision(robot, obstacles, gridConfig) {
+export function checkCollision(robot, obstacles, grid) {
+  let colliding = false;
+
   // Boundary check
-  if (!isInBounds(robot.x, robot.y, gridConfig)) {
-    robot.colliding = true;
-    return true;
+  if (robot.x < 0 || robot.x >= grid.cols || robot.y < 0 || robot.y >= grid.rows) {
+    colliding = true;
   }
 
-  // Obstacle collision using radius sampling (4 cardinal + 4 diagonal)
-  const r = robot.radius;
-  const offsets = [
-    [0, 0],
-    [r, 0], [-r, 0], [0, r], [0, -r],
-    [r * 0.707, r * 0.707],
-    [-r * 0.707, r * 0.707],
-    [r * 0.707, -r * 0.707],
-    [-r * 0.707, -r * 0.707],
-  ];
-
-  for (const [dx, dy] of offsets) {
-    if (isOccupied(robot.x + dx, robot.y + dy, obstacles)) {
-      robot.colliding = true;
-      return true;
+  // Obstacle check
+  if (!colliding) {
+    for (const obs of obstacles) {
+      if (
+        robot.x >= obs.x && robot.x < obs.x + obs.width &&
+        robot.y >= obs.y && robot.y < obs.y + obs.height
+      ) {
+        colliding = true;
+        break;
+      }
     }
   }
 
-  robot.colliding = false;
-  return false;
+  robot.colliding = colliding;
+  return colliding;
 }
 
 /**
- * Apply a movement/turn command to the robot
- * @param {'forward'|'backward'|'left'|'right'|'stop'} command
+ * applyCommand(robot, command, dt, physics): void
  */
-export function applyCommand(robot, command, dt, physicsConfig) {
-  switch (command.type) {
+export function applyCommand(robot, command, dt, physics) {
+  switch (command) {
     case 'forward':
-      moveForward(robot, dt, physicsConfig);
+      moveForward(robot, dt, physics);
       break;
     case 'backward':
-      moveBackward(robot, dt, physicsConfig);
+      moveBackward(robot, dt, physics);
       break;
     case 'left':
-      turnLeft(robot, dt, physicsConfig);
+      turnLeft(robot, dt, physics);
       break;
     case 'right':
-      turnRight(robot, dt, physicsConfig);
+      turnRight(robot, dt, physics);
       break;
     case 'stop':
       break;
   }
+}
+
+/**
+ * clampToBounds(robot, grid): void
+ */
+export function clampToBounds(robot, grid) {
+  robot.x = Math.max(0, Math.min(grid.cols - 0.01, robot.x));
+  robot.y = Math.max(0, Math.min(grid.rows - 0.01, robot.y));
 }
