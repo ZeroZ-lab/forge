@@ -36,6 +36,11 @@ description: 从 contract.md 验收条件推导测试场景——正常路径、
 
 **记录**：测试范围矩阵（验收条件 → 测试用例 → 优先级）
 
+**AC 编号规则**：
+- 验收条件必须在 feature/contract.md 或模块文件中编号（AC1, AC2, ...）
+- 测试范围矩阵的"验收条件"列必须引用 AC 编号，不用自然语言描述
+- 追溯链：PRD US-XX → contract AC-XX → test-cases TC-XXX
+
 ### TC2: 正常（Happy Path）
 
 为每个验收条件定义正常路径——功能在正常输入下按预期工作。
@@ -119,6 +124,12 @@ docs/features/<feature>/
 **testing/test-cases.md 必须包含**：测试范围矩阵 · 正常/边界/错误测试用例 · 数据构造+隔离+清理策略 · 优先级（P0/P1/P2）
 **testing/test-cases.md 不应包含**：具体测试代码（codegen）· 测试框架选择（test-strategy）· CI/CD 配置（deploy）
 
+**行数约束**：test-cases.md ≤ 200 行。超出时拆分：
+- 主文件保留：版本信息 · 测试范围矩阵 · P0 用例 · 优先级汇总 · 执行顺序
+- P1/P2 用例 → `test-cases/p1-cases.md`
+- 边界 + 错误用例 → `test-cases/edge-errors.md`
+- 测试数据策略 → `test-cases/data-strategy.md`
+
 ## 模板
 
 使用 `${CLAUDE_SKILL_DIR}/references/test-cases-template.md` 作为产出结构参考。
@@ -126,7 +137,12 @@ docs/features/<feature>/
 ## 入口/出口条件
 
 **入口**：有 contract.md + modules/ + plan.md（或用户已有代码）
-**出口**：testing/test-cases.md 已生成 · 所有验收条件都有测试用例 · 正常+边界+错误全覆盖 · 数据策略已确定
+**出口**：testing/test-cases.md 已生成 · 所有验收条件都有测试用例 · 正常+边界+错误全覆盖 · 数据策略已确定 · test-cases.md ≤ 200 行
+
+**交叉验证**：
+- 读 testing/contract.md 覆盖矩阵 → 提取"可自动化"的模块列表
+- 读 test-cases.md 测试范围矩阵 → 提取覆盖的 AC 列表
+- 覆盖矩阵中有但 test-cases 无 → 补充或标注"手动验证"
 
 ## 何时不使用
 

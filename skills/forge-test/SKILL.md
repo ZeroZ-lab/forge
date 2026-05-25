@@ -39,6 +39,13 @@ description: 测试阶段编排——测试策略 + 测试用例，一次对话�
 **Phase 2: 测试用例**
 加载 `forge-test-cases` skill，走完 TC1-TC5 方法论步骤。
 
+**Phase 3: 交叉验证**
+1. 读 testing/contract.md 覆盖矩阵 → 提取"可自动化"的模块列表
+2. 读 testing/test-cases.md 测试范围矩阵 → 提取覆盖的 AC 列表
+3. 比对：覆盖矩阵中有但 test-cases 无 → 标记缺失
+4. 如有缺失 → 回到 Phase 2 补充
+5. 检查 test-cases.md 行数 ≤ 200 → 超出则按拆分策略处理
+
 ## 产出
 
 ```

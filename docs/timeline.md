@@ -1,5 +1,33 @@
 # Timeline — Forge 方法论进化记录
 
+### 2026-05-25 — 方法论进化：测试 skill 产物格式强化 + 文件拆分策略
+
+- **触发**：demo11 testing 产物审计（testing/contract.md + testing/test-cases.md），发现 6 个结构性缺陷
+- **偏差归因**：
+  - T1-T5 决策点格式不统一（T2/T3/T4 缺 `被拒` 段落，因 skill 只在 `**记录**` 行提及，无显式子结构）
+  - test-cases.md 无行数约束 → 550 行远超 200 行上限
+  - 测试范围矩阵以"模块"为维度（template 引导不足）
+  - AC 编号无全局规范（per-module 重启 vs feature-level 全局）
+  - test-strategy 覆盖矩阵 vs test-cases 测试用例无交叉验证（TopBar 缺口）
+  - feature contract.md 缺领域索引（纯前端路径跳过领域聚合）
+
+- **影响范围**：5 个 skill 文件 + 1 个模板 + demo11 产物
+
+- **执行的修改**：
+
+| # | 改进项 | 影响 Skill/模板 | 类型 |
+|---|--------|----------------|------|
+| 1 | T1-T5 产出格式统一（表格 + 被拒子标题） | forge-test-strategy | 决策点格式 |
+| 2 | 行数约束 ≤ 200 行 + 拆分策略 | forge-test-cases + test-cases-template | 膨胀控制 |
+| 3 | AC 编号规范（feature-level 全局） | forge-test-cases | 追溯链 |
+| 4 | 覆盖矩阵 vs 测试用例交叉验证 | forge-test + forge-test-cases | 出口条件 |
+| 5 | 领域索引段落 | shared/contract-template | 模板新增 |
+| 6 | 编排层 Phase 3 交叉验证步骤 | forge-test | 流程新增 |
+
+- **验证结果**：demo11 testing 产物修复后全量通过（行数 ≤ 200、T1-T5 被拒完整、矩阵 AC 维度、领域索引存在、覆盖缺口消除）
+
+---
+
 ### 2026-05-25 — 方法论进化：决策编号分域 + 模板分前后端 + 轻量模式
 
 - **触发**：demo11（factory-digital-twin）产物审计，发现 10 个结构性缺陷
