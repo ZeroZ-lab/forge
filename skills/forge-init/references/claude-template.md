@@ -15,5 +15,5 @@
 1. 读 AGENTS.md 了解技术栈和工作流
 2. 读 docs/timeline.md 了解项目近期演进
 3. 读相关 feature 的 contract.md + changelog.md
-4. 按 contract.md 写代码，注释决策编号
+4. 按 contract.md 写代码，注释决策编号（FD# / PD# / DB#）
 5. 改完文档后自动追加 changelog.md + timeline.md

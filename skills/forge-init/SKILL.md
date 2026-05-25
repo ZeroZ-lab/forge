@@ -30,6 +30,8 @@ description: 项目初始化——一次对话完成业务对齐 + 技术选型 
 - 无法判断是否有前端 → 暂停并询问，不默认生成前端设计系统。
 - 现有项目文件和新决策冲突 → 停止覆盖，输出冲突项、影响范围和建议选择。
 - 用户跳过某 phase → 记录跳过原因，确保下游知道对应输入可能缺失。
+- 纯前端项目（技术选型无后端框架/数据库/ORM）→ project.md 跳过「服务划分」「部署架构（后端部分）」「性能指标（QPS/P99）」，共享约束省略多租户、API 超时等后端约束。
+- project.md 的 Feature 索引初始为空表，不预填任何 feature 行——由第一次 detail 阶段自动填写。
 
 ## 流程
 
@@ -97,7 +99,7 @@ my-project/
 1. 读 AGENTS.md 了解技术栈和工作流
 2. 读 docs/timeline.md 了解项目近期演进
 3. 读相关 feature 的 contract.md + changelog.md
-4. 按 contract.md 写代码，注释决策编号
+4. 按 contract.md 写代码，注释决策编号（FD# feature 级 / PD# 项目级 / DB# 数据库级）
 5. 改完文档后自动追加 changelog.md + timeline.md
 ```
 

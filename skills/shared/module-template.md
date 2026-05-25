@@ -1,13 +1,14 @@
 # module-template.md — 模块模板
 
-> 每个模块用这个模板。自包含：需求 + 验收条件 + 数据模型 + 接口合约 + 约束。
+> 每个模块用此模板。自包含：需求 + 验收条件 + 数据模型 + 接口/结构 + 约束。
 > 目标：100-200 行。
+> 后端模块侧重接口合约，前端模块侧重组件结构和数据消费。按模块类型选择对应段落。
 
 ---
 
 # <Module Name> 模块
 
-> 依赖共享决策 D1-D7，遵循共享约束。
+> 依赖共享决策 FD#，遵循共享约束。
 
 ## 入口
 
@@ -40,11 +41,51 @@
 
 ## 公共接口
 
-> 被其他模块调用的函数。参数需要类型签名。
+> 被其他模块调用的函数或组件。参数需要类型签名。
 
 ```
 functionName(param1: Type1, param2: Type2): ReturnType
   → 功能描述
+```
+
+> 前端组件：
+
+```
+ComponentName: React.FC<{ prop1: Type1, prop2: Type2 }>
+  → 功能描述
+  → 从 store/hook 读取的数据
+```
+
+---
+
+## 组件结构
+
+> 前端模块必填。组件树伪代码 + 关键属性 + 交互行为。
+> 后端模块可省略此节。
+
+```
+ParentComponent
+├── ChildA
+│   ├── prop={value}
+│   └── onClick → handler()
+├── ChildB
+│   └── conditional rendering
+└── 交互事件
+    ├── onPointerOver → ...
+    └── onClick → ...
+```
+
+---
+
+## 数据消费
+
+> 前端模块必填。从 store/hook/context/API 读取的数据。
+> 后端模块可省略此节（改为"依赖注入"或"数据库查询"）。
+
+```
+from store: fieldA, fieldB, actionC()
+from hook: useSomething() → { data, loading, error }
+from API: GET /path → ResponseType
 ```
 
 ---
@@ -73,6 +114,9 @@ from module-b: typeZ
 
 ## 接口合约
 
+> 后端模块必填。HTTP 端点的请求/响应/错误合约。
+> 前端模块可省略此节（已在组件结构和数据消费中覆盖）。
+
 ```
 METHOD /path
   Auth: Bearer JWT required
@@ -95,10 +139,10 @@ METHOD /path
 
 > 只放这个模块独有的约束，共享约束在 contract.md。
 
-### 索引
+### 性能
 
 -
 
-### 性能
+### 其他
 
 -

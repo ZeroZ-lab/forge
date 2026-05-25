@@ -123,10 +123,17 @@ src/
 
 ## 模板
 
-使用共享模板：
-- `${CLAUDE_SKILL_DIR}/../shared/contract-template.md` — contract.md 结构
-- `${CLAUDE_SKILL_DIR}/../shared/module-template.md` — modules/*.md 结构
+使用前端专用模板：
+- `${CLAUDE_SKILL_DIR}/../shared/frontend-contract-template.md` — frontend/contract.md 结构（FD1-FD5 决策 + 共享约束 + 编排）
+- `${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md` — frontend/modules/*.md 结构（组件结构 + 数据消费 + 依赖）
 - `${CLAUDE_SKILL_DIR}/../shared/changelog-template.md` — changelog.md 结构
+
+## 与 project.md 的关系
+
+- project.md 已列出的技术选型 → frontend/contract.md 引用不重复
+- frontend/contract.md 只补充前端特有的依赖（如 @react-spring/three、Lucide React）
+- 格式：`> 完整技术栈见 project.md，以下为前端补充`
+- F1-FD1 的框架选型如果和 project.md 的前端框架一致，直接引用不重复
 
 ## 入口/出口条件
 

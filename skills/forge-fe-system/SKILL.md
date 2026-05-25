@@ -84,6 +84,8 @@ description: 设计系统落地——从产品意图推导可消费的 DESIGN.md
 - [ ] 是否覆盖核心组件和交互状态？
 - [ ] 是否说明页面结构和响应式规则？
 - [ ] 是否能被 frontend-design 和 fe-artifact 直接消费？
+- [ ] Component Token 引用的 Semantic Token 是否都已定义？（交叉验证）
+- [ ] Component Token 是否覆盖交互模式库中所有核心组件？
 
 ## 历史维护
 

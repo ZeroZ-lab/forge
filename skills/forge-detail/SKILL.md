@@ -49,13 +49,21 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 按以下顺序依次执行，每个 phase 完成后向用户确认再进入下一个：
 
 **Phase 1: API 设计**（如有后端）
-加载 `forge-api-design` skill，走完 D1-D7 方法论步骤。先确定资源模型、端点、错误、权限、幂等、并发和认证。
+加载 `forge-api-design` skill，走完 FD1-FD7 方法论步骤。先确定资源模型、端点、错误、权限、幂等、并发和认证。
 
 **Phase 2: 数据库设计**（如有后端）
 加载 `forge-db-design` skill，走完 DB1-DB5 方法论步骤。数据库设计消费 Phase 1 的资源模型和查询模式，不在缺少 API 合约时先行表设计。
 
 **Phase 3: 前端设计**（如有前端）
-加载 `forge-frontend-design` skill，走完 F1-F5 方法论步骤。
+加载 `forge-frontend-design` skill，走完 FD1-FD5 方法论步骤。
+
+**Phase 4: 索引同步**（必选）
+1. 读 project.md Feature 索引
+2. 对比本次生成的 feature 目录
+3. 如索引缺失该 feature → 追加条目（Feature 名 + 目录路径 + 状态 + 说明）
+4. 如索引有已删除的 feature → 标注提醒用户确认删除
+5. 如索引的 feature 名称/路径与实际不符 → 修正
+6. 检查 project.md 共享决策（PD#）与本次 feature contract（FD#）无编号冲突
 
 ## 漂移检测
 
@@ -97,6 +105,14 @@ docs/features/<feature>/
 ## 历史维护（自动）
 
 完成后追加 `docs/timeline.md` + feature `changelog.md`（一条汇总记录）。`forge-api-design`、`forge-db-design`、`forge-frontend-design` 作为子阶段时不单独追加历史。超 100 行时归档。
+
+## 出口条件
+
+完成后必须满足：
+- 所有加载的领域 skill 产出完整（api/contract.md FD1-FD7 / frontend/contract.md FD1-FD5 / database/contract.md DB1-DB5）
+- project.md Feature 索引已同步（Phase 4）
+- project.md 共享决策（PD#）与 feature contract（FD#）无编号冲突
+- 漂移检测已完成（如有下游依赖表）
 
 ## 运行时信号
 
