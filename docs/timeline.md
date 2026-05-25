@@ -1,5 +1,20 @@
 # Timeline — Forge 方法论进化记录
 
+### 2026-05-25 — 新增 forge-research skill（算法猎手）
+
+- **触发**：用户表达"想做壁虎但不知道涉及哪些算法"——Forge 在产品愿景和技术决策之间缺少桥梁
+- **核心洞察**：人类擅长定义产品愿景（做什么），不擅长识别技术可能性（怎么做）。research 补这个缺口
+- **改动**：
+  - 新增 `skills/forge-research/SKILL.md`（206 行）：四阶段方法论（拆解→上下文→搜索→菜单）
+  - 新增 `skills/forge-research/references/research-brief-template.md`：子问题地图 + 算法菜单 + 组合建议
+  - AGENTS.md 阶段表新增 research 行（19 个领域 Skill）
+  - AGENTS.md 产物传递图新增"算法菜单"环节
+  - AGENTS.md 自然语言执行表新增"做一只壁虎"示例
+- **与上下游的切法**：brainstorm 发散产品层面"做什么"，research 发散算法层面"怎么做的选项"，technical-design 收敛"选哪个组合"
+- **关键设计**：必须 web search（训练数据可能过时）、算法卡片用人话不堆术语、探索性组合诚实标注
+
+---
+
 ### 2026-05-25 — 方法论进化：膨胀控制从硬约束改为分级策略
 
 - **触发**：demo11 全量审计发现 PRD(346行)/plan(355行)/interaction-spec(246行) 超限，但这些文件天然需要整体加载，拆开会丢失全局视野

@@ -35,11 +35,12 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 决策协议（skill）→ 产物文档 → 下游消费（代码/设计稿/任务清单/测试用例...）
 ```
 
-### 8 阶段 × 18 个领域 Skill + 4 个编排 Skill
+### 8 阶段 × 19 个领域 Skill + 4 个编排 Skill
 
 | 阶段 | Skill | 方法论 | 角色 | 产出 |
 |------|-------|--------|------|------|
 | **⓪ 探索** | brainstorm | 可能性展开 | 产品 + 业务方 | 方向简报 |
+| | research | 算法猎手 | 产品 + 技术研究员 | 算法菜单 |
 | **① 定义** | business-alignment | 需求验证 | 产品 + 业务方 | 项目章程 |
 | | requirements | 约束定义 | 产品 + 开发 | PRD |
 | **② 设计** | interaction-design | 流程优先 | 产品 + 设计师 | 交互规格 |
@@ -65,8 +66,8 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 ### 阶段间的产物传递
 
 ```
-⓪ 探索         ① 定义                    ② 设计                      ③ 详设
-方向简报  →  项目章程 → PRD    →    交互规格 + 设计系统 + 技术方案    →    contract + modules/
+⓪ 探索         ⓪.5 研究       ① 定义                    ② 设计                      ③ 详设
+方向简报  →  算法菜单  →  项目章程 → PRD    →    交互规格 + 设计系统 + 技术方案    →    contract + modules/
                                                                               │
                                                                               ↓
 ⑦ 交付          ⑥.5 审查        ⑥ 测试                     ⑤ 构建         ④ 任务
@@ -303,6 +304,7 @@ Forge 不维护独立的指令层。用户用自然语言表达目标，运行�
 | 阶段 | 做什么 | 加载的 skill | 产出 |
 |------|--------|-------------|------|
 | ⓪ 探索 | 发散可能性 + 圈定方向 | brainstorm | `idea-brief.md` |
+| ⓪.5 研究 | 技术子问题拆解 + 算法搜索 | research | `research-brief.md` |
 | 初始化 | 业务 + 技术 + 设计 | business-alignment + technical-design + fe-system | `project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
 | ① 定义 | 需求分析 + PRD | requirements | `PRD.md` |
 | ② 设计 | 交互 + 视觉 | interaction-design + fe-system | `interaction-spec.md` + `DESIGN.md` |
@@ -318,6 +320,7 @@ Forge 不维护独立的指令层。用户用自然语言表达目标，运行�
 | 你说 | AI 做什么 |
 |------|----------|
 | "生成代码" | 读 plan.md → 按任务序列生成 src/ + tests/ |
+| "做一只壁虎" | brainstorm + research 的组合（产品探索 + 算法菜单） |
 | "创建任务报 500" | 读 contract.md + 代码 → 找分歧 → 修代码 |
 | "给任务加标签" | detail + build 的组合（加模块） |
 | "分页换成 cursor" | 改决策 → 级联更新文档 + 重新生成 |
@@ -472,6 +475,7 @@ forge/
 ├── references/                      # 补充文档（使用示例、验证教训）
 ├── skills/                          # 22 个决策协议（flat list）
 │   ├── forge-brainstorm/            # ⓪ 探索
+│   ├── forge-research/              # ⓪.5 技术探索（算法猎手）
 │   ├── forge-init/                  # 初始化编排（+ agents/claude 模板）
 │   ├── forge-business-alignment/    # ① 业务对齐
 │   ├── forge-define/                # ① 需求文档
