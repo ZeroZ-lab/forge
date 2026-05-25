@@ -7,6 +7,12 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 
 根据项目上下文按需加载领域 skill，产出技术合约文档。
 
+## 运行时角色
+
+`forge-detail` 是中回路 controller。它把上游 PRD、project、DESIGN 和偏差信号转成可投影的 contract，并在 codegen/review 发现漂移时负责 contract 复查和级联更新决策。
+
+运行时闭环参考 `docs/runtime-control-loop.md`；偏差报告结构参考 `skills/shared/output-contracts/deviation-report.md`。
+
 ## 加载判断
 
 先确定加载哪些 skill：
@@ -19,6 +25,24 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 - **有前端** → `forge-api-design` + `forge-db-design` + `forge-frontend-design`
 - **纯后端** → `forge-api-design` + `forge-db-design`
 - **纯前端** → `forge-frontend-design`
+
+## 输入状态读取
+
+开始前读取：
+
+- `docs/project.md` 的技术选型和共享约束
+- `PRD.md` 或等价需求说明
+- `DESIGN.md` 和 interaction-spec（如有前端）
+- 已有 feature `contract.md`、领域 contract 和 modules
+- `forge-codegen` 偏差摘要或 `forge-review` 漂移报告（如本次由偏差触发）
+
+## 分支与恢复
+
+- 缺 PRD/需求输入 → 不直接写 contract，先要求补需求或明确走最小 detail。
+- 前端存在性不确定 → 暂停询问，不默认加载 frontend-design。
+- 由同类 L1 偏差触发 → 先复查对应 contract/module 盲区，再决定是否改代码。
+- 发现 L2 setpoint 漂移 → 中止详设输出，列出需要人类决策的矛盾点。
+- 下游漂移影响范围不清 → 不自动级联修改，先输出漂移报告。
 
 ## 流程
 
@@ -50,6 +74,11 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 
 **偏差信号接收**：如果 codegen 偏差摘要中同类 L1 偏差连续 ≥ 2 个任务出现，建议复查 contract 对应部分——偏差可能是 contract 盲区而非代码问题。
 
+**信号输出**：
+- `contract updated`：setpoint 已修正，下游可继续。
+- `downstream drift`：下游文档需要确认是否级联更新。
+- `human decision needed`：存在 L2 漂移或架构/需求分歧。
+
 ## 产出
 
 ```
@@ -68,6 +97,12 @@ docs/features/<feature>/
 ## 历史维护（自动）
 
 完成后追加 `docs/timeline.md` + feature `changelog.md`（一条汇总记录）。`forge-api-design`、`forge-db-design`、`forge-frontend-design` 作为子阶段时不单独追加历史。超 100 行时归档。
+
+## 运行时信号
+
+- **signals in**：需求输入、技术约束、同类 L1、L2 漂移、review 文档漂移。
+- **signals out**：contract ready、drift report、cascade update needed、human decision needed。
+- **升级条件**：contract 歧义、下游漂移影响不清、API/DB/Frontend 领域边界冲突。
 
 ## 完成提示
 

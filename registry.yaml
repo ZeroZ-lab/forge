@@ -1,0 +1,1477 @@
+{
+  "version": 1,
+  "description": "Forge runtime control registry. Skills are protocol nodes; runtime execution forms the control loop.",
+  "skills": [
+    {
+      "name": "forge-brainstorm",
+      "path": "skills/forge-brainstorm/SKILL.md",
+      "phase": "explore",
+      "type": "domain",
+      "runtime_role": "setpoint-generator",
+      "triggers": [
+        "想法模糊",
+        "探索方向",
+        "brainstorm"
+      ],
+      "avoid_when": [
+        "方向已明确",
+        "已有完整 PRD",
+        "纯技术实现问题"
+      ],
+      "consumes": [
+        "user intent",
+        "problem context"
+      ],
+      "produces": [
+        "idea-brief.md"
+      ],
+      "signals_in": [
+        "user uncertainty"
+      ],
+      "signals_out": [
+        "validated direction",
+        "assumption list"
+      ],
+      "escalates_when": [
+        "方向无法排序",
+        "核心痛点无法具体化"
+      ],
+      "output_contract": [
+        "方向地图",
+        "MVP 定义",
+        "假设清单",
+        "验证计划"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-business-alignment",
+        "forge-init"
+      ],
+      "feedback_to": [],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "validated direction",
+          "to": "forge-business-alignment",
+          "when": "direction is concrete enough for business commitment"
+        },
+        {
+          "signal": "assumption list",
+          "to": "forge-init",
+          "when": "new project initialization can proceed from explored direction"
+        }
+      ]
+    },
+    {
+      "name": "forge-business-alignment",
+      "path": "skills/forge-business-alignment/SKILL.md",
+      "phase": "define",
+      "type": "domain",
+      "runtime_role": "setpoint-generator",
+      "triggers": [
+        "验证需求",
+        "项目目标",
+        "成功指标"
+      ],
+      "avoid_when": [
+        "只是技术探索",
+        "已有完整 PRD",
+        "已有 project.md"
+      ],
+      "consumes": [
+        "idea-brief.md",
+        "user business context"
+      ],
+      "produces": [
+        "docs/project.md business goals"
+      ],
+      "signals_in": [
+        "direction decision"
+      ],
+      "signals_out": [
+        "Go/No-Go",
+        "business constraints"
+      ],
+      "escalates_when": [
+        "用户画像、指标、资源不对齐"
+      ],
+      "output_contract": [
+        "用户画像",
+        "成功指标",
+        "资源约束",
+        "Go/No-Go 决策"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-define",
+        "forge-technical-design"
+      ],
+      "feedback_to": [
+        "forge-brainstorm"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "Go/No-Go",
+          "to": "forge-define",
+          "when": "business commitment is accepted"
+        },
+        {
+          "signal": "business constraints",
+          "to": "forge-technical-design",
+          "when": "technical choices need business and resource context"
+        }
+      ]
+    },
+    {
+      "name": "forge-define",
+      "path": "skills/forge-define/SKILL.md",
+      "phase": "define",
+      "type": "domain",
+      "runtime_role": "setpoint-generator",
+      "triggers": [
+        "写 PRD",
+        "定义需求",
+        "验收条件"
+      ],
+      "avoid_when": [
+        "只是技术探索",
+        "已有完整 PRD",
+        "小功能迭代"
+      ],
+      "consumes": [
+        "docs/project.md business goals",
+        "user requirements"
+      ],
+      "produces": [
+        "PRD.md"
+      ],
+      "signals_in": [
+        "business constraints"
+      ],
+      "signals_out": [
+        "testable acceptance criteria",
+        "scope exclusions"
+      ],
+      "escalates_when": [
+        "验收条件不可测试",
+        "范围边界无法确认"
+      ],
+      "output_contract": [
+        "用户故事",
+        "验收条件",
+        "非功能需求",
+        "范围排除",
+        "验收计划"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-design",
+        "forge-detail",
+        "forge-test-cases"
+      ],
+      "feedback_to": [
+        "forge-business-alignment"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "testable acceptance criteria",
+          "to": "forge-test-cases",
+          "when": "acceptance criteria can be mapped to cases"
+        },
+        {
+          "signal": "scope exclusions",
+          "to": "forge-detail",
+          "when": "feature setpoint needs technical detailing"
+        }
+      ]
+    },
+    {
+      "name": "forge-interaction-design",
+      "path": "skills/forge-interaction-design/SKILL.md",
+      "phase": "design",
+      "type": "domain",
+      "runtime_role": "setpoint-generator",
+      "triggers": [
+        "交互设计",
+        "用户流程",
+        "信息架构"
+      ],
+      "avoid_when": [
+        "纯后端 API",
+        "已有完整交互设计",
+        "小功能迭代"
+      ],
+      "consumes": [
+        "PRD.md",
+        "user flow constraints"
+      ],
+      "produces": [
+        "docs/features/<feature>/interaction-spec.md"
+      ],
+      "signals_in": [
+        "acceptance criteria"
+      ],
+      "signals_out": [
+        "interaction paths",
+        "component behavior"
+      ],
+      "escalates_when": [
+        "异常流程缺失",
+        "核心路径无法三步内完成"
+      ],
+      "output_contract": [
+        "用户流程图",
+        "信息架构",
+        "页面线框",
+        "组件复用清单"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-fe-system",
+        "forge-frontend-design"
+      ],
+      "feedback_to": [
+        "forge-define"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "interaction paths",
+          "to": "forge-frontend-design",
+          "when": "frontend component behavior needs detailing"
+        },
+        {
+          "signal": "component behavior",
+          "to": "forge-fe-system",
+          "when": "design system needs interaction states"
+        }
+      ]
+    },
+    {
+      "name": "forge-fe-system",
+      "path": "skills/forge-fe-system/SKILL.md",
+      "phase": "design",
+      "type": "domain",
+      "runtime_role": "knowledge",
+      "triggers": [
+        "设计系统",
+        "配色",
+        "设计规范"
+      ],
+      "avoid_when": [
+        "无前端界面",
+        "只需要技术详设"
+      ],
+      "consumes": [
+        "docs/project.md",
+        "PRD.md",
+        "interaction-spec.md",
+        "brand references"
+      ],
+      "produces": [
+        "DESIGN.md"
+      ],
+      "signals_in": [
+        "product tone",
+        "page archetype"
+      ],
+      "signals_out": [
+        "design tokens",
+        "component patterns"
+      ],
+      "escalates_when": [
+        "视觉方向冲突",
+        "已有 DESIGN.md 冲突"
+      ],
+      "output_contract": [
+        "三层 token",
+        "页面结构模式",
+        "组件模式",
+        "交互状态"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-frontend-design",
+        "forge-fe-artifact",
+        "forge-fe-accept"
+      ],
+      "feedback_to": [
+        "forge-init",
+        "forge-interaction-design"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "design tokens",
+          "to": "forge-frontend-design",
+          "when": "frontend contracts need design constraints"
+        },
+        {
+          "signal": "component patterns",
+          "to": "forge-fe-accept",
+          "when": "frontend acceptance needs visual setpoint"
+        }
+      ]
+    },
+    {
+      "name": "forge-technical-design",
+      "path": "skills/forge-technical-design/SKILL.md",
+      "phase": "design",
+      "type": "domain",
+      "runtime_role": "setpoint-generator",
+      "triggers": [
+        "技术设计",
+        "架构",
+        "技术选型"
+      ],
+      "avoid_when": [
+        "纯前端项目",
+        "已有完整技术架构"
+      ],
+      "consumes": [
+        "docs/project.md business goals",
+        "team constraints"
+      ],
+      "produces": [
+        "docs/project.md technical decisions"
+      ],
+      "signals_in": [
+        "business and resource constraints"
+      ],
+      "signals_out": [
+        "technical constraints",
+        "architecture decisions"
+      ],
+      "escalates_when": [
+        "团队经验、业务约束、运维能力缺失"
+      ],
+      "output_contract": [
+        "架构模式",
+        "技术选型",
+        "服务划分",
+        "数据架构",
+        "部署架构"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-detail",
+        "forge-codegen"
+      ],
+      "feedback_to": [
+        "forge-business-alignment"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "technical constraints",
+          "to": "forge-detail",
+          "when": "domain contracts need architecture constraints"
+        },
+        {
+          "signal": "architecture decisions",
+          "to": "forge-codegen",
+          "when": "code projection needs project-level decisions"
+        }
+      ]
+    },
+    {
+      "name": "forge-init",
+      "path": "skills/forge-init/SKILL.md",
+      "phase": "orchestration",
+      "type": "orchestrator",
+      "runtime_role": "orchestrator",
+      "triggers": [
+        "初始化项目",
+        "新项目",
+        "项目启动"
+      ],
+      "avoid_when": [
+        "已有完整 project.md、DESIGN.md 和入口文件"
+      ],
+      "consumes": [
+        "user project intent",
+        "existing docs/project.md",
+        "existing DESIGN.md"
+      ],
+      "produces": [
+        "docs/project.md",
+        "DESIGN.md",
+        "AGENTS.md",
+        "CLAUDE.md"
+      ],
+      "signals_in": [
+        "missing project files"
+      ],
+      "signals_out": [
+        "project initialized",
+        "phase skipped"
+      ],
+      "escalates_when": [
+        "已有文件与新决策冲突",
+        "无法判断是否有前端"
+      ],
+      "output_contract": [
+        "项目级技术决策",
+        "设计系统",
+        "AI 行为入口"
+      ],
+      "maturity": "needs-runtime-hardening",
+      "stage_next": [
+        "forge-define",
+        "forge-detail",
+        "forge-fe-system"
+      ],
+      "feedback_to": [
+        "forge-brainstorm"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "project initialized",
+          "to": "forge-define",
+          "when": "requirements definition should start after project files exist"
+        },
+        {
+          "signal": "phase skipped",
+          "to": "forge-detail",
+          "when": "existing project files allow direct detailing"
+        }
+      ]
+    },
+    {
+      "name": "forge-design",
+      "path": "skills/forge-design/SKILL.md",
+      "phase": "orchestration",
+      "type": "orchestrator",
+      "runtime_role": "orchestrator",
+      "triggers": [
+        "做设计",
+        "交互设计",
+        "设计阶段"
+      ],
+      "avoid_when": [
+        "纯后端 API",
+        "已有完整设计输入且只需详设"
+      ],
+      "consumes": [
+        "PRD.md",
+        "existing DESIGN.md",
+        "feature context"
+      ],
+      "produces": [
+        "interaction-spec.md",
+        "DESIGN.md updates"
+      ],
+      "signals_in": [
+        "design needed",
+        "frontend absent"
+      ],
+      "signals_out": [
+        "interaction spec ready",
+        "design tokens ready"
+      ],
+      "escalates_when": [
+        "用户不确认视觉方向",
+        "交互和视觉职责冲突"
+      ],
+      "output_contract": [
+        "交互规格",
+        "设计系统变更"
+      ],
+      "maturity": "needs-runtime-hardening",
+      "stage_next": [
+        "forge-detail",
+        "forge-frontend-design"
+      ],
+      "feedback_to": [
+        "forge-define"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "interaction spec ready",
+          "to": "forge-detail",
+          "when": "technical detail needs design context"
+        },
+        {
+          "signal": "design tokens ready",
+          "to": "forge-frontend-design",
+          "when": "frontend detail is required"
+        }
+      ]
+    },
+    {
+      "name": "forge-detail",
+      "path": "skills/forge-detail/SKILL.md",
+      "phase": "orchestration",
+      "type": "orchestrator",
+      "runtime_role": "controller",
+      "triggers": [
+        "技术详设",
+        "详细设计",
+        "设计 API"
+      ],
+      "avoid_when": [
+        "没有需求或技术上下文",
+        "只是代码修复"
+      ],
+      "consumes": [
+        "docs/project.md",
+        "PRD.md",
+        "interaction-spec.md",
+        "DESIGN.md",
+        "codegen deviation summary"
+      ],
+      "produces": [
+        "feature contract.md",
+        "api/contract.md",
+        "database/contract.md",
+        "frontend/contract.md"
+      ],
+      "signals_in": [
+        "repeated L1 from forge-codegen",
+        "document drift from forge-review"
+      ],
+      "signals_out": [
+        "contract updated",
+        "downstream drift report",
+        "human decision needed"
+      ],
+      "escalates_when": [
+        "contract ambiguity",
+        "downstream drift needs decision",
+        "frontend presence unclear"
+      ],
+      "output_contract": [
+        "feature contract",
+        "domain contracts",
+        "drift report"
+      ],
+      "maturity": "needs-runtime-hardening",
+      "stage_next": [
+        "forge-api-design",
+        "forge-plan",
+        "forge-test"
+      ],
+      "feedback_to": [
+        "forge-codegen",
+        "forge-review"
+      ],
+      "quality_gates": [
+        "forge-review"
+      ],
+      "signal_routes": [
+        {
+          "signal": "contract updated",
+          "to": "forge-plan",
+          "when": "setpoint is ready for task slicing"
+        },
+        {
+          "signal": "downstream drift report",
+          "to": "human decision",
+          "when": "cascade impact is unclear"
+        },
+        {
+          "signal": "human decision needed",
+          "to": "human decision",
+          "when": "L2 drift or domain boundary conflict exists"
+        }
+      ]
+    },
+    {
+      "name": "forge-api-design",
+      "path": "skills/forge-api-design/SKILL.md",
+      "phase": "detail",
+      "type": "domain",
+      "runtime_role": "setpoint-generator",
+      "triggers": [
+        "API 设计",
+        "设计端点",
+        "API 合约"
+      ],
+      "avoid_when": [
+        "纯前端项目",
+        "已有完整 API 详设"
+      ],
+      "consumes": [
+        "docs/project.md",
+        "PRD.md"
+      ],
+      "produces": [
+        "api/contract.md",
+        "api/modules/*.md"
+      ],
+      "signals_in": [
+        "requirements and technical constraints"
+      ],
+      "signals_out": [
+        "API setpoint",
+        "shared data model"
+      ],
+      "escalates_when": [
+        "资源模型无法确认",
+        "权限或幂等策略冲突"
+      ],
+      "output_contract": [
+        "D1-D7",
+        "接口合约",
+        "共享数据模型"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-db-design",
+        "forge-frontend-design",
+        "forge-plan"
+      ],
+      "feedback_to": [
+        "forge-detail"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "API setpoint",
+          "to": "forge-db-design",
+          "when": "storage model depends on API data model"
+        },
+        {
+          "signal": "shared data model",
+          "to": "forge-frontend-design",
+          "when": "frontend contracts consume API shapes"
+        }
+      ]
+    },
+    {
+      "name": "forge-db-design",
+      "path": "skills/forge-db-design/SKILL.md",
+      "phase": "detail",
+      "type": "domain",
+      "runtime_role": "setpoint-generator",
+      "triggers": [
+        "数据库设计",
+        "表结构",
+        "数据模型"
+      ],
+      "avoid_when": [
+        "纯前端项目",
+        "已有完整数据库详设"
+      ],
+      "consumes": [
+        "docs/project.md",
+        "api/contract.md"
+      ],
+      "produces": [
+        "database/contract.md"
+      ],
+      "signals_in": [
+        "API data model"
+      ],
+      "signals_out": [
+        "database setpoint",
+        "migration rules"
+      ],
+      "escalates_when": [
+        "API 模型和存储模型冲突",
+        "迁移不可回滚"
+      ],
+      "output_contract": [
+        "DB1-DB5",
+        "表清单",
+        "索引规划表",
+        "迁移规则"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-plan",
+        "forge-codegen"
+      ],
+      "feedback_to": [
+        "forge-api-design"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "database setpoint",
+          "to": "forge-plan",
+          "when": "task slicing needs persistence work"
+        },
+        {
+          "signal": "migration rules",
+          "to": "forge-codegen",
+          "when": "code projection includes schema or migrations"
+        }
+      ]
+    },
+    {
+      "name": "forge-frontend-design",
+      "path": "skills/forge-frontend-design/SKILL.md",
+      "phase": "detail",
+      "type": "domain",
+      "runtime_role": "setpoint-generator",
+      "triggers": [
+        "前端设计",
+        "组件设计",
+        "页面结构"
+      ],
+      "avoid_when": [
+        "纯后端 API",
+        "已有完整前端详设"
+      ],
+      "consumes": [
+        "interaction-spec.md",
+        "DESIGN.md",
+        "api/contract.md"
+      ],
+      "produces": [
+        "frontend/contract.md",
+        "frontend/modules/*.md"
+      ],
+      "signals_in": [
+        "API setpoint",
+        "design tokens",
+        "interaction spec"
+      ],
+      "signals_out": [
+        "frontend setpoint",
+        "component modules"
+      ],
+      "escalates_when": [
+        "API 合约缺失",
+        "DESIGN.md 缺失",
+        "状态方案冲突"
+      ],
+      "output_contract": [
+        "F1-F5",
+        "组件树",
+        "数据流",
+        "状态管理"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-plan",
+        "forge-codegen",
+        "forge-fe-artifact"
+      ],
+      "feedback_to": [
+        "forge-api-design",
+        "forge-design",
+        "forge-fe-system",
+        "forge-interaction-design"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "frontend setpoint",
+          "to": "forge-fe-artifact",
+          "when": "frontend implementation is requested"
+        },
+        {
+          "signal": "component modules",
+          "to": "forge-codegen",
+          "when": "general code projection includes frontend modules"
+        }
+      ]
+    },
+    {
+      "name": "forge-plan",
+      "path": "skills/forge-plan/SKILL.md",
+      "phase": "plan",
+      "type": "domain",
+      "runtime_role": "planner",
+      "triggers": [
+        "拆任务",
+        "任务分解",
+        "执行计划"
+      ],
+      "avoid_when": [
+        "只有一个模块",
+        "已有明确任务清单"
+      ],
+      "consumes": [
+        "contract.md",
+        "modules/*.md"
+      ],
+      "produces": [
+        "plan.md",
+        "testing/test-cases.md"
+      ],
+      "signals_in": [
+        "domain contracts"
+      ],
+      "signals_out": [
+        "task sequence",
+        "checkpoints"
+      ],
+      "escalates_when": [
+        "任务无法垂直切片",
+        "验收标准缺失"
+      ],
+      "output_contract": [
+        "任务清单",
+        "依赖图",
+        "拓扑排序",
+        "验证方式"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-codegen",
+        "forge-test",
+        "forge-test-cases"
+      ],
+      "feedback_to": [
+        "forge-detail"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "task sequence",
+          "to": "forge-codegen",
+          "when": "implementation can proceed by vertical slices"
+        },
+        {
+          "signal": "checkpoints",
+          "to": "forge-test",
+          "when": "testing stage needs task-derived checkpoints"
+        }
+      ]
+    },
+    {
+      "name": "forge-codegen",
+      "path": "skills/forge-codegen/SKILL.md",
+      "phase": "build",
+      "type": "execution",
+      "runtime_role": "actuator",
+      "triggers": [
+        "生成代码",
+        "写代码",
+        "build"
+      ],
+      "avoid_when": [
+        "只有文档没有代码",
+        "已有完整代码",
+        "纯文档项目"
+      ],
+      "consumes": [
+        "docs/project.md",
+        "DESIGN.md",
+        "contract.md",
+        "modules/*.md",
+        "plan.md"
+      ],
+      "produces": [
+        "src/",
+        "tests/",
+        "deviation summary"
+      ],
+      "signals_in": [
+        "contract setpoint",
+        "task sequence"
+      ],
+      "signals_out": [
+        "L0 noise",
+        "L1 deviation",
+        "L2 drift"
+      ],
+      "escalates_when": [
+        "L2 drift",
+        "three correction loops without convergence"
+      ],
+      "output_contract": [
+        "generated code",
+        "generated tests",
+        "deviation summary"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-review",
+        "forge-test",
+        "forge-deploy"
+      ],
+      "feedback_to": [
+        "forge-detail"
+      ],
+      "quality_gates": [
+        "forge-review",
+        "forge-test",
+        "forge-fe-accept"
+      ],
+      "signal_routes": [
+        {
+          "signal": "L1 deviation",
+          "to": "forge-detail",
+          "when": "same-class L1 >= 2"
+        },
+        {
+          "signal": "L2 drift",
+          "to": "human decision",
+          "when": "setpoint contradiction or missing source truth"
+        },
+        {
+          "signal": "generated code",
+          "to": "forge-review",
+          "when": "projection is ready for independent review"
+        }
+      ]
+    },
+    {
+      "name": "forge-fe-artifact",
+      "path": "skills/forge-fe-artifact/SKILL.md",
+      "phase": "build",
+      "type": "execution",
+      "runtime_role": "actuator",
+      "triggers": [
+        "生成前端",
+        "做页面",
+        "写组件"
+      ],
+      "avoid_when": [
+        "无前端任务",
+        "缺 DESIGN.md 且无法确认视觉规则"
+      ],
+      "consumes": [
+        "DESIGN.md",
+        "interaction-spec.md",
+        "frontend/contract.md",
+        "frontend/modules/*.md",
+        "api/modules/*.md",
+        "plan.md"
+      ],
+      "produces": [
+        "frontend source files",
+        "frontend validation evidence"
+      ],
+      "signals_in": [
+        "frontend task",
+        "design tokens"
+      ],
+      "signals_out": [
+        "frontend artifact ready",
+        "preview blocked"
+      ],
+      "escalates_when": [
+        "无法运行或预览",
+        "设计输入缺失"
+      ],
+      "output_contract": [
+        "pages",
+        "components",
+        "hooks",
+        "styles",
+        "basic tests"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-fe-accept",
+        "forge-review"
+      ],
+      "feedback_to": [
+        "forge-fe-system",
+        "forge-frontend-design"
+      ],
+      "quality_gates": [
+        "forge-fe-accept",
+        "forge-review"
+      ],
+      "signal_routes": [
+        {
+          "signal": "frontend artifact ready",
+          "to": "forge-fe-accept",
+          "when": "preview or acceptance can run"
+        },
+        {
+          "signal": "preview blocked",
+          "to": "human decision",
+          "when": "frontend cannot be run or inspected"
+        }
+      ]
+    },
+    {
+      "name": "forge-test",
+      "path": "skills/forge-test/SKILL.md",
+      "phase": "orchestration",
+      "type": "orchestrator",
+      "runtime_role": "orchestrator",
+      "triggers": [
+        "做测试",
+        "测试阶段",
+        "测试规划"
+      ],
+      "avoid_when": [
+        "纯文档项目",
+        "已有完整测试策略和测试用例"
+      ],
+      "consumes": [
+        "contract.md",
+        "modules/*.md",
+        "plan.md",
+        "existing testing/contract.md",
+        "existing testing/test-cases.md"
+      ],
+      "produces": [
+        "testing/contract.md",
+        "testing/test-cases.md"
+      ],
+      "signals_in": [
+        "test planning needed",
+        "missing test cases"
+      ],
+      "signals_out": [
+        "test strategy ready",
+        "test cases ready"
+      ],
+      "escalates_when": [
+        "验收条件缺失",
+        "测试策略和用例冲突"
+      ],
+      "output_contract": [
+        "测试策略",
+        "测试用例"
+      ],
+      "maturity": "needs-runtime-hardening",
+      "stage_next": [
+        "forge-codegen",
+        "forge-deploy",
+        "forge-review",
+        "forge-test-strategy"
+      ],
+      "feedback_to": [
+        "forge-detail",
+        "forge-plan"
+      ],
+      "quality_gates": [
+        "forge-review"
+      ],
+      "signal_routes": [
+        {
+          "signal": "test strategy ready",
+          "to": "forge-codegen",
+          "when": "codegen needs testing constraints"
+        },
+        {
+          "signal": "test cases ready",
+          "to": "forge-review",
+          "when": "review needs test coverage evidence"
+        },
+        {
+          "signal": "requirements not testable",
+          "to": "forge-detail",
+          "when": "setpoint cannot produce reliable tests"
+        }
+      ]
+    },
+    {
+      "name": "forge-test-strategy",
+      "path": "skills/forge-test-strategy/SKILL.md",
+      "phase": "test",
+      "type": "domain",
+      "runtime_role": "planner",
+      "triggers": [
+        "测试策略",
+        "测试覆盖",
+        "Mock 策略"
+      ],
+      "avoid_when": [
+        "纯文档项目",
+        "已有完整测试策略"
+      ],
+      "consumes": [
+        "contract.md",
+        "modules/*.md",
+        "plan.md"
+      ],
+      "produces": [
+        "testing/contract.md"
+      ],
+      "signals_in": [
+        "business risk",
+        "test constraints"
+      ],
+      "signals_out": [
+        "test strategy",
+        "quality gate"
+      ],
+      "escalates_when": [
+        "关键路径无法覆盖",
+        "CI 约束不清"
+      ],
+      "output_contract": [
+        "T1-T5",
+        "覆盖矩阵",
+        "测试规范"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-test-cases",
+        "forge-codegen"
+      ],
+      "feedback_to": [
+        "forge-test"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "test strategy",
+          "to": "forge-test-cases",
+          "when": "test cases need coverage strategy"
+        },
+        {
+          "signal": "quality gate",
+          "to": "forge-codegen",
+          "when": "implementation needs testing guardrails"
+        }
+      ]
+    },
+    {
+      "name": "forge-test-cases",
+      "path": "skills/forge-test-cases/SKILL.md",
+      "phase": "test",
+      "type": "domain",
+      "runtime_role": "setpoint-generator",
+      "triggers": [
+        "写测试用例",
+        "测试场景",
+        "测试覆盖"
+      ],
+      "avoid_when": [
+        "只有文档没有代码",
+        "已有完整测试用例",
+        "纯文档项目"
+      ],
+      "consumes": [
+        "contract.md",
+        "modules/*.md",
+        "plan.md",
+        "testing/contract.md"
+      ],
+      "produces": [
+        "testing/test-cases.md"
+      ],
+      "signals_in": [
+        "acceptance criteria",
+        "test strategy"
+      ],
+      "signals_out": [
+        "test case setpoint"
+      ],
+      "escalates_when": [
+        "验收条件不可测试",
+        "测试数据不可重复构造"
+      ],
+      "output_contract": [
+        "测试范围矩阵",
+        "正常路径",
+        "边界情况",
+        "错误处理",
+        "测试数据"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-codegen",
+        "forge-review"
+      ],
+      "feedback_to": [
+        "forge-define",
+        "forge-plan",
+        "forge-test-strategy"
+      ],
+      "quality_gates": [
+        "forge-review"
+      ],
+      "signal_routes": [
+        {
+          "signal": "test case setpoint",
+          "to": "forge-codegen",
+          "when": "tests should be projected with code"
+        },
+        {
+          "signal": "test case setpoint",
+          "to": "forge-review",
+          "when": "review needs acceptance coverage evidence"
+        }
+      ]
+    },
+    {
+      "name": "forge-fe-accept",
+      "path": "skills/forge-fe-accept/SKILL.md",
+      "phase": "test",
+      "type": "domain",
+      "runtime_role": "sensor",
+      "triggers": [
+        "验收前端",
+        "检查页面",
+        "视觉验收"
+      ],
+      "avoid_when": [
+        "无前端实现",
+        "无可对照设计系统"
+      ],
+      "consumes": [
+        "DESIGN.md",
+        "interaction-spec.md",
+        "frontend/contract.md",
+        "frontend/modules/*.md",
+        "frontend source files"
+      ],
+      "produces": [
+        "frontend acceptance report"
+      ],
+      "signals_in": [
+        "frontend artifact ready"
+      ],
+      "signals_out": [
+        "P0/P1/P2 frontend issues",
+        "acceptance status"
+      ],
+      "escalates_when": [
+        "无法运行或预览却要求通过",
+        "P0/P1 未修复"
+      ],
+      "output_contract": [
+        "验收报告",
+        "缺陷清单",
+        "豁免记录"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-review",
+        "forge-codegen"
+      ],
+      "feedback_to": [
+        "forge-fe-artifact",
+        "forge-fe-system"
+      ],
+      "quality_gates": [
+        "forge-review"
+      ],
+      "signal_routes": [
+        {
+          "signal": "P0/P1/P2 frontend issues",
+          "to": "forge-codegen",
+          "when": "frontend projection needs fixes"
+        },
+        {
+          "signal": "acceptance status",
+          "to": "forge-review",
+          "when": "review needs frontend acceptance evidence"
+        }
+      ]
+    },
+    {
+      "name": "forge-review",
+      "path": "skills/forge-review/SKILL.md",
+      "phase": "review",
+      "type": "governance",
+      "runtime_role": "sensor",
+      "triggers": [
+        "审查文档",
+        "审查代码",
+        "review"
+      ],
+      "avoid_when": [
+        "没有可审查产物"
+      ],
+      "consumes": [
+        "PRD.md",
+        "docs/project.md",
+        "DESIGN.md",
+        "contract.md",
+        "modules/*.md",
+        "plan.md",
+        "src/",
+        "tests/",
+        "changelog",
+        "timeline"
+      ],
+      "produces": [
+        "review report",
+        "deviation attribution"
+      ],
+      "signals_in": [
+        "artifact ready",
+        "health check trigger"
+      ],
+      "signals_out": [
+        "P0/P1/P2 issues",
+        "skill/document/code attribution"
+      ],
+      "escalates_when": [
+        "P0/P1 found",
+        "WHY missing before codegen",
+        "deviation has no attribution"
+      ],
+      "output_contract": [
+        "findings",
+        "evidence",
+        "impact",
+        "fix recommendations",
+        "attribution"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-deploy",
+        "forge-learn"
+      ],
+      "feedback_to": [
+        "forge-detail",
+        "forge-codegen"
+      ],
+      "quality_gates": [
+        "forge-deploy"
+      ],
+      "signal_routes": [
+        {
+          "signal": "document drift",
+          "to": "forge-detail",
+          "when": "review attributes issue to document drift"
+        },
+        {
+          "signal": "skill/document/code attribution",
+          "to": "forge-learn",
+          "when": "same-class deviation >= 3 or cross-project deviation appears"
+        },
+        {
+          "signal": "P0/P1 issues",
+          "to": "human decision",
+          "when": "blocking issue needs prioritization or waiver"
+        }
+      ]
+    },
+    {
+      "name": "forge-deploy",
+      "path": "skills/forge-deploy/SKILL.md",
+      "phase": "deploy",
+      "type": "domain",
+      "runtime_role": "planner",
+      "triggers": [
+        "发布",
+        "部署",
+        "上线",
+        "灰度",
+        "回滚"
+      ],
+      "avoid_when": [
+        "纯本地工具",
+        "已有完整 CI/CD",
+        "原型验证阶段"
+      ],
+      "consumes": [
+        "src/",
+        "tests/",
+        "testing/test-cases.md",
+        "contract.md",
+        "review report"
+      ],
+      "produces": [
+        "deploy/contract.md",
+        "release checklist"
+      ],
+      "external_downstream": [
+        "runtime release execution"
+      ],
+      "signals_in": [
+        "code review passed",
+        "test results"
+      ],
+      "signals_out": [
+        "release plan",
+        "rollback plan",
+        "release blocked"
+      ],
+      "escalates_when": [
+        "无回滚方案",
+        "无健康检查",
+        "无监控告警"
+      ],
+      "output_contract": [
+        "RL1-RL5",
+        "部署流程",
+        "回滚步骤",
+        "监控告警",
+        "发布清单"
+      ],
+      "maturity": "stable",
+      "stage_next": [],
+      "feedback_to": [
+        "forge-review",
+        "forge-test"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "release plan",
+          "to": "runtime release execution",
+          "when": "release checklist is complete and approved"
+        },
+        {
+          "signal": "release blocked",
+          "to": "human decision",
+          "when": "rollback, health check, or monitoring is missing"
+        }
+      ]
+    },
+    {
+      "name": "forge-learn",
+      "path": "skills/forge-learn/SKILL.md",
+      "phase": "learn",
+      "type": "governance",
+      "runtime_role": "governance",
+      "triggers": [
+        "复盘",
+        "方法论回顾",
+        "改进 skill"
+      ],
+      "avoid_when": [
+        "没有足够偏差证据",
+        "只是单次偶发问题"
+      ],
+      "consumes": [
+        "review attribution",
+        "changelog",
+        "timeline"
+      ],
+      "produces": [
+        "skill improvement recommendation"
+      ],
+      "external_downstream": [
+        "skill maintenance"
+      ],
+      "signals_in": [
+        "same-class deviation >= 3",
+        "cross-project deviation"
+      ],
+      "signals_out": [
+        "methodology change proposal",
+        "evidence chain"
+      ],
+      "escalates_when": [
+        "证据不足",
+        "建议会导致 skill 膨胀或冲突"
+      ],
+      "output_contract": [
+        "模式识别",
+        "修改建议",
+        "证据链",
+        "反向验证"
+      ],
+      "maturity": "stable",
+      "stage_next": [],
+      "feedback_to": [
+        "forge-review"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "methodology change proposal",
+          "to": "skill maintenance",
+          "when": "human confirms evidence-backed methodology update"
+        },
+        {
+          "signal": "evidence chain",
+          "to": "human decision",
+          "when": "methodology change requires approval"
+        }
+      ]
+    }
+  ]
+}

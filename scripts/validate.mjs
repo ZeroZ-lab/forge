@@ -39,7 +39,7 @@ function json(relativePath) {
   try {
     return JSON.parse(read(relativePath));
   } catch (error) {
-    fail(`${relativePath}: invalid JSON (${error.message})`);
+    fail(`${relativePath}: invalid JSON-compatible YAML (${error.message})`);
     return {};
   }
 }
@@ -70,10 +70,19 @@ function referencedMarkdownFiles(skillName, content) {
   });
 }
 
+function assertArrayOfStrings(value, label) {
+  assert(Array.isArray(value), `${label} must be an array`);
+  if (!Array.isArray(value)) return;
+  for (const item of value) {
+    assert(typeof item === 'string' && item.length > 0, `${label} must contain only non-empty strings`);
+  }
+}
+
 const packageJson = json('package.json');
 const claudePlugin = json('.claude-plugin/plugin.json');
 const codexPlugin = json('.codex-plugin/plugin.json');
 const claudeMarketplace = json('.claude-plugin/marketplace.json');
+const runtimeRegistry = json('registry.yaml');
 
 assert(
   packageJson.version === claudePlugin.version &&
@@ -82,6 +91,7 @@ assert(
 );
 
 assert(packageJson.scripts?.validate === 'node scripts/validate.mjs', 'package.json: missing scripts.validate');
+assert(packageJson.scripts?.test === 'node --test', 'package.json: missing scripts.test');
 
 const skillsDir = path.join(root, 'skills');
 const forgeSkillDirs = fs
@@ -100,6 +110,109 @@ assert(
   JSON.stringify(manifestSkillPaths) === JSON.stringify(expectedSkillPaths),
   '.claude-plugin/plugin.json: skills list must match skills/forge-* exactly',
 );
+
+assert(runtimeRegistry.version === 1, 'registry.yaml: version must be 1');
+assert(Array.isArray(runtimeRegistry.skills), 'registry.yaml: skills must be an array');
+
+const registryNames = Array.isArray(runtimeRegistry.skills)
+  ? runtimeRegistry.skills.map((skill) => skill.name).sort()
+  : [];
+assert(
+  JSON.stringify(registryNames) === JSON.stringify(forgeSkillDirs),
+  'registry.yaml: skills must cover skills/forge-* exactly',
+);
+
+const allowedRuntimeRoles = new Set([
+  'setpoint-generator',
+  'orchestrator',
+  'controller',
+  'planner',
+  'actuator',
+  'sensor',
+  'governance',
+  'knowledge',
+]);
+
+const allowedRegistryPhases = new Set([
+  'explore',
+  'define',
+  'design',
+  'orchestration',
+  'detail',
+  'plan',
+  'planning',
+  'build',
+  'test',
+  'review',
+  'deploy',
+  'learn',
+]);
+
+const allowedRegistryTypes = new Set(['domain', 'orchestrator', 'execution', 'governance']);
+const allowedExternalTargets = new Set(['human decision', 'runtime release execution', 'skill maintenance']);
+
+for (const skill of runtimeRegistry.skills ?? []) {
+  assert(typeof skill.name === 'string' && skill.name.startsWith('forge-'), 'registry.yaml: each skill needs a forge-* name');
+  assert(skill.path === `skills/${skill.name}/SKILL.md`, `registry.yaml: ${skill.name} path must point to its SKILL.md`);
+  assert(exists(skill.path), `registry.yaml: missing path for ${skill.name}: ${skill.path}`);
+  assert(allowedRegistryPhases.has(skill.phase), `registry.yaml: ${skill.name} invalid phase "${skill.phase}"`);
+  assert(allowedRegistryTypes.has(skill.type), `registry.yaml: ${skill.name} invalid type "${skill.type}"`);
+  assert(allowedRuntimeRoles.has(skill.runtime_role), `registry.yaml: ${skill.name} invalid runtime_role "${skill.runtime_role}"`);
+  for (const field of [
+    'triggers',
+    'avoid_when',
+    'consumes',
+    'produces',
+    'signals_in',
+    'signals_out',
+    'escalates_when',
+    'output_contract',
+    'stage_next',
+    'feedback_to',
+    'quality_gates',
+  ]) {
+    assertArrayOfStrings(skill[field], `registry.yaml: ${skill.name}.${field}`);
+  }
+  if ('external_downstream' in skill) {
+    assertArrayOfStrings(skill.external_downstream, `registry.yaml: ${skill.name}.external_downstream`);
+  }
+  assert(Array.isArray(skill.signal_routes), `registry.yaml: ${skill.name}.signal_routes must be an array`);
+  if (Array.isArray(skill.signal_routes)) {
+    for (const route of skill.signal_routes) {
+      assert(route && typeof route === 'object' && !Array.isArray(route), `registry.yaml: ${skill.name}.signal_routes entries must be objects`);
+      assert(typeof route?.signal === 'string' && route.signal.length > 0, `registry.yaml: ${skill.name}.signal_routes.signal is required`);
+      assert(typeof route?.to === 'string' && route.to.length > 0, `registry.yaml: ${skill.name}.signal_routes.to is required`);
+      assert(typeof route?.when === 'string' && route.when.length > 0, `registry.yaml: ${skill.name}.signal_routes.when is required`);
+    }
+  }
+  assert(typeof skill.maturity === 'string' && skill.maturity.length > 0, `registry.yaml: ${skill.name}.maturity is required`);
+}
+
+const registryByName = Object.fromEntries((runtimeRegistry.skills ?? []).map((skill) => [skill.name, skill]));
+
+for (const skill of runtimeRegistry.skills ?? []) {
+  for (const field of ['stage_next', 'feedback_to', 'quality_gates']) {
+    for (const target of skill[field]) {
+      assert(registryByName[target], `registry.yaml: ${skill.name}.${field} references unknown skill "${target}"`);
+      assert(target !== skill.name, `registry.yaml: ${skill.name}.${field} must not reference itself`);
+    }
+  }
+  for (const route of skill.signal_routes ?? []) {
+    if (typeof route?.to === 'string') {
+      assert(
+        registryByName[route.to] || allowedExternalTargets.has(route.to),
+        `registry.yaml: ${skill.name}.signal_routes.to references unknown target "${route.to}"`,
+      );
+    }
+  }
+}
+
+for (const role of ['orchestrator', 'controller', 'actuator', 'sensor', 'governance', 'setpoint-generator']) {
+  assert(
+    (runtimeRegistry.skills ?? []).some((skill) => skill.runtime_role === role),
+    `registry.yaml: missing runtime role "${role}"`,
+  );
+}
 
 for (const skillName of forgeSkillDirs) {
   const skillPath = `skills/${skillName}/SKILL.md`;
@@ -121,6 +234,74 @@ for (const skillName of forgeSkillDirs) {
     assert(exists(referencePath), `${skillPath}: referenced file is missing: ${referencePath}`);
   }
 }
+
+assert(exists('docs/runtime-control-loop.md'), 'docs/runtime-control-loop.md: missing');
+assert(exists('docs/skill-architecture-audit.md'), 'docs/skill-architecture-audit.md: missing');
+assertIncludes('docs/runtime-control-loop.md', [
+  'skills 是协议节点，不是控制系统本体',
+  'Runtime MAPE-K 映射',
+  '快回路',
+  '中回路',
+  '慢回路',
+  'runtime role',
+  'consumes',
+  'produces',
+  'signals_in',
+  'signals_out',
+  'escalates_when',
+]);
+assertIncludes('docs/skill-architecture-audit.md', [
+  '运行时控制回路判定',
+  '运行时闭环',
+  'registry.yaml',
+  'docs/runtime-control-loop.md',
+]);
+
+for (const skillName of forgeSkillDirs) {
+  assert(
+    read('docs/skill-architecture-audit.md').includes(`### ${skillName}`),
+    `docs/skill-architecture-audit.md: missing audit entry for ${skillName}`,
+  );
+}
+
+const sharedKnowledgeFiles = [
+  'skills/shared/concepts/mape-k.md',
+  'skills/shared/concepts/control-loop.md',
+  'skills/shared/concepts/document-as-source.md',
+  'skills/shared/rubrics/skill-quality.md',
+  'skills/shared/rubrics/contract-quality.md',
+  'skills/shared/rubrics/projection-quality.md',
+  'skills/shared/red-flags/contract-drift.md',
+  'skills/shared/red-flags/scope-creep.md',
+  'skills/shared/red-flags/unsafe-projection.md',
+  'skills/shared/output-contracts/deviation-report.md',
+  'skills/shared/output-contracts/review-result.md',
+  'skills/shared/output-contracts/runtime-control.md',
+];
+
+for (const file of sharedKnowledgeFiles) {
+  assert(exists(file), `${file}: missing runtime knowledge file`);
+  if (exists(file)) {
+    assert(lineCount(read(file)) <= 200, `${file}: exceeds 200 lines`);
+  }
+}
+
+for (const orchestrator of ['forge-init', 'forge-design', 'forge-detail', 'forge-test']) {
+  assertIncludes(`skills/${orchestrator}/SKILL.md`, ['## 运行时角色', '## 输入状态读取', '## 分支与恢复', '## 运行时信号']);
+}
+
+assert(
+  registryByName['forge-codegen']?.signal_routes?.some((route) => route.signal === 'L1 deviation' && route.to === 'forge-detail'),
+  'registry.yaml: fast-to-middle loop must route L1 deviation from forge-codegen to forge-detail',
+);
+assert(
+  registryByName['forge-review']?.signal_routes?.some((route) => route.signal === 'skill/document/code attribution' && route.to === 'forge-learn'),
+  'registry.yaml: review-to-learn loop must route attributed deviations to forge-learn',
+);
+assert(
+  registryByName['forge-deploy']?.escalates_when?.includes('无回滚方案'),
+  'registry.yaml: deploy must block when rollback is missing',
+);
 
 const requiredProtocols = {
   'forge-fe-system': {
@@ -181,8 +362,12 @@ assert(
   '.claude-plugin/marketplace.json: forge description must mention "22 个决策协议 skill"',
 );
 assert(read('README.md').includes('8 阶段 × 22 个 Skill'), 'README.md: must document 8 阶段 × 22 个 Skill');
+assert(read('README.md').includes('registry.yaml'), 'README.md: must document registry.yaml runtime control surface');
+assert(read('README.md').includes('docs/runtime-control-loop.md'), 'README.md: must document runtime control loop doc');
 assert(read('AGENTS.md').includes('22 个决策协议'), 'AGENTS.md: must document 22 个决策协议');
 assert(read('AGENTS.md').includes('信号传递'), 'AGENTS.md: must document signal passing between control loops');
+assert(read('AGENTS.md').includes('registry.yaml'), 'AGENTS.md: must document registry.yaml runtime control surface');
+assert(read('AGENTS.md').includes('docs/runtime-control-loop.md'), 'AGENTS.md: must document runtime control loop doc');
 
 const stalePatterns = [
   ['AGENTS.md', /BA1-BA5/],

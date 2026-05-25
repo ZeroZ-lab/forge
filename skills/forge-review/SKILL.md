@@ -25,6 +25,18 @@ review 的目标不是总结优点，而是发现会导致错误投影、错误�
 
 详细审查维度、prompt 和报告模板见 `references/review-protocol.md`。
 
+## 运行时角色
+
+review 是慢回路的 sensor + analyzer。它不只判断“有没有问题”，还必须把偏差归因成可传递信号：代码实现偏差回到 codegen，文档漂移回到 detail，方法论盲区进入 learn 聚合。
+
+## 运行时信号
+
+**输入信号**：codegen 偏差摘要、测试失败、文档/代码不一致、发布前质量门、用户要求独立审查。
+
+**输出信号**：P0/P1/P2 问题、阻塞项、豁免项、`skill/document/code attribution`、需要 detail 级联更新的漂移点、需要 learn 聚合的方法论候选。
+
+单次问题不能直接证明 skill 方法论错误；只有带证据的归因信号才允许进入 learn。
+
 ## 审查模式
 
 ### 文档审查

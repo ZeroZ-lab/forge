@@ -39,6 +39,16 @@ node scripts/validate.mjs
 
 自检会校验版本同步、22 个 `forge-*` skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 投影回流。
 
+运行时控制面也会被校验：`registry.yaml` 必须覆盖全部 22 个 skill，并声明每个协议节点的 `runtime_role`、输入输出、typed edges、偏差信号和升级条件；`docs/runtime-control-loop.md` 和 `docs/skill-architecture-audit.md` 必须存在；shared Knowledge 层、编排 skill 的运行时恢复规则，以及 `codegen -> detail -> review -> learn` 信号链必须完整。`registry.yaml` 是 JSON-compatible YAML，保持严格 JSON 语法以便无依赖校验。
+
+### 行为测试
+
+```bash
+node --test
+```
+
+行为测试验证 suite 运行时控制面的静态完整性，不模拟真实 skill 执行；它不要求每个 skill 文件都长成完整 MAPE-K 模板。
+
 ### 个人 Skill 安装
 
 ```bash
@@ -61,6 +71,8 @@ ln -s /path/to/forge/skills/forge-detail .claude/skills/forge-detail
 ## 使用方式
 
 Forge 不维护独立的指令层。用户用自然语言表达当前目标，运行时由 skill 描述触发对应决策协议。
+
+运行时闭环的边界是：skill 是协议节点，控制系统产生在“路由 skill -> 读取状态 -> 产出文档 -> 下游投影 -> 反馈偏差 -> 修正文档/代码/方法论”的执行过程中。详见 `docs/runtime-control-loop.md`；suite 控制面由 `registry.yaml` 描述。
 
 | 场景 | 触发的 skill | 产出 |
 |------|-------------|------|
