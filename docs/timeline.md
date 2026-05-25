@@ -1,5 +1,22 @@
 # Timeline — Forge 方法论进化记录
 
+### 2026-05-25 — 方法论进化：膨胀控制从硬约束改为分级策略
+
+- **触发**：demo11 全量审计发现 PRD(346行)/plan(355行)/interaction-spec(246行) 超限，但这些文件天然需要整体加载，拆开会丢失全局视野
+- **调研依据**：
+  - Stanford "Lost in the Middle"：LLM 对上下文中间段信息召回最差（U 形曲线）
+  - Amazon Science：即使检索完美，30K tokens 以下性能就开始退化
+  - LangChain：coding agent 保留最近 5 个文件 + 压缩历史
+  - 200 行 ≈ 2,000 tokens，5 文件 × 200 行 + 系统提示 ≈ 20K tokens（安全线内）
+- **改动**：AGENTS.md 膨胀控制段落重写
+  - 按需加载文件（contract/modules/project.md）：≤ 200 行（不变）
+  - 整体加载文件（PRD/plan/interaction-spec）：无硬约束，超 400 行检查
+  - 追加型文件（timeline/changelog）：≤ 100 行，超出归档
+  - 总预算：一次任务加载 < 30K tokens（≈ 3,000 行）
+- **消除重复**：历史记录段落的压缩规则表指向膨胀控制段落
+
+---
+
 ### 2026-05-25 — 方法论进化：测试 skill 产物格式强化 + 文件拆分策略
 
 - **触发**：demo11 testing 产物审计（testing/contract.md + testing/test-cases.md），发现 6 个结构性缺陷

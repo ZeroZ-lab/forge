@@ -231,21 +231,27 @@ testing/contract.md ───────→ tests/ 结构和策略
 
 ## 膨胀控制
 
-每个文件始终 < 200 行。
+**原则**：一次任务加载的总上下文 < 30K tokens（≈ 3,000 行）。
+按需加载的文件控制单文件大小，整体加载的文件按 scope 自然增长。
+
+### 按需加载（单文件 ≤ 200 行）
+
+AI 每次任务只读 1-2 个，控制单次 token 消耗。
 
 ```
-feature/contract.md     ~80 行    几乎不变
+feature/contract.md     ~100 行   几乎不变
 api/contract.md         ~100 行   几乎不变
 api/modules/*.md        100-200 行  迭代时修改
 frontend/contract.md    ~80 行    几乎不变
 frontend/modules/*.md   100-200 行  迭代时修改
+project.md / DESIGN.md  ~200 行   很少变
 ```
 
 AI 按需加载：
 
 ```
 "加标签功能"
-  → 读 feature/contract.md（共享约束，~80 行）
+  → 读 feature/contract.md（共享约束，~100 行）
   → 读 api/contract.md + api/modules/tasks.md（参考模式，~220 行）
   → 读 frontend/contract.md + frontend/modules/task-list.md（参考，~200 行）
   → 写 api/modules/labels.md + frontend/modules/labels.md
@@ -253,6 +259,25 @@ AI 按需加载：
   → 生成代码
   → 总共读 ~500 行，不碰其他领域和模块
 ```
+
+### 整体加载（无硬约束，超 400 行检查）
+
+AI 做任务时需要全部读，不存在"只读某一段"的场景。大小与 scope 正相关。
+
+| 文件类型 | 说明 |
+|---------|------|
+| PRD.md | 大小与 US 数量正相关，拆开会丢失全局视野 |
+| plan.md | 依赖图 + 并行矩阵需要整体可见 |
+| interaction-spec.md | 流程 + 线框 + 组件复用需要交叉引用 |
+| idea-brief.md | 发散阶段，不宜过早压缩 |
+
+### 追加型（≤ 100 行，超出归档）
+
+| 文件类型 | 上限 | 超出时 |
+|---------|------|--------|
+| timeline.md | 100 行 | 旧条目压缩成年度摘要，移到 timeline/年.md |
+| changelog.md | 100 行 | 旧版本移到 changelog/v*.md |
+| timeline/年.md | 200 行 | 按季度拆分 |
 
 ---
 
@@ -314,13 +339,7 @@ Forge 不维护独立的指令层。用户用自然语言表达目标，运行�
 
 **触发规则**：contract.md / modules/*.md 变更 → 追加 changelog · 阶段完成 → 追加 timeline · 新增 feature → 新建 changelog + 追加 timeline · 跨 feature 共享决策变更 → 追加 timeline 并标注影响
 
-**压缩规则**：
-
-| 文件 | 上限 | 超出时 |
-|------|------|--------|
-| `timeline.md` | 100 行 | 旧条目压缩成年度摘要，移到 `timeline/年.md` |
-| `changelog.md` | 100 行 | 旧版本移到 `changelog/v*.md` |
-| `timeline/年.md` | 200 行 | 按季度拆分 |
+**压缩规则**：见上方「膨胀控制 → 追加型」。
 
 **AI 怎么用**：改分页逻辑 → 读 timeline.md 看到 v1.1 改过 page → cursor（触发：性能）→ 读 changelog.md 看详细决策 → 知道上次为什么选 cursor，避免重复犯错。
 
