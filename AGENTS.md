@@ -40,9 +40,9 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 | 阶段 | Skill | 方法论 | 角色 | 产出 |
 |------|-------|--------|------|------|
 | **⓪ 探索** | brainstorm | 可能性展开 | 产品 + 业务方 | 方向简报 |
-| | research | 算法猎手 | 产品 + 技术研究员 | 算法菜单 |
 | **① 定义** | business-alignment | 需求验证 | 产品 + 业务方 | 项目章程 |
 | | requirements | 约束定义 | 产品 + 开发 | PRD |
+| **①.5 研究** | research | 算法猎手 | 产品 + 技术研究员 | 算法菜单 |
 | **② 设计** | interaction-design | 流程优先 | 产品 + 设计师 | 交互规格 |
 | | fe-system | 三层 Token | 设计师 | 设计系统 |
 | | technical-design | 架构权衡 | 架构师 + 开发 | 技术方案 |
@@ -66,8 +66,8 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 ### 阶段间的产物传递
 
 ```
-⓪ 探索         ⓪.5 研究       ① 定义                    ② 设计                      ③ 详设
-方向简报  →  算法菜单  →  项目章程 → PRD    →    交互规格 + 设计系统 + 技术方案    →    contract + modules/
+⓪ 探索         ① 定义         ①.5 研究       ② 设计                      ③ 详设
+方向简报  →  项目章程 → PRD  →  算法菜单  →    交互规格 + 设计系统 + 技术方案    →    contract + modules/
                                                                               │
                                                                               ↓
 ⑦ 交付          ⑥.5 审查        ⑥ 测试                     ⑤ 构建         ④ 任务
@@ -297,12 +297,20 @@ AI 做任务时需要全部读，不存在"只读某一段"的场景。大小与
 
 **跳过原则**：已有 project.md + DESIGN.md → 跳过 init · 需求明确 → 跳过 brainstorm 和 define · 纯后端 → 跳过 design · 一个端点 → 跳过 plan
 
-**research 自动触发**：当产品愿景涉及非平凡算法选择时，AI 主动建议走 research，不需要用户显式调用。判断信号：
-- 用户描述的产品涉及物理模拟、动画、路径规划、机器学习等算法密集领域
-- 用户说"我想做 X"但对技术实现没有任何提及（说明可能不知道涉及哪些技术）
-- 用户问"这个功能怎么实现"但问题本身需要先拆解成多个子问题
+**research 自动触发**：define 完成后，AI 扫描 PRD 中的技术信号词，默认建议 research，只在明确不需要时跳过。
 
-不触发 research 的信号：纯 CRUD 应用、用户已有明确技术方案、团队有类似项目经验
+技术信号词（出现任一即触发）：
+- 实时/同步/协作（CRDT vs OT vs 锁）
+- 搜索/排序/推荐（BM25 vs 向量 vs 混合）
+- 动画/物理/仿真（运动学、碰撞检测、粒子系统）
+- 路径/调度/优化（A*、遗传算法、约束求解）
+- 加密/认证/权限（加密方案、权限模型）
+- 图片/音频/视频处理（编解码、滤镜、压缩）
+
+跳过（三条全部满足）：
+- 纯 CRUD 应用（表单→数据库→列表页，没有技术选择空间）
+- 且用户已有明确技术方案
+- 且团队做过类似项目
 
 ### Skill 编排
 
@@ -311,9 +319,9 @@ Forge 不维护独立的指令层。用户用自然语言表达目标，运行�
 | 阶段 | 做什么 | 加载的 skill | 产出 |
 |------|--------|-------------|------|
 | ⓪ 探索 | 发散可能性 + 圈定方向 | brainstorm | `idea-brief.md` |
-| ⓪.5 研究 | 技术子问题拆解 + 算法搜索 | research | `research-brief.md` |
 | 初始化 | 业务 + 技术 + 设计 | business-alignment + technical-design + fe-system | `project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
 | ① 定义 | 需求分析 + PRD | requirements | `PRD.md` |
+| ①.5 研究 | 扫描 PRD 技术信号 + 算法搜索 | research | `research-brief.md` |
 | ② 设计 | 交互 + 视觉 | interaction-design + fe-system | `interaction-spec.md` + `DESIGN.md` |
 | ③ 详设 | API + DB + 前端（按需） | api-design + db-design (+ frontend-design) | `contract.md` + `modules/` |
 | ④ 任务 | 垂直切片 + 自动推导测试 | plan + test-cases | `plan.md` + `testing/test-cases.md` |
@@ -482,10 +490,10 @@ forge/
 ├── references/                      # 补充文档（使用示例、验证教训）
 ├── skills/                          # 22 个决策协议（flat list）
 │   ├── forge-brainstorm/            # ⓪ 探索
-│   ├── forge-research/              # ⓪.5 技术探索（算法猎手）
 │   ├── forge-init/                  # 初始化编排（+ agents/claude 模板）
 │   ├── forge-business-alignment/    # ① 业务对齐
 │   ├── forge-define/                # ① 需求文档
+│   ├── forge-research/              # ①.5 技术探索（算法猎手）
 │   ├── forge-design/                # 设计编排
 │   ├── forge-interaction-design/    # ② 交互设计
 │   ├── forge-fe-system/             # ② 设计系统落地（含原 visual-design）

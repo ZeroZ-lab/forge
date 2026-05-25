@@ -4,6 +4,7 @@
 
 - **触发**：用户表达"想做壁虎但不知道涉及哪些算法"——Forge 在产品愿景和技术决策之间缺少桥梁
 - **核心洞察**：人类擅长定义产品愿景（做什么），不擅长识别技术可能性（怎么做）。research 补这个缺口
+- **位置修正**：初版放在 ⓪.5（brainstorm 之后），但此时技术子问题尚未浮出。改为 ①.5（define 之后），因为 PRD 用户故事中隐含技术信号（"平滑爬墙"→脊柱算法），research 从 PRD 提取信号再搜索
 - **改动**：
   - 新增 `skills/forge-research/SKILL.md`（206 行）：四阶段方法论（拆解→上下文→搜索→菜单）
   - 新增 `skills/forge-research/references/research-brief-template.md`：子问题地图 + 算法菜单 + 组合建议
