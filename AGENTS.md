@@ -152,6 +152,8 @@ my-project/
 │   │
 │   └── features/
 │       ├── task-management/          # 一个功能 = 一棵文档树
+│       │   ├── PRD.md                #   需求定义（define 阶段，整体加载）
+│       │   ├── plan.md               #   任务分解（plan 阶段，整体加载）
 │       │   ├── contract.md           #   feature 级共享骨架（~80 行）
 │       │   ├── changelog.md          #   功能变更历史（最近 5 条，≤100 行）
 │       │   ├── changelog/            #   变更历史归档
@@ -267,8 +269,8 @@ AI 做任务时需要全部读，不存在"只读某一段"的场景。大小与
 
 | 文件类型 | 说明 |
 |---------|------|
-| PRD.md | 大小与 US 数量正相关，拆开会丢失全局视野 |
-| plan.md | 依赖图 + 并行矩阵需要整体可见 |
+| PRD.md | `docs/features/<feature>/PRD.md`，大小与 US 数量正相关，拆开会丢失全局视野 |
+| plan.md | `docs/features/<feature>/plan.md`，依赖图 + 并行矩阵需要整体可见 |
 | interaction-spec.md | 流程 + 线框 + 组件复用需要交叉引用 |
 | idea-brief.md | 发散阶段，不宜过早压缩 |
 

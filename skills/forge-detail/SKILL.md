@@ -30,7 +30,7 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 
 开始前读取：
 
-- `docs/project.md` 的技术选型和共享约束
+- `docs/project.md` 的技术选型、共享约束和核心算法（如有）
 - `PRD.md` 或等价需求说明
 - `DESIGN.md` 和 interaction-spec（如有前端）
 - 已有 feature `contract.md`、领域 contract 和 modules
@@ -48,14 +48,27 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 
 按以下顺序依次执行，每个 phase 完成后向用户确认再进入下一个：
 
+**Phase 0: Feature 骨架创建**（必选）
+创建 feature/contract.md 作为跨领域共享骨架。
+1. 从 project.md 提取共享约束和技术选型
+2. 从 PRD.md 提取核心场景和验收条件摘要
+3. 从 project.md「核心算法」（如有）提取算法决策
+4. 按 `shared/contract-template.md` 生成 feature/contract.md：
+   - 共享决策（FD#）：跨领域的决策
+   - 共享数据模型：跨模块的类型定义
+   - 共享约束：性能/安全/兼容性
+   - 编排：入口 + 启动序列 + 事件绑定
+   - 领域索引：列出后续 Phase 会创建的领域
+5. 向用户确认 feature/contract.md 后再进入领域设计
+
 **Phase 1: API 设计**（如有后端）
-加载 `forge-api-design` skill，走完 FD1-FD7 方法论步骤。先确定资源模型、端点、错误、权限、幂等、并发和认证。
+加载 `forge-api-design` skill，走完 API1-API7 方法论步骤。先确定资源模型、端点、错误、权限、幂等、并发和认证。
 
 **Phase 2: 数据库设计**（如有后端）
 加载 `forge-db-design` skill，走完 DB1-DB5 方法论步骤。数据库设计消费 Phase 1 的资源模型和查询模式，不在缺少 API 合约时先行表设计。
 
 **Phase 3: 前端设计**（如有前端）
-加载 `forge-frontend-design` skill，走完 FD1-FD5 方法论步骤。
+加载 `forge-frontend-design` skill，走完 FE1-FE5 方法论步骤。
 
 **Phase 4: 索引同步**（必选）
 1. 读 project.md Feature 索引
@@ -109,7 +122,8 @@ docs/features/<feature>/
 ## 出口条件
 
 完成后必须满足：
-- 所有加载的领域 skill 产出完整（api/contract.md FD1-FD7 / frontend/contract.md FD1-FD5 / database/contract.md DB1-DB5）
+- 所有加载的领域 skill 产出完整（api/contract.md API1-API7 / frontend/contract.md FE1-FE5 / database/contract.md DB1-DB5）
+- feature/contract.md（FD#）与各领域 contract（FE# / API# / DB#）无编号冲突
 - project.md Feature 索引已同步（Phase 4）
 - project.md 共享决策（PD#）与 feature contract（FD#）无编号冲突
 - 漂移检测已完成（如有下游依赖表）

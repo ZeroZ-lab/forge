@@ -2,7 +2,7 @@
 
 > 每个 feature 的 contract.md 用此模板。只放共享部分，模块细节放 modules/*.md。
 > 目标：~100 行，几乎不变。
-> 决策编号使用 FD# 前缀（Feature Decision），与 project.md 的 PD#（Project Decision）和 database/contract.md 的 DB#（Database Decision）区分。
+> 决策编号使用 FD# 前缀（Feature Decision），与 project.md 的 PD#（Project Decision）、frontend/contract.md 的 FE#（Frontend Decision）、api/contract.md 的 API#（API Decision）和 database/contract.md 的 DB#（Database Decision）区分。
 
 ---
 
@@ -96,11 +96,15 @@
 
 ---
 
-## 模块索引
+## 领域模块索引
 
-| 模块 | 文件 | 说明 |
-|------|------|------|
-| | modules/xxx.md | |
+> 列出各领域下的模块文件。由 detail 阶段各领域 skill 自动维护。
+> 纯单领域项目（如纯前端创意编码）可省略此节，直接在领域 contract.md 中列模块。
+
+| 领域 | 模块 | 文件 | 说明 |
+|------|------|------|------|
+| frontend | | frontend/modules/xxx.md | |
+| api | | api/modules/xxx.md | |
 
 ---
 

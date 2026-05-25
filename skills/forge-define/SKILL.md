@@ -120,6 +120,8 @@ description: 从业务需求推导可验收的 PRD——定义约束、场景覆
 
 **PRD.md 不应包含**：交互设计（design 阶段）· 技术选型（init 阶段）· 具体实现（detail 阶段）
 
+**PRD.md 路径**：`docs/features/<feature>/PRD.md`
+
 ## 模板
 
 使用 `${CLAUDE_SKILL_DIR}/references/prd-template.md` 作为产出结构参考。核心结构：
