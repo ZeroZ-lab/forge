@@ -23,17 +23,21 @@ Forge：文档是源代码，代码是文档在某个模型能力下的投影
 
 **代码会腐烂，但决策不会过期。**
 
-## 安装
+## 安装与使用
 
-### 插件安装
+### Claude Code 插件安装
 
-```bash
-git clone https://github.com/ZeroZ-lab/forge.git
-cd forge
-claude plugin install --path .
+在 Claude Code 中运行：
+
+```text
+/plugin marketplace add ZeroZ-lab/forge
+/plugin install forge@forge
+/reload-plugins
 ```
 
-安装后在任意项目中启动 Claude Code，Forge 的 22 个 skill 自动可用。
+安装后在任意项目中启动 Claude Code，Forge skill 会自动可用。直接用自然语言描述目标，Claude Code 会按 skill 描述触发对应的 Forge 决策协议。
+
+## 开发自检
 
 ### 仓库自检
 
@@ -52,25 +56,6 @@ node --test
 ```
 
 行为测试验证 suite 运行时控制面的静态完整性，不模拟真实 skill 执行；它不要求每个 skill 文件都长成完整 MAPE-K 模板。
-
-### 个人 Skill 安装
-
-```bash
-git clone https://github.com/ZeroZ-lab/forge.git
-cd forge
-
-for skill in skills/forge-*/; do
-  ln -s "$(pwd)/$skill" "$HOME/.claude/skills/$(basename "$skill")"
-done
-```
-
-### 项目级安装
-
-```bash
-mkdir -p .claude/skills
-ln -s /path/to/forge/skills/forge-init .claude/skills/forge-init
-ln -s /path/to/forge/skills/forge-detail .claude/skills/forge-detail
-```
 
 ## 使用方式
 
