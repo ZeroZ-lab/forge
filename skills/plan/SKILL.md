@@ -177,10 +177,11 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 ## 完成提示
 
 ```
-✅ 任务分解完成！plan.md 已生成。
+✅ 任务分解完成！plan.md + testing/test-cases.md（用例骨架）已生成。
 
 下一步你可以：
+  test 阶段    — 测试策略 + 补全测试用例（Recommended — P6 只产出了用例骨架，测试策略还缺：测试金字塔、Mock 策略、CI 集成）
   生成代码       — 按任务序列生成 src/ + tests/
-  test 阶段    — 测试策略 + 测试用例
-  发布规划 — 灰度策略 + 回滚方案 + 监控告警
 ```
+
+**注意**：deploy 不在 plan 的完成提示里。deploy 的入口条件是「有 src/ + tests/ + testing/test-cases.md，review 通过」，这些在 plan 之后都不存在。deploy 应出现在 codegen 或 test 的完成提示中。

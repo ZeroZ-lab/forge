@@ -77,6 +77,10 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 4. 如索引有已删除的 feature → 标注提醒用户确认删除
 5. 如索引的 feature 名称/路径与实际不符 → 修正
 6. 检查 project.md 共享决策（PD#）与本次 feature contract（FD#）无编号冲突
+7. **Module 结构校验**：扫描所有 modules/*.md 文件，检查是否包含共享模板的必需节：
+   - 后端模块（`shared/module-template.md`）：入口 · 公共接口 · 内部函数 · 依赖关系 · 接口合约
+   - 前端模块（`shared/frontend-module-template.md`）：入口 · 公共接口 · 组件结构 · 数据消费 · 内部函数 · 依赖关系
+   - 缺失必需节 → 列出缺失文件和缺失节，要求补充后再进入下一步
 
 ## 漂移检测
 
@@ -127,6 +131,7 @@ docs/features/<feature>/
 - project.md Feature 索引已同步（Phase 4）
 - project.md 共享决策（PD#）与 feature contract（FD#）无编号冲突
 - 漂移检测已完成（如有下游依赖表）
+- 所有 modules/*.md 包含模板必需节（Phase 4 第 7 步校验）
 
 ## 运行时信号
 
