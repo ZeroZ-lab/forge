@@ -1,6 +1,6 @@
 # frontend-module-template.md — 前端模块模板
 
-> forge-frontend-design 专用。产出 frontend/modules/*.md。
+> frontend-design 专用。产出 frontend/modules/*.md。
 > 目标：100-200 行。每个组件自包含：需求 + 验收条件 + 组件结构 + 数据消费 + 约束。
 
 ---

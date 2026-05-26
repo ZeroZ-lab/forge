@@ -16,7 +16,7 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 ## 与上下游的边界
 
 **上游**：读 contract.md + modules/（来自 detail 阶段），知道有哪些模块和接口合约
-**下游**：plan.md 交给代码生成（按任务序列生成 src/ + tests/）· 从验收条件自动推导 testing/test-cases.md（详见 forge-test-cases skill）
+**下游**：plan.md 交给代码生成（按任务序列生成 src/ + tests/）· 从验收条件自动推导 testing/test-cases.md（详见 test-cases skill）
 
 **和 detail 的切法**：detail 定义**做什么**（合约+模块），plan 定义**怎么做**（任务+顺序）
 **和 codegen 的切法**：plan 定义**任务序列**（目标+步骤+验证），codegen 定义**具体实现**（代码）
@@ -104,7 +104,7 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 - TDD 任务：从验收条件推导测试用例骨架（测试名 + 输入 + 预期输出）
 - 直接验证任务：标记为"手动验收"，不生成自动化用例
 - 推导结果写入 `testing/test-cases.md`（测试范围矩阵 + P0 用例清单）
-- 完整测试策略由 `forge-test` 编排 skill 负责，此处只做自动推导
+- 完整测试策略由 `test` 编排 skill 负责，此处只做自动推导
 
 **记录**：testing/test-cases.md（测试范围矩阵 + 用例骨架）
 
@@ -172,7 +172,7 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 
 ## 历史维护（自动）
 
-完成后追加 `docs/timeline.md`：`### {日期} — {feature} 任务分解 · plan.md（{N} 个任务）+ testing/test-cases.md`。追加 `changelog.md`。超 100 行时归档。自动推导测试用例时加载 `forge-test-cases`，但历史由 `forge-plan` 写一条汇总记录，避免重复。
+完成后追加 `docs/timeline.md`：`### {日期} — {feature} 任务分解 · plan.md（{N} 个任务）+ testing/test-cases.md`。追加 `changelog.md`。超 100 行时归档。自动推导测试用例时加载 `test-cases`，但历史由 `plan` 写一条汇总记录，避免重复。
 
 ## 完成提示
 

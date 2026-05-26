@@ -9,7 +9,7 @@ description: 项目初始化——一次对话完成业务对齐 + 技术选型 
 
 ## 运行时角色
 
-`forge-init` 是项目级 orchestrator。它不替代子 skill 做决策，而是读取当前项目状态，决定哪些初始化协议需要执行、哪些可以跳过，以及什么时候需要人类确认。
+`init` 是项目级 orchestrator。它不替代子 skill 做决策，而是读取当前项目状态，决定哪些初始化协议需要执行、哪些可以跳过，以及什么时候需要人类确认。
 
 运行时控制约束见 `skills/shared/concepts/control-loop.md`；阶段汇报可参考 `skills/shared/output-contracts/runtime-control.md`。
 
@@ -38,13 +38,13 @@ description: 项目初始化——一次对话完成业务对齐 + 技术选型 
 按以下顺序依次执行，每个 phase 完成后向用户确认再进入下一个：
 
 **Phase 1: 业务对齐**
-加载 `forge-business-alignment` skill，走完 BA1-BA4 方法论步骤。
+加载 `business-alignment` skill，走完 BA1-BA4 方法论步骤。
 
 **Phase 2: 技术选型**
-加载 `forge-technical-design` skill，走完 TD1-TD5 方法论步骤。
+加载 `technical-design` skill，走完 TD1-TD5 方法论步骤。
 
 **Phase 3: 设计系统**
-加载 `forge-fe-system` skill，走完 S1-S5 方法论步骤。项目初始化没有 interaction-spec 时，按项目级模式生成 DESIGN.md：从业务目标、产品气质、目标用户和页面类型推导最小设计系统，不要求 feature 级交互规格。
+加载 `fe-system` skill，走完 S1-S5 方法论步骤。项目初始化没有 interaction-spec 时，按项目级模式生成 DESIGN.md：从业务目标、产品气质、目标用户和页面类型推导最小设计系统，不要求 feature 级交互规格。
 
 ## 产出
 
@@ -61,7 +61,7 @@ my-project/
 | 文件 | 模板 | 来源 |
 |------|------|------|
 | docs/project.md | `shared/project-template.md` | Phase 1 business-alignment |
-| DESIGN.md | `forge-fe-system/references/design-system-template.md` | Phase 3 fe-system |
+| DESIGN.md | `fe-system/references/design-system-template.md` | Phase 3 fe-system |
 | AGENTS.md | `${CLAUDE_SKILL_DIR}/references/agents-template.md` | Phase 1+2+3 投影 |
 | CLAUDE.md | `${CLAUDE_SKILL_DIR}/references/claude-template.md` | 入口指针 |
 
@@ -111,7 +111,7 @@ my-project/
 
 ## 历史维护边界
 
-`forge-init` 作为编排 skill 负责写入本次初始化的一条 timeline 记录。被加载的子 skill 只更新对应产物内容；除非用户直接调用子 skill，否则不单独追加 timeline，避免同一次初始化生成多条重复历史。
+`init` 作为编排 skill 负责写入本次初始化的一条 timeline 记录。被加载的子 skill 只更新对应产物内容；除非用户直接调用子 skill，否则不单独追加 timeline，避免同一次初始化生成多条重复历史。
 
 ## 运行时信号
 

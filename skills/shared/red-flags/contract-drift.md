@@ -14,5 +14,5 @@ Contract drift means downstream artifacts no longer match the upstream document 
 
 - Classify local implementation mismatch as L1 when the contract is clear.
 - Classify contradictory or incomplete setpoint as L2 and stop projection.
-- Route repeated L1 drift to `forge-detail`.
-- Route cross-document drift found in review to `forge-detail` for cascade update decisions.
+- Route repeated L1 drift to `detail`.
+- Route cross-document drift found in review to `detail` for cascade update decisions.

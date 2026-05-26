@@ -14,5 +14,5 @@ Unsafe projection means code, release, or generated artifacts enter a real envir
 
 - Treat missing setpoint as L2 and stop.
 - Treat missing release recovery as a deploy blocker.
-- Treat repeated verified methodology defects as input to `forge-learn`.
+- Treat repeated verified methodology defects as input to `learn`.
 - Record any human exception as an explicit decision with impact and owner.

@@ -23,7 +23,7 @@ disable-model-invocation: true
 **和 detail 的切法**：detail 定义**做什么**（合约+模块），codegen 定义**代码怎么投影**（从文档到实现）
 **和 test 的切法**：codegen 生成基础测试（从验收条件推导），test 阶段补充测试策略和覆盖
 
-**和 forge-fe-artifact 的关系**：codegen 遇到前端文件（组件、页面、hooks、样式）时加载 `forge-fe-artifact` 作为前端子协议。codegen 负责通用投影规则（读→生→验→修），fe-artifact 负责前端特化的五层翻译逻辑。
+**和 fe-artifact 的关系**：codegen 遇到前端文件（组件、页面、hooks、样式）时加载 `fe-artifact` 作为前端子协议。codegen 负责通用投影规则（读→生→验→修），fe-artifact 负责前端特化的五层翻译逻辑。
 
 ## 方法论：读→生→验→修
 
@@ -109,7 +109,7 @@ disable-model-invocation: true
 
 **信号传递**：同类 L1 偏差连续 ≥ 2 个任务出现 → 输出"⚠️ 同类偏差重复，建议复查 contract 对应部分"（偏差信号向上传递给中回路）。
 
-**偏差摘要**：每个任务完成后输出：`自动修正 N 处 · L2 中止 M 处 · 待确认 K 处 · 归因：skill 方法论 a / 文档未同步 b / 代码实现 c`。偏差摘要沉淀到 timeline，供 forge-learn 消费。
+**偏差摘要**：每个任务完成后输出：`自动修正 N 处 · L2 中止 M 处 · 待确认 K 处 · 归因：skill 方法论 a / 文档未同步 b / 代码实现 c`。偏差摘要沉淀到 timeline，供 learn 消费。
 
 **健康检查**：连续 3 个任务零偏差 → review 阶段触发重建审查（验证"检查机制本身是否在工作"，而非代码真的完美）。
 
@@ -147,7 +147,7 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 
 ## 入口/出口条件
 
-**入口**：有 contract.md + modules/ + plan.md（或用户已有详设和任务分解）· forge-review 文档审查通过（如有）
+**入口**：有 contract.md + modules/ + plan.md（或用户已有详设和任务分解）· review 文档审查通过（如有）
 **出口**：src/ + tests/ 已生成 · 所有测试通过 · 代码和文档对齐 · 用户确认
 
 ## 何时不使用
@@ -187,7 +187,7 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 
 下一步你可以：
   test 阶段          — 测试策略 + 测试用例
-  自然语言       — 说"审查代码"进入 forge-review（subagent 独立代码审查）
+  自然语言       — 说"审查代码"进入 review（subagent 独立代码审查）
   发布规划 — 灰度 + 回滚 + 监控
   自然语言       — 直接说"跑测试"或"修 bug"
 ```

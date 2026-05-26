@@ -15,7 +15,7 @@ description: 设计用户怎么走——流程优先，先画路径再画界面�
 
 ## 与上下游的边界
 
-**上游**：读 PRD（forge-define 产出），不重复需求定义
+**上游**：读 PRD（define 产出），不重复需求定义
 **下游**：交互规格交给 fe-system（定义外观）和 detail 阶段（技术实现）
 
 **和 fe-system 的切法**：

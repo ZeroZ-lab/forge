@@ -9,7 +9,7 @@ description: 设计阶段编排——交互规格 + 视觉规范，一次对话�
 
 ## 运行时角色
 
-`forge-design` 是设计阶段 orchestrator。它判断当前任务是否真的需要交互和视觉设计，并协调 `forge-interaction-design` 与 `forge-fe-system` 的边界。
+`design` 是设计阶段 orchestrator。它判断当前任务是否真的需要交互和视觉设计，并协调 `interaction-design` 与 `fe-system` 的边界。
 
 ## 输入状态读取
 
@@ -34,10 +34,10 @@ description: 设计阶段编排——交互规格 + 视觉规范，一次对话�
 按以下顺序依次执行，每个 phase 完成后向用户确认再进入下一个：
 
 **Phase 1: 交互设计**
-加载 `forge-interaction-design` skill，走完 I1-I5 方法论步骤。
+加载 `interaction-design` skill，走完 I1-I5 方法论步骤。
 
 **Phase 2: 设计系统落地**
-加载 `forge-fe-system` skill，走完 S1-S5 方法论步骤。
+加载 `fe-system` skill，走完 S1-S5 方法论步骤。
 
 ## 产出
 
@@ -53,7 +53,7 @@ DESIGN.md（更新）                               # 来自 Phase 2
 
 ## 历史维护（自动）
 
-完成后追加 `docs/timeline.md` + feature `changelog.md`（一条汇总记录）。`forge-interaction-design` 和 `forge-fe-system` 作为子阶段时不单独追加历史。超 100 行时归档。
+完成后追加 `docs/timeline.md` + feature `changelog.md`（一条汇总记录）。`interaction-design` 和 `fe-system` 作为子阶段时不单独追加历史。超 100 行时归档。
 
 ## 运行时信号
 

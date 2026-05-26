@@ -167,7 +167,7 @@ docs/features/<feature>/
 
 ## 历史维护（自动）
 
-完成后追加 `docs/timeline.md`：`### {日期} — {feature} 测试用例 · testing/test-cases.md（{N} 验收条件 → {M} 测试用例）`。追加 `changelog.md`。超 100 行时归档。作为 `forge-test` 或 `forge-plan` 子阶段运行时不单独追加历史，由编排 skill 写汇总记录。
+完成后追加 `docs/timeline.md`：`### {日期} — {feature} 测试用例 · testing/test-cases.md（{N} 验收条件 → {M} 测试用例）`。追加 `changelog.md`。超 100 行时归档。作为 `test` 或 `plan` 子阶段运行时不单独追加历史，由编排 skill 写汇总记录。
 
 ## 完成提示
 

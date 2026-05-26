@@ -23,6 +23,6 @@ Use this shape for document, code, frontend, or release review output.
 
 ## Follow-up signal
 
-- Route to `forge-detail`:
-- Route to `forge-codegen`:
-- Route to `forge-learn`:
+- Route to `detail`:
+- Route to `codegen`:
+- Route to `learn`:

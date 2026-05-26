@@ -59,9 +59,9 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 | **⑦ 交付** | deploy | 可逆发布 | DevOps + 开发 | 发布清单 |
 | **⑧ 进化** | learn | 偏差驱动进化 | AI + 用户 | 方法论改进 |
 
-编排 skill：`forge-init`、`forge-design`、`forge-detail`、`forge-test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。
+编排 skill：`init`、`design`、`detail`、`test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。
 
-> 每个 skill 的完整方法论、AI 角色、边界声明和引导技巧见 `skills/forge-*/SKILL.md`。
+> 每个 skill 的完整方法论、AI 角色、边界声明和引导技巧见 `skills/*/SKILL.md`。
 
 ### 阶段间的产物传递
 
@@ -86,7 +86,7 @@ Forge 是闭环系统——文档是 setpoint，代码是投影，偏差信号�
 |------|------|------|---------|
 | **快回路** | 单任务 | codegen 生成 → 四维对照 → L0/L1/L2 分级 → 修正 → 收敛 | 同类 L1 ≥ 2 → 触发中回路 |
 | **中回路** | 单次迭代 | detail 改 contract → 读下游依赖表 → 漂移检测 → 级联更新 | 偏差归因 → 喂给慢回路 |
-| **慢回路** | 跨项目 | review 偏差归因 → forge-learn 聚合 → 修改 skill 方法论 | 方法论变更 → 影响所有回路 |
+| **慢回路** | 跨项目 | review 偏差归因 → learn 聚合 → 修改 skill 方法论 | 方法论变更 → 影响所有回路 |
 
 **前馈机制**：detail 阶段从历史偏差提取高频失误 → 写入 contract「已知风险」→ codegen 读 contract 时自然获得，零额外成本。
 
@@ -376,7 +376,7 @@ Forge 的 AGENTS.md 和项目实际使用的 AGENTS.md 是**不同的文件**。
 ```
 Forge 的 AGENTS.md（方法论）
        │
-       │ forge-init 投影生成
+       │ init 投影生成
        ▼
 项目的 AGENTS.md（具体指令）  ← 实际项目开发读的是这个
        │
@@ -400,11 +400,11 @@ Forge AGENTS.md     →  编译器源码
 
 ### 资源引用链
 
-**决策 Skill 不引用资源。** 只有编排型 Skill（forge-init）引用模板。
+**决策 Skill 不引用资源。** 只有编排型 Skill（init）引用模板。
 
 ```
 决策 Skill（抽象）     →  "问日活多少，推荐方案，记录决策"
-forge-init（编排器）   →  加载子 skill + 模板 → 生成项目文件
+init（编排器）   →  加载子 skill + 模板 → 生成项目文件
 项目 AGENTS.md        →  告诉 AI 文件在哪、格式是什么
 ```
 
@@ -493,29 +493,29 @@ forge/
 ├── AGENTS.md                        # 本文件
 ├── references/                      # 补充文档（使用示例、验证教训）
 ├── skills/                          # 22 个决策协议（flat list）
-│   ├── forge-brainstorm/            # ⓪ 探索
-│   ├── forge-init/                  # 初始化编排（+ agents/claude 模板）
-│   ├── forge-business-alignment/    # ① 业务对齐
-│   ├── forge-define/                # ① 需求文档
-│   ├── forge-research/              # ①.5 技术探索（算法猎手）
-│   ├── forge-design/                # 设计编排
-│   ├── forge-interaction-design/    # ② 交互设计
-│   ├── forge-fe-system/             # ② 设计系统落地（含原 visual-design）
-│   ├── forge-technical-design/      # ② 技术设计
-│   ├── forge-detail/                # 详设编排
-│   ├── forge-api-design/            # ③ API 详设
-│   ├── forge-frontend-design/       # ③ 前端详设
-│   ├── forge-db-design/             # ③ 数据库详设
-│   ├── forge-plan/                  # ④ 任务分解
-│   ├── forge-codegen/               # ⑤ 代码生成
-│   ├── forge-fe-artifact/           # ⑤ 前端代码生成（codegen 子协议）
-│   ├── forge-test/                  # 测试编排
-│   ├── forge-test-strategy/         # ⑥ 测试策略
-│   ├── forge-test-cases/            # ⑥ 测试用例
-│   ├── forge-fe-accept/             # ⑥ 前端质量验收
-│   ├── forge-review/                # ⑥.5 subagent 独立审查（文档审查+代码审查）
-│   ├── forge-deploy/                # ⑦ 部署发布
-│   ├── forge-learn/                 # ⑧ 方法论进化
+│   ├── brainstorm/            # ⓪ 探索
+│   ├── init/                  # 初始化编排（+ agents/claude 模板）
+│   ├── business-alignment/    # ① 业务对齐
+│   ├── define/                # ① 需求文档
+│   ├── research/              # ①.5 技术探索（算法猎手）
+│   ├── design/                # 设计编排
+│   ├── interaction-design/    # ② 交互设计
+│   ├── fe-system/             # ② 设计系统落地（含原 visual-design）
+│   ├── technical-design/      # ② 技术设计
+│   ├── detail/                # 详设编排
+│   ├── api-design/            # ③ API 详设
+│   ├── frontend-design/       # ③ 前端详设
+│   ├── db-design/             # ③ 数据库详设
+│   ├── plan/                  # ④ 任务分解
+│   ├── codegen/               # ⑤ 代码生成
+│   ├── fe-artifact/           # ⑤ 前端代码生成（codegen 子协议）
+│   ├── test/                  # 测试编排
+│   ├── test-strategy/         # ⑥ 测试策略
+│   ├── test-cases/            # ⑥ 测试用例
+│   ├── fe-accept/             # ⑥ 前端质量验收
+│   ├── review/                # ⑥.5 subagent 独立审查（文档审查+代码审查）
+│   ├── deploy/                # ⑦ 部署发布
+│   ├── learn/                 # ⑧ 方法论进化
 │   └── shared/                      # 共享模板（contract + module + changelog）
 ├── .claude-plugin/plugin.json       # Claude Code 插件
 └── .codex-plugin/plugin.json        # Codex CLI 插件

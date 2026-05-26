@@ -9,7 +9,7 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 
 ## 运行时角色
 
-`forge-detail` 是中回路 controller。它把上游 PRD、project、DESIGN 和偏差信号转成可投影的 contract，并在 codegen/review 发现漂移时负责 contract 复查和级联更新决策。
+`detail` 是中回路 controller。它把上游 PRD、project、DESIGN 和偏差信号转成可投影的 contract，并在 codegen/review 发现漂移时负责 contract 复查和级联更新决策。
 
 运行时闭环参考 `docs/runtime-control-loop.md`；偏差报告结构参考 `skills/shared/output-contracts/deviation-report.md`。
 
@@ -22,9 +22,9 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 3. 如果不确定 → 问用户："这个项目有前端吗？"
 
 **加载组合**：
-- **有前端** → `forge-api-design` + `forge-db-design` + `forge-frontend-design`
-- **纯后端** → `forge-api-design` + `forge-db-design`
-- **纯前端** → `forge-frontend-design`
+- **有前端** → `api-design` + `db-design` + `frontend-design`
+- **纯后端** → `api-design` + `db-design`
+- **纯前端** → `frontend-design`
 
 ## 输入状态读取
 
@@ -34,7 +34,7 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 - `PRD.md` 或等价需求说明
 - `DESIGN.md` 和 interaction-spec（如有前端）
 - 已有 feature `contract.md`、领域 contract 和 modules
-- `forge-codegen` 偏差摘要或 `forge-review` 漂移报告（如本次由偏差触发）
+- `codegen` 偏差摘要或 `review` 漂移报告（如本次由偏差触发）
 
 ## 分支与恢复
 
@@ -62,13 +62,13 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 5. 向用户确认 feature/contract.md 后再进入领域设计
 
 **Phase 1: API 设计**（如有后端）
-加载 `forge-api-design` skill，走完 API1-API7 方法论步骤。先确定资源模型、端点、错误、权限、幂等、并发和认证。
+加载 `api-design` skill，走完 API1-API7 方法论步骤。先确定资源模型、端点、错误、权限、幂等、并发和认证。
 
 **Phase 2: 数据库设计**（如有后端）
-加载 `forge-db-design` skill，走完 DB1-DB5 方法论步骤。数据库设计消费 Phase 1 的资源模型和查询模式，不在缺少 API 合约时先行表设计。
+加载 `db-design` skill，走完 DB1-DB5 方法论步骤。数据库设计消费 Phase 1 的资源模型和查询模式，不在缺少 API 合约时先行表设计。
 
 **Phase 3: 前端设计**（如有前端）
-加载 `forge-frontend-design` skill，走完 FE1-FE5 方法论步骤。
+加载 `frontend-design` skill，走完 FE1-FE5 方法论步骤。
 
 **Phase 4: 索引同步**（必选）
 1. 读 project.md Feature 索引
@@ -117,7 +117,7 @@ docs/features/<feature>/
 
 ## 历史维护（自动）
 
-完成后追加 `docs/timeline.md` + feature `changelog.md`（一条汇总记录）。`forge-api-design`、`forge-db-design`、`forge-frontend-design` 作为子阶段时不单独追加历史。超 100 行时归档。
+完成后追加 `docs/timeline.md` + feature `changelog.md`（一条汇总记录）。`api-design`、`db-design`、`frontend-design` 作为子阶段时不单独追加历史。超 100 行时归档。
 
 ## 出口条件
 

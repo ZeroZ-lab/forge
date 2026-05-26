@@ -13,6 +13,6 @@ Scope creep means the runtime starts doing work outside the current setpoint wit
 ## Runtime response
 
 - Stop and record the missing decision.
-- Route product scope changes to `forge-define`.
-- Route technical scope changes to `forge-detail` or `forge-technical-design`.
+- Route product scope changes to `define`.
+- Route technical scope changes to `detail` or `technical-design`.
 - Do not hide scope changes inside implementation details.

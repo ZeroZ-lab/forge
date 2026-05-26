@@ -1,6 +1,6 @@
 # frontend-contract-template.md — 前端 contract 模板
 
-> forge-frontend-design 专用。产出 frontend/contract.md。
+> frontend-design 专用。产出 frontend/contract.md。
 > 只放前端特有的决策（FE#）和组件索引。共享数据模型、编排、下游依赖在 feature/contract.md。
 > 目标：~80 行，几乎不变。
 
