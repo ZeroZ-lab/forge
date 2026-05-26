@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/forge-logo.png" alt="Forge logo" width="180">
+</p>
+
 # Forge
 
 **文档是源代码，代码是投影。**
