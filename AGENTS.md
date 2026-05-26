@@ -136,6 +136,8 @@ my-project/
 
 **Skill 里不写具体技术。** 具体技术由模型搜索最新方案后推荐，人类确认后写入产物文档。这样 skill 不会因为技术更替而过期。
 
+**决策点用结构化选择呈现。** 所有 skill 的决策点（`### XX: 主题`）在选项可枚举时，使用 `AskUserQuestion` 工具呈现 2-4 个选项让用户点选，而非自然语言提问。开放性问题（场景描述、发散探索）用自然语言。详见 `skills/shared/concepts/decision-presentation.md`。
+
 ---
 
 ## 文档结构
