@@ -270,6 +270,7 @@ const sharedKnowledgeFiles = [
   'skills/shared/concepts/mape-k.md',
   'skills/shared/concepts/control-loop.md',
   'skills/shared/concepts/document-as-source.md',
+  'skills/shared/concepts/execution-discipline.md',
   'skills/shared/rubrics/skill-quality.md',
   'skills/shared/rubrics/contract-quality.md',
   'skills/shared/rubrics/projection-quality.md',
@@ -371,6 +372,14 @@ assert(read('AGENTS.md').includes('23 个决策协议'), 'AGENTS.md: must docume
 assert(read('AGENTS.md').includes('信号传递'), 'AGENTS.md: must document signal passing between control loops');
 assert(read('AGENTS.md').includes('registry.yaml'), 'AGENTS.md: must document registry.yaml runtime control surface');
 assert(read('AGENTS.md').includes('docs/runtime-control-loop.md'), 'AGENTS.md: must document runtime control loop doc');
+assertIncludes('AGENTS.md', ['### AI 执行纪律', '最小变更', '不引入未要求的抽象']);
+assertIncludes('skills/init/references/agents-template.md', ['## AI 执行纪律', '需要同步的契约文件', '执行可用验证']);
+assertIncludes('skills/shared/concepts/execution-discipline.md', [
+  '# Execution discipline',
+  '## Runtime meaning',
+  '## Decision boundaries',
+  '## Projection rule',
+]);
 
 const stalePatterns = [
   ['AGENTS.md', /BA1-BA5/],
