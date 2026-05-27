@@ -150,6 +150,13 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 **入口**：有 contract.md + modules/ + plan.md（或用户已有详设和任务分解）· review 文档审查通过（如有）
 **出口**：src/ + tests/ 已生成 · 所有测试通过 · 代码和文档对齐 · 用户确认
 
+## 运行时信号
+
+- 输入：contract setpoint、task sequence
+- 输出：L0 noise、L1 deviation、L2 drift
+- 路由：详见 `registry.yaml` 的 `forge-codegen` 节点；本节只保留人类可读摘要。
+- 升级：L2 drift · three correction loops without convergence
+
 ## 何时不使用
 
 只有文档没有代码 · 已有完整代码 · 纯文档项目

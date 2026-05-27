@@ -144,6 +144,13 @@ docs/features/<feature>/
 - 读 test-cases.md 测试范围矩阵 → 提取覆盖的 AC 列表
 - 覆盖矩阵中有但 test-cases 无 → 补充或标注"手动验证"
 
+## 运行时信号
+
+- 输入：acceptance criteria、test strategy
+- 输出：test case setpoint
+- 路由：详见 `registry.yaml` 的 `forge-test-cases` 节点；本节只保留人类可读摘要。
+- 升级：验收条件不可测试 · 测试数据不可重复构造
+
 ## 何时不使用
 
 只有文档没有代码 · 已有完整测试用例 · 纯文档项目

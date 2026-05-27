@@ -80,7 +80,7 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI
 
 Forge 是闭环系统——文档是 setpoint，代码是投影，偏差信号驱动修正。
 
-这里的控制论约束发生在运行时，不要求每个 `SKILL.md` 文件都独立长成完整 MAPE-K 模板。skill 是协议节点；控制系统产生在一次任务执行中：路由 skill、读取项目状态、生成或更新文档、下游投影、检测偏差、回流信号、修正文档/代码/方法论或等待人类决策。运行时控制面见 `registry.yaml`，完整定义见 `docs/runtime-control-loop.md`，审计记录见 `docs/skill-architecture-audit.md`。
+这里的控制论约束发生在运行时，不要求每个 `SKILL.md` 文件都独立长成完整 MAPE-K 模板。skill 是协议节点；控制系统产生在一次任务执行中：路由 skill、读取项目状态、生成或更新文档、下游投影、检测偏差、回流信号、修正文档/代码/方法论或等待人类决策。运行时控制面以 `registry.yaml` 为 typed edges / signal routes 的事实源；每个 skill 的 `## 运行时信号` 节只是人类可读摘要，必须与 registry 对齐。完整定义见 `docs/runtime-control-loop.md`，审计记录见 `docs/skill-architecture-audit.md`。
 
 | 回路 | 速度 | 机制 | 信号传递 |
 |------|------|------|---------|
@@ -93,6 +93,21 @@ Forge 是闭环系统——文档是 setpoint，代码是投影，偏差信号�
 **自适应频率**：codegen 按任务复杂度选择对照频率——简单任务整任务对照，复杂任务逐函数对照。连续零偏差触发健康检查（验证检查机制本身是否有效）。
 
 **控制论映射**：contract = setpoint · codegen = actuator · 四维对照 = sensor · 偏差信号 = error signal · 修正循环 = controller。
+
+#### 关键路由规则
+
+以下是跨 skill 的核心信号路由摘要；完整 typed edges 和条件以 `registry.yaml` 为准。
+
+| 触发 | 发射方 | 路由到 | 条件 |
+|------|--------|--------|------|
+| 同类 L1 偏差 ≥ 2 | codegen | detail | 中回路触发 |
+| L2 偏差 | codegen | 人类决策 | setpoint 矛盾 |
+| 3 次修正不收敛 | codegen | 人类决策 | 快回路卡死 |
+| 文档漂移 | review | detail | 归因到文档层 |
+| 同类偏差 ≥ 3 | review | learn | 慢回路触发 |
+| P0/P1 阻塞 | review | 人类决策 | 需要优先级裁决 |
+
+**累积升级规则**：如果你在本次 session 中反复修正同类问题（≥ 2 次），停下来建议用户回退到上游 skill 重新审视决策。偏差可能是 setpoint 的盲区，不是投影的问题。
 
 ### 三层文档体系
 
@@ -492,7 +507,7 @@ init（编排器）   →  加载子 skill + 模板 → 生成项目文件
 forge/
 ├── AGENTS.md                        # 本文件
 ├── references/                      # 补充文档（使用示例、验证教训）
-├── skills/                          # 22 个决策协议（flat list）
+├── skills/                          # 23 个决策协议（flat list）
 │   ├── brainstorm/            # ⓪ 探索
 │   ├── init/                  # 初始化编排（+ agents/claude 模板）
 │   ├── business-alignment/    # ① 业务对齐

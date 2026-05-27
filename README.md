@@ -45,9 +45,9 @@ Forge：文档是源代码，代码是文档在某个模型能力下的投影
 node scripts/validate.mjs
 ```
 
-自检会校验版本同步、22 个 `forge-*` skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 投影回流。
+自检会校验版本同步、23 个 skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 投影回流。
 
-运行时控制面也会被校验：`registry.yaml` 必须覆盖全部 22 个 skill，并声明每个协议节点的 `runtime_role`、输入输出、typed edges、偏差信号和升级条件；`docs/runtime-control-loop.md` 和 `docs/skill-architecture-audit.md` 必须存在；shared Knowledge 层、编排 skill 的运行时恢复规则，以及 `codegen -> detail -> review -> learn` 信号链必须完整。`registry.yaml` 是 JSON-compatible YAML，保持严格 JSON 语法以便无依赖校验。
+运行时控制面也会被校验：`registry.yaml` 必须覆盖全部 23 个 skill，并声明每个协议节点的 `runtime_role`、输入输出、typed edges、偏差信号和升级条件；`docs/runtime-control-loop.md` 和 `docs/skill-architecture-audit.md` 必须存在；shared Knowledge 层、编排 skill 的运行时恢复规则，以及 `codegen -> detail -> review -> learn` 信号链必须完整。`registry.yaml` 是 JSON-compatible YAML，保持严格 JSON 语法以便无依赖校验。
 
 ### 行为测试
 
@@ -90,13 +90,14 @@ Forge 不维护独立的指令层。用户用自然语言表达当前目标，�
 
 跳过原则：已有 `docs/project.md` 和 `DESIGN.md` 可跳过 init；需求明确可跳过 brainstorm 和 define；纯后端可跳过 design；改动很小时可跳过 plan。
 
-## 8 阶段 × 22 个 Skill
+## 8 阶段 × 23 个 Skill
 
 | 阶段 | Skill | 产出 |
 |------|-------|------|
 | 探索 | `forge-brainstorm` | `idea-brief.md` |
 | 定义 | `forge-business-alignment` | `project.md` 业务目标段落 |
 | 定义 | `forge-define` | `PRD.md` |
+| 研究 | `forge-research` | `research-brief.md` |
 | 设计 | `forge-interaction-design` | `interaction-spec.md` |
 | 设计 | `forge-fe-system` | `DESIGN.md` |
 | 设计 | `forge-technical-design` | `docs/project.md` 技术决策 |

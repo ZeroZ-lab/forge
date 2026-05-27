@@ -148,6 +148,13 @@ docs/features/<feature>/testing/
 **入口**：有 contract.md + modules/ + plan.md，或用户已有详设和任务分解
 **出口**：testing/contract.md（T1-T5 完整） · 测试框架已选 · 覆盖矩阵已填 · 测试规范已明确
 
+## 运行时信号
+
+- 输入：business risk、test constraints
+- 输出：test strategy、quality gate
+- 路由：详见 `registry.yaml` 的 `forge-test-strategy` 节点；本节只保留人类可读摘要。
+- 升级：关键路径无法覆盖 · CI 约束不清
+
 ## 何时不使用
 
 纯文档项目 · 已有完整测试策略 · 原型验证阶段

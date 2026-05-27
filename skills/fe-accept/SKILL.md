@@ -54,6 +54,13 @@ description: 前端质量验收——从功能、视觉、适应性、性能四�
 
 **出口**：验收报告已生成，P0/P1 问题明确，豁免项有理由和责任人。
 
+## 运行时信号
+
+- 输入：frontend artifact ready
+- 输出：P0/P1/P2 frontend issues、acceptance status
+- 路由：详见 `registry.yaml` 的 `forge-fe-accept` 节点；本节只保留人类可读摘要。
+- 升级：无法运行或预览却要求通过 · P0/P1 未修复
+
 ## 红旗
 
 - 只看截图，不操作真实路径。

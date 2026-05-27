@@ -5,8 +5,8 @@ import test from 'node:test';
 const registry = JSON.parse(fs.readFileSync('registry.yaml', 'utf8'));
 const skillNames = fs
   .readdirSync('skills', { withFileTypes: true })
-  .filter((entry) => entry.isDirectory() && entry.name.startsWith('forge-'))
-  .map((entry) => entry.name)
+  .filter((entry) => entry.isDirectory() && entry.name !== 'shared')
+  .map((entry) => `forge-${entry.name}`)
   .sort();
 const allowedExternalTargets = new Set(['human decision', 'runtime release execution', 'skill maintenance']);
 
@@ -19,7 +19,7 @@ test('registry covers every forge skill exactly once', () => {
 
 test('runtime registry records static control-surface fields for every skill', () => {
   for (const skill of registry.skills) {
-    assert.equal(skill.path, `skills/${skill.name}/SKILL.md`);
+    assert.equal(skill.path, `skills/${skill.name.replace(/^forge-/, '')}/SKILL.md`);
     assert.ok(fs.existsSync(skill.path));
     for (const field of ['runtime_role', 'consumes', 'produces', 'signals_in', 'signals_out', 'escalates_when', 'stage_next', 'feedback_to', 'quality_gates', 'signal_routes']) {
       assert.ok(skill[field], `${skill.name} missing ${field}`);

@@ -7,10 +7,10 @@
 
 当前仓库基线：
 
-- `node scripts/validate.mjs` 通过：`Forge validation passed (22 skills, version 0.13.0).`
-- 当前 suite 暴露 22 个一级 `skills/forge-*` skill。
-- `.claude-plugin/plugin.json` 显式枚举 `skills/forge-*`，`scripts/validate.mjs` 校验 manifest 与目录一致。
-- `registry.yaml` 已新增为运行时控制面，覆盖全部 22 个 skill。
+- `node scripts/validate.mjs` 通过：`Forge validation passed (23 skills, version 0.18.0).`
+- 当前 suite 暴露 23 个一级 `skills/*` skill，registry 使用 `forge-*` 作为对外协议 id。
+- `.claude-plugin/plugin.json` 显式枚举 `skills/*`，`scripts/validate.mjs` 校验 manifest 与目录一致。
+- `registry.yaml` 已新增为运行时控制面，覆盖全部 23 个 skill。
 - `skills/shared/` 已从产物模板扩展出 concepts、rubrics、red-flags、output-contracts 四类 Knowledge 文件。
 - `tests/runtime-control.test.mjs` 已新增为 suite 级行为测试层，验证运行时闭环和信号链。
 - `docs/runtime-control-loop.md` 已新增为运行时闭环定义。
@@ -18,7 +18,7 @@
 不改 flat 结构的原因：
 
 - Claude Code 只发现 `skills/` 一级子目录的 `SKILL.md`，当前 flat list 是安装和发现边界。
-- Validator 已经把 22 个 `forge-*` skill、frontmatter 短名、manifest 枚举和行数上限作为稳定约束。
+- Validator 已经把 23 个 skill、frontmatter 短名、manifest 枚举和行数上限作为稳定约束。
 - 嵌套分类目录会破坏现有 plugin discovery 和 validator 约束；分类应该进入 registry 元数据，不应进入物理目录。
 
 审计标准来源：
@@ -64,7 +64,7 @@
 
 整体结论：
 
-- Forge 不需要把 22 个 skill 都改成完整 MAPE-K 模板。
+- Forge 不需要把 23 个 skill 都改成完整 MAPE-K 模板。
 - 必须保证运行时闭环完整：状态读取、偏差判断、计划选择、执行投影、反馈验收、恢复升级和知识沉淀能串起来。
 - 真正需要优先补的是运行时控制面、知识层、行为测试层，以及 4 个编排 skill 的中枢控制能力。
 - 领域型决策 skill 可以继续保持“方法论 + 决策点 + 文档约束”的形态，只需在必要处补输入状态、偏差分类或恢复规则。
@@ -93,6 +93,13 @@
 - 当前强项：`约束 -> 场景 -> 验收` 能把需求转成可测试 PRD；范围排除和验收条件意识强。
 - 缺口：作为 setpoint 生成器，重点不是完整 MAPE-K，而是需求输入质量判断不足。
 - 建议动作：补需求输入状态读取清单和模糊需求分级，明确何时先补 business-alignment 或回到用户确认。
+- 优先级：P2。
+
+### forge-research
+
+- 当前强项：把 PRD 中的技术信号翻译成子问题地图、算法菜单和组合建议，补足 define 与 technical-design 之间的技术探索层。
+- 缺口：作为研究阶段 setpoint 生成器，需要明确纯 CRUD 跳过、方案不可行和重大 trade-off 时的升级路径。
+- 建议动作：保持 research-brief 作为 technical-design 的输入，并在 registry 中记录 `algorithm menu` 与 `technical recommendation` 的路由。
 - 优先级：P2。
 
 ### forge-interaction-design
@@ -258,7 +265,7 @@
 
 `tests/runtime-control.test.mjs` 已覆盖：
 
-- registry 覆盖 22 个 `forge-*` skill
+- registry 覆盖 23 个 skill
 - 每个 registry entry 具备运行时控制字段
 - typed edges 只引用已知 skill 或允许的外部目标
 - `signal_routes` 覆盖 fast / middle / slow 偏差信号链
@@ -267,12 +274,12 @@
 
 ### validator 已校验运行时闭环完整性
 
-`scripts/validate.mjs` 除原有 22 个 skill、manifest、frontmatter、行数、共享模板、关键 marker 和 stale pattern 外，已新增：
+`scripts/validate.mjs` 除原有 23 个 skill、manifest、frontmatter、行数、共享模板、关键 marker 和 stale pattern 外，已新增：
 
 - `docs/skill-architecture-audit.md` 存在
 - `docs/runtime-control-loop.md` 存在
-- 22 个 skill 均在审计表中出现
-- `registry.yaml` 覆盖 22 个 skill
+- 23 个 skill 均在审计表中出现
+- `registry.yaml` 覆盖 23 个 skill
 - `registry.yaml` typed edges 引用完整
 - shared Knowledge 层文件存在
 - 运行时 MAPE-K 映射存在
@@ -293,7 +300,7 @@
 
 本轮执行仍保持以下边界：
 
-- 保留 `skills/forge-*` 一级 flat discovery。
+- 保留 `skills/*` 一级 flat discovery，`registry.yaml` 使用 `forge-*` 作为协议 id。
 - 不触碰未跟踪 `.claude/`。
 - 不把领域型 skill 统一改成完整 MAPE-K 模板。
 - 不改变 `.claude-plugin/plugin.json` 和 `.codex-plugin/plugin.json` 的 skill 枚举方式。

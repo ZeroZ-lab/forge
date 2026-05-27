@@ -78,6 +78,13 @@ disable-model-invocation: true
 
 **出口**：相关前端文件已生成，基础验证完成，剩余风险已记录。
 
+## 运行时信号
+
+- 输入：frontend task、design tokens
+- 输出：frontend artifact ready、preview blocked
+- 路由：详见 `registry.yaml` 的 `forge-fe-artifact` 节点；本节只保留人类可读摘要。
+- 升级：无法运行或预览 · 设计输入缺失
+
 ## 红旗
 
 - 没读 `DESIGN.md` 就写样式。

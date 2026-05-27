@@ -153,6 +153,13 @@ description: 架构权衡与技术选型——每个选择都是 trade-off，不
 **入口**：project.md「业务目标」已填写（来自 business-alignment）或用户已有交互和视觉设计
 **出口**：project.md「技术决策」已填写 · 架构模式已确定 · 技术选型已确定 · 用户确认进入 detail 阶段
 
+## 运行时信号
+
+- 输入：business and resource constraints
+- 输出：technical constraints、architecture decisions
+- 路由：详见 `registry.yaml` 的 `forge-technical-design` 节点；本节只保留人类可读摘要。
+- 升级：团队经验、业务约束、运维能力缺失
+
 ## 何时不使用
 
 纯前端项目 · 已有完整技术架构（直接进入 detail 阶段）· 技术栈已确定（简化选型流程）

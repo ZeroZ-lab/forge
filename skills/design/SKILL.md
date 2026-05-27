@@ -57,9 +57,10 @@ DESIGN.md（更新）                               # 来自 Phase 2
 
 ## 运行时信号
 
-- **signals in**：设计阶段需要、纯后端跳过、已有设计冲突。
-- **signals out**：interaction-spec ready、DESIGN ready、human decision needed。
-- **升级条件**：PRD 缺关键用户流程、视觉方向未确认、已有 DESIGN.md 冲突不可自动合并。
+- 输入：design needed、frontend absent
+- 输出：interaction spec ready、design tokens ready
+- 路由：详见 `registry.yaml` 的 `forge-design` 节点；本节只保留人类可读摘要。
+- 升级：用户不确认视觉方向 · 交互和视觉职责冲突
 
 ## 完成提示
 

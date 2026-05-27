@@ -6,8 +6,8 @@
 - **核心洞察**：人类擅长定义产品愿景（做什么），不擅长识别技术可能性（怎么做）。research 补这个缺口
 - **位置修正**：初版放在 ⓪.5（brainstorm 之后），但此时技术子问题尚未浮出。改为 ①.5（define 之后），因为 PRD 用户故事中隐含技术信号（"平滑爬墙"→脊柱算法），research 从 PRD 提取信号再搜索
 - **改动**：
-  - 新增 `skills/forge-research/SKILL.md`（206 行）：四阶段方法论（拆解→上下文→搜索→菜单）
-  - 新增 `skills/forge-research/references/research-brief-template.md`：子问题地图 + 算法菜单 + 组合建议
+  - 新增 `skills/research/SKILL.md`：四阶段方法论（拆解→上下文→搜索→菜单）
+  - 新增 `skills/research/references/research-brief-template.md`：子问题地图 + 算法菜单 + 组合建议
   - AGENTS.md 阶段表新增 research 行（19 个领域 Skill）
   - AGENTS.md 产物传递图新增"算法菜单"环节
   - AGENTS.md 自然语言执行表新增"做一只壁虎"示例

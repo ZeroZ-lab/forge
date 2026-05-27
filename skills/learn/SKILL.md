@@ -95,11 +95,10 @@ description: 方法论进化——从积累偏差中发现 skill 的系统性缺
 
 ## 运行时信号
 
-**输入信号**：`same-class deviation >= 3`、跨项目同类偏差、review 的 `skill/document/code attribution`、历史方法论修改记录。
-
-**输出信号**：方法论修改建议、证据链、优先级、反向验证、是否应抽到 shared Knowledge 层、是否需要先回滚错误归因。
-
-learn 不能凭直觉改 skill。没有证据链时输出“继续积累”，而不是制造新方法论。
+- 输入：same-class deviation >= 3、cross-project deviation
+- 输出：methodology change proposal、evidence chain
+- 路由：详见 `registry.yaml` 的 `forge-learn` 节点；本节只保留人类可读摘要。
+- 升级：证据不足 · 建议会导致 skill 膨胀或冲突
 
 ## 触发条件
 

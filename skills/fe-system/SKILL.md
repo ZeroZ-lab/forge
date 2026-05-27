@@ -68,6 +68,13 @@ description: 设计系统落地——从产品意图推导可消费的 DESIGN.md
 
 **出口**：`DESIGN.md` 已生成或更新，人类确认关键视觉方向，后续 skill 可直接消费 token。
 
+## 运行时信号
+
+- 输入：product tone、page archetype
+- 输出：design tokens、component patterns
+- 路由：详见 `registry.yaml` 的 `forge-fe-system` 节点；本节只保留人类可读摘要。
+- 升级：视觉方向冲突 · 已有 DESIGN.md 冲突
+
 ## 红旗
 
 - 只给颜色，不给语义 token。

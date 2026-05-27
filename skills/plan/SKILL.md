@@ -143,6 +143,13 @@ description: 把 contract.md 拆成可执行任务序列——垂直切片、依
 **入口**：有 contract.md + modules/（来自 detail 阶段）或用户已有详设文档
 **出口**：plan.md 已生成 · testing/test-cases.md 已生成（P6 从验收条件 + 验证方式推导） · 用户确认进入代码生成
 
+## 运行时信号
+
+- 输入：domain contracts
+- 输出：task sequence、checkpoints
+- 路由：详见 `registry.yaml` 的 `forge-plan` 节点；本节只保留人类可读摘要。
+- 升级：任务无法垂直切片 · 验收标准缺失
+
 ## 何时不使用
 
 只有一个模块（不需要分解）· 已有明确任务清单 · 小功能迭代（简化流程）

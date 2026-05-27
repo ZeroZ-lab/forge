@@ -114,6 +114,13 @@ updated_at: timestamp, not null, default now()
 **入口**：有 project.md + api/contract.md，或用户已有技术选型和 API 详设
 **出口**：database/contract.md（DB1-DB5 完整）+ 表清单 + 索引规划表 + 迁移规则
 
+## 运行时信号
+
+- 输入：API data model
+- 输出：database setpoint、migration rules
+- 路由：详见 `registry.yaml` 的 `forge-db-design` 节点；本节只保留人类可读摘要。
+- 升级：API 模型和存储模型冲突 · 迁移不可回滚
+
 ## 何时不使用
 
 纯前端项目 · 已有完整数据库详设 · 简单 CRUD（可简化决策流程）

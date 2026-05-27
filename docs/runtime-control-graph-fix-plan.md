@@ -26,7 +26,7 @@ validator 只校验字段是 array，没有校验元素都是 string。后续 re
 1. 不回到泛泛 `upstream/downstream`。
 2. 不把 feedback edge 伪装成 stage edge。
 3. 不要求图全局互逆；只有声明为双向关系的边才需要互逆。
-4. 不改变 plugin discovery：`skills/forge-*` flat list 保持不变。
+4. 不改变 plugin discovery：`skills/*` flat list with `forge-*` registry ids 保持不变。
 5. `registry.yaml` 继续保持 JSON-compatible YAML，暂不引入 YAML parser。
 
 ## 3. 目标结构
@@ -71,7 +71,7 @@ validator 只校验字段是 array，没有校验元素都是 string。后续 re
 - `runtime release execution`
 - `skill maintenance`
 
-`signal_routes.to` 如果不是 22 个 `forge-*` skill，必须属于上述白名单。
+`signal_routes.to` 如果不是 23 个 skill，必须属于上述白名单。
 
 ### 字段淘汰策略
 
@@ -116,7 +116,7 @@ validator 只校验字段是 array，没有校验元素都是 string。后续 re
 
 动作：
 
-- 为 22 个 skill 补 `stage_next`、`feedback_to`、`quality_gates`、`signal_routes`。
+- 为 23 个 skill 补 `stage_next`、`feedback_to`、`quality_gates`、`signal_routes`。
 - 删除 `upstream/downstream`，不保留兼容字段。
 - `forge-deploy`、`forge-learn` 的外部落点继续放 `external_downstream`。
 
@@ -133,7 +133,7 @@ validator 只校验字段是 array，没有校验元素都是 string。后续 re
 
 验收：
 
-- `stage_next/feedback_to/quality_gates` 只引用 22 个 `forge-*` skill。
+- `stage_next/feedback_to/quality_gates` 只引用 23 个 skill。
 - `signal_routes.to` 可以引用 skill，也可以引用明确允许的外部目标。
 - `signal_routes.to` 的外部目标只允许 `human decision`、`runtime release execution`、`skill maintenance`。
 - 无需强制所有 typed edge 互逆；只有 `stage_next` 的反向关系可被推导，不需要双写。
@@ -172,7 +172,7 @@ validator 只校验字段是 array，没有校验元素都是 string。后续 re
 
 动作：
 
-- 测试 registry 覆盖 22 个 skill。
+- 测试 registry 覆盖 23 个 skill。
 - 测试 typed edge 引用完整。
 - 测试 signal route 覆盖快 / 中 / 慢回路。
 - 测试 signal route 外部目标白名单。

@@ -99,10 +99,12 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 
 **偏差信号接收**：如果 codegen 偏差摘要中同类 L1 偏差连续 ≥ 2 个任务出现，建议复查 contract 对应部分——偏差可能是 contract 盲区而非代码问题。
 
-**信号输出**：
-- `contract updated`：setpoint 已修正，下游可继续。
-- `downstream drift`：下游文档需要确认是否级联更新。
-- `human decision needed`：存在 L2 漂移或架构/需求分歧。
+## 运行时信号
+
+- 输入：repeated L1 from forge-codegen、document drift from forge-review
+- 输出：contract updated、downstream drift report、human decision needed
+- 路由：详见 `registry.yaml` 的 `forge-detail` 节点；本节只保留人类可读摘要。
+- 升级：contract ambiguity · downstream drift needs decision · frontend presence unclear
 
 ## 产出
 
@@ -132,12 +134,6 @@ docs/features/<feature>/
 - project.md 共享决策（PD#）与 feature contract（FD#）无编号冲突
 - 漂移检测已完成（如有下游依赖表）
 - 所有 modules/*.md 包含模板必需节（Phase 4 第 7 步校验）
-
-## 运行时信号
-
-- **signals in**：需求输入、技术约束、同类 L1、L2 漂移、review 文档漂移。
-- **signals out**：contract ready、drift report、cascade update needed、human decision needed。
-- **升级条件**：contract 歧义、下游漂移影响不清、API/DB/Frontend 领域边界冲突。
 
 ## 完成提示
 

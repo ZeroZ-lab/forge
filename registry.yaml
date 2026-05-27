@@ -4,7 +4,7 @@
   "skills": [
     {
       "name": "forge-brainstorm",
-      "path": "skills/forge-brainstorm/SKILL.md",
+      "path": "skills/brainstorm/SKILL.md",
       "phase": "explore",
       "type": "domain",
       "runtime_role": "setpoint-generator",
@@ -64,7 +64,7 @@
     },
     {
       "name": "forge-business-alignment",
-      "path": "skills/forge-business-alignment/SKILL.md",
+      "path": "skills/business-alignment/SKILL.md",
       "phase": "define",
       "type": "domain",
       "runtime_role": "setpoint-generator",
@@ -89,7 +89,8 @@
         "direction decision"
       ],
       "signals_out": [
-        "Go/No-Go",
+        "Go decision",
+        "No-Go decision",
         "business constraints"
       ],
       "escalates_when": [
@@ -112,9 +113,14 @@
       "quality_gates": [],
       "signal_routes": [
         {
-          "signal": "Go/No-Go",
+          "signal": "Go decision",
           "to": "forge-define",
           "when": "business commitment is accepted"
+        },
+        {
+          "signal": "No-Go decision",
+          "to": "forge-brainstorm",
+          "when": "direction, user, metric, or resource assumptions need to be revisited"
         },
         {
           "signal": "business constraints",
@@ -125,7 +131,7 @@
     },
     {
       "name": "forge-define",
-      "path": "skills/forge-define/SKILL.md",
+      "path": "skills/define/SKILL.md",
       "phase": "define",
       "type": "domain",
       "runtime_role": "setpoint-generator",
@@ -188,8 +194,69 @@
       ]
     },
     {
+      "name": "forge-research",
+      "path": "skills/research/SKILL.md",
+      "phase": "define",
+      "type": "domain",
+      "runtime_role": "setpoint-generator",
+      "triggers": [
+        "技术探索",
+        "算法菜单",
+        "research"
+      ],
+      "avoid_when": [
+        "纯 CRUD 应用",
+        "用户已有完整技术方案",
+        "没有技术选择空间"
+      ],
+      "consumes": [
+        "PRD.md",
+        "technical signal words"
+      ],
+      "produces": [
+        "research-brief.md"
+      ],
+      "signals_in": [
+        "PRD technical signals"
+      ],
+      "signals_out": [
+        "algorithm menu",
+        "technical recommendation"
+      ],
+      "escalates_when": [
+        "技术信号词存在但没有可行方案",
+        "所有方案都有重大 trade-off"
+      ],
+      "output_contract": [
+        "子问题地图",
+        "算法菜单",
+        "组合建议"
+      ],
+      "maturity": "stable",
+      "stage_next": [
+        "forge-technical-design",
+        "forge-detail"
+      ],
+      "feedback_to": [
+        "forge-define"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "algorithm menu",
+          "to": "forge-technical-design",
+          "when": "technical choices need algorithm options"
+        },
+        {
+          "signal": "technical recommendation",
+          "to": "forge-detail",
+          "when": "domain contracts need research constraints"
+        }
+      ]
+    },
+    {
       "name": "forge-interaction-design",
-      "path": "skills/forge-interaction-design/SKILL.md",
+      "path": "skills/interaction-design/SKILL.md",
       "phase": "design",
       "type": "domain",
       "runtime_role": "setpoint-generator",
@@ -251,7 +318,7 @@
     },
     {
       "name": "forge-fe-system",
-      "path": "skills/forge-fe-system/SKILL.md",
+      "path": "skills/fe-system/SKILL.md",
       "phase": "design",
       "type": "domain",
       "runtime_role": "knowledge",
@@ -317,7 +384,7 @@
     },
     {
       "name": "forge-technical-design",
-      "path": "skills/forge-technical-design/SKILL.md",
+      "path": "skills/technical-design/SKILL.md",
       "phase": "design",
       "type": "domain",
       "runtime_role": "setpoint-generator",
@@ -378,7 +445,7 @@
     },
     {
       "name": "forge-init",
-      "path": "skills/forge-init/SKILL.md",
+      "path": "skills/init/SKILL.md",
       "phase": "orchestration",
       "type": "orchestrator",
       "runtime_role": "orchestrator",
@@ -442,7 +509,7 @@
     },
     {
       "name": "forge-design",
-      "path": "skills/forge-design/SKILL.md",
+      "path": "skills/design/SKILL.md",
       "phase": "orchestration",
       "type": "orchestrator",
       "runtime_role": "orchestrator",
@@ -504,7 +571,7 @@
     },
     {
       "name": "forge-detail",
-      "path": "skills/forge-detail/SKILL.md",
+      "path": "skills/detail/SKILL.md",
       "phase": "orchestration",
       "type": "orchestrator",
       "runtime_role": "controller",
@@ -582,7 +649,7 @@
     },
     {
       "name": "forge-api-design",
-      "path": "skills/forge-api-design/SKILL.md",
+      "path": "skills/api-design/SKILL.md",
       "phase": "detail",
       "type": "domain",
       "runtime_role": "setpoint-generator",
@@ -644,7 +711,7 @@
     },
     {
       "name": "forge-db-design",
-      "path": "skills/forge-db-design/SKILL.md",
+      "path": "skills/db-design/SKILL.md",
       "phase": "detail",
       "type": "domain",
       "runtime_role": "setpoint-generator",
@@ -705,7 +772,7 @@
     },
     {
       "name": "forge-frontend-design",
-      "path": "skills/forge-frontend-design/SKILL.md",
+      "path": "skills/frontend-design/SKILL.md",
       "phase": "detail",
       "type": "domain",
       "runtime_role": "setpoint-generator",
@@ -775,7 +842,7 @@
     },
     {
       "name": "forge-plan",
-      "path": "skills/forge-plan/SKILL.md",
+      "path": "skills/plan/SKILL.md",
       "phase": "plan",
       "type": "domain",
       "runtime_role": "planner",
@@ -838,7 +905,7 @@
     },
     {
       "name": "forge-codegen",
-      "path": "skills/forge-codegen/SKILL.md",
+      "path": "skills/codegen/SKILL.md",
       "phase": "build",
       "type": "execution",
       "runtime_role": "actuator",
@@ -916,7 +983,7 @@
     },
     {
       "name": "forge-fe-artifact",
-      "path": "skills/forge-fe-artifact/SKILL.md",
+      "path": "skills/fe-artifact/SKILL.md",
       "phase": "build",
       "type": "execution",
       "runtime_role": "actuator",
@@ -988,7 +1055,7 @@
     },
     {
       "name": "forge-test",
-      "path": "skills/forge-test/SKILL.md",
+      "path": "skills/test/SKILL.md",
       "phase": "orchestration",
       "type": "orchestrator",
       "runtime_role": "orchestrator",
@@ -1062,7 +1129,7 @@
     },
     {
       "name": "forge-test-strategy",
-      "path": "skills/forge-test-strategy/SKILL.md",
+      "path": "skills/test-strategy/SKILL.md",
       "phase": "test",
       "type": "domain",
       "runtime_role": "planner",
@@ -1124,7 +1191,7 @@
     },
     {
       "name": "forge-test-cases",
-      "path": "skills/forge-test-cases/SKILL.md",
+      "path": "skills/test-cases/SKILL.md",
       "phase": "test",
       "type": "domain",
       "runtime_role": "setpoint-generator",
@@ -1193,7 +1260,7 @@
     },
     {
       "name": "forge-fe-accept",
-      "path": "skills/forge-fe-accept/SKILL.md",
+      "path": "skills/fe-accept/SKILL.md",
       "phase": "test",
       "type": "domain",
       "runtime_role": "sensor",
@@ -1259,7 +1326,7 @@
     },
     {
       "name": "forge-review",
-      "path": "skills/forge-review/SKILL.md",
+      "path": "skills/review/SKILL.md",
       "phase": "review",
       "type": "governance",
       "runtime_role": "sensor",
@@ -1339,7 +1406,7 @@
     },
     {
       "name": "forge-deploy",
-      "path": "skills/forge-deploy/SKILL.md",
+      "path": "skills/deploy/SKILL.md",
       "phase": "deploy",
       "type": "domain",
       "runtime_role": "planner",
@@ -1412,7 +1479,7 @@
     },
     {
       "name": "forge-learn",
-      "path": "skills/forge-learn/SKILL.md",
+      "path": "skills/learn/SKILL.md",
       "phase": "learn",
       "type": "governance",
       "runtime_role": "governance",

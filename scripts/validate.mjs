@@ -94,21 +94,22 @@ assert(packageJson.scripts?.validate === 'node scripts/validate.mjs', 'package.j
 assert(packageJson.scripts?.test === 'node --test', 'package.json: missing scripts.test');
 
 const skillsDir = path.join(root, 'skills');
-const forgeSkillDirs = fs
+const skillDirs = fs
   .readdirSync(skillsDir, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory() && entry.name.startsWith('forge-'))
+  .filter((entry) => entry.isDirectory() && entry.name !== 'shared')
   .map((entry) => entry.name)
   .sort();
 
-assert(forgeSkillDirs.length === 22, `expected 22 forge-* skills, found ${forgeSkillDirs.length}`);
+assert(skillDirs.length === 23, `expected 23 skills, found ${skillDirs.length}`);
 
-const expectedSkillPaths = forgeSkillDirs.map((skillName) => `./skills/${skillName}`).sort();
+const expectedSkillPaths = skillDirs.map((skillName) => `./skills/${skillName}`).sort();
 const manifestSkillPaths = Array.isArray(claudePlugin.skills) ? [...claudePlugin.skills].sort() : [];
+const expectedRegistryNames = skillDirs.map((skillName) => `forge-${skillName}`).sort();
 
 assert(Array.isArray(claudePlugin.skills), '.claude-plugin/plugin.json: skills must explicitly enumerate installed skills');
 assert(
   JSON.stringify(manifestSkillPaths) === JSON.stringify(expectedSkillPaths),
-  '.claude-plugin/plugin.json: skills list must match skills/forge-* exactly',
+  '.claude-plugin/plugin.json: skills list must match skills/* exactly',
 );
 
 assert(runtimeRegistry.version === 1, 'registry.yaml: version must be 1');
@@ -118,8 +119,8 @@ const registryNames = Array.isArray(runtimeRegistry.skills)
   ? runtimeRegistry.skills.map((skill) => skill.name).sort()
   : [];
 assert(
-  JSON.stringify(registryNames) === JSON.stringify(forgeSkillDirs),
-  'registry.yaml: skills must cover skills/forge-* exactly',
+  JSON.stringify(registryNames) === JSON.stringify(expectedRegistryNames),
+  'registry.yaml: skills must cover skills/* exactly',
 );
 
 const allowedRuntimeRoles = new Set([
@@ -153,7 +154,8 @@ const allowedExternalTargets = new Set(['human decision', 'runtime release execu
 
 for (const skill of runtimeRegistry.skills ?? []) {
   assert(typeof skill.name === 'string' && skill.name.startsWith('forge-'), 'registry.yaml: each skill needs a forge-* name');
-  assert(skill.path === `skills/${skill.name}/SKILL.md`, `registry.yaml: ${skill.name} path must point to its SKILL.md`);
+  const expectedPath = `skills/${skill.name.replace(/^forge-/, '')}/SKILL.md`;
+  assert(skill.path === expectedPath, `registry.yaml: ${skill.name} path must point to ${expectedPath}`);
   assert(exists(skill.path), `registry.yaml: missing path for ${skill.name}: ${skill.path}`);
   assert(allowedRegistryPhases.has(skill.phase), `registry.yaml: ${skill.name} invalid phase "${skill.phase}"`);
   assert(allowedRegistryTypes.has(skill.type), `registry.yaml: ${skill.name} invalid type "${skill.type}"`);
@@ -214,7 +216,7 @@ for (const role of ['orchestrator', 'controller', 'actuator', 'sensor', 'governa
   );
 }
 
-for (const skillName of forgeSkillDirs) {
+for (const skillName of skillDirs) {
   const skillPath = `skills/${skillName}/SKILL.md`;
   assert(exists(skillPath), `${skillPath}: missing`);
   if (!exists(skillPath)) continue;
@@ -257,7 +259,7 @@ assertIncludes('docs/skill-architecture-audit.md', [
   'docs/runtime-control-loop.md',
 ]);
 
-for (const skillName of forgeSkillDirs) {
+for (const skillName of expectedRegistryNames) {
   assert(
     read('docs/skill-architecture-audit.md').includes(`### ${skillName}`),
     `docs/skill-architecture-audit.md: missing audit entry for ${skillName}`,
@@ -287,7 +289,8 @@ for (const file of sharedKnowledgeFiles) {
 }
 
 for (const orchestrator of ['forge-init', 'forge-design', 'forge-detail', 'forge-test']) {
-  assertIncludes(`skills/${orchestrator}/SKILL.md`, ['## 运行时角色', '## 输入状态读取', '## 分支与恢复', '## 运行时信号']);
+  const skillPath = registryByName[orchestrator]?.path ?? `skills/${orchestrator.replace(/^forge-/, '')}/SKILL.md`;
+  assertIncludes(skillPath, ['## 运行时角色', '## 输入状态读取', '## 分支与恢复', '## 运行时信号']);
 }
 
 assert(
@@ -305,26 +308,26 @@ assert(
 
 const requiredProtocols = {
   'forge-fe-system': {
-    path: 'skills/forge-fe-system/references/fe-system-protocol.md',
+    path: 'skills/fe-system/references/fe-system-protocol.md',
     markers: ['# Fe System Protocol', '## Token 结构', '### Primitive', '### Semantic', '### Component'],
   },
   'forge-fe-artifact': {
-    path: 'skills/forge-fe-artifact/references/fe-artifact-protocol.md',
+    path: 'skills/fe-artifact/references/fe-artifact-protocol.md',
     markers: ['# Fe Artifact Protocol', '## 五层翻译详解', '### 1. 意图层', '### 5. 适配层'],
   },
   'forge-fe-accept': {
-    path: 'skills/forge-fe-accept/references/fe-accept-protocol.md',
+    path: 'skills/fe-accept/references/fe-accept-protocol.md',
     markers: ['# Fe Accept Protocol', '## 四维验收', '## 报告格式', '## 执行证据'],
   },
   'forge-review': {
-    path: 'skills/forge-review/references/review-protocol.md',
+    path: 'skills/review/references/review-protocol.md',
     markers: ['# Review Protocol', '## 文档审查维度', '## 代码审查维度', '## 偏差归因维度', '## 报告格式'],
   },
 };
 
 for (const [skillName, protocol] of Object.entries(requiredProtocols)) {
-  const skillPath = `skills/${skillName}/SKILL.md`;
-  const referenceName = protocol.path.replace(`skills/${skillName}/`, '');
+  const skillPath = registryByName[skillName]?.path ?? `skills/${skillName.replace(/^forge-/, '')}/SKILL.md`;
+  const referenceName = protocol.path.replace(`skills/${skillName.replace(/^forge-/, '')}/`, '');
   assert(read(skillPath).includes(referenceName), `${skillPath}: must reference ${referenceName}`);
   assert(exists(protocol.path), `${protocol.path}: missing`);
   if (exists(protocol.path)) assertIncludes(protocol.path, protocol.markers);
@@ -358,13 +361,13 @@ assertIncludes('skills/shared/contract-orchestration-template.md', [
 
 const marketplaceDescription = claudeMarketplace.plugins?.find((plugin) => plugin.name === 'forge')?.description ?? '';
 assert(
-  marketplaceDescription.includes('22 个决策协议 skill'),
-  '.claude-plugin/marketplace.json: forge description must mention "22 个决策协议 skill"',
+  marketplaceDescription.includes('23 个决策协议 skill'),
+  '.claude-plugin/marketplace.json: forge description must mention "23 个决策协议 skill"',
 );
-assert(read('README.md').includes('8 阶段 × 22 个 Skill'), 'README.md: must document 8 阶段 × 22 个 Skill');
+assert(read('README.md').includes('8 阶段 × 23 个 Skill'), 'README.md: must document 8 阶段 × 23 个 Skill');
 assert(read('README.md').includes('registry.yaml'), 'README.md: must document registry.yaml runtime control surface');
 assert(read('README.md').includes('docs/runtime-control-loop.md'), 'README.md: must document runtime control loop doc');
-assert(read('AGENTS.md').includes('22 个决策协议'), 'AGENTS.md: must document 22 个决策协议');
+assert(read('AGENTS.md').includes('23 个决策协议'), 'AGENTS.md: must document 23 个决策协议');
 assert(read('AGENTS.md').includes('信号传递'), 'AGENTS.md: must document signal passing between control loops');
 assert(read('AGENTS.md').includes('registry.yaml'), 'AGENTS.md: must document registry.yaml runtime control surface');
 assert(read('AGENTS.md').includes('docs/runtime-control-loop.md'), 'AGENTS.md: must document runtime control loop doc');
@@ -373,9 +376,9 @@ const stalePatterns = [
   ['AGENTS.md', /BA1-BA5/],
   ['README.md', /9 个决策 Command|9 个 Command|8 阶段 × 18 个 Skill|18 个 skill|18 个 `forge-\*` skill/],
   ['AGENTS.md', /Phase 1 数据库|Phase 2 API/],
-  ['README.md', /Command 链|决策 Command|\/(brainstorm|init|define|design|detail|plan|test|deploy)(?![-\w])/],
-  ['AGENTS.md', /命令系统|Command|\/(brainstorm|init|define|design|detail|plan|test|deploy)(?![-\w])/],
-  ['references/usage-examples.md', /\/(brainstorm|init|define|design|detail|plan|test|deploy)(?![-\w])/],
+  ['README.md', /Command 链|决策 Command|\/(brainstorm|init|define|design|detail|plan|test|deploy)(?![-\w.])/],
+  ['AGENTS.md', /命令系统|Command|\/(brainstorm|init|define|design|detail|plan|test|deploy)(?![-\w.])/],
+  ['references/usage-examples.md', /\/(brainstorm|init|define|design|detail|plan|test|deploy)(?![-\w.])/],
   ['AGENTS.md', /demos\/robot-sim|Robot Simulation/],
   ['README.md', /demos\/robot-sim|Robot Simulation/],
   ['README.md', /产出：`plan\.md` \+ `test-cases\.md`|testing\/contract\.md` \+ `test-cases\.md`/],
@@ -398,35 +401,41 @@ for (const file of removedHookFiles) {
   assert(!exists(file), `${file}: hooks were removed; do not reintroduce hook config without a new maintenance plan`);
 }
 
-const detailSkill = read('skills/forge-detail/SKILL.md');
-const apiPhase = indexOfOrFail(detailSkill, 'Phase 1: API 设计', 'skills/forge-detail/SKILL.md');
-const dbPhase = indexOfOrFail(detailSkill, 'Phase 2: 数据库设计', 'skills/forge-detail/SKILL.md');
-assert(apiPhase < dbPhase, 'skills/forge-detail/SKILL.md: API phase must precede database phase');
+const detailSkillPath = registryByName['forge-detail']?.path ?? 'skills/detail/SKILL.md';
+const detailSkill = read(detailSkillPath);
+const apiPhase = indexOfOrFail(detailSkill, 'Phase 1: API 设计', detailSkillPath);
+const dbPhase = indexOfOrFail(detailSkill, 'Phase 2: 数据库设计', detailSkillPath);
+assert(apiPhase < dbPhase, `${detailSkillPath}: API phase must precede database phase`);
 
-const planSkill = read('skills/forge-plan/SKILL.md');
+const planSkillPath = registryByName['forge-plan']?.path ?? 'skills/plan/SKILL.md';
+const planSkill = read(planSkillPath);
 for (const marker of ['### P1:', '### P2:', '### P3:', '### P4:', '### P5:']) {
-  assert(planSkill.includes(marker), `skills/forge-plan/SKILL.md: missing ${marker}`);
+  assert(planSkill.includes(marker), `${planSkillPath}: missing ${marker}`);
 }
 
-const testCasesSkill = read('skills/forge-test-cases/SKILL.md');
+const testCasesSkillPath = registryByName['forge-test-cases']?.path ?? 'skills/test-cases/SKILL.md';
+const testCasesSkill = read(testCasesSkillPath);
 for (const marker of ['### TC1:', '### TC2:', '### TC3:', '### TC4:', '### TC5:']) {
-  assert(testCasesSkill.includes(marker), `skills/forge-test-cases/SKILL.md: missing ${marker}`);
+  assert(testCasesSkill.includes(marker), `${testCasesSkillPath}: missing ${marker}`);
 }
-assert(testCasesSkill.includes('testing/test-cases.md'), 'skills/forge-test-cases/SKILL.md: must use testing/test-cases.md');
+assert(testCasesSkill.includes('testing/test-cases.md'), `${testCasesSkillPath}: must use testing/test-cases.md`);
 
-const deploySkill = read('skills/forge-deploy/SKILL.md');
+const deploySkillPath = registryByName['forge-deploy']?.path ?? 'skills/deploy/SKILL.md';
+const deploySkill = read(deploySkillPath);
 for (const marker of ['### RL1:', '### RL2:', '### RL3:', '### RL4:', '### RL5:']) {
-  assert(deploySkill.includes(marker), `skills/forge-deploy/SKILL.md: missing ${marker}`);
+  assert(deploySkill.includes(marker), `${deploySkillPath}: missing ${marker}`);
 }
 
-const learnSkill = read('skills/forge-learn/SKILL.md');
+const learnSkillPath = registryByName['forge-learn']?.path ?? 'skills/learn/SKILL.md';
+const learnSkill = read(learnSkillPath);
 for (const marker of ['### L1:', '### L2:', '### L3:', '### L4:']) {
-  assert(learnSkill.includes(marker), `skills/forge-learn/SKILL.md: missing ${marker}`);
+  assert(learnSkill.includes(marker), `${learnSkillPath}: missing ${marker}`);
 }
 
-const codegenSkill = read('skills/forge-codegen/SKILL.md');
+const codegenSkillPath = registryByName['forge-codegen']?.path ?? 'skills/codegen/SKILL.md';
+const codegenSkill = read(codegenSkillPath);
 for (const marker of ['L0（噪声）', 'L1（偏差）', 'L2（漂移）', '前馈', '信号传递', '健康检查', '归因：']) {
-  assert(codegenSkill.includes(marker), `skills/forge-codegen/SKILL.md: missing cybernetic marker "${marker}"`);
+  assert(codegenSkill.includes(marker), `${codegenSkillPath}: missing cybernetic marker "${marker}"`);
 }
 
 assert(
@@ -448,4 +457,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(`Forge validation passed (${forgeSkillDirs.length} skills, version ${packageJson.version}).`);
+console.log(`Forge validation passed (${skillDirs.length} skills, version ${packageJson.version}).`);

@@ -29,14 +29,6 @@ review 的目标不是总结优点，而是发现会导致错误投影、错误�
 
 review 是慢回路的 sensor + analyzer。它不只判断“有没有问题”，还必须把偏差归因成可传递信号：代码实现偏差回到 codegen，文档漂移回到 detail，方法论盲区进入 learn 聚合。
 
-## 运行时信号
-
-**输入信号**：codegen 偏差摘要、测试失败、文档/代码不一致、发布前质量门、用户要求独立审查。
-
-**输出信号**：P0/P1/P2 问题、阻塞项、豁免项、`skill/document/code attribution`、需要 detail 级联更新的漂移点、需要 learn 聚合的方法论候选。
-
-单次问题不能直接证明 skill 方法论错误；只有带证据的归因信号才允许进入 learn。
-
 ## 审查模式
 
 ### 文档审查
@@ -85,6 +77,13 @@ review 是慢回路的 sensor + analyzer。它不只判断“有没有问题”�
 **入口**：已有可审查的文档或代码；用户要求 review；或 codegen 或 deploy 前需要质量门。
 
 **出口**：审查报告已输出，P0/P1 有文件位置、证据和修复建议。
+
+## 运行时信号
+
+- 输入：artifact ready、health check trigger
+- 输出：P0/P1/P2 issues、skill/document/code attribution
+- 路由：详见 `registry.yaml` 的 `forge-review` 节点；本节只保留人类可读摘要。
+- 升级：P0/P1 found · WHY missing before codegen · deviation has no attribution
 
 ## 偏差归因
 

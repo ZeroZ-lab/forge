@@ -115,9 +115,10 @@ my-project/
 
 ## 运行时信号
 
-- **signals in**：缺失项目文件、已有文件冲突、用户项目意图。
-- **signals out**：项目初始化完成、phase 跳过、需要人类决策。
-- **升级条件**：已有文件与新决策冲突、前后端边界不清、项目级约束不足以进入 detail。
+- 输入：missing project files
+- 输出：project initialized、phase skipped
+- 路由：详见 `registry.yaml` 的 `forge-init` 节点；本节只保留人类可读摘要。
+- 升级：已有文件与新决策冲突 · 无法判断是否有前端
 
 ## 完成提示
 

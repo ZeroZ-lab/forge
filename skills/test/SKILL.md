@@ -66,9 +66,10 @@ docs/features/<feature>/
 
 ## 运行时信号
 
-- **signals in**：test planning needed、missing test cases、review testing gap。
-- **signals out**：test strategy ready、test cases ready、requirements not testable。
-- **升级条件**：验收条件缺失、测试数据不可重复、策略和用例冲突。
+- 输入：test planning needed、missing test cases
+- 输出：test strategy ready、test cases ready
+- 路由：详见 `registry.yaml` 的 `forge-test` 节点；本节只保留人类可读摘要。
+- 升级：验收条件缺失 · 测试策略和用例冲突
 
 ## 完成提示
 

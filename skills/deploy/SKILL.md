@@ -129,6 +129,13 @@ docs/features/<feature>/deploy/
 **入口**：有 src/ + tests/ + testing/test-cases.md（或用户已有代码和测试）· review 代码审查通过（subagent 独立审查，如有）
 **出口**：deploy/contract.md 已生成 · 部署流程已定义 · 回滚步骤已明确（具体命令）· 监控告警已配置 · 发布清单已就绪
 
+## 运行时信号
+
+- 输入：code review passed、test results
+- 输出：release plan、rollback plan、release blocked
+- 路由：详见 `registry.yaml` 的 `forge-deploy` 节点；本节只保留人类可读摘要。
+- 升级：无回滚方案 · 无健康检查 · 无监控告警
+
 ## 何时不使用
 
 纯本地工具 · 已有完整 CI/CD · 原型验证阶段
