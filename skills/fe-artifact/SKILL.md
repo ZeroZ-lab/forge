@@ -10,6 +10,12 @@ disable-model-invocation: true
 
 把前端文档投影成可运行、可验收的前端代码。它是 codegen 的前端子协议，负责把设计系统、交互规格、API 合约和组件规格落到页面与组件。
 
+## 执行纪律
+
+- **D5**：不重新做产品决策，不改 API 合约，不绕过 DESIGN.md 自行发明视觉语言
+- **D7**：前端可运行时必须启动本地预览并做真实验证，不凭猜测通过
+- **D1**：关键逻辑必须引用文档来源（From: frontend/modules/tasks.md AC3）
+
 ## 上下游边界
 
 **上游**：`DESIGN.md`、interaction-spec、frontend/contract.md、frontend/modules/*.md、api/modules/*.md、plan.md。

@@ -1,6 +1,6 @@
 {
   "name": "forge",
-  "version": "0.18.1",
+  "version": "0.19.0",
   "description": "文档是源代码，代码是投影。模型越强，同一份文档生成的代码越好。",
   "author": {
     "name": "ZeroZ-lab",

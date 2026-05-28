@@ -13,6 +13,12 @@ description: 项目初始化——一次对话完成业务对齐 + 技术选型 
 
 运行时控制约束见 `skills/shared/concepts/control-loop.md`；阶段汇报可参考 `skills/shared/output-contracts/runtime-control.md`。
 
+## 执行纪律
+
+- **D3**：现有文件和新决策冲突 → 停止覆盖，输出冲突项等人类决策
+- **D5**：已有 project.md → 只补缺失段落，不重写已记录决策
+- **D4**：每个 phase 完成后确认再进入下一个，不跳 phase
+
 ## 输入状态读取
 
 开始前读取：

@@ -13,6 +13,12 @@ description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill
 
 运行时闭环参考 `docs/runtime-control-loop.md`；偏差报告结构参考 `skills/shared/output-contracts/deviation-report.md`。
 
+## 执行纪律
+
+- **D3**：前端存在性不确定 → 暂停询问；L2 setpoint 漂移 → 中止详设，列矛盾点等人类决策
+- **D5**：只加载项目需要的领域 skill（有前端→3 个，纯后端→2 个）
+- **D2**：漂移检测以文档为源头，漂移点呈现给用户决策，AI 不自动修改下游文档
+
 ## 加载判断
 
 先确定加载哪些 skill：

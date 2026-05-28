@@ -11,6 +11,12 @@ description: 独立审查——文档审查（codegen 前）和代码审查（de
 
 review 的目标不是总结优点，而是发现会导致错误投影、错误发布或未来重建失败的问题。
 
+## 执行纪律
+
+- **D1**：每个问题必须有证据、影响和修复建议
+- **D5**：不替代 codegen，不直接发布，不用同一轮自我确认代替独立检查
+- **D8**：发现偏差必须归因（skill 方法论 / 文档未同步 / 代码实现），不归因就无法反馈给 learn
+
 ## 上下游边界
 
 **上游**：PRD、project.md、DESIGN.md、contract.md、modules、plan、src、tests、changelog、timeline。

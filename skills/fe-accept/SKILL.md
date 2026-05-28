@@ -11,6 +11,12 @@ description: 前端质量验收——从功能、视觉、适应性、性能四�
 
 这是 QA + 设计验收 skill，不负责重新设计，不把主观审美当成唯一标准。
 
+## 执行纪律
+
+- **D5**：不重新设计，不把主观审美当成唯一标准
+- **D7**：前端可运行时必须启动预览做真实验证，不凭截图通过
+- **D8**：同类问题反复出现 → 归因到上游 skill（设计系统缺失 or 合约歧义）
+
 ## 上下游边界
 
 **上游**：`DESIGN.md`、interaction-spec、frontend/contract.md、frontend/modules/*.md、api/modules/*.md、实际前端代码和测试。

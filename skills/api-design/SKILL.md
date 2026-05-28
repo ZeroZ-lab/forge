@@ -7,6 +7,12 @@ description: 资源导向的 API 合约设计——API1-API7 决策点，产出�
 设计资源的接口合约——URL 是资源的地址，不是动作的调用。
 **核心洞察**：好的 API 合约应该让任何未来模型重建系统。接口合约的四层信息（WHAT/WHY/HOW/CONSTRAINTS）缺一不可。
 **方法论**：资源导向设计——识别资源 → 建立关系 → 映射操作（CRUD→HTTP 动词）→ 统一接口（错误、分页、认证、幂等）。
+## 执行纪律
+
+- **D1**：每个 API 决策记录选择 + 理由 + 被拒方案
+- **D2**：API 合约的四层信息（WHAT/WHY/HOW/CONSTRAINTS）缺一不可
+- **D5**：只设计接口层，不涉及存储层（db-design）和外观层（fe-system）
+
 ## 与上下游的边界
 **上游**：读 project.md（技术选型+共享约束）+ PRD.md（用户故事+验收条件）
 **下游**：api/contract.md + modules/*.md 交给 db-design（数据模型）、frontend-design（消费接口）、plan 阶段（任务分解）
