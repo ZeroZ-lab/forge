@@ -1,6 +1,7 @@
 ---
 name: fe-accept
-description: 前端质量验收——从功能、视觉、适应性、性能四维检查前端实现。用户说"验收前端"、"检查页面"、"视觉验收"或需要确认前端质量时触发。
+description: Reviews frontend implementation quality across behavior, visual fidelity, responsiveness, accessibility, and performance evidence. Use for lightweight page checks or full frontend acceptance review.
+when_to_use: Use when the user asks to accept frontend work, inspect a page, compare implementation with design, check visual quality, responsive behavior, accessibility, performance, or frontend release readiness.
 ---
 
 # Fe Accept — 前端质量验收

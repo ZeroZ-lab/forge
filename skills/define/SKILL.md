@@ -1,6 +1,7 @@
 ---
 name: define
-description: 从业务需求推导可验收的 PRD——定义约束、场景覆盖和验收条件。用户说"写 PRD"、"定义需求"、"用户故事"、"验收条件"、或需要明确做什么不做什么时触发。
+description: Defines requirements, constraints, user stories, scope exclusions, and testable acceptance criteria. Use for lightweight requirement clarification or full define stage execution when a PRD or exact scope is needed.
+when_to_use: Use when the user asks to write or refine a PRD, define requirements, clarify what is in or out of scope, create user stories, write acceptance criteria, or make vague requirements executable.
 ---
 # Requirements — 定义阶段（需求层）
 ## 职责

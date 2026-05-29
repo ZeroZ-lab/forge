@@ -1,6 +1,7 @@
 ---
 name: learn
-description: 方法论进化——从积累偏差中发现 skill 的系统性缺陷，提出修正建议。用户说"复盘"、"方法论回顾"、"改进 skill"、或有足够的偏差数据需要分析时触发。
+description: Analyzes repeated deviations and review evidence to identify systematic skill or methodology weaknesses and propose improvements. Use for retrospectives, methodology evolution, or skill-quality repair.
+when_to_use: Use when the user asks to review the method, improve skills, do a retrospective, explain repeated drift, learn from deviations, update methodology, or analyze whether Forge rules need upstream changes.
 ---
 
 # Learn — 进化阶段

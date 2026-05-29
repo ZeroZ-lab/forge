@@ -1,6 +1,7 @@
 ---
 name: research
-description: 算法猎手——把产品愿景分解为技术子问题，为每个子问题搜索算法菜单。用户描述产品愿景时默认触发（除纯 CRUD 外），把"我想做 X"翻译成技术子问题菜单。
+description: Researches technical uncertainty by decomposing product goals into subproblems and comparing algorithm or implementation options. Use when a product idea contains non-CRUD technical choices or current research is needed.
+when_to_use: Use when the user mentions realtime collaboration, search, recommendation, animation, simulation, path planning, scheduling, optimization, encryption, auth, media processing, algorithms, or asks what technical options exist.
 ---
 # Research — 技术探索阶段
 ## 职责

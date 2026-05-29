@@ -1,6 +1,7 @@
 ---
 name: fe-system
-description: 设计系统落地——从产品意图推导可消费的 DESIGN.md、CSS tokens 和交互模式库。用户说"设计系统"、"配色"、"设计规范"或需要建立/更新 DESIGN.md 时触发。
+description: Designs or reviews project visual systems, DESIGN.md, tokens, color, typography, spacing, component states, and visual language. Use for lightweight design-system decisions or full fe-system execution.
+when_to_use: Use when the user asks about design system, DESIGN.md, colors, typography, spacing, CSS tokens, component visual states, brand feel, visual direction, or updating shared frontend design rules.
 ---
 
 # Fe System — 设计系统落地

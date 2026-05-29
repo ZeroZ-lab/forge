@@ -1,6 +1,7 @@
 ---
 name: test-strategy
-description: 引导测试策略（T1-T5）——测试类型、覆盖策略、测试数据、Mock 策略、CI 集成，产出测试文档。用户说"测试策略"、"测试覆盖"、"Mock 策略"、或需要规划测试方案和质量门禁时触发。
+description: Designs how to test a feature through test types, risk coverage, data strategy, mocking, isolation, CI gates, and quality thresholds. Use for lightweight testing strategy review or full test-strategy execution.
+when_to_use: Use when the user asks how to test, which test layers to use, coverage strategy, mock strategy, test data, CI integration, quality gate, automation scope, or testing/contract.md planning.
 ---
 
 # Test Strategy — 测试阶段

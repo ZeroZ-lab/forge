@@ -1,6 +1,7 @@
 ---
 name: review
-description: 独立审查——文档审查（codegen 前）和代码审查（deploy 前）。用户说"审查文档"、"审查代码"、"review"或需要独立质量门时触发。
+description: Performs independent review of diffs, documents, contracts, code, tests, and drift before build or release. Use for lightweight review requests and for full quality-gate review when explicitly requested.
+when_to_use: Use when the user asks to review changes, inspect a diff, check code quality, audit documents, find contract drift, run an adversarial review, verify implementation against docs, or assess release readiness.
 ---
 
 # Review — 独立审查

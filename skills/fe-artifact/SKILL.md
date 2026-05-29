@@ -1,6 +1,7 @@
 ---
 name: fe-artifact
-description: 前端代码投影——从 DESIGN.md、frontend contract 和 modules 生成页面、组件、hooks 与样式。用户说"生成前端"、"做页面"、"写组件"或 codegen 遇到前端文件时触发。
+description: Projects DESIGN.md, interaction specs, frontend contracts, and modules into pages, components, hooks, and styles. Manual or codegen-child execution only because this skill is disabled for automatic model invocation.
+when_to_use: Use by direct invocation or from codegen when documented frontend tasks need page, component, hook, style, or frontend test implementation from Forge contracts and design system inputs.
 disable-model-invocation: true
 ---
 

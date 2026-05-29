@@ -1,6 +1,7 @@
 ---
 name: db-design
-description: 数据模型驱动的数据库设计——DB1-DB5 决策点，产出数据库文档。用户说"数据库设计"、"表结构"、"数据模型"、"索引策略"、或需要设计 schema 和迁移方案时触发。
+description: Reviews and designs data models, schemas, indexes, migrations, ID strategy, soft delete, query patterns, and storage constraints. Use for lightweight database review or patch tasks, and for full db-design stage execution when explicitly requested.
+when_to_use: Use when the user asks about table structure, data model, schema changes, indexes, migrations, rollback, IDs, storage choice, soft delete, query performance, or whether a database design is reasonable.
 ---
 
 # Database Design — 详设阶段（数据库层）

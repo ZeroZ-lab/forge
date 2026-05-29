@@ -1,6 +1,7 @@
 ---
 name: init
-description: 项目初始化——一次对话完成业务对齐 + 技术选型 + 设计系统，生成 project.md + DESIGN.md。用户说"初始化项目"、"新项目"、"项目启动"、或从零开始建立项目时触发。
+description: Orchestrates full project initialization across business alignment, technical design, and design-system setup to create project.md, DESIGN.md, AGENTS.md, and CLAUDE.md. Use only for explicit new-project initialization.
+when_to_use: Use when the user asks to initialize a project, start a new project, create Forge project files, run init, bootstrap project-level decisions, or generate project instructions from business and technical choices.
 ---
 
 # Forge Init — 项目初始化编排

@@ -1,6 +1,7 @@
 ---
 name: api-design
-description: 资源导向的 API 合约设计——API1-API7 决策点，产出能重建系统的文档树。用户说"API 设计"、"设计端点"、"API 合约"、或需要设计 REST/GraphQL API 时触发。
+description: Reviews and designs API contracts, endpoints, schemas, error formats, auth, pagination, idempotency, and API boundary decisions. Use for lightweight API review or patch tasks, and for full api-design stage execution when explicitly requested.
+when_to_use: Use when the user asks whether an API is reasonable, wants to add or change an endpoint, adjust request or response shape, review error codes, auth, pagination, idempotency, REST or GraphQL contracts, or explicitly asks for API design.
 ---
 # API Design — 详设阶段（API 层）
 ## 职责

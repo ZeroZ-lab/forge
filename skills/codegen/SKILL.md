@@ -1,28 +1,20 @@
 ---
 name: codegen
-description: 从 contract.md 和 modules/ 生成 src/ 和 tests/——文档是源代码，代码是投影。用户说"生成代码"、"写代码"、"build"、或有 plan.md 需要生成实现代码时触发。
+description: Projects contract.md, modules, and plan.md into src and tests while checking document-code drift. Manual or orchestrated execution only because this skill is disabled for automatic model invocation.
+when_to_use: Use by direct invocation or as a child protocol when the user explicitly asks to generate implementation from Forge contracts, run the build phase, or project documented tasks into code and tests.
 disable-model-invocation: true
 ---
-
 # Codegen — 构建阶段
-
 ## 职责
-
 从详设文档（contract.md + modules/）按 plan.md 的任务序列生成可运行代码（src/ + tests/）。
-
 **核心洞察**：文档是源代码，代码是投影。模型越强，同一份文档生成的代码越好。codegen 不是决策阶段——所有决策在 detail 和 plan 阶段已完成。codegen 的职责是按文档忠实投影，并在投影过程中发现和修复文档与代码的分歧。
-
 **方法论**：读 → 生 → 验 → 修。
-
 ## 执行纪律
-
 - **D4**：生成范围不超出 plan.md 当前任务对应的 module 文件，不引入未要求的抽象
 - **D5**：只读与当前任务相关的文档，发现无关问题只记录不修改
 - **D7**：每个任务生成后立即验证（测试 + 文档对齐），验证不可用时说明原因
 - **D8**：同类 L1 偏差连续 ≥ 2 个任务 → 停下来建议回退 detail 重新审视 contract
-
 ## 与上下游的边界
-
 **上游**：读 contract.md + modules/（合约）+ plan.md（任务序列）+ project.md（技术选型）+ DESIGN.md（设计系统，如有前端）
 **下游**：src/ + tests/ 交给测试和部署阶段
 

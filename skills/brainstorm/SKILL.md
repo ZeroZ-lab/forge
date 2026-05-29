@@ -1,6 +1,7 @@
 ---
 name: brainstorm
-description: 引导可能性探索——从模糊想法展开方向空间，圈定值得深入的领域。用户说"想做个东西"、"探索方向"、"brainstorm"、或想法还很模糊需要发散时触发。
+description: Explores ambiguous product ideas, expands possible directions, and narrows promising opportunities before commitments are made. Use for lightweight ideation or a full brainstorm stage when the user wants possibility exploration.
+when_to_use: Use when the user says they want to make something, explore directions, brainstorm, compare possible product ideas, clarify a vague idea, or identify what is worth pursuing before requirements or design.
 ---
 # Brainstorm — 探索阶段
 ## 职责

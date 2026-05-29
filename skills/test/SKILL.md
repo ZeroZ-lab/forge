@@ -1,6 +1,7 @@
 ---
 name: test
-description: 测试阶段编排——测试策略 + 测试用例，一次对话完成测试规划。用户说"做测试"、"测试阶段"、"测试规划"、或需要从 contract.md 产出测试策略和测试用例时触发。
+description: Orchestrates the full test stage across testing strategy and test-case derivation. Use only when the user explicitly asks for the test stage or when testing strategy and test cases must be coordinated.
+when_to_use: Use when the user says run the test stage, full testing plan, coordinate test-strategy and test-cases, produce both testing/contract.md and testing/test-cases.md, or resolve conflicts between how to test and what to test.
 ---
 
 # Forge Test — 测试阶段编排

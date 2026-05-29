@@ -1,6 +1,7 @@
 ---
 name: design
-description: 设计阶段编排——交互规格 + 视觉规范，一次对话完成交互和视觉设计。用户说"做设计"、"交互设计"、"设计阶段"、或需要从 PRD 产出交互规格和设计系统时触发。
+description: Orchestrates the full design stage across interaction design and visual system decisions. Use only when the user explicitly asks for the design stage or when interaction and design-system outputs must be coordinated.
+when_to_use: Use when the user says to run the design stage, produce both interaction-spec and DESIGN.md, coordinate interaction-design with fe-system, or resolve conflicts between behavior and visual system decisions.
 ---
 
 # Forge Design — 设计阶段编排

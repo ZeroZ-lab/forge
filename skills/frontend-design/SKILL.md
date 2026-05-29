@@ -1,6 +1,7 @@
 ---
 name: frontend-design
-description: 组件驱动的前端设计——FE1-FE5 决策点，产出前端文档树。用户说"前端设计"、"组件设计"、"页面结构"、或需要设计前端架构和组件规格时触发。
+description: Reviews and designs frontend component structure, page architecture, data flow, state boundaries, cache strategy, and API consumption. Use for lightweight frontend design review or full frontend-design stage execution.
+when_to_use: Use when the user asks how to split components, structure pages, manage UI state, consume APIs, cache or retry data requests, design frontend modules, or review whether frontend architecture is reasonable.
 ---
 # Frontend Design — 详设阶段（前端层）
 ## 职责

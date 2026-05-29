@@ -1,6 +1,7 @@
 ---
 name: test-cases
-description: 从 contract.md 验收条件推导测试场景——正常路径、边界情况、错误处理全覆盖。用户说"写测试用例"、"测试场景"、"测试覆盖"、或需要从验收条件系统推导测试用例时触发。
+description: Derives concrete test scenarios from acceptance criteria, business rules, normal paths, boundaries, errors, and test data needs. Use for lightweight test-case gaps or full test-cases artifact generation.
+when_to_use: Use when the user asks what to test, wants test cases, scenario coverage, acceptance-condition mapping, edge cases, error cases, test data, or missing coverage in testing/test-cases.md.
 ---
 
 # Test Cases — 测试阶段

@@ -1,6 +1,7 @@
 ---
 name: deploy
-description: 管理发布流程——灰度策略、回滚方案、监控告警，每次发布都能在 5 分钟内回滚。用户说"发布"、"部署"、"上线"、"灰度"、"回滚"、或需要生成发布清单和部署方案时触发。
+description: Plans reversible releases, deployment environments, CI or CD flow, rollout strategy, rollback steps, monitoring, and release checklists. Use for lightweight release review or full deploy stage execution.
+when_to_use: Use when the user asks about release, deploy, launch, production rollout, staging, CI or CD, containers, health checks, monitoring, alerts, gray release, rollback, or a deploy contract.
 ---
 
 # Deploy — 交付阶段

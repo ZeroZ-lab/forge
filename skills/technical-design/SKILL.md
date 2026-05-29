@@ -1,16 +1,12 @@
 ---
 name: technical-design
-description: 架构权衡与技术选型——每个选择都是 trade-off，不存在最优解。用户说"技术设计"、"架构"、"技术选型"、"服务划分"、或需要做架构决策和技术 trade-off 时触发。
+description: Reviews and makes architecture decisions, technical tradeoffs, stack choices, service boundaries, deployment shape, and shared engineering constraints. Use for lightweight architecture review or full technical-design execution.
+when_to_use: Use when the user asks about architecture, technical design, stack choice, service split, runtime, framework, deployment architecture, performance constraints, tradeoffs, or whether a technical approach fits.
 ---
-
 # Technical Design — 设计阶段（技术层）
-
 ## 职责
-
 定义系统的技术架构，做架构权衡和技术选型。
-
 **核心洞察**：架构决策不可逆要慎重，组件选择可替换可以大胆。不存在最优解，只有最适合当前条件的。简单方案优先。
-
 **方法论**：约束→选项→权衡→验证。
 
 ## 执行纪律

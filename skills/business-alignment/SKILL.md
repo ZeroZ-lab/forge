@@ -1,6 +1,7 @@
 ---
 name: business-alignment
-description: 从探索方向到项目承诺——定义用户画像、成功指标、资源约束，做出 Go/No-Go 决策。用户说"验证需求"、"项目目标"、"成功指标"、或需要从方向变成承诺时触发。
+description: Aligns a product direction into project commitment by defining users, success metrics, resource constraints, and Go or No-Go decisions. Use for lightweight business fit checks or full business-alignment stage execution.
+when_to_use: Use when the user asks about target users, project goals, success metrics, resource limits, demand validation, Go or No-Go decisions, or moving an explored direction into a committed project scope.
 ---
 # Business Alignment — 定义阶段（业务层）
 ## 职责

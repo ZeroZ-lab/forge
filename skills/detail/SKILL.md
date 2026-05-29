@@ -1,6 +1,7 @@
 ---
 name: detail
-description: 详设阶段编排——按需加载 API + 数据库 + 前端 skill，产出 contract.md + modules/。用户说"技术详设"、"详细设计"、"设计 API"、或需要从 PRD/设计文档产出技术合约时触发。
+description: Orchestrates the full detail stage across multiple domain contracts to produce contract.md and modules. Use only when the user explicitly asks for detail stage or cross-domain contracts must be coordinated.
+when_to_use: Use when the user says technical detail design, detail stage, full contract design, coordinate multiple domain contracts, turn PRD or design docs into technical contracts, or resolve cross-domain contract drift.
 ---
 
 # Forge Detail — 详设阶段编排

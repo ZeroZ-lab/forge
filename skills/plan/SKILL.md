@@ -1,8 +1,8 @@
 ---
 name: plan
-description: 把 contract.md 拆成可执行任务序列——垂直切片、依赖图、拓扑排序、关键路径。用户说"拆任务"、"任务分解"、"执行计划"、或有 contract.md 需要转成开发计划时触发。
+description: Converts contracts and modules into executable vertical-slice task plans with dependencies, ordering, risks, and verification criteria. Use for lightweight task planning or full plan stage execution.
+when_to_use: Use when the user asks to split tasks, make an execution plan, plan implementation from contract.md, order work, identify dependencies, create vertical slices, or turn Forge contracts into plan.md.
 ---
-
 # Plan — 任务阶段
 
 ## 职责

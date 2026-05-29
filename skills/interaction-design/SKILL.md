@@ -1,6 +1,7 @@
 ---
 name: interaction-design
-description: 设计用户怎么走——流程优先，先画路径再画界面。用户说"交互设计"、"用户流程"、"信息架构"、"线框图"、或需要规划操作路径和导航模式时触发。
+description: Reviews and designs user flows, navigation, information architecture, wireframes, interaction patterns, feedback states, and recovery paths. Use for lightweight interaction review or full interaction-design execution.
+when_to_use: Use when the user asks about user flow, navigation, IA, wireframe, operation path, page behavior, feedback, empty or error states, interaction pattern choice, or whether a workflow is ergonomic.
 ---
 # Interaction Design — 设计阶段（交互层）
 ## 职责
