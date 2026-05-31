@@ -1,8 +1,8 @@
 ---
 name: fe-artifact
-description: Projects DESIGN.md, interaction specs, frontend contracts, and modules into pages, components, hooks, and styles. Manual or codegen-child execution only because this skill is disabled for automatic model invocation.
+description: Projects DESIGN.md, interaction specs, frontend contracts, and modules into pages, components, hooks, and styles.
 when_to_use: Use by direct invocation or from codegen when documented frontend tasks need page, component, hook, style, or frontend test implementation from Forge contracts and design system inputs.
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Fe Artifact — 前端代码投影

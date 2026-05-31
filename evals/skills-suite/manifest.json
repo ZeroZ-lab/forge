@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "name": "forge-skills-suite-benchmark",
+  "description": "A deterministic contract for checking whether Forge skills are triggered, bounded, verified, and traceable during representative agent runs.",
+  "minimum_cases": 10,
+  "report_schema": "evals/skills-suite/report.schema.json",
+  "evaluation_axes": [
+    "skill routing",
+    "artifact production",
+    "decision gates",
+    "verification evidence",
+    "scope control"
+  ],
+  "cases": [
+    {
+      "id": "ambiguous-idea-alignment",
+      "title": "模糊想法收敛到业务方向",
+      "level": "L2 stage",
+      "fixture": "evals/skills-suite/fixtures/ambiguous-idea-alignment.md",
+      "expected_skills": ["forge-brainstorm", "forge-business-alignment"],
+      "expected_artifacts": ["docs/idea-brief.md", "docs/project.md"],
+      "required_evidence": ["triggered skills", "direction map", "go/no-go decision"],
+      "forbidden_behaviors": ["generated_code_without_contract", "skipped_business_decision"],
+      "oracle_checks": [
+        { "type": "skill_triggered", "skill": "forge-brainstorm" },
+        { "type": "skill_triggered", "skill": "forge-business-alignment" },
+        { "type": "artifact_reported", "path": "docs/idea-brief.md" },
+        { "type": "decision_gate_reported", "decision": "business_go_no_go" },
+        { "type": "forbidden_behavior_absent", "behavior": "generated_code_without_contract" }
+      ]
+    },
+    {
+      "id": "project-bootstrap",
+      "title": "新项目初始化投影",
+      "level": "L2 stage",
+      "fixture": "evals/skills-suite/fixtures/project-bootstrap.md",
+      "expected_skills": ["forge-init", "forge-technical-design", "forge-fe-system"],
+      "expected_artifacts": ["docs/project.md", "DESIGN.md", "AGENTS.md", "CLAUDE.md"],
+      "required_evidence": ["project decisions", "design tokens", "project agents projection"],
+      "forbidden_behaviors": ["hardcoded_unconfirmed_stack", "missing_agents_projection"],
+      "oracle_checks": [
+        { "type": "skill_triggered", "skill": "forge-init" },
+        { "type": "skill_triggered", "skill": "forge-technical-design" },
+        { "type": "skill_triggered", "skill": "forge-fe-system" },
+        { "type": "artifact_reported", "path": "AGENTS.md" },
+        { "type": "command_reported", "command": "node scripts/validate.mjs" }
+      ]
+    },
+    {
+      "id": "requirements-research",
+      "title": "需求定义触发技术研究",
+      "level": "L2 stage",
+      "fixture": "evals/skills-suite/fixtures/requirements-research.md",
+      "expected_skills": ["forge-define", "forge-research"],
+      "expected_artifacts": ["docs/features/realtime-search/PRD.md", "docs/features/realtime-search/research-brief.md"],
+      "required_evidence": ["acceptance criteria", "technical signal scan", "algorithm menu"],
+      "forbidden_behaviors": ["skipped_research_for_signal_word", "selected_algorithm_without_options"],
+      "oracle_checks": [
+        { "type": "skill_triggered", "skill": "forge-define" },
+        { "type": "skill_triggered", "skill": "forge-research" },
+        { "type": "artifact_reported", "path": "docs/features/realtime-search/PRD.md" },
+        { "type": "evidence_contains", "text": "技术信号词" },
+        { "type": "decision_gate_reported", "decision": "research_recommendation" }
+      ]
+    },
+    {
+      "id": "interaction-design-system",
+      "title": "交互流程和设计系统协同",
+      "level": "L2 stage",
+      "fixture": "evals/skills-suite/fixtures/interaction-design-system.md",
+      "expected_skills": ["forge-design", "forge-interaction-design", "forge-fe-system"],
+      "expected_artifacts": ["docs/features/onboarding/interaction-spec.md", "DESIGN.md"],
+      "required_evidence": ["primary flow", "component states", "token decisions"],
+      "forbidden_behaviors": ["landing_page_instead_of_workflow", "visual_tokens_without_interaction_context"],
+      "oracle_checks": [
+        { "type": "skill_triggered", "skill": "forge-design" },
+        { "type": "skill_triggered", "skill": "forge-interaction-design" },
+        { "type": "skill_triggered", "skill": "forge-fe-system" },
+        { "type": "artifact_reported", "path": "docs/features/onboarding/interaction-spec.md" },
+        { "type": "decision_gate_reported", "decision": "primary_flow" }
+      ]
+    },
+    {
+      "id": "detail-api-db-frontend",
+      "title": "详设生成跨领域 contract",
+      "level": "L2 stage",
+      "fixture": "evals/skills-suite/fixtures/detail-api-db-frontend.md",
+      "expected_skills": ["forge-detail", "forge-api-design", "forge-db-design", "forge-frontend-design"],
+      "expected_artifacts": [
+        "docs/features/tags/contract.md",
+        "docs/features/tags/api/contract.md",
+        "docs/features/tags/database/contract.md",
+        "docs/features/tags/frontend/contract.md"
+      ],
+      "required_evidence": ["domain index", "downstream references", "shared data model"],
+      "forbidden_behaviors": ["frontend_references_unwritten_api", "database_design_before_api_model"],
+      "oracle_checks": [
+        { "type": "skill_triggered", "skill": "forge-detail" },
+        { "type": "skill_triggered", "skill": "forge-api-design" },
+        { "type": "skill_triggered", "skill": "forge-db-design" },
+        { "type": "skill_triggered", "skill": "forge-frontend-design" },
+        { "type": "evidence_contains", "text": "下游依赖" }
+      ]
+    },
+    {
+      "id": "plan-test-cases",
+      "title": "垂直切片任务和测试用例追溯",
+      "level": "L2 stage",
+      "fixture": "evals/skills-suite/fixtures/plan-test-cases.md",
+      "expected_skills": ["forge-plan", "forge-test-cases"],
+      "expected_artifacts": ["docs/features/tags/plan.md", "docs/features/tags/testing/test-cases.md"],
+      "required_evidence": ["vertical slices", "AC traceability", "dependency order"],
+      "forbidden_behaviors": ["horizontal_layer_plan", "test_cases_without_acceptance_ids"],
+      "oracle_checks": [
+        { "type": "skill_triggered", "skill": "forge-plan" },
+        { "type": "skill_triggered", "skill": "forge-test-cases" },
+        { "type": "artifact_reported", "path": "docs/features/tags/plan.md" },
+        { "type": "artifact_reported", "path": "docs/features/tags/testing/test-cases.md" },
+        { "type": "evidence_contains", "text": "AC-" }
+      ]
+    },
+    {
+      "id": "codegen-projection",
+      "title": "从 contract 投影代码并记录偏差信号",
+      "level": "L1 patch",
+      "fixture": "evals/skills-suite/fixtures/codegen-projection.md",
+      "expected_skills": ["forge-codegen"],
+      "expected_artifacts": ["src/", "tests/"],
+      "required_evidence": ["contract read set", "generated files", "verification command", "deviation classification"],
+      "forbidden_behaviors": ["code_without_contract_trace", "claimed_complete_without_runtime_evidence"],
+      "oracle_checks": [
+        { "type": "skill_triggered", "skill": "forge-codegen" },
+        { "type": "artifact_reported", "path": "src/" },
+        { "type": "artifact_reported", "path": "tests/" },
+        { "type": "command_reported", "command": "node --test" },
+        { "type": "evidence_contains", "text": "L0/L1/L2" }
+      ]
+    },
+    {
+      "id": "frontend-artifact-acceptance",
+      "title": "前端投影和四维验收",
+      "level": "L1 patch",
+      "fixture": "evals/skills-suite/fixtures/frontend-artifact-acceptance.md",
+      "expected_skills": ["forge-fe-artifact", "forge-fe-accept"],
+      "expected_artifacts": ["src/components/", "docs/features/onboarding/frontend/fe-acceptance-report.md"],
+      "required_evidence": ["design token use", "state coverage", "visual/runtime evidence"],
+      "forbidden_behaviors": ["unverified_visual_claim", "component_without_state_contract"],
+      "oracle_checks": [
+        { "type": "skill_triggered", "skill": "forge-fe-artifact" },
+        { "type": "skill_triggered", "skill": "forge-fe-accept" },
+        { "type": "artifact_reported", "path": "docs/features/onboarding/frontend/fe-acceptance-report.md" },
+        { "type": "evidence_contains", "text": "四维验收" },
+        { "type": "forbidden_behavior_absent", "behavior": "unverified_visual_claim" }
+      ]
+    },
+    {
+      "id": "test-strategy-suite",
+      "title": "风险分层测试策略和用例生成",
+      "level": "L2 stage",
+      "fixture": "evals/skills-suite/fixtures/test-strategy-suite.md",
+      "expected_skills": ["forge-test", "forge-test-strategy", "forge-test-cases"],
+      "expected_artifacts": ["docs/features/billing/testing/contract.md", "docs/features/billing/testing/test-cases.md"],
+      "required_evidence": ["risk tiers", "coverage matrix", "test case oracle"],
+      "forbidden_behaviors": ["test_strategy_without_cases", "cases_without_risk_trace"],
+      "oracle_checks": [
+        { "type": "skill_triggered", "skill": "forge-test" },
+        { "type": "skill_triggered", "skill": "forge-test-strategy" },
+        { "type": "skill_triggered", "skill": "forge-test-cases" },
+        { "type": "artifact_reported", "path": "docs/features/billing/testing/contract.md" },
+        { "type": "evidence_contains", "text": "风险分层" }
+      ]
+    },
+    {
+      "id": "review-deploy-learn",
+      "title": "审查、交付和方法论回流",
+      "level": "L2 stage",
+      "fixture": "evals/skills-suite/fixtures/review-deploy-learn.md",
+      "expected_skills": ["forge-review", "forge-deploy", "forge-learn"],
+      "expected_artifacts": ["docs/features/tags/review-report.md", "docs/features/tags/deploy/contract.md", "docs/thinking/methodology-proposal.md"],
+      "required_evidence": ["deviation attribution", "rollback plan", "methodology evidence threshold"],
+      "forbidden_behaviors": ["methodology_change_without_repeated_deviation", "release_without_rollback"],
+      "oracle_checks": [
+        { "type": "skill_triggered", "skill": "forge-review" },
+        { "type": "skill_triggered", "skill": "forge-deploy" },
+        { "type": "skill_triggered", "skill": "forge-learn" },
+        { "type": "decision_gate_reported", "decision": "p0_p1_priority" },
+        { "type": "forbidden_behavior_absent", "behavior": "release_without_rollback" }
+      ]
+    },
+    {
+      "id": "thinking-red-team",
+      "title": "深度思考产物和回写闭环",
+      "level": "L1 analysis",
+      "fixture": "evals/skills-suite/fixtures/thinking-red-team.md",
+      "expected_skills": ["forge-think"],
+      "expected_artifacts": ["docs/thinking/*.md"],
+      "required_evidence": ["problem reframing", "assumption list", "source document backlink"],
+      "forbidden_behaviors": ["thinking_without_writeback", "final_decision_hidden_in_thinking_doc"],
+      "oracle_checks": [
+        { "type": "skill_triggered", "skill": "forge-think" },
+        { "type": "artifact_reported", "path": "docs/thinking/*.md" },
+        { "type": "evidence_contains", "text": "假设清单" },
+        { "type": "decision_gate_reported", "decision": "thinking_writeback_target" },
+        { "type": "forbidden_behavior_absent", "behavior": "thinking_without_writeback" }
+      ]
+    }
+  ]
+}

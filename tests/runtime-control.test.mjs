@@ -21,9 +21,13 @@ test('runtime registry records static control-surface fields for every skill', (
   for (const skill of registry.skills) {
     assert.equal(skill.path, `skills/${skill.name.replace(/^forge-/, '')}/SKILL.md`);
     assert.ok(fs.existsSync(skill.path));
-    for (const field of ['runtime_role', 'consumes', 'produces', 'signals_in', 'signals_out', 'escalates_when', 'stage_next', 'feedback_to', 'quality_gates', 'signal_routes']) {
+    for (const field of ['runtime_role', 'consumes', 'signals_in', 'signals_out', 'escalates_when', 'stage_next', 'feedback_to', 'quality_gates', 'signal_routes']) {
       assert.ok(skill[field], `${skill.name} missing ${field}`);
     }
+    assert.ok(
+      skill.produces || (skill.own_produces && skill.orchestrated_produces),
+      `${skill.name} missing produces or split produces`,
+    );
   }
 });
 

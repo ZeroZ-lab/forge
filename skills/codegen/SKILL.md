@@ -1,8 +1,8 @@
 ---
 name: codegen
-description: Projects contract.md, modules, and plan.md into src and tests while checking document-code drift. Manual or orchestrated execution only because this skill is disabled for automatic model invocation.
+description: Projects contract.md, modules, and plan.md into src and tests while checking document-code drift.
 when_to_use: Use by direct invocation or as a child protocol when the user explicitly asks to generate implementation from Forge contracts, run the build phase, or project documented tasks into code and tests.
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 # Codegen — 构建阶段
 ## 职责

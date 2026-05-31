@@ -45,9 +45,9 @@ Forge：文档是源代码，代码是文档在某个模型能力下的投影
 node scripts/validate.mjs
 ```
 
-自检会校验版本同步、23 个 skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 投影回流。
+自检会校验版本同步、24 个 skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 投影回流。
 
-运行时控制面也会被校验：`registry.yaml` 必须覆盖全部 23 个 skill，并声明每个协议节点的 `runtime_role`、输入输出、typed edges、偏差信号和升级条件；`docs/runtime-control-loop.md` 和 `docs/skill-architecture-audit.md` 必须存在；shared Knowledge 层、编排 skill 的运行时恢复规则，以及 `codegen -> detail -> review -> learn` 信号链必须完整。`registry.yaml` 是 JSON-compatible YAML，保持严格 JSON 语法以便无依赖校验。
+运行时控制面也会被校验：`registry.yaml` 必须覆盖全部 24 个 skill，并声明每个协议节点的 `runtime_role`、输入输出、typed edges、偏差信号和升级条件；`docs/runtime-control-loop.md` 和 `docs/skill-architecture-audit.md` 必须存在；shared Knowledge 层、编排 skill 的运行时恢复规则，以及 `codegen -> detail -> review -> learn` 信号链必须完整。`registry.yaml` 是 JSON-compatible YAML，保持严格 JSON 语法以便无依赖校验。
 
 ### 行为测试
 
@@ -56,6 +56,38 @@ node --test
 ```
 
 行为测试验证 suite 运行时控制面的静态完整性，不模拟真实 skill 执行；它不要求每个 skill 文件都长成完整 MAPE-K 模板。
+
+### Skill Suite 评测
+
+```bash
+node scripts/evaluate-skills.mjs
+```
+
+评测自检会校验 `evals/skills-suite/manifest.json`：至少 10 个固定任务、覆盖全部 24 个 skill、fixtures 存在、oracle check 可机器读取。这个命令只证明评测合约完整，不证明某次 agent 行为有效。
+
+要评价真实运行，把 agent 执行记录整理成 `evals/skills-suite/report.schema.json` 格式，然后运行：
+
+```bash
+node scripts/evaluate-skills.mjs --report path/to/report.json
+```
+
+报告模式会逐 case 检查触发的 skill、产物、决策门、验证命令和禁用行为。评测方法详见 `docs/skill-suite-evaluation.md`。
+
+也可以直接用 Codex CLI 跑真实 fixtures：
+
+```bash
+node scripts/install-local-codex-plugin.mjs
+node scripts/run-skills-benchmark.mjs --case thinking-red-team
+node scripts/evaluate-skills.mjs --allow-partial --report .eval-runs/skills-suite/<run-id>/report.json
+```
+
+`run-skills-benchmark.mjs` 会为每个 case 创建临时工作区，调用 `codex exec`，并保存 transcript、last message 和 report。
+
+如果全量运行被 Codex usage limit 中断，可以只评分已完成 case：
+
+```bash
+node scripts/evaluate-skills.mjs --skip-blocked --report .eval-runs/skills-suite/<run-id>/report.json
+```
 
 ## 使用方式
 
@@ -76,6 +108,7 @@ Forge 不维护独立的指令层。用户用自然语言表达当前目标，�
 | 前端验收 | `forge-fe-accept` | `fe-acceptance-report.md` |
 | 独立审查 | `forge-review` | 审查报告 |
 | 发布规划 | `forge-deploy` | `deploy/contract.md` |
+| 深度思考 | `forge-think` | `docs/thinking/*.md` |
 
 ## 流程选择
 
@@ -90,7 +123,7 @@ Forge 不维护独立的指令层。用户用自然语言表达当前目标，�
 
 跳过原则：已有 `docs/project.md` 和 `DESIGN.md` 可跳过 init；需求明确可跳过 brainstorm 和 define；纯后端可跳过 design；改动很小时可跳过 plan。
 
-## 8 阶段 × 23 个 Skill
+## 8 阶段 × 24 个 Skill
 
 | 阶段 | Skill | 产出 |
 |------|-------|------|
@@ -112,6 +145,7 @@ Forge 不维护独立的指令层。用户用自然语言表达当前目标，�
 | 测试 | `forge-fe-accept` | 前端验收报告 |
 | 审查 | `forge-review` | 文档审查或代码审查报告 |
 | 交付 | `forge-deploy` | `deploy/contract.md` |
+| 思考增强 | `forge-think` | `docs/thinking/*.md` |
 | 编排 | `forge-init` | 项目级初始化文件 |
 | 编排 | `forge-design` | 交互 + 设计系统汇总 |
 | 编排 | `forge-detail` | API + DB + 前端详设汇总 |

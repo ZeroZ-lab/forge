@@ -63,7 +63,7 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 决策协议（skill）→ 产物文档 → 下游消费（代码/设计稿/任务清单/测试用例...）
 ```
 
-### 8 阶段 × 19 个领域 Skill + 4 个编排 Skill
+### 8 阶段 × 19 个领域 Skill + 4 个编排 Skill + 1 个思考增强 Skill
 
 | 阶段 | Skill | 方法论 | 角色 | 产出 |
 |------|-------|--------|------|------|
@@ -86,8 +86,9 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 | **⑥.5 审查** | review | subagent 独立审查 | AI + 用户 | 审查报告 |
 | **⑦ 交付** | deploy | 可逆发布 | DevOps + 开发 | 发布清单 |
 | **⑧ 进化** | learn | 偏差驱动进化 | AI + 用户 | 方法论改进 |
+| **思考增强** | think | 结构化深度思考 | AI + 用户 | thinking 产物 + 决策依据回写 |
 
-编排 skill：`init`、`design`、`detail`、`test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。
+编排 skill：`init`、`design`、`detail`、`test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。`think` 不是生命周期阶段，而是可在任意阶段调用的思考增强层。
 
 > 每个 skill 的完整方法论、AI 角色、边界声明和引导技巧见 `skills/*/SKILL.md`。
 
@@ -600,7 +601,7 @@ init（编排器）   →  加载子 skill + 模板 → 生成项目文件
 forge/
 ├── AGENTS.md                        # 本文件
 ├── references/                      # 补充文档（使用示例、验证教训）
-├── skills/                          # 23 个决策协议（flat list）
+├── skills/                          # 24 个决策协议（flat list）
 │   ├── brainstorm/            # ⓪ 探索
 │   ├── init/                  # 初始化编排（+ agents/claude 模板）
 │   ├── business-alignment/    # ① 业务对齐
@@ -624,6 +625,7 @@ forge/
 │   ├── review/                # ⑥.5 subagent 独立审查（文档审查+代码审查）
 │   ├── deploy/                # ⑦ 部署发布
 │   ├── learn/                 # ⑧ 方法论进化
+│   ├── think/                 # 思考增强
 │   └── shared/                      # 共享模板（contract + module + changelog）
 ├── .claude-plugin/plugin.json       # Claude Code 插件
 └── .codex-plugin/plugin.json        # Codex CLI 插件

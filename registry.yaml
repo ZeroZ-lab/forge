@@ -133,6 +133,12 @@
       "name": "methodology change proposal",
       "produced_by": "forge-learn",
       "consumed_by": []
+    },
+    {
+      "id": "think.reasoning_record",
+      "name": "reasoning record",
+      "produced_by": "forge-think",
+      "consumed_by": ["forge-brainstorm", "forge-define", "forge-detail", "forge-review", "forge-learn"]
     }
   ],
   "skills": [
@@ -1676,6 +1682,86 @@
           "signal": "evidence chain",
           "to": "human decision",
           "when": "methodology change requires approval"
+        }
+      ]
+    },
+    {
+      "name": "forge-think",
+      "path": "skills/think/SKILL.md",
+      "phase": "orchestration",
+      "type": "governance",
+      "runtime_role": "knowledge",
+      "triggers": [
+        "想想",
+        "分析一下",
+        "攻击这个方案",
+        "Red Team"
+      ],
+      "avoid_when": [
+        "只是执行层面的简单问题",
+        "用户已明确方向且只需要执行",
+        "没有技术或产品决策"
+      ],
+      "consumes": [
+        "user question",
+        "current decision context",
+        "target document"
+      ],
+      "produces": [
+        "docs/thinking/*.md",
+        "decision rationale excerpt"
+      ],
+      "signals_in": [
+        "high-impact decision",
+        "unclear assumption",
+        "user asks for challenge"
+      ],
+      "signals_out": [
+        "reasoning record",
+        "assumption risk",
+        "direction changed",
+        "needs research"
+      ],
+      "escalates_when": [
+        "方案被击穿",
+        "关键假设无法验证",
+        "回写目标不明确"
+      ],
+      "output_contract": [
+        "问题重构",
+        "假设清单",
+        "分析过程",
+        "结论摘要",
+        "回写引用"
+      ],
+      "maturity": "experimental",
+      "stage_next": [
+        "forge-research",
+        "forge-detail"
+      ],
+      "feedback_to": [
+        "forge-brainstorm",
+        "forge-define",
+        "forge-detail",
+        "forge-review",
+        "forge-learn"
+      ],
+      "quality_gates": [],
+      "signal_routes": [
+        {
+          "signal": "reasoning record",
+          "to": "forge-detail",
+          "when": "analysis changes or strengthens a feature contract decision"
+        },
+        {
+          "signal": "needs research",
+          "to": "forge-research",
+          "when": "analysis exposes unresolved technical uncertainty"
+        },
+        {
+          "signal": "方案被击穿",
+          "to": "human decision",
+          "when": "L2 attack shows the current plan cannot proceed safely"
         }
       ]
     }

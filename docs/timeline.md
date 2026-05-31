@@ -1,5 +1,19 @@
 # Timeline — Forge 方法论进化记录
 
+### 2026-05-31 — 可验证 Skills Suite 评测合约
+
+- **触发**：用户希望把当前项目变成可验证的 skills suite，否则无法判断 skill 是否真的有用
+- **核心判断**：必须区分两类证据——评测合约完整性（repo 内确定性验证）和真实 agent 行为有效性（需要运行报告评分）
+- **改动**：
+  - 新增 `evals/skills-suite/manifest.json`：11 个固定任务，覆盖全部 24 个 Forge skill
+  - 新增 `evals/skills-suite/fixtures/`：每个任务的稳定 prompt 和预期行为
+  - 新增 `evals/skills-suite/report.schema.json`：真实运行报告格式
+  - 新增 `scripts/evaluate-skills.mjs`：无依赖评测合约校验和 report oracle 评分
+  - 新增 `scripts/run-skills-benchmark.mjs`：调用 Codex CLI 逐 case 生成真实运行 report
+  - 新增 `docs/skill-suite-evaluation.md`：说明 no-report 模式和 report 模式的证据边界
+  - `validate` 和 `node --test` 接入评测链锚点，防止评测资产漂移
+- **验证目标**：`node scripts/evaluate-skills.mjs` + `node scripts/validate.mjs` + `node --test`
+
 ### 2026-05-31 — 深度思考能力探索（think skill）
 
 - **触发**：用户希望将"高智力协作"提示词（Socratic/First Principles/Red Team/Epistemic Humility）与 Forge 工程协议融合，解决"AI 执行有余思考不足"和"深度思考留不住"两个痛点

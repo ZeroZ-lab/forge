@@ -7,10 +7,10 @@
 
 当前仓库基线：
 
-- `node scripts/validate.mjs` 通过：`Forge validation passed (23 skills, version 0.18.0).`
-- 当前 suite 暴露 23 个一级 `skills/*` skill，registry 使用 `forge-*` 作为对外协议 id。
+- `node scripts/validate.mjs` 通过：`Forge validation passed (24 skills, version 0.24.1).`
+- 当前 suite 暴露 24 个一级 `skills/*` skill，registry 使用 `forge-*` 作为对外协议 id。
 - `.claude-plugin/plugin.json` 显式枚举 `skills/*`，`scripts/validate.mjs` 校验 manifest 与目录一致。
-- `registry.yaml` 已新增为运行时控制面，覆盖全部 23 个 skill。
+- `registry.yaml` 已新增为运行时控制面，覆盖全部 24 个 skill。
 - `skills/shared/` 已从产物模板扩展出 concepts、rubrics、red-flags、output-contracts 四类 Knowledge 文件。
 - `tests/runtime-control.test.mjs` 已新增为 suite 级行为测试层，验证运行时闭环和信号链。
 - `docs/runtime-control-loop.md` 已新增为运行时闭环定义。
@@ -18,7 +18,7 @@
 不改 flat 结构的原因：
 
 - Claude Code 只发现 `skills/` 一级子目录的 `SKILL.md`，当前 flat list 是安装和发现边界。
-- Validator 已经把 23 个 skill、frontmatter 短名、manifest 枚举和行数上限作为稳定约束。
+- Validator 已经把 24 个 skill、frontmatter 短名、manifest 枚举和行数上限作为稳定约束。
 - 嵌套分类目录会破坏现有 plugin discovery 和 validator 约束；分类应该进入 registry 元数据，不应进入物理目录。
 
 审计标准来源：
@@ -64,7 +64,7 @@
 
 整体结论：
 
-- Forge 不需要把 23 个 skill 都改成完整 MAPE-K 模板。
+- Forge 不需要把 24 个 skill 都改成完整 MAPE-K 模板。
 - 必须保证运行时闭环完整：状态读取、偏差判断、计划选择、执行投影、反馈验收、恢复升级和知识沉淀能串起来。
 - 真正需要优先补的是运行时控制面、知识层、行为测试层，以及 4 个编排 skill 的中枢控制能力。
 - 领域型决策 skill 可以继续保持“方法论 + 决策点 + 文档约束”的形态，只需在必要处补输入状态、偏差分类或恢复规则。
@@ -207,6 +207,13 @@
 - 建议动作：补“建议排序、证据强度、行数预算、抽 shared 优先”的计划规则。
 - 优先级：P1。
 
+### forge-think
+
+- 当前强项：把深度思考从对话中抽出为可追踪产物，能记录问题重构、假设暴露、攻击结果和回写目标。
+- 缺口：作为跨阶段思考增强层，不是 setpoint 生产者；必须防止 thinking 文档绕过原阶段 contract，变成隐藏决策源。
+- 建议动作：registry 将其标为 knowledge/governance 节点；评测要求 thinking 产物必须有回写目标和源文档引用。
+- 优先级：P1。
+
 ### forge-init
 
 - 当前强项：能编排 business-alignment、technical-design、fe-system，并投影项目级文件。
@@ -265,7 +272,7 @@
 
 `tests/runtime-control.test.mjs` 已覆盖：
 
-- registry 覆盖 23 个 skill
+- registry 覆盖 24 个 skill
 - 每个 registry entry 具备运行时控制字段
 - typed edges 只引用已知 skill 或允许的外部目标
 - `signal_routes` 覆盖 fast / middle / slow 偏差信号链
@@ -274,12 +281,12 @@
 
 ### validator 已校验运行时闭环完整性
 
-`scripts/validate.mjs` 除原有 23 个 skill、manifest、frontmatter、行数、共享模板、关键 marker 和 stale pattern 外，已新增：
+`scripts/validate.mjs` 除原有 24 个 skill、manifest、frontmatter、行数、共享模板、关键 marker 和 stale pattern 外，已新增：
 
 - `docs/skill-architecture-audit.md` 存在
 - `docs/runtime-control-loop.md` 存在
-- 23 个 skill 均在审计表中出现
-- `registry.yaml` 覆盖 23 个 skill
+- 24 个 skill 均在审计表中出现
+- `registry.yaml` 覆盖 24 个 skill
 - `registry.yaml` typed edges 引用完整
 - shared Knowledge 层文件存在
 - 运行时 MAPE-K 映射存在

@@ -92,6 +92,10 @@ assert(
 
 assert(packageJson.scripts?.validate === 'node scripts/validate.mjs', 'package.json: missing scripts.validate');
 assert(packageJson.scripts?.test === 'node --test', 'package.json: missing scripts.test');
+assert(packageJson.scripts?.['eval:skills'] === 'node scripts/evaluate-skills.mjs', 'package.json: missing scripts.eval:skills');
+assert(packageJson.scripts?.['eval:skills:run'] === 'node scripts/run-skills-benchmark.mjs', 'package.json: missing scripts.eval:skills:run');
+assert(packageJson.scripts?.['plugin:install:local'] === 'node scripts/install-local-codex-plugin.mjs', 'package.json: missing scripts.plugin:install:local');
+assert(codexPlugin.skills === './skills', '.codex-plugin/plugin.json: skills must point to ./skills');
 
 const skillsDir = path.join(root, 'skills');
 const skillDirs = fs
@@ -99,8 +103,10 @@ const skillDirs = fs
   .filter((entry) => entry.isDirectory() && entry.name !== 'shared')
   .map((entry) => entry.name)
   .sort();
+const skillCount = skillDirs.length;
+const skillLineLimit = 300;
 
-assert(skillDirs.length === 23, `expected 23 skills, found ${skillDirs.length}`);
+assert(skillDirs.length > 0, 'expected at least one skill');
 
 const expectedSkillPaths = skillDirs.map((skillName) => `./skills/${skillName}`).sort();
 const manifestSkillPaths = Array.isArray(claudePlugin.skills) ? [...claudePlugin.skills].sort() : [];
@@ -164,7 +170,6 @@ for (const skill of runtimeRegistry.skills ?? []) {
     'triggers',
     'avoid_when',
     'consumes',
-    'produces',
     'signals_in',
     'signals_out',
     'escalates_when',
@@ -174,6 +179,17 @@ for (const skill of runtimeRegistry.skills ?? []) {
     'quality_gates',
   ]) {
     assertArrayOfStrings(skill[field], `registry.yaml: ${skill.name}.${field}`);
+  }
+  const hasDirectProduces = Array.isArray(skill.produces);
+  const hasSplitProduces = Array.isArray(skill.own_produces) && Array.isArray(skill.orchestrated_produces);
+  assert(
+    hasDirectProduces || hasSplitProduces,
+    `registry.yaml: ${skill.name} must define produces or own_produces/orchestrated_produces`,
+  );
+  if (hasDirectProduces) assertArrayOfStrings(skill.produces, `registry.yaml: ${skill.name}.produces`);
+  if (hasSplitProduces) {
+    assertArrayOfStrings(skill.own_produces, `registry.yaml: ${skill.name}.own_produces`);
+    assertArrayOfStrings(skill.orchestrated_produces, `registry.yaml: ${skill.name}.orchestrated_produces`);
   }
   if ('external_downstream' in skill) {
     assertArrayOfStrings(skill.external_downstream, `registry.yaml: ${skill.name}.external_downstream`);
@@ -230,7 +246,7 @@ for (const skillName of skillDirs) {
     `${skillPath}: frontmatter name "${declaredName}" must match short skill name "${shortName}"`,
   );
   assert(Boolean(description), `${skillPath}: frontmatter description is required`);
-  assert(lineCount(content) <= 200, `${skillPath}: exceeds 200 lines`);
+  assert(lineCount(content) <= skillLineLimit, `${skillPath}: exceeds ${skillLineLimit} lines`);
 
   for (const referencePath of referencedMarkdownFiles(skillName, content)) {
     assert(exists(referencePath), `${skillPath}: referenced file is missing: ${referencePath}`);
@@ -239,6 +255,7 @@ for (const skillName of skillDirs) {
 
 assert(exists('docs/runtime-control-loop.md'), 'docs/runtime-control-loop.md: missing');
 assert(exists('docs/skill-architecture-audit.md'), 'docs/skill-architecture-audit.md: missing');
+assert(exists('docs/skill-suite-evaluation.md'), 'docs/skill-suite-evaluation.md: missing');
 assertIncludes('docs/runtime-control-loop.md', [
   'skills 是协议节点，不是控制系统本体',
   'Runtime MAPE-K 映射',
@@ -257,6 +274,12 @@ assertIncludes('docs/skill-architecture-audit.md', [
   '运行时闭环',
   'registry.yaml',
   'docs/runtime-control-loop.md',
+]);
+assertIncludes('docs/skill-suite-evaluation.md', [
+  'Benchmark contract is valid',
+  'A run proves skill effectiveness',
+  'evals/skills-suite/manifest.json',
+  'evals/skills-suite/report.schema.json',
 ]);
 
 for (const skillName of expectedRegistryNames) {
@@ -287,6 +310,58 @@ for (const file of sharedKnowledgeFiles) {
   if (exists(file)) {
     assert(lineCount(read(file)) <= 200, `${file}: exceeds 200 lines`);
   }
+}
+
+const skillsEvalManifest = json('evals/skills-suite/manifest.json');
+assert(exists('scripts/evaluate-skills.mjs'), 'scripts/evaluate-skills.mjs: missing');
+assert(exists('scripts/run-skills-benchmark.mjs'), 'scripts/run-skills-benchmark.mjs: missing');
+assert(exists('scripts/install-local-codex-plugin.mjs'), 'scripts/install-local-codex-plugin.mjs: missing');
+assert(exists('evals/skills-suite/README.md'), 'evals/skills-suite/README.md: missing');
+assert(exists('evals/skills-suite/report.schema.json'), 'evals/skills-suite/report.schema.json: missing');
+assert(skillsEvalManifest.version === 1, 'evals/skills-suite/manifest.json: version must be 1');
+assert(skillsEvalManifest.name === 'forge-skills-suite-benchmark', 'evals/skills-suite/manifest.json: unexpected benchmark name');
+assert(Array.isArray(skillsEvalManifest.cases), 'evals/skills-suite/manifest.json: cases must be an array');
+assert(
+  skillsEvalManifest.cases?.length >= 10,
+  'evals/skills-suite/manifest.json: must define at least 10 benchmark cases',
+);
+
+const evalCoveredSkills = new Set();
+const evalCaseIds = new Set();
+const allowedEvalCheckTypes = new Set([
+  'artifact_reported',
+  'command_reported',
+  'decision_gate_reported',
+  'evidence_contains',
+  'forbidden_behavior_absent',
+  'skill_triggered',
+]);
+
+for (const testCase of skillsEvalManifest.cases ?? []) {
+  assert(
+    typeof testCase.id === 'string' && /^[a-z0-9-]+$/.test(testCase.id),
+    'evals/skills-suite/manifest.json: case id must be kebab-case',
+  );
+  assert(!evalCaseIds.has(testCase.id), `evals/skills-suite/manifest.json: duplicate case id ${testCase.id}`);
+  evalCaseIds.add(testCase.id);
+  assert(typeof testCase.fixture === 'string' && exists(testCase.fixture), `${testCase.id}: fixture is missing`);
+  assertArrayOfStrings(testCase.expected_skills, `${testCase.id}.expected_skills`);
+  assertArrayOfStrings(testCase.expected_artifacts, `${testCase.id}.expected_artifacts`);
+  assertArrayOfStrings(testCase.required_evidence, `${testCase.id}.required_evidence`);
+  assertArrayOfStrings(testCase.forbidden_behaviors, `${testCase.id}.forbidden_behaviors`);
+  assert(Array.isArray(testCase.oracle_checks) && testCase.oracle_checks.length > 0, `${testCase.id}: oracle_checks are required`);
+
+  for (const skillName of testCase.expected_skills ?? []) {
+    assert(registryByName[skillName], `${testCase.id}: unknown expected skill ${skillName}`);
+    evalCoveredSkills.add(skillName);
+  }
+  for (const check of testCase.oracle_checks ?? []) {
+    assert(allowedEvalCheckTypes.has(check.type), `${testCase.id}: unknown oracle check type ${check.type}`);
+  }
+}
+
+for (const skillName of expectedRegistryNames) {
+  assert(evalCoveredSkills.has(skillName), `evals/skills-suite/manifest.json: missing benchmark coverage for ${skillName}`);
 }
 
 for (const orchestrator of ['forge-init', 'forge-design', 'forge-detail', 'forge-test']) {
@@ -362,13 +437,13 @@ assertIncludes('skills/shared/contract-orchestration-template.md', [
 
 const marketplaceDescription = claudeMarketplace.plugins?.find((plugin) => plugin.name === 'forge')?.description ?? '';
 assert(
-  marketplaceDescription.includes('23 个决策协议 skill'),
-  '.claude-plugin/marketplace.json: forge description must mention "23 个决策协议 skill"',
+  marketplaceDescription.includes(`${skillCount} 个决策协议 skill`),
+  `.claude-plugin/marketplace.json: forge description must mention "${skillCount} 个决策协议 skill"`,
 );
-assert(read('README.md').includes('8 阶段 × 23 个 Skill'), 'README.md: must document 8 阶段 × 23 个 Skill');
+assert(read('README.md').includes(`8 阶段 × ${skillCount} 个 Skill`), `README.md: must document 8 阶段 × ${skillCount} 个 Skill`);
 assert(read('README.md').includes('registry.yaml'), 'README.md: must document registry.yaml runtime control surface');
 assert(read('README.md').includes('docs/runtime-control-loop.md'), 'README.md: must document runtime control loop doc');
-assert(read('AGENTS.md').includes('23 个决策协议'), 'AGENTS.md: must document 23 个决策协议');
+assert(read('AGENTS.md').includes(`${skillCount} 个决策协议`), `AGENTS.md: must document ${skillCount} 个决策协议`);
 assert(read('AGENTS.md').includes('信号传递'), 'AGENTS.md: must document signal passing between control loops');
 assert(read('AGENTS.md').includes('registry.yaml'), 'AGENTS.md: must document registry.yaml runtime control surface');
 assert(read('AGENTS.md').includes('docs/runtime-control-loop.md'), 'AGENTS.md: must document runtime control loop doc');

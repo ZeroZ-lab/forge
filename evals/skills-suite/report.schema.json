@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/forge/skills-suite-report.schema.json",
+  "title": "Forge skills-suite evaluation report",
+  "type": "object",
+  "required": ["version", "suite", "run_id", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "suite": { "const": "forge" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "model": { "type": "string" },
+    "runner": { "type": "string" },
+    "started_at": { "type": "string" },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["case_id", "status", "triggered_skills", "artifacts", "commands_run", "evidence"],
+        "properties": {
+          "case_id": { "type": "string" },
+          "status": { "enum": ["pass", "fail", "blocked"] },
+          "triggered_skills": { "type": "array", "items": { "type": "string" } },
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                { "type": "string" },
+                {
+                  "type": "object",
+                  "required": ["path"],
+                  "properties": {
+                    "path": { "type": "string" },
+                    "action": { "type": "string" }
+                  }
+                }
+              ]
+            }
+          },
+          "commands_run": { "type": "array", "items": { "type": "string" } },
+          "decisions": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                { "type": "string" },
+                {
+                  "type": "object",
+                  "required": ["id"],
+                  "properties": {
+                    "id": { "type": "string" },
+                    "choice": { "type": "string" }
+                  }
+                }
+              ]
+            }
+          },
+          "forbidden_behaviors": { "type": "array", "items": { "type": "string" } },
+          "evidence": { "type": "array", "items": { "type": "string" } },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}

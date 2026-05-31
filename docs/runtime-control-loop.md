@@ -1,6 +1,6 @@
 # Forge Runtime Control Loop
 
-> 目标：定义 Forge 在运行时如何使用 23 个 skill 形成控制论 / MAPE-K 闭环。
+> 目标：定义 Forge 在运行时如何使用 24 个协议 skill 形成控制论 / MAPE-K 闭环。
 > 关键边界：skills 是协议节点，不是控制系统本体；控制系统产生在执行这些协议的运行过程中。
 
 ## 1. 核心判断
