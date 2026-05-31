@@ -633,6 +633,18 @@ forge/
 
 > **Flat list 纪律**：Claude Code 只发现 `skills/` 一级子目录的 SKILL.md，不支持嵌套。Skill 目录名全局唯一，用命名前缀区分阶段归属。
 
+### 版本同步纪律
+
+发版时以下文件的 `version` 字段必须保持一致，`/plugin` 命令读取的是 plugin.json，不是 package.json：
+
+| 文件 | 用途 |
+|------|------|
+| `package.json` | npm 包版本 |
+| `.claude-plugin/plugin.json` | Claude Code 插件版本（`/plugin` 命令显示） |
+| `.codex-plugin/plugin.json` | Codex CLI 插件版本 |
+
+**规则**：更新版本号时，三个文件同步改，commit message 用 `vX.Y.Z:` 前缀。漏改任何一个 = 用户看到的版本号和实际不一致。
+
 ### Skills 评测系统
 
 Forge 通过运行时行为验证 skills 有效性，而非仅靠文档质量。
