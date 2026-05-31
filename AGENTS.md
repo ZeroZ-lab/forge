@@ -632,3 +632,38 @@ forge/
 ```
 
 > **Flat list 纪律**：Claude Code 只发现 `skills/` 一级子目录的 SKILL.md，不支持嵌套。Skill 目录名全局唯一，用命名前缀区分阶段归属。
+
+### Skills 评测系统
+
+Forge 通过运行时行为验证 skills 有效性，而非仅靠文档质量。
+
+**两个核心脚本**：
+
+1. **验证评测合约**（无需运行 agent）：
+```bash
+node scripts/evaluate-skills.mjs
+# 或：npm run eval:skills
+```
+验证 benchmark 定义完整性：至少 10 个测试用例、覆盖所有 skills、fixture 存在、oracle checks 格式正确。这只证明评测工具本身正确，不证明 skills 有效。
+
+2. **评分实际运行**（需要 Codex CLI）：
+```bash
+# 安装本地 Codex 插件
+node scripts/install-local-codex-plugin.mjs
+
+# 运行 benchmark（单个用例或全部）
+node scripts/run-skills-benchmark.mjs --case thinking-red-team
+# 或：npm run eval:skills:run
+
+# 评分报告
+node scripts/evaluate-skills.mjs --report .eval-runs/skills-suite/<run-id>/report.json
+# 部分完成时加 --allow-partial，跳过 blocked 用例加 --skip-blocked
+```
+
+运行记录保存在 `.eval-runs/skills-suite/`，包含 transcript、workspace 和中间产物。
+
+**评测纪律**：
+- Fixture 保持稳定，确保跨版本可比
+- 运行期间禁止 agent 修改 manifest 或 report schema
+- 中断的运行标记为 incomplete，不算 skill 行为失败
+- 对比 suite 时关注：pass rate、scope control、verification evidence、user intervention count
