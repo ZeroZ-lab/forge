@@ -148,6 +148,7 @@ Feature 级   → 这个功能的全流程产物                     迭代时�
 ```
 my-project/
 ├── docs/project.md        # 技术决策 + 共享约束
+├── docs/status.md         # Feature 阶段追踪看板（多 feature 全局视图）
 ├── docs/timeline.md       # 项目时间线（最近 10 条详细 + 更早压缩）
 ├── docs/timeline/         # 时间线归档（按年/季度）
 ├── DESIGN.md              # 设计系统（颜色、间距、交互模式、组件模式）
@@ -161,6 +162,7 @@ my-project/
 |------|---------|---------|
 | project.md | 技术上怎么做 | technical-design 的共享决策 |
 | DESIGN.md | 视觉上怎么呈现 | fe-system 决策 |
+| status.md | 各 feature 当前在哪个阶段 | 每个 skill 完成时自动更新 |
 | AGENTS.md | 你应该怎么工作 | project.md + DESIGN.md 投影 |
 | CLAUDE.md | 读 AGENTS.md | 入口指针 |
 
@@ -415,6 +417,54 @@ Claude Code 根据 skill 的 `description` / `when_to_use` 自动选择最小相
 **压缩规则**：见上方「膨胀控制 → 追加型」。
 
 **AI 怎么用**：改分页逻辑 → 读 timeline.md 看到 v1.1 改过 page → cursor（触发：性能）→ 读 changelog.md 看详细决策 → 知道上次为什么选 cursor，避免重复犯错。
+
+---
+
+## 阶段追踪（多 Feature 协调）
+
+`docs/status.md` 是 feature 阶段的**全局快照**，解决"多 feature 并行时，不知道整体进展"的问题。
+
+**与历史记录的关系**：status.md 是"现在在哪"（快照），timeline/changelog 是"发生了什么"（历史）。三者互补，不重复。
+
+### 状态机语义
+
+每个 feature 的每个阶段有 5 种状态：
+
+| 状态 | 含义 | 标记 |
+|------|------|------|
+| 未到 | 还没开始 | `·` |
+| 进行中 | 正在执行 | `🔄` |
+| 完成 | 出口条件满足 | `✅` |
+| 跳过 | 显式决定不做（必须附原因） | `⏭️跳过（原因）` |
+| 阻塞 | 被依赖 feature 或人类确认卡住 | `🚫阻塞（原因）` |
+
+**转换条件**：skill 入口 → `进行中` · skill 出口 → `完成` · 用户/AI 显式跳过 → `跳过` · 依赖未满足 → `阻塞`
+
+### 多 Feature 依赖
+
+依赖是**产物依赖**，不是抽象关系：
+
+```
+Feature B 的 detail 需要 Feature A 的 api/contract.md
+→ status.md 中标注：B 依赖 A（③详设）
+→ B 进入 detail 时，检查 A 的 detail 是否完成
+→ 未完成 → B 的 detail 标记为 🚫阻塞
+```
+
+### 更新规则
+
+每个 skill 完成时，在「历史维护」步骤中同步更新 status.md：
+
+1. 当前阶段状态 → `✅`
+2. 下一阶段状态 → `🔄`（如果有明确的下一步）
+3. 新 feature 首次出现 → 添加行
+4. 跳过阶段 → 标注 `⏭️` + 原因
+
+**膨胀控制**：status.md 是追加型（≤ 100 行）。已交付的 feature 移到"已交付归档"区域。超过 100 行时，归档早期 feature。
+
+### 模板
+
+使用 `skills/shared/status-template.md` 作为产出结构参考。
 
 ---
 

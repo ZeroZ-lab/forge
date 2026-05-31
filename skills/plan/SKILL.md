@@ -194,6 +194,8 @@ when_to_use: Use when the user asks to split tasks, make an execution plan, plan
 
 完成后追加 `docs/timeline.md`：`### {日期} — {feature} 任务分解 · plan.md（{N} 个任务）+ testing/test-cases.md`。追加 `changelog.md`。超 100 行时归档。自动推导测试用例时加载 `test-cases`，但历史由 `plan` 写一条汇总记录，避免重复。
 
+**更新 docs/status.md**：④任务 → `✅`，⑤构建 → `🔄`。
+
 ## 完成提示
 
 ```

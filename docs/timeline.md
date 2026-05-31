@@ -13,6 +13,17 @@
   - 产出 `docs/idea-brief.md`（方向地图 + MVP + 假设清单）
 - **验证计划**：2 周内试用 3 次，至少 1 次 thinking 产物被下游引用
 
+### 2026-05-31 — 多 Feature 阶段追踪机制（status.md）
+
+- **触发**：用户提出 Forge 缺少阶段追踪，多 feature 并行时更需要全局视图
+- **核心洞察**：Forge 靠"文件存在"推断阶段，但三个盲区——进行中vs未开始、跳过vs未到、依赖vs独立。本质是**协调**问题而非追踪问题
+- **L1 分析结论**（thinking/feature-stage-tracking.md）：Forge 阶段本质是有限状态机（5 种状态），多 feature 状态机独立但通过产物依赖耦合
+- **改动**：
+  - 新增 `skills/shared/status-template.md`：状态看板模板（总览表 + 阶段矩阵 + 阻塞与依赖 + 已交付归档）
+  - AGENTS.md 新增「阶段追踪」段：状态机语义 + 多 feature 依赖 + 更新规则
+  - AGENTS.md 项目级文件目录树和文件表新增 status.md
+  - 3 个 skill 的「历史维护」段新增 status.md 更新步骤：brainstorm（创建+首次更新）、detail（中间阶段）、plan（出口阶段）
+
 ---
 
 ### 2026-05-27 — 内化 AI 执行纪律

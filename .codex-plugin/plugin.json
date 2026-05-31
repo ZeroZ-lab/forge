@@ -5,7 +5,7 @@
     "name": "ZeroZ-lab",
     "url": "https://github.com/ZeroZ-lab/forge"
   },
-  "version": "0.21.0",
+  "version": "0.22.0",
   "homepage": "https://github.com/ZeroZ-lab/forge",
   "compatibility": {
     "claude-code": ">=1.0.0",

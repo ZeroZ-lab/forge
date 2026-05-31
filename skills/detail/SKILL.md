@@ -147,6 +147,8 @@ docs/features/<feature>/
 
 完成后追加 `docs/timeline.md` + feature `changelog.md`（一条汇总记录）。`api-design`、`db-design`、`frontend-design` 作为子阶段时不单独追加历史。超 100 行时归档。
 
+**更新 docs/status.md**：③详设 → `✅`，下一阶段（④任务）→ `🔄`。如有跳过的阶段（如 ②设计），标注 `⏭️跳过（原因）`。如有依赖的 feature，更新依赖列。
+
 ## 验证清单
 - [ ] feature/contract.md（FD#）是否包含共享决策 + 共享数据模型 + 共享约束？
 - [ ] 所有加载的领域 skill 产出是否完整（API1-API7 / DB1-DB5 / FE1-FE5）？
