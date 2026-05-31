@@ -41,7 +41,7 @@ when_to_use: Use when the user asks what to test, wants test cases, scenario cov
 - 每个验收条件至少 1 个测试，核心验收条件 3+ 个测试
 - P0（核心功能）> P1（重要功能）> P2（边缘功能）
 
-**记录**：测试范围矩阵（验收条件 → 测试用例 → 优先级）
+**记录**：测试范围矩阵（验收条件 → 测试用例 → 优先级）+ **优先级理由**（为什么这个 AC 是 P0？）
 
 **AC 编号规则**：
 - 验收条件必须在 feature/contract.md 或模块文件中编号（AC1, AC2, ...）
@@ -146,6 +146,10 @@ docs/features/<feature>/
 **入口**：有 contract.md + modules/ + plan.md（或用户已有代码）
 **出口**：testing/test-cases.md 已生成 · 所有验收条件都有测试用例 · 正常+边界+错误全覆盖 · 数据策略已确定 · test-cases.md ≤ 200 行
 
+**缺失处理**：
+- 验收条件未编号 → 先补充 AC 编号（AC1, AC2, ...），不凭空写测试
+- contract.md 存在但 modules/ 为空 → 从 contract.md 推导，标注"模块文档缺失"
+
 **交叉验证**：
 - 读 testing/contract.md 覆盖矩阵 → 提取"可自动化"的模块列表
 - 读 test-cases.md 测试范围矩阵 → 提取覆盖的 AC 列表
@@ -153,8 +157,8 @@ docs/features/<feature>/
 
 ## 运行时信号
 
-- 输入：acceptance criteria、test strategy
-- 输出：test case setpoint
+- 输入：`define.acceptance_criteria` + `test_strategy.test_strategy`
+- 输出：`test_cases.test_case_setpoint`
 - 路由：详见 `registry.yaml` 的 `forge-test-cases` 节点；本节只保留人类可读摘要。
 - 升级：验收条件不可测试 · 测试数据不可重复构造
 

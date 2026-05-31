@@ -100,10 +100,17 @@ METHOD /path
 ## 入口/出口条件
 **入口**：有 project.md + PRD.md，或用户已有技术选型和需求文档
 **出口**：api/contract.md（API1-API7 完整）+ modules/*.md（接口合约完整）+ 共享数据模型
+
+**缺失处理**：
+- project.md 缺技术选型 → 要求先完成 technical-design，或在 API 设计中做最小选型标注
+- PRD 缺验收条件 → 从用户故事推导，标注"AI 推导，待确认"
+
 ## 运行时信号
-- 输入：requirements and technical constraints
-- 输出：API setpoint、shared data model
-- 路由：详见 `registry.yaml` 的 `forge-api-design` 节点；本节只保留人类可读摘要。
+- 输入：`define.acceptance_criteria` + `technical_design.architecture_decisions`
+- 输出：`api_design.api_setpoint` + `api_design.shared_data_model`
+- 路由：
+  - `api_design.api_setpoint` → forge-db-design（数据模型约束）+ forge-frontend-design（接口消费）
+  - `api_design.shared_data_model` → forge-db-design（存储模型）
 - 升级：资源模型无法确认 · 权限或幂等策略冲突
 ## 何时不使用
 纯前端项目 · 已有完整 API 详设 · GraphQL 项目（资源导向不完全适用）

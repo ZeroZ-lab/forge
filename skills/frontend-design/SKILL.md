@@ -121,6 +121,12 @@ src/
 ## 入口/出口条件
 **入口**：有 project.md + PRD.md + interaction-spec.md，或用户已有技术选型、需求和交互设计
 **出口**：frontend/contract.md（FE1-FE5 完整）+ modules/*.md + 技术选型表 + 共享约束
+
+**缺失处理**：
+- 无 interaction-spec.md → 从 PRD 推导最小交互路径，标注"无交互规格，组件行为需用户确认"
+- 无 DESIGN.md → 跳过 FE3 样式方案决策（使用框架默认样式），标注"无设计系统"
+- api/contract.md 缺失 → 要求先完成 API 详设，或标注"接口待定义"
+
 ## 运行时信号
 - 输入：API setpoint、design tokens、interaction spec
 - 输出：frontend setpoint、component modules
@@ -136,6 +142,7 @@ src/
 - 没有数据请求策略 → 强制评估（"API 调用怎么缓存？怎么重试？"）
 - 和 fe-system 职责重叠 → 拉回（"这是外观还是行为？"）
 - module 文件缺少模板必需节（入口 / 公共接口 / 组件结构 / 数据消费 / 内部函数 / 依赖关系）→ 强制补充，参照 `shared/frontend-module-template.md`
+- 模块索引中的页面/组件没有对应的 module 文件 → 强制补充或从索引移除
 ## 验证清单
 - [ ] FE1-FE5 是否都有选择 + 理由 + 被拒方案？
 - [ ] 服务端状态和客户端状态是否分离？

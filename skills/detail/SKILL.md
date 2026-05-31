@@ -14,11 +14,18 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 
 运行时闭环参考 `docs/runtime-control-loop.md`；偏差报告结构参考 `skills/shared/output-contracts/deviation-report.md`。
 
+**Phase 0 例外**：`detail` 的 Phase 0（Feature 骨架创建）和 Phase 4（索引同步 + Module 结构校验）是编排器自己的 domain work——创建 feature/contract.md 作为跨领域共享骨架，维护 project.md 索引。没有单独的 skill 负责 feature 级共享决策和 project.md 索引维护。
+
 ## 执行纪律
 
 - **D3**：前端存在性不确定 → 暂停询问；L2 setpoint 漂移 → 中止详设，列矛盾点等人类决策
 - **D5**：只加载项目需要的领域 skill（有前端→3 个，纯后端→2 个）
 - **D2**：漂移检测以文档为源头，漂移点呈现给用户决策，AI 不自动修改下游文档
+
+## 何时不使用
+- 只有一个模块的简单功能（直接使用 api-design 或 frontend-design）
+- 已有完整的 contract.md + modules/（无需重新详设）
+- 用户只想改一个端点（L1 patch，直接用 api-design）
 
 ## 加载判断
 
@@ -50,6 +57,14 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 - 由同类 L1 偏差触发 → 先复查对应 contract/module 盲区，再决定是否改代码。
 - 发现 L2 setpoint 漂移 → 中止详设输出，列出需要人类决策的矛盾点。
 - 下游漂移影响范围不清 → 不自动级联修改，先输出漂移报告。
+
+## 红旗清单
+- 前端存在性不确定 → 暂停询问（不默认加载 frontend-design）
+- PRD 缺失 → 不直接写 contract，先要求补需求或明确走最小 detail
+- 由同类 L1 偏差触发 → 先复查 contract 盲区，再决定是否改代码
+- L2 setpoint 漂移 → 中止详设，列出矛盾点等用户决策
+- feature/contract.md 的 FD# 与 project.md 的 PD# 编号冲突 → 重新分配编号
+- 下游漂移影响范围不清 → 不自动级联修改，先输出漂移报告
 
 ## 流程
 
@@ -131,6 +146,14 @@ docs/features/<feature>/
 ## 历史维护（自动）
 
 完成后追加 `docs/timeline.md` + feature `changelog.md`（一条汇总记录）。`api-design`、`db-design`、`frontend-design` 作为子阶段时不单独追加历史。超 100 行时归档。
+
+## 验证清单
+- [ ] feature/contract.md（FD#）是否包含共享决策 + 共享数据模型 + 共享约束？
+- [ ] 所有加载的领域 skill 产出是否完整（API1-API7 / DB1-DB5 / FE1-FE5）？
+- [ ] FD# 与 PD# / API# / DB# / FE# 是否无编号冲突？
+- [ ] project.md Feature 索引是否已同步？
+- [ ] 漂移检测是否已完成？
+- [ ] 所有 modules/*.md 是否包含模板必需节？
 
 ## 出口条件
 

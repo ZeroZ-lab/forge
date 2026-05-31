@@ -25,6 +25,12 @@ disable-model-invocation: true
 
 不重新做产品决策，不改 API 合约，不绕过 `DESIGN.md` 自行发明视觉语言。
 
+## 何时不使用
+- 无前端合约（frontend/contract.md 不存在）
+- 无 DESIGN.md（设计系统未建立）
+- 纯后端 API（无前端代码需要生成）
+- codegen 未处理前端任务时不单独调用
+
 ## 核心方法论
 
 五层翻译：
@@ -36,6 +42,11 @@ disable-model-invocation: true
 5. **适配层**：性能、可访问性、错误恢复、边界设备。
 
 详细规则见 `references/fe-artifact-protocol.md`。
+
+**最小执行规则**（不读 protocol 文件时仍需遵守）：
+- 每个页面/组件必须消费 DESIGN.md Token，不自行发明视觉语言
+- 每个组件必须有 loading/error/empty/disabled 状态
+- 关键逻辑必须引用文档来源
 
 ## 读取阶段
 
@@ -92,14 +103,22 @@ disable-model-invocation: true
 - 路由：详见 `registry.yaml` 的 `forge-fe-artifact` 节点；本节只保留人类可读摘要。
 - 升级：无法运行或预览 · 设计输入缺失
 
-## 红旗
+## 红旗清单
+- 没读 DESIGN.md 就写样式 → 停止，先读 DESIGN.md 提取 Token
+- 只写 happy path 没有 loading/error/empty → 强制补充所有状态
+- 组件 props 和 module 文档不一致 → 以 module 文档为准，标注差异
+- 页面结构和交互规格不一致 → 以 interaction-spec 为准
+- 移动端文本溢出或控件重叠 → 强制修复响应式布局
+- 视觉状态无法被 fe-accept 验收 → 补充证据（截图/预览链接）
 
-- 没读 `DESIGN.md` 就写样式。
-- 只写 happy path，没有 loading/error/empty。
-- 组件 props 和 module 文档不一致。
-- 页面结构和交互规格不一致。
-- 移动端文本溢出或控件重叠。
-- 视觉状态无法被 fe-accept 验收。
+## 验证清单
+- [ ] 是否读取了 DESIGN.md + frontend/contract.md + frontend/modules/*.md + api/modules/*.md？
+- [ ] API 类型、错误和加载状态是否完整？
+- [ ] 组件 props 是否与 module 文档一致？
+- [ ] 视觉是否消费 DESIGN.md Token（不自行发明颜色/间距）？
+- [ ] 所有交互状态是否覆盖（loading/error/empty/disabled/success）？
+- [ ] 移动端和桌面端是否无重叠、无横向溢出？
+- [ ] 关键逻辑是否引用文档来源（From: frontend/modules/xxx.md AC3）？
 
 ## 完成提示
 

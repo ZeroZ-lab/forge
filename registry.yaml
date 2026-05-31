@@ -1,6 +1,140 @@
 {
   "version": 1,
   "description": "Forge runtime control registry. Skills are protocol nodes; runtime execution forms the control loop.",
+  "signal_vocabulary": [
+    {
+      "id": "brainstorm.idea_brief",
+      "name": "idea brief",
+      "produced_by": "forge-brainstorm",
+      "consumed_by": ["forge-business-alignment"]
+    },
+    {
+      "id": "business_alignment.go_decision",
+      "name": "go decision",
+      "produced_by": "forge-business-alignment",
+      "consumed_by": ["forge-define", "forge-technical-design"]
+    },
+    {
+      "id": "define.prd",
+      "name": "PRD",
+      "produced_by": "forge-define",
+      "consumed_by": ["forge-research", "forge-interaction-design", "forge-detail"]
+    },
+    {
+      "id": "define.acceptance_criteria",
+      "name": "acceptance criteria",
+      "produced_by": "forge-define",
+      "consumed_by": ["forge-test-cases", "forge-plan"]
+    },
+    {
+      "id": "research.algorithm_menu",
+      "name": "algorithm menu",
+      "produced_by": "forge-research",
+      "consumed_by": ["forge-technical-design"]
+    },
+    {
+      "id": "interaction_design.interaction_spec",
+      "name": "interaction spec",
+      "produced_by": "forge-interaction-design",
+      "consumed_by": ["forge-fe-system", "forge-frontend-design", "forge-detail"]
+    },
+    {
+      "id": "fe_system.design_tokens",
+      "name": "design tokens",
+      "produced_by": "forge-fe-system",
+      "consumed_by": ["forge-frontend-design", "forge-fe-artifact", "forge-fe-accept"]
+    },
+    {
+      "id": "technical_design.architecture_decisions",
+      "name": "architecture decisions",
+      "produced_by": "forge-technical-design",
+      "consumed_by": ["forge-detail"]
+    },
+    {
+      "id": "api_design.api_setpoint",
+      "name": "API setpoint",
+      "produced_by": "forge-api-design",
+      "consumed_by": ["forge-db-design", "forge-frontend-design", "forge-plan"]
+    },
+    {
+      "id": "api_design.shared_data_model",
+      "name": "shared data model",
+      "produced_by": "forge-api-design",
+      "consumed_by": ["forge-db-design"]
+    },
+    {
+      "id": "db_design.database_setpoint",
+      "name": "database setpoint",
+      "produced_by": "forge-db-design",
+      "consumed_by": ["forge-plan"]
+    },
+    {
+      "id": "frontend_design.frontend_setpoint",
+      "name": "frontend setpoint",
+      "produced_by": "forge-frontend-design",
+      "consumed_by": ["forge-plan"]
+    },
+    {
+      "id": "detail.feature_contract",
+      "name": "feature contract",
+      "produced_by": "forge-detail",
+      "consumed_by": ["forge-plan", "forge-codegen"]
+    },
+    {
+      "id": "plan.task_sequence",
+      "name": "task sequence",
+      "produced_by": "forge-plan",
+      "consumed_by": ["forge-codegen"]
+    },
+    {
+      "id": "codegen.generated_code",
+      "name": "generated code",
+      "produced_by": "forge-codegen",
+      "consumed_by": ["forge-review", "forge-fe-accept"]
+    },
+    {
+      "id": "codegen.deviation_summary",
+      "name": "deviation summary",
+      "produced_by": "forge-codegen",
+      "consumed_by": ["forge-detail"]
+    },
+    {
+      "id": "codegen.l1_signal",
+      "name": "repeated L1 deviation",
+      "produced_by": "forge-codegen",
+      "consumed_by": ["forge-detail"]
+    },
+    {
+      "id": "test_strategy.test_strategy",
+      "name": "test strategy",
+      "produced_by": "forge-test-strategy",
+      "consumed_by": ["forge-test-cases"]
+    },
+    {
+      "id": "test_cases.test_case_setpoint",
+      "name": "test case setpoint",
+      "produced_by": "forge-test-cases",
+      "consumed_by": ["forge-codegen"]
+    },
+    {
+      "id": "review.deviation_attribution",
+      "name": "deviation attribution",
+      "produced_by": "forge-review",
+      "consumed_by": ["forge-learn", "forge-detail"]
+    },
+    {
+      "id": "deploy.release_plan",
+      "name": "release plan",
+      "produced_by": "forge-deploy",
+      "consumed_by": []
+    },
+    {
+      "id": "learn.methodology_proposal",
+      "name": "methodology change proposal",
+      "produced_by": "forge-learn",
+      "consumed_by": []
+    }
+  ],
   "skills": [
     {
       "name": "forge-brainstorm",
@@ -462,7 +596,8 @@
         "existing docs/project.md",
         "existing DESIGN.md"
       ],
-      "produces": [
+      "own_produces": [],
+      "orchestrated_produces": [
         "docs/project.md",
         "DESIGN.md",
         "AGENTS.md",
@@ -527,7 +662,8 @@
         "existing DESIGN.md",
         "feature context"
       ],
-      "produces": [
+      "own_produces": [],
+      "orchestrated_produces": [
         "interaction-spec.md",
         "DESIGN.md updates"
       ],
@@ -591,8 +727,10 @@
         "DESIGN.md",
         "codegen deviation summary"
       ],
-      "produces": [
-        "feature contract.md",
+      "own_produces": [
+        "feature contract.md"
+      ],
+      "orchestrated_produces": [
         "api/contract.md",
         "database/contract.md",
         "frontend/contract.md"
@@ -859,10 +997,10 @@
         "contract.md",
         "modules/*.md"
       ],
-      "produces": [
-        "plan.md",
-        "testing/test-cases.md"
+      "own_produces": [
+        "plan.md"
       ],
+      "orchestrated_produces": [],
       "signals_in": [
         "domain contracts"
       ],
@@ -1075,7 +1213,8 @@
         "existing testing/contract.md",
         "existing testing/test-cases.md"
       ],
-      "produces": [
+      "own_produces": [],
+      "orchestrated_produces": [
         "testing/contract.md",
         "testing/test-cases.md"
       ],

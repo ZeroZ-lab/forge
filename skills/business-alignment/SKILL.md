@@ -101,10 +101,16 @@ brainstorm 回答"这个方向值得探索吗"，business-alignment 回答"我�
 ## 入口/出口条件
 **入口**：有 idea-brief.md（来自 brainstorm）或用户已有明确方向
 **出口**：project.md「业务目标」已填写 · Go 决策已确认 · 用户确认进入下一阶段
+
+**缺失处理**：
+- 无 idea-brief.md → 降级为 5 分钟快速探索（"用一句话描述你想做什么？为谁做？"），不强制回退 brainstorm
+- idea-brief.md 缺推荐方向 → 要求用户从方向列表中选择一个再继续
 ## 运行时信号
 - 输入：direction decision
 - 输出：Go decision、No-Go decision、business constraints
 - 路由：详见 `registry.yaml` 的 `forge-business-alignment` 节点；本节只保留人类可读摘要。
+- Go 决策路由：→ define（进入需求定义）+ → technical-design（同步业务约束）
+- No-Go 决策路由：→ 终止当前流程，记录理由到 timeline
 - 升级：用户画像、指标、资源不对齐
 ## 何时不使用
 - 只是技术探索（不需要业务承诺）
@@ -134,6 +140,8 @@ brainstorm 回答"这个方向值得探索吗"，business-alignment 回答"我�
 - [ ] 资源约束是否明确（团队、时间、预算）？
 - [ ] Go/No-Go 决策是否有明确理由？
 - [ ] 四个要素是否对齐（用户、指标、资源之间无冲突）？
+- [ ] 轻量模式触发条件是否满足（团队 ≤ 2 人 / 无外部利益方 / 无交付时间线）？
+- [ ] 轻量模式下产物是否仍包含核心四要素（简化版）？
 ## 历史维护（自动）
 完成后自动执行：
 1. **追加 docs/timeline.md**：

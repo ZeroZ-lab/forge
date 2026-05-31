@@ -51,7 +51,7 @@ when_to_use: Use when the user asks to write or refine a PRD, define requirement
 |------|---------|------|
 | 约束 | 约束提醒者 | 搜索同类项目的常见约束（安全、合规、性能基线），提醒容易遗漏的 |
 | 场景 | 边界生成者 | 从用户故事推导边界情况和异常场景，生成验收条件草案 |
-| 验收 | 一致性检查者 | 检查验收条件是否覆盖所有场景，是否有遗漏 |
+| 验收 | 一致性检查者 | 检查验收条件是否覆盖所有场景；**发现不一致时列出差异等用户决策，不自行修正** |
 ## 决策点
 ### R1: 用户故事（场景阶段）
 **问**：作为 [角色]，想要 [功能]，以便 [价值]？优先级？依赖关系？
@@ -90,10 +90,18 @@ when_to_use: Use when the user asks to write or refine a PRD, define requirement
 ## 入口/出口条件
 **入口**：project.md「业务目标」已填写（来自 business-alignment）或用户已有明确需求
 **出口**：PRD.md 已生成 · 用户故事已排序 · 验收条件已定义 · 范围排除已确认
+
+**缺失处理**：
+- project.md「业务目标」不完整 → 补齐关键缺失字段（用户/指标），不重写已有内容
+- 无 project.md → 要求先完成 init，或降级为无业务约束的需求定义（标注风险）
+- 用户要求跳过需求直接做详设 → 执行最小 define（≤ 5 个用户故事 + 验收条件），标注"跳过完整需求定义"
 ## 运行时信号
 - 输入：business constraints
 - 输出：testable acceptance criteria、scope exclusions
 - 路由：详见 `registry.yaml` 的 `forge-define` 节点；本节只保留人类可读摘要。
+- 路由：
+  - PRD 无技术信号词 → 建议进入 design 或 detail
+  - PRD 含技术信号词（实时/同步/协作/搜索/推荐/动画/物理/仿真/路径/调度/加密/音频/视频/流式/ASR/TTS）→ 建议进入 research
 - 升级：验收条件不可测试 · 范围边界无法确认
 ## 何时不使用
 - 只是技术探索（不需要需求定义）

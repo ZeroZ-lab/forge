@@ -70,6 +70,8 @@ when_to_use: Use when the user asks about user flow, navigation, IA, wireframe, 
 | 模式 | 组件推荐者 | 搜索交互模式库，推荐适合的组件组合 |
 | 细节 | 边界检查者 | 从流程推导边界情况（空状态、错误、权限不足） |
 ## 决策点
+> 交互设计使用 I# 前缀（Interaction Decision）。I# 记录在 interaction-spec.md 中。
+
 ### I1: 用户流程（流程阶段）
 **问**：核心任务需要几步？每步需要什么信息和操作？异常怎么处理？
 **记录**：用户流程图 + 每步信息需求 + 异常处理
@@ -100,6 +102,11 @@ when_to_use: Use when the user asks about user flow, navigation, IA, wireframe, 
 ## 入口/出口条件
 **入口**：有 PRD.md（来自 define 阶段）或用户已有明确需求
 **出口**：interaction-spec.md 已生成 · 用户流程已定义 · 信息架构已明确 · 用户确认进入 fe-system 或 detail 阶段
+
+**缺失处理**：
+- PRD 缺失 → 要求用户至少描述核心用户路径，不凭空设计交互
+- PRD 缺验收条件 → 从用户故事中推导最小验收条件，标注为"AI 推导，待用户确认"
+
 ## 运行时信号
 - 输入：acceptance criteria
 - 输出：interaction paths、component behavior
@@ -116,6 +123,7 @@ when_to_use: Use when the user asks about user flow, navigation, IA, wireframe, 
 - 信息架构超过 3 层 → 强制扁平化（"能不能减少层级？"）
 - 没有空状态设计 → 强制补充（"第一次使用时展示什么？"）
 - 和 fe-system 职责重叠 → 拉回（"这是行为还是外观？"）
+- interaction-spec 引用的组件在 DESIGN.md 中无对应 Token → 标记（等 fe-system 补齐）
 ## 验证清单
 - [ ] 核心流程是否在 3 步内完成？
 - [ ] 是否有异常流程（错误、取消、超时）？

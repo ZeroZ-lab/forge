@@ -134,12 +134,18 @@ docs/features/<feature>/deploy/
 ## 入口/出口条件
 
 **入口**：有 src/ + tests/ + testing/test-cases.md（或用户已有代码和测试）· review 代码审查通过（subagent 独立审查，如有）
+
+**缺失处理**：
+- 缺 src/ + tests/ → 不生成发布清单，先要求代码生成
+- 缺 review → 标注"未经独立审查"，用户确认后仍可生成
+- 缺 testing/test-cases.md → 标注"无测试用例"，降级为最小发布流程
+
 **出口**：deploy/contract.md 已生成 · 部署流程已定义 · 回滚步骤已明确（具体命令）· 监控告警已配置 · 发布清单已就绪
 
 ## 运行时信号
 
-- 输入：code review passed、test results
-- 输出：release plan、rollback plan、release blocked
+- 输入：`codegen.generated_code` + `review.deviation_attribution`
+- 输出：`deploy.release_plan`
 - 路由：详见 `registry.yaml` 的 `forge-deploy` 节点；本节只保留人类可读摘要。
 - 升级：无回滚方案 · 无健康检查 · 无监控告警
 

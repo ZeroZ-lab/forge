@@ -93,6 +93,9 @@ when_to_use: Use when the user asks about architecture, technical design, stack 
 
 ## 决策点
 
+> 技术设计使用 TD# 前缀（Technical Design Decision）。TD# 记录在 project.md「技术决策」中。
+> 项目级共享决策使用 PD# 前缀。
+
 ### TD1: 架构模式（选项+权衡阶段）
 
 **问**：读写比？一致性要求？流量性能？团队技术栈？
@@ -154,6 +157,8 @@ when_to_use: Use when the user asks about architecture, technical design, stack 
 
 **入口**：project.md「业务目标」已填写（来自 business-alignment）或用户已有交互和视觉设计
 **出口**：project.md「技术决策」已填写 · 架构模式已确定 · 技术选型已确定 · 用户确认进入 detail 阶段
+
+**缺失处理**：缺业务目标 → 补齐用户/指标再选型；已有技术栈 → 跳过 TD1-TD2 做验证。
 
 ## 运行时信号
 

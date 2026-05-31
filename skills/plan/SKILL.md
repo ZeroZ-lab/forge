@@ -27,6 +27,8 @@ when_to_use: Use when the user asks to split tasks, make an execution plan, plan
 **和 detail 的切法**：detail 定义**做什么**（合约+模块），plan 定义**怎么做**（任务+顺序）
 **和 codegen 的切法**：plan 定义**任务序列**（目标+步骤+验证），codegen 定义**具体实现**（代码）
 
+> Plan 使用 PL# 前缀（Plan Decision）。PL# 记录在 plan.md 中。仅用于关键规划决策（如任务拆分争议、风险优先级判断），不用于每个任务的步骤。
+
 ## 方法论：识别→切片→排序→验证→检查
 
 ### P1: 识别（Identify）
@@ -114,6 +116,8 @@ when_to_use: Use when the user asks to split tasks, make an execution plan, plan
 
 **记录**：testing/test-cases.md（测试范围矩阵 + 用例骨架）
 
+**与 test-cases 的分工**：plan P6 只产出测试范围矩阵 + P0 用例骨架（≤ 30 行）。完整测试用例（正常/边界/错误/数据）由 test-cases skill 负责。如果用户需要完整测试用例，plan 的完成提示中推荐进入 test 阶段。
+
 ## AI 的角色
 
 | 阶段 | AI 角色 | 行为 |
@@ -147,6 +151,9 @@ when_to_use: Use when the user asks to split tasks, make an execution plan, plan
 ## 入口/出口条件
 
 **入口**：有 contract.md + modules/（来自 detail 阶段）或用户已有详设文档
+
+**缺失处理**：contract.md 不完整 → 只切已有模块，标注"待补模块"；modules/ 为空 → 从 contract.md 推导最小切片。
+
 **出口**：plan.md 已生成 · testing/test-cases.md 已生成（P6 从验收条件 + 验证方式推导） · 用户确认进入代码生成
 
 ## 运行时信号

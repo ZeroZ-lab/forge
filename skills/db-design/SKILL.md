@@ -115,15 +115,20 @@ updated_at: timestamp, not null, default now()
 使用共享模板：
 - `${CLAUDE_SKILL_DIR}/../shared/contract-template.md` — contract.md 结构
 - `${CLAUDE_SKILL_DIR}/../shared/changelog-template.md` — changelog.md 结构
+- `${CLAUDE_SKILL_DIR}/../shared/module-template.md` — 如有数据库领域模块文件
 
 ## 入口/出口条件
 
 **入口**：有 project.md + api/contract.md，或用户已有技术选型和 API 详设
 **出口**：database/contract.md（DB1-DB5 完整）+ 表清单 + 索引规划表 + 迁移规则
 
+**缺失处理**：
+- api/contract.md 缺失 → 要求先完成 API 详设（数据库设计从 API 资源模型推导，不从零开始）
+- 共享数据模型不完整 → 从 PRD 推导最小模型，标注"待 API 详设确认"
+
 ## 运行时信号
 
-- 输入：API data model
+- 输入：`api_design.shared_data_model`
 - 输出：database setpoint、migration rules
 - 路由：详见 `registry.yaml` 的 `forge-db-design` 节点；本节只保留人类可读摘要。
 - 升级：API 模型和存储模型冲突 · 迁移不可回滚

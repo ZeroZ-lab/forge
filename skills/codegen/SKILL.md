@@ -147,12 +147,15 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 ## 入口/出口条件
 
 **入口**：有 contract.md + modules/ + plan.md（或用户已有详设和任务分解）· review 文档审查通过（如有）
+
+**缺失处理**：缺 plan.md → 从 contract.md 推导最小任务序列（标注"无 plan，任务顺序为 AI 推导"）；缺 modules/ → 从 contract.md 推导，标注"模块文档缺失"。
+
 **出口**：src/ + tests/ 已生成 · 所有测试通过 · 代码和文档对齐 · 用户确认
 
 ## 运行时信号
 
-- 输入：contract setpoint、task sequence
-- 输出：L0 noise、L1 deviation、L2 drift
+- 输入：`detail.feature_contract` + `plan.task_sequence`
+- 输出：`codegen.generated_code` + `codegen.deviation_summary` + `codegen.l1_signal`
 - 路由：详见 `registry.yaml` 的 `forge-codegen` 节点；本节只保留人类可读摘要。
 - 升级：L2 drift · three correction loops without convergence
 

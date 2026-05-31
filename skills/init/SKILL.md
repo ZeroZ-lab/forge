@@ -40,6 +40,13 @@ when_to_use: Use when the user asks to initialize a project, start a new project
 - 纯前端项目（技术选型无后端框架/数据库/ORM）→ project.md 跳过「服务划分」「部署架构（后端部分）」「性能指标（QPS/P99）」，共享约束省略多租户、API 超时等后端约束。
 - project.md 的 Feature 索引初始为空表，不预填任何 feature 行——由第一次 detail 阶段自动填写。
 
+## 红旗清单
+- 已有文件与新决策冲突 → 停止覆盖，输出冲突项等用户决策（不自动合并）
+- 无法判断是否有前端 → 暂停询问（不默认生成前端设计系统）
+- 用户跳过某 phase → 记录跳过原因 + 标注下游可能缺失的输入
+- 三个 phase 全跳过 → 确认是否真的需要 init，还是只需要补某个文件
+- 生成 AGENTS.md 超过 100 行 → 强制精简（project.md 是源头，AGENTS.md 是投影）
+
 ## 流程
 
 按以下顺序依次执行，每个 phase 完成后向用户确认再进入下一个：
@@ -116,9 +123,32 @@ my-project/
 - 已有 project.md → 从缺失的 phase 开始
 - 内部工具 → Phase 3 简化为最小设计系统
 
+## 何时不使用
+- 已有完整的 project.md + DESIGN.md + AGENTS.md + CLAUDE.md（无需初始化）
+- 只想做技术选型（直接使用 technical-design skill）
+- 只想做设计系统（直接使用 fe-system skill）
+- 已有项目，只想加新功能（使用 define 或 detail）
+
 ## 历史维护边界
 
 `init` 作为编排 skill 负责写入本次初始化的一条 timeline 记录。被加载的子 skill 只更新对应产物内容；除非用户直接调用子 skill，否则不单独追加 timeline，避免同一次初始化生成多条重复历史。
+
+## 入口/出口条件
+**入口**：用户明确要初始化项目 · 或已有部分项目文件需要补齐
+**出口**：project.md + DESIGN.md + AGENTS.md + CLAUDE.md 已生成/更新 · 用户确认进入 define 阶段
+
+## 方法论
+init 是编排器，不做独立决策。方法论 = 读状态 → 判断跳过 → 加载子 skill → 投影生成。
+每个子 skill 有自己的方法论（business-alignment 的承诺四要素、technical-design 的约束→选项→权衡→验证、fe-system 的三层 Token）。
+init 的方法论是：**不替代子 skill 做决策，只负责状态判断和投影组装**。
+
+## 验证清单
+- [ ] project.md 是否包含业务目标（用户/指标/约束）+ 技术决策（架构/选型/部署）？
+- [ ] DESIGN.md 是否包含三层 Token（primitive/semantic/component）？
+- [ ] AGENTS.md 是否从 project.md + DESIGN.md 投影（不含独立决策）？
+- [ ] CLAUDE.md 是否 < 20 行且指向 AGENTS.md？
+- [ ] 四个文件之间是否无矛盾（技术选型与项目类型匹配、设计系统与产品气质匹配）？
+- [ ] Feature 索引是否为空表（不预填）？
 
 ## 运行时信号
 

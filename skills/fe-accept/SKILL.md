@@ -24,6 +24,11 @@ when_to_use: Use when the user asks to accept frontend work, inspect a page, com
 
 **下游**：验收报告、缺陷清单、豁免记录，交给 codegen 修复或 review 审查。
 
+## 何时不使用
+- 无前端实现（没有代码可验收）
+- 无 DESIGN.md（没有设计标准可对照）
+- 前端不可运行且用户只提供截图 → 可以做有限验收，标注"非真实验证"
+
 ## 核心方法论
 
 四维验收：
@@ -34,6 +39,11 @@ when_to_use: Use when the user asks to accept frontend work, inspect a page, com
 4. **性能边界**：首屏、交互响应、列表规模、动画和资源。
 
 详细维度和报告模板见 `references/fe-accept-protocol.md`。
+
+**最小执行规则**（不读 protocol 文件时仍需遵守）：
+- 四维都必须检查（功能/视觉/适应性/性能），不能只查功能
+- 每个问题必须有证据（截图/日志/复现步骤）+ 影响 + 修复建议
+- P0/P1 是阻塞问题，不是建议
 
 ## 验收流程
 
@@ -68,14 +78,13 @@ when_to_use: Use when the user asks to accept frontend work, inspect a page, com
 - 路由：详见 `registry.yaml` 的 `forge-fe-accept` 节点；本节只保留人类可读摘要。
 - 升级：无法运行或预览却要求通过 · P0/P1 未修复
 
-## 红旗
-
-- 只看截图，不操作真实路径。
-- 只检查桌面，不检查移动端。
-- 只检查 happy path，不检查失败状态。
-- 视觉和 `DESIGN.md` 不一致却未记录决策变更。
-- 无法运行或无法预览却宣称通过。
-- 把 P0/P1 写成建议而不是阻塞问题。
+## 红旗清单
+- 只看截图不操作真实路径 → 强制启动预览做真实验证
+- 只检查桌面不检查移动端 → 强制补充移动端验证
+- 只检查 happy path 不检查失败状态 → 强制补充 loading/error/empty/disabled
+- 视觉和 DESIGN.md 不一致却未记录 → 强制记录差异 + 标注是否需要修正
+- 无法运行或无法预览却宣称通过 → 禁止通过，标注"未验证"
+- 把 P0/P1 写成建议而不是阻塞问题 → 纠正（P0/P1 必须修复后才能发布）
 
 ## 验证清单
 
