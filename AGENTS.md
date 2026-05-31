@@ -151,6 +151,7 @@ my-project/
 ├── docs/status.md         # Feature 阶段追踪看板（多 feature 全局视图）
 ├── docs/timeline.md       # 项目时间线（最近 10 条详细 + 更早压缩）
 ├── docs/timeline/         # 时间线归档（按年/季度）
+├── docs/thinking/         # 深度思考产物（L1/L2 分析、攻击报告）
 ├── DESIGN.md              # 设计系统（颜色、间距、交互模式、组件模式）
 ├── AGENTS.md              # AI 行为指令（从 project.md + DESIGN.md 投影）
 └── CLAUDE.md              # Claude Code 入口（指向 AGENTS.md）
@@ -192,6 +193,8 @@ my-project/
 │   ├── project.md                    # Project 级（~100 行，很少变）
 │   ├── timeline.md                   # 项目时间线（最近 10 条，≤100 行）
 │   ├── timeline/                     # 时间线归档
+│   ├── thinking/                     # 深度思考产物（L1/L2 分析、攻击报告）
+│   │   └── archive/                  #   被推翻的分析归档
 │   │
 │   └── features/
 │       ├── task-management/          # 一个功能 = 一棵文档树

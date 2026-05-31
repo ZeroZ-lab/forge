@@ -5,7 +5,7 @@
 - **触发**：用户希望将"高智力协作"提示词（Socratic/First Principles/Red Team/Epistemic Humility）与 Forge 工程协议融合，解决"AI 执行有余思考不足"和"深度思考留不住"两个痛点
 - **核心洞察**：思考和记录被设计成两个分离的动作。Forge 记录决策结果但不记录推理过程；对话中的深度分析随 context window 蒸发
 - **探索过程**：2 轮 brainstorm，评估 5 个方向（协议注入 / 独立 skill / 推理链文档 / 反馈回路 / 模型选择）
-- **推荐方向**：独立 think skill + thinking/ 文档体系（方向 2+3），最小侵入，按需触发
+- **推荐方向**：独立 think skill + docs/thinking/ 文档体系（方向 2+3），最小侵入，按需触发
 - **改动**：
   - 新增 `skills/think/SKILL.md`：三模式方法论（L0 挑战 / L1 分析 / L2 攻击）
   - 新增 `skills/think/references/thinking-template.md`：thinking 文档模板
@@ -17,7 +17,7 @@
 
 - **触发**：用户提出 Forge 缺少阶段追踪，多 feature 并行时更需要全局视图
 - **核心洞察**：Forge 靠"文件存在"推断阶段，但三个盲区——进行中vs未开始、跳过vs未到、依赖vs独立。本质是**协调**问题而非追踪问题
-- **L1 分析结论**（thinking/feature-stage-tracking.md）：Forge 阶段本质是有限状态机（5 种状态），多 feature 状态机独立但通过产物依赖耦合
+- **L1 分析结论**（docs/thinking/feature-stage-tracking.md）：Forge 阶段本质是有限状态机（5 种状态），多 feature 状态机独立但通过产物依赖耦合
 - **改动**：
   - 新增 `skills/shared/status-template.md`：状态看板模板（总览表 + 阶段矩阵 + 阻塞与依赖 + 已交付归档）
   - AGENTS.md 新增「阶段追踪」段：状态机语义 + 多 feature 依赖 + 更新规则
