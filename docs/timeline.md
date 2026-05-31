@@ -1,5 +1,20 @@
 # Timeline — Forge 方法论进化记录
 
+### 2026-05-31 — 深度思考能力探索（think skill）
+
+- **触发**：用户希望将"高智力协作"提示词（Socratic/First Principles/Red Team/Epistemic Humility）与 Forge 工程协议融合，解决"AI 执行有余思考不足"和"深度思考留不住"两个痛点
+- **核心洞察**：思考和记录被设计成两个分离的动作。Forge 记录决策结果但不记录推理过程；对话中的深度分析随 context window 蒸发
+- **探索过程**：2 轮 brainstorm，评估 5 个方向（协议注入 / 独立 skill / 推理链文档 / 反馈回路 / 模型选择）
+- **推荐方向**：独立 think skill + thinking/ 文档体系（方向 2+3），最小侵入，按需触发
+- **改动**：
+  - 新增 `skills/think/SKILL.md`：三模式方法论（L0 挑战 / L1 分析 / L2 攻击）
+  - 新增 `skills/think/references/thinking-template.md`：thinking 文档模板
+  - 注册到 `plugin.json`
+  - 产出 `docs/idea-brief.md`（方向地图 + MVP + 假设清单）
+- **验证计划**：2 周内试用 3 次，至少 1 次 thinking 产物被下游引用
+
+---
+
 ### 2026-05-27 — 内化 AI 执行纪律
 
 - **触发**：用户希望把通用 CLAUDE.md 行为提示词内化到 Forge，而不是只作为当前会话提示。
