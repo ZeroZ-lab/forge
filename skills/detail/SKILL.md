@@ -72,7 +72,7 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 
 **Phase 0: Feature 骨架创建**（必选）
 创建 feature/contract.md 作为跨领域共享骨架。
-1. 从 project.md 提取共享约束和技术选型
+1. 从 project.md 提取共享约束和技术选型（含 TD6 工程约束：模块边界规则、public API 约定 → 指导 module 结构）
 2. 从 PRD.md 提取核心场景和验收条件摘要
 3. 从 project.md「核心算法」（如有）提取算法决策
 4. 按 `shared/contract-template.md` 生成 feature/contract.md：
