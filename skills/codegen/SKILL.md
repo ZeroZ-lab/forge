@@ -157,7 +157,7 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 | project.md 技术选型 | package.json + tsconfig | 框架 + 版本 → 依赖安装 |
 | contract.md 共享约束 | 所有文件 | 多租户 + 权限 + 软删除 → 注入每个服务 |
 
-**注释规则**：每个关键逻辑分支注释对应的决策编号——FD# 优先（feature 级，来自 contract.md），PD# 补充（项目级共享约束，来自 project.md），DB# 引用（数据库约束，来自 database/contract.md）。让人类审查代码时可直接跳转文档理解 WHY。
+**注释规则**：每个关键逻辑分支注释对应的决策编号——FD# 优先（feature 级，来自 contract.md），PD# 补充（项目级共享约束，来自 project.md），DB# 引用（数据库约束，来自 database/contract.md）。测试文件额外注释 AC 编号（来自 modules/*.md，如 `// Test for: AC-01-1`），形成 PRD → 测试追溯链。modules 可能使用 AC1/AC2 重新编号（追溯至 PRD AC-XX-X），测试注释使用 module 的编号即可。让人类审查代码时可直接跳转文档理解 WHY。
 
 ## 文档约束
 
@@ -209,7 +209,11 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 
 ## 历史维护（自动）
 
-完成后追加 `docs/timeline.md`：`### {日期} — {feature} 代码生成 · src/（{N} 文件）+ tests/（{M} 测试）`。追加 `changelog.md`。超 100 行时归档。
+完成后追加 `docs/timeline.md`：`### {日期} — {feature} 代码生成 · src/（{N} 文件）+ tests/（{M} 测试）`。追加 `changelog.md`。
+
+**更新 docs/status.md**：⑤构建 → `✅`，⑥测试 → `🔄`。
+
+超 100 行时归档。
 
 ## 完成提示
 

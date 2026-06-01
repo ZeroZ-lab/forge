@@ -81,6 +81,136 @@ function errorMessageFromEvents(eventsPath) {
   return null;
 }
 
+function artifactPaths(run) {
+  return new Set(
+    (run.artifacts ?? []).map((artifact) => (typeof artifact === 'string' ? artifact : artifact?.path)).filter(Boolean),
+  );
+}
+
+function globMatch(pattern, value) {
+  if (!pattern.includes('*')) return value === pattern;
+  const escaped = pattern
+    .split('*')
+    .map((part) => part.replace(/[|\\{}()[\]^$+?.]/g, '\\$&'))
+    .join('.*');
+  return new RegExp(`^${escaped}$`).test(value);
+}
+
+function decisionIds(run) {
+  return new Set(
+    (run.decisions ?? []).map((decision) => (typeof decision === 'string' ? decision : decision?.id)).filter(Boolean),
+  );
+}
+
+function evidenceText(run) {
+  return [...(run.evidence ?? []), run.notes ?? ''].join('\n');
+}
+
+function checkRun(testCase, run) {
+  const triggeredSkills = new Set(run.triggered_skills ?? []);
+  const artifacts = artifactPaths(run);
+  const commands = new Set(run.commands_run ?? []);
+  const decisions = decisionIds(run);
+  const forbiddenBehaviors = new Set(run.forbidden_behaviors ?? []);
+  const evidence = evidenceText(run);
+
+  return testCase.oracle_checks.map((check) => {
+    let passed = false;
+    if (check.type === 'skill_triggered') passed = triggeredSkills.has(check.skill);
+    if (check.type === 'artifact_reported') {
+      passed = [...artifacts].some((artifactPath) => globMatch(check.path, artifactPath));
+    }
+    if (check.type === 'command_reported') passed = commands.has(check.command);
+    if (check.type === 'decision_gate_reported') passed = decisions.has(check.decision);
+    if (check.type === 'evidence_contains') passed = evidence.includes(check.text);
+    if (check.type === 'forbidden_behavior_absent') passed = !forbiddenBehaviors.has(check.behavior);
+    return { passed, check };
+  });
+}
+
+function truncateList(items, limit = 4) {
+  if (!items || items.length === 0) return '-';
+  const visible = items.slice(0, limit);
+  const suffix = items.length > limit ? `, +${items.length - limit} more` : '';
+  return `${visible.join(', ')}${suffix}`;
+}
+
+function markdownTableCell(value) {
+  return String(value).replaceAll('\n', '<br>').replaceAll('|', '\\|');
+}
+
+function generateSummary(report, manifest, reportPath) {
+  const manifestById = new Map(manifest.cases.map((testCase) => [testCase.id, testCase]));
+  const counts = { pass: 0, fail: 0, blocked: 0 };
+  let passedChecks = 0;
+  let totalChecks = 0;
+  const rows = [];
+
+  for (const run of report.cases) {
+    counts[run.status] = (counts[run.status] ?? 0) + 1;
+    const testCase = manifestById.get(run.case_id);
+    const checkResults = testCase ? checkRun(testCase, run) : [];
+    const casePassedChecks = checkResults.filter((result) => result.passed).length;
+    passedChecks += casePassedChecks;
+    totalChecks += checkResults.length;
+
+    const artifacts = (run.artifacts ?? []).map((artifact) => (typeof artifact === 'string' ? artifact : artifact.path));
+    const decisions = (run.decisions ?? []).map((decision) => (typeof decision === 'string' ? decision : decision.id));
+    const firstEvidence = run.evidence?.[0] ?? run.notes ?? '-';
+
+    rows.push([
+      run.case_id,
+      run.status,
+      `${casePassedChecks}/${checkResults.length}`,
+      truncateList(run.triggered_skills ?? []),
+      truncateList(artifacts),
+      truncateList(run.commands_run ?? [], 2),
+      truncateList(decisions),
+      firstEvidence,
+    ]);
+  }
+
+  const blockedNote = counts.blocked > 0
+    ? '\n\nBlocked cases are not evidence of skill failure or skill effectiveness; inspect their evidence and event logs.'
+    : '';
+  const scorerReportPath = path.relative(root, reportPath);
+
+  return `# Forge Skills Suite Report
+
+Run: \`${report.run_id}\`  
+Started: ${report.started_at ?? '-'}  
+Runner: ${report.runner ?? '-'}
+
+## Result
+
+- Total cases: ${report.cases.length}
+- Pass: ${counts.pass}
+- Fail: ${counts.fail}
+- Blocked: ${counts.blocked}
+- Oracle checks: ${passedChecks}/${totalChecks}${blockedNote}
+
+## Cases
+
+| Case | Status | Oracle | Skills | Artifacts | Commands | Decisions | First evidence |
+|---|---:|---:|---|---|---|---|---|
+${rows.map((row) => `| ${row.map(markdownTableCell).join(' | ')} |`).join('\n')}
+
+## Scoring
+
+Use the machine scorer for the authoritative pass/fail result:
+
+\`\`\`bash
+node scripts/evaluate-skills.mjs --report ${scorerReportPath}
+\`\`\`
+
+If external conditions blocked some cases, score completed cases only:
+
+\`\`\`bash
+node scripts/evaluate-skills.mjs --skip-blocked --report ${scorerReportPath}
+\`\`\`
+`;
+}
+
 function promptForCase(testCase, fixture) {
   return `你正在运行 Forge skills-suite benchmark。必须真实使用已安装的 Forge skills，而不是只做静态判断。
 
@@ -272,4 +402,8 @@ const outputPath = args.output
 fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 fs.writeFileSync(outputPath, JSON.stringify(report, null, 2));
 
+const summaryPath = path.join(path.dirname(outputPath), 'summary.md');
+fs.writeFileSync(summaryPath, generateSummary(report, manifest, outputPath));
+
 console.log(outputPath);
+console.log(summaryPath);

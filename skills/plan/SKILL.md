@@ -57,7 +57,19 @@ when_to_use: Use when the user asks to split tasks, make an execution plan, plan
 - 做减法是艺术——超过 7 步先问"能不能拆成两个独立可验证的路径？"
 - 禁止占位符（TBD/TODO/后续补充）——写不出步骤说明没想清楚
 
-**记录**：任务清单（目标 + 文件 + 步骤）
+**引用而非复述**：任务描述中的约束、数据模型、接口定义引用 contract.md（FD# / 模块名），不复述内容。
+- ❌ "guard 校验路径 sandbox + 像素限制 100MP + tile 限制 64 + 源文件保护"
+- ✅ "实现 guard 校验逻辑（约束见 contract.md FD4 + project.md PD3）"
+- 任务步骤中需要具体参数/字段时，引用模块文件而非复制数据模型
+
+**PRD 来源追溯**：每个任务标注对应的 PRD 用户故事和验收条件：
+```markdown
+### Task-03: inspect 命令
+**PRD 来源**：US-01（AC-01-1, AC-01-2, AC-01-3）
+**目标**：...
+```
+
+**记录**：任务清单（目标 + PRD 来源 + 文件 + 步骤）
 
 ### P3: 排序（Order）
 
@@ -194,7 +206,7 @@ when_to_use: Use when the user asks to split tasks, make an execution plan, plan
 
 完成后追加 `docs/timeline.md`：`### {日期} — {feature} 任务分解 · plan.md（{N} 个任务）+ testing/test-cases.md`。追加 `changelog.md`。超 100 行时归档。自动推导测试用例时加载 `test-cases`，但历史由 `plan` 写一条汇总记录，避免重复。
 
-**更新 docs/status.md**：④任务 → `✅`，⑤构建 → `🔄`。
+**更新 docs/status.md**：④任务 → `✅`，⑤构建 → `🔄`。如有跳过的阶段，标注 `⏭️跳过（原因）`。
 
 ## 完成提示
 

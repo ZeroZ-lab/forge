@@ -121,7 +121,7 @@ METHOD /path
 - 错误码不统一 → 强制规范（"UPPER_SNAKE_CASE + HTTP status"）
 - 没有幂等策略 → 强制评估（"重复执行最坏会怎样？"）
 - 和 db-design 职责重叠 → 拉回（"这是接口层还是存储层？"）
-- module 文件缺少模板必需节（入口 / 公共接口 / 内部函数 / 依赖关系 / 接口合约）→ 强制补充，参照 `shared/module-template.md`
+- module 文件缺少模板必需节（入口 / 公共接口 / 内部函数 / 依赖关系 / 接口合约）→ 强制补充，参照 `${CLAUDE_SKILL_DIR}/../shared/module-template.md`
 ## 验证清单
 - [ ] API1-API7 是否都有选择 + 理由 + 被拒方案？
 - [ ] 每个端点是否有完整接口合约？

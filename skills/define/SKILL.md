@@ -26,6 +26,20 @@ when_to_use: Use when the user asks to write or refine a PRD, define requirement
 - 范围排除要写清楚，每个排除的功能都要有理由
 - 非功能需求要量化（不是"快"，是"< 200ms"）
 - 约束是项目的围墙——没有围墙的项目会无限膨胀
+
+**引用而非重复**：PRD 的约束节引用 project.md 共享约束，不复制内容。格式：
+```markdown
+## 约束
+
+> 引用 project.md 共享约束（PD3 安全、PD4 错误处理、PD# 性能…）。
+
+### 本 PRD 新增约束
+{仅写 project.md 中没有的新增约束，无新增则写"无"}
+
+### 精化约束
+{如果需要把 project.md 的通用约束精化到具体命令/模块，标注来源}
+```
+- 错误码表、格式支持列表等枚举型信息 → 在 PRD 中完整列出（因为不同 feature 的错误码集不同），但与 project.md 冲突时必须标注"PRD 新增"
 ### 第二步：场景覆盖（Scenario）
 从用户视角描述每个使用场景，覆盖正常、边界、异常。
 **核心问题**：
@@ -36,6 +50,30 @@ when_to_use: Use when the user asks to write or refine a PRD, define requirement
 - 每个用户故事必须包含角色、功能、价值
 - 每个场景至少 3 个验收条件（正常、边界、错误）
 - 验收条件要可测试（不是"体验好"，是"3 步内完成"）
+- **每个验收条件必须编号**，格式：`AC-{US编号}-{序号}`
+
+**AC 编号示例**：
+```markdown
+### US-01: inspect — 查看图片元数据
+**作为** Agent，**我想要** ...
+
+#### AC-01-1: 正常读取元数据
+Given 一张 6000×4000 的 PNG 文件
+When 运行 image-viewport inspect screenshot.png --json
+Then 返回 JSON 包含 width: 6000, height: 4000
+
+#### AC-01-2: 文件不存在
+Given 一个不存在的文件路径
+When 运行 image-viewport inspect missing.png --json
+Then 返回 error.code = "FILE_NOT_FOUND"
+
+#### AC-01-3: 小图不需要 overview
+Given 一张 200×150 的小图片
+When 运行 image-viewport inspect small.png --json
+Then suggestion.needs_overview = false
+```
+
+**编号用途**：下游 plan、test-cases 引用 AC 编号形成追溯链（PRD US-XX → AC-XX-X → test TC-XXX）。codegen 通过读 modules/*.md 间接获得追溯（modules 中的 AC 编号 → 测试注释）。
 ### 第三步：验收确认（Verify）
 验收条件是需求文档的灵魂——不验收的需求 = 不存在的需求。
 **核心问题**：
@@ -89,7 +127,12 @@ when_to_use: Use when the user asks to write or refine a PRD, define requirement
 3. **范围排除表** — 功能 × 排除理由 × 后续计划
 ## 入口/出口条件
 **入口**：project.md「业务目标」已填写（来自 business-alignment）或用户已有明确需求
-**出口**：PRD.md 已生成 · 用户故事已排序 · 验收条件已定义 · 范围排除已确认
+**出口**：PRD.md 已生成 · 用户故事已排序 · 验收条件已定义（含 AC 编号） · 范围排除已确认
+
+**入口读取**：
+- 读 project.md「业务目标」+ 共享约束 + 共享决策（PD#）
+- 读 project.md 共享约束 → 检查是否有与即将定义的 PRD 约束可能冲突的项（如 project.md 声明了性能目标，PRD 需要精化而非矛盾）
+- 冲突 → 列出差异让用户确认，不自行修正
 
 **缺失处理**：
 - project.md「业务目标」不完整 → 补齐关键缺失字段（用户/指标），不重写已有内容
@@ -99,7 +142,6 @@ when_to_use: Use when the user asks to write or refine a PRD, define requirement
 - 输入：business constraints
 - 输出：testable acceptance criteria、scope exclusions
 - 路由：详见 `registry.yaml` 的 `forge-define` 节点；本节只保留人类可读摘要。
-- 路由：
   - PRD 无技术信号词 → 建议进入 design 或 detail
   - PRD 含技术信号词（实时/同步/协作/搜索/推荐/动画/物理/仿真/路径/调度/加密/音频/视频/流式/ASR/TTS）→ 建议进入 research
 - 升级：验收条件不可测试 · 范围边界无法确认
@@ -125,10 +167,13 @@ when_to_use: Use when the user asks to write or refine a PRD, define requirement
 - [ ] 用户故事是否按优先级排序？
 - [ ] 每个用户故事是否有验收条件（至少 3 个）？
 - [ ] 验收条件是否可测试（Given-When-Then）？
+- [ ] 每个验收条件是否有 AC 编号（AC-XX-X 格式）？
 - [ ] 非功能需求是否量化？
 - [ ] 范围排除是否明确？
 - [ ] 是否有验收计划？
 - [ ] 依赖关系是否清晰？
+- [ ] **内部一致性**：验收条件中出现的每个错误码/参数名/格式名是否都在约束定义或枚举表中定义？
+- [ ] **跨文档一致性**：PRD 约束是否与 project.md 共享约束矛盾？（精化允许，矛盾不允许）
 ## 历史维护（自动）
 完成后自动执行：
 1. **追加 feature changelog.md**（如不存在则创建）：
@@ -143,17 +188,18 @@ when_to_use: Use when the user asks to write or refine a PRD, define requirement
    ### {日期} — {feature} 需求定义
    - 新增：PRD.md（{N} 个用户故事）
    ```
-3. **检查膨胀**：超 100 行时归档。
+3. **更新 docs/status.md**：①定义 → `✅`，下一阶段 → `🔄`。
+4. **检查膨胀**：超 100 行时归档。
 ## 完成提示
 完成后向用户展示：
 ```
 ✅ 需求定义完成！PRD.md 已生成。
 
 下一步你可以：
-  research 阶段  — 技术探索（PRD 含技术信号词时推荐）
-  design 阶段  — 做交互设计 + 视觉设计
-  detail 阶段  — 跳过设计，直接做技术详设
-  自然语言       — 直接说"做 API 设计"进入某个领域
+research 阶段  — 技术探索（PRD 含技术信号词时推荐）
+design 阶段  — 做交互设计 + 视觉设计
+detail 阶段  — 跳过设计，直接做技术详设
+自然语言       — 直接说"做 API 设计"进入某个领域
 ```
 **条件引导规则**：扫描刚生成的 PRD.md，如果出现任一技术信号词（实时、同步、协作、搜索、推荐、动画、物理、仿真、路径、调度、加密、音频、视频、流式、ASR、TTS），将 research 标记为 `(Recommended)` 并附一句话理由：
 ```

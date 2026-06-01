@@ -26,6 +26,7 @@ node scripts/evaluate-skills.mjs --allow-partial --report .eval-runs/skills-suit
 ```
 
 The runner stores transcripts and temporary workspaces under `.eval-runs/skills-suite/`.
+Each run writes both `report.json` for machine scoring and `summary.md` for human review in the run directory.
 
 If Codex usage limits or other external conditions block a full run, score only completed cases with:
 

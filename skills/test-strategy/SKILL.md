@@ -187,10 +187,18 @@ docs/features/<feature>/testing/
 - [ ] 外部依赖是否有 Mock 策略？
 - [ ] CI 中是否配置了测试运行？
 - [ ] 测试失败是否阻断发布？
+- [ ] **跨文档一致性**：testing/contract.md 的覆盖率策略是否与 project.md 工程约束中的测试策略一致？
+  - 如果 project.md 写了 "目标 ≥80% 覆盖率"，testing/contract.md 不能写 "不做覆盖率门槛"
+  - 不一致 → 停下来让用户决策，更新 project.md 或 testing/contract.md
+- [ ] **引用纪律**：testing/contract.md 的约束是否引用 project.md PD#，而非重复内容？
 
 ## 历史维护（自动）
 
-完成后追加 `docs/timeline.md`：`### {日期} — {feature} 测试策略 · testing/contract.md（T1-T5）`。追加 `changelog.md`。超 100 行时归档。
+完成后追加 `docs/timeline.md`：`### {日期} — {feature} 测试策略 · testing/contract.md（T1-T5）`。追加 `changelog.md`。
+
+**更新 docs/status.md**：⑥测试 → `🔄`（test-cases 完成后由 test 编排或 test-cases 标记 `✅`）。
+
+超 100 行时归档。
 
 ## 完成提示
 
@@ -198,6 +206,7 @@ docs/features/<feature>/testing/
 ✅ 测试策略完成！testing/contract.md 已生成。
 
 下一步你可以：
-  发布规划 — 灰度 + 回滚 + 监控
-  自然语言       — 直接说"生成代码"或"写测试"
+  test-cases — 定义具体测试用例（正常/边界/错误）
+  代码生成   — 按任务序列生成 src/ + tests/
+  自然语言   — 直接说"写测试"或"生成代码"
 ```

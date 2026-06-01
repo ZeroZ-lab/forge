@@ -1,7 +1,8 @@
 # contract-template.md — 共享骨架模板
 
 > 每个 feature 的 contract.md 用此模板。只放共享部分，模块细节放 modules/*.md。
-> 目标：~100 行，几乎不变。
+> 目标：~100 行。含完整共享数据模型时 ≤ 200 行。几乎不变。
+> 模块专属数据模型和接口签名放 modules/<name>.md，不在此展开。
 > 决策编号使用 FD# 前缀（Feature Decision），与 project.md 的 PD#（Project Decision）、frontend/contract.md 的 FE#（Frontend Decision）、api/contract.md 的 API#（API Decision）和 database/contract.md 的 DB#（Database Decision）区分。
 
 ---
@@ -59,15 +60,13 @@
 
 ## 共享约束
 
-> 按项目类型填写。后端侧重安全/性能/兼容性，前端侧重帧率/可访问性/组件规范。
+> 引用 project.md 共享约束（PD#），不复制内容。
 
-### （约束类别 1）
+### 本 Feature 新增约束
+{仅写 project.md 中没有的新增约束，无新增则写"无"}
 
--
-
-### （约束类别 2）
-
--
+### 精化约束
+{如果需要把 project.md 的通用约束精化到具体场景，标注来源。如"精化自 PD3：tile 限制 64"}
 
 ---
 
@@ -150,7 +149,7 @@ modules/<name>.md ────→ src/components/<Name>.tsx
 
 > 模块间的调用顺序和事件绑定。模块文档只记"这个模块做什么"，这里记"谁在什么时机调用谁"。
 > 这部分是胶水代码的文档——没有它，重建时每个模块能写对，但不知道怎么串起来。
-> 详细结构使用 `skills/shared/contract-orchestration-template.md`。
+> 详细结构使用 `${CLAUDE_SKILL_DIR}/../shared/contract-orchestration-template.md`。
 
 ### 入口文件
 
@@ -160,7 +159,7 @@ modules/<name>.md ────→ src/components/<Name>.tsx
 
 | 编排项 | 位置 | 说明 |
 |--------|------|------|
-| 启动序列 | contract-orchestration-template.md | 初始化顺序 |
-| 主循环 / 请求处理 | contract-orchestration-template.md | 运行时调用链 |
-| 事件绑定 | contract-orchestration-template.md | 事件源到模块调用 |
-| 模式优先级 | contract-orchestration-template.md | 多控制源冲突处理 |
+| 启动序列 | `${CLAUDE_SKILL_DIR}/../shared/contract-orchestration-template.md` | 初始化顺序 |
+| 主循环 / 请求处理 | `${CLAUDE_SKILL_DIR}/../shared/contract-orchestration-template.md` | 运行时调用链 |
+| 事件绑定 | `${CLAUDE_SKILL_DIR}/../shared/contract-orchestration-template.md` | 事件源到模块调用 |
+| 模式优先级 | `${CLAUDE_SKILL_DIR}/../shared/contract-orchestration-template.md` | 多控制源冲突处理 |

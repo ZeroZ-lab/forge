@@ -24,7 +24,7 @@
       "id": "define.acceptance_criteria",
       "name": "acceptance criteria",
       "produced_by": "forge-define",
-      "consumed_by": ["forge-test-cases", "forge-plan"]
+      "consumed_by": ["forge-test-cases", "forge-plan", "forge-test-strategy", "forge-detail"]
     },
     {
       "id": "research.algorithm_menu",
@@ -1091,7 +1091,8 @@
       "output_contract": [
         "generated code",
         "generated tests",
-        "deviation summary"
+        "deviation summary",
+        "repeated L1 deviation"
       ],
       "maturity": "stable",
       "stage_next": [

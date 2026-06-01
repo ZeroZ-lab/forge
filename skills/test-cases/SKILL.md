@@ -44,9 +44,12 @@ when_to_use: Use when the user asks what to test, wants test cases, scenario cov
 **记录**：测试范围矩阵（验收条件 → 测试用例 → 优先级）+ **优先级理由**（为什么这个 AC 是 P0？）
 
 **AC 编号规则**：
-- 验收条件必须在 feature/contract.md 或模块文件中编号（AC1, AC2, ...）
+- 验收条件编号来自上游：define 阶段的 PRD 编号为 `AC-{US编号}-{序号}`（如 AC-01-1），detail 阶段的 contract/modules 可能重新编号为 `AC1, AC2, ...`
 - 测试范围矩阵的"验收条件"列必须引用 AC 编号，不用自然语言描述
-- 追溯链：PRD US-XX → contract AC-XX → test-cases TC-XXX
+- **追溯链**：PRD US-XX → [contract AC-XX →] test-cases TC-XXX
+  - 如果 contract/modules 有 AC 编号 → 引用 contract AC 编号
+  - 如果 contract 无 AC 编号 → 引用 PRD AC 编号（如 "→ US-01/AC-01-1"）
+  - 每个测试用例分组标题标注来源：`### inspect 测试用例（→ US-01）`
 
 ### TC2: 正常（Happy Path）
 
@@ -147,7 +150,7 @@ docs/features/<feature>/
 **出口**：testing/test-cases.md 已生成 · 所有验收条件都有测试用例 · 正常+边界+错误全覆盖 · 数据策略已确定 · test-cases.md ≤ 200 行
 
 **缺失处理**：
-- 验收条件未编号 → 先补充 AC 编号（AC1, AC2, ...），不凭空写测试
+- 验收条件未编号 → 先补充 AC 编号（`AC-{US编号}-{序号}` 格式，追溯至 PRD），不凭空写测试
 - contract.md 存在但 modules/ 为空 → 从 contract.md 推导，标注"模块文档缺失"
 
 **交叉验证**：
@@ -186,6 +189,8 @@ docs/features/<feature>/
 ## 历史维护（自动）
 
 完成后追加 `docs/timeline.md`：`### {日期} — {feature} 测试用例 · testing/test-cases.md（{N} 验收条件 → {M} 测试用例）`。追加 `changelog.md`。超 100 行时归档。作为 `test` 或 `plan` 子阶段运行时不单独追加历史，由编排 skill 写汇总记录。
+
+**更新 docs/status.md**（独立运行时）：⑥测试 → `✅`，下一阶段 → `🔄`。
 
 ## 完成提示
 

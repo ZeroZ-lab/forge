@@ -37,8 +37,10 @@
 
 ## 项目结构
 
+> 从 project.md「工程约束 → 模块边界」投影。必须与实际目录一致。不使用默认结构假设。
+
 ```
-{project_directory_tree}
+{project_directory_tree — 从 project.md 工程约束提取，对照实际目录}
 ```
 
 ## 工作流

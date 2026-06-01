@@ -12,7 +12,7 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 
 `detail` 是中回路 controller。它把上游 PRD、project、DESIGN 和偏差信号转成可投影的 contract，并在 codegen/review 发现漂移时负责 contract 复查和级联更新决策。
 
-运行时闭环参考 `docs/runtime-control-loop.md`；偏差报告结构参考 `skills/shared/output-contracts/deviation-report.md`。
+运行时闭环参考 `docs/runtime-control-loop.md`；偏差报告结构参考 `${CLAUDE_SKILL_DIR}/../shared/output-contracts/deviation-report.md`。
 
 **Phase 0 例外**：`detail` 的 Phase 0（Feature 骨架创建）和 Phase 4（索引同步 + Module 结构校验）是编排器自己的 domain work——创建 feature/contract.md 作为跨领域共享骨架，维护 project.md 索引。没有单独的 skill 负责 feature 级共享决策和 project.md 索引维护。
 
@@ -45,10 +45,11 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 开始前读取：
 
 - `docs/project.md` 的技术选型、共享约束和核心算法（如有）
-- `PRD.md` 或等价需求说明
+- `PRD.md` 或等价需求说明（检查是否有 AC 编号，有则 contract 验收条件可追溯）
 - `DESIGN.md` 和 interaction-spec（如有前端）
 - 已有 feature `contract.md`、领域 contract 和 modules
 - `codegen` 偏差摘要或 `review` 漂移报告（如本次由偏差触发）
+- **交叉验证**：读 project.md 工程约束中的测试策略 → 确认即将生成的 contract.md 不与之矛盾（如 project.md 写了 "≥80% 覆盖率"，contract 不能暗示不需要测试）
 
 ## 分支与恢复
 
@@ -75,7 +76,7 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 1. 从 project.md 提取共享约束和技术选型（含 TD6 工程约束：模块边界规则、public API 约定 → 指导 module 结构）
 2. 从 PRD.md 提取核心场景和验收条件摘要
 3. 从 project.md「核心算法」（如有）提取算法决策
-4. 按 `shared/contract-template.md` 生成 feature/contract.md：
+4. 按 `${CLAUDE_SKILL_DIR}/../shared/contract-template.md` 生成 feature/contract.md：
    - 共享决策（FD#）：跨领域的决策
    - 共享数据模型：跨模块的类型定义
    - 共享约束：性能/安全/兼容性
@@ -100,9 +101,27 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 5. 如索引的 feature 名称/路径与实际不符 → 修正
 6. 检查 project.md 共享决策（PD#）与本次 feature contract（FD#）无编号冲突
 7. **Module 结构校验**：扫描所有 modules/*.md 文件，检查是否包含共享模板的必需节：
-   - 后端模块（`shared/module-template.md`）：入口 · 公共接口 · 内部函数 · 依赖关系 · 接口合约
-   - 前端模块（`shared/frontend-module-template.md`）：入口 · 公共接口 · 组件结构 · 数据消费 · 内部函数 · 依赖关系
+   - 后端模块（`${CLAUDE_SKILL_DIR}/../shared/module-template.md`）：入口 · 公共接口 · 内部函数 · 依赖关系 · 接口合约
+   - 前端模块（`${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md`）：入口 · 公共接口 · 组件结构 · 数据消费 · 内部函数 · 依赖关系
    - 缺失必需节 → 列出缺失文件和缺失节，要求补充后再进入下一步
+
+8. **Module Spec 生成**（如 modules/*.md 不存在）：
+   对 feature/contract.md 模块索引中的每个模块：
+   a. 检查 `modules/<name>.md` 是否存在
+   b. 不存在 → 按领域对应模板生成骨架（后端用 `${CLAUDE_SKILL_DIR}/../shared/module-template.md`，前端用 `${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md`）
+   c. 骨架内容从 contract.md 共享数据模型投影：
+      - 模块专属的数据模型子集（输入/输出类型）
+      - 公共接口签名（从 contract 编排的调用链推导）
+      - 验收条件（从 PRD 对应 US 的 AC 编号追溯，格式 `AC-{US编号}-{序号}`，如 AC-01-1）
+      - 依赖关系（从编排调用链推导：该模块 import 了哪些其他模块）
+   d. 模块数 ≥ 5 → **必须生成** module specs，不允许跳过
+   e. 模块数 < 5 → 可选生成，但 contract.md 模块索引需包含完整接口签名（而非仅一行描述）
+
+**contract.md 共享数据模型节制规则**：
+- 只放**跨模块共享**的核心类型（如 Point/Rect/CommandResult 等基础结构）
+- 模块专属的输入/输出类型 → 放 `modules/<name>.md` 数据模型段
+- 如果模块有独立 module spec → contract.md 只列类型名 + 一行说明，不展开字段
+- contract.md 目标 ~100 行，含完整数据模型时 ≤ 200 行
 
 ## 漂移检测
 

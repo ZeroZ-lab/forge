@@ -12,7 +12,7 @@ when_to_use: Use when the user asks to initialize a project, start a new project
 
 `init` 是项目级 orchestrator。它不替代子 skill 做决策，而是读取当前项目状态，决定哪些初始化协议需要执行、哪些可以跳过，以及什么时候需要人类确认。
 
-运行时控制约束见 `skills/shared/concepts/control-loop.md`；阶段汇报可参考 `skills/shared/output-contracts/runtime-control.md`。
+运行时控制约束见 `${CLAUDE_SKILL_DIR}/../shared/concepts/control-loop.md`；阶段汇报可参考 `${CLAUDE_SKILL_DIR}/../shared/output-contracts/runtime-control.md`。
 
 ## 执行纪律
 
@@ -65,17 +65,20 @@ when_to_use: Use when the user asks to initialize a project, start a new project
 ```
 my-project/
 ├── docs/project.md        # 技术决策 + 共享约束（来自 Phase 1+2）
+├── docs/status.md         # 项目状态（从 ${CLAUDE_SKILL_DIR}/../shared/status-template.md 初始化）
 ├── DESIGN.md              # 设计系统（来自 Phase 3）
 ├── AGENTS.md              # AI 行为指令（从 project.md + DESIGN.md 投影）
 └── CLAUDE.md              # Claude Code 入口（指向 AGENTS.md）
 ```
 
+**Phase 结束后**：按 `${CLAUDE_SKILL_DIR}/../shared/status-template.md` 创建 `docs/status.md`（如不存在）。已跳过的阶段标注 ⏭️ + 原因（如 "⏭️跳过（纯后端无前端）"）。
+
 ## 模板
 
 | 文件 | 模板 | 来源 |
 |------|------|------|
-| docs/project.md | `shared/project-template.md` | Phase 1 business-alignment |
-| DESIGN.md | `fe-system/references/design-system-template.md` | Phase 3 fe-system |
+| docs/project.md | `${CLAUDE_SKILL_DIR}/../shared/project-template.md` | Phase 1 business-alignment |
+| DESIGN.md | `${CLAUDE_SKILL_DIR}/../fe-system/references/design-system-template.md` | Phase 3 fe-system |
 | AGENTS.md | `${CLAUDE_SKILL_DIR}/references/agents-template.md` | Phase 1+2+3 投影 |
 | CLAUDE.md | `${CLAUDE_SKILL_DIR}/references/claude-template.md` | 入口指针 |
 
@@ -86,7 +89,9 @@ my-project/
 1. **角色** — 一句话定义项目身份
 2. **技术栈** — 从 project.md 技术选型段提取
 3. **命令** — 构建、测试、类型检查的具体命令
-4. **项目结构** — 目录树
+4. **项目结构** — 从 project.md 工程约束的「模块边界」提取实际目录结构
+   - 如果 project.md 定义了 workspace / monorepo / 多 crate 结构 → AGENTS.md 必须反映该结构，不使用假设的默认结构（如 src/）
+   - 投影后与实际目录（`find` / `ls`）对照，不一致则修正
 5. **工作流** — Forge 方法论（固定）
 6. **代码标准** — 从 project.md 共享约束提取
 7. **设计约束** — 从 DESIGN.md 提取核心值
@@ -146,9 +151,12 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 - [ ] project.md 是否包含业务目标（用户/指标/约束）+ 技术决策（架构/选型/部署）？
 - [ ] DESIGN.md 是否包含三层 Token（primitive/semantic/component）？
 - [ ] AGENTS.md 是否从 project.md + DESIGN.md 投影（不含独立决策）？
+- [ ] AGENTS.md 项目结构是否与 project.md 工程约束中的模块边界一致？
+- [ ] AGENTS.md 项目结构是否与实际目录（`find` / `ls`）一致？
 - [ ] CLAUDE.md 是否 < 20 行且指向 AGENTS.md？
 - [ ] 四个文件之间是否无矛盾（技术选型与项目类型匹配、设计系统与产品气质匹配）？
 - [ ] Feature 索引是否为空表（不预填）？
+- [ ] docs/status.md 是否已按 `${CLAUDE_SKILL_DIR}/../shared/status-template.md` 初始化？跳过的阶段是否标注 ⏭️ + 原因？
 
 ## 运行时信号
 
