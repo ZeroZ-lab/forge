@@ -6,24 +6,44 @@
 
 **文档是源代码，代码是投影。**
 
-Forge 是一个为 AI 开发工作流设计的决策协议框架。它把文档从代码的衍生品变成项目的唯一真相：人类在关键分歧点做选择，AI 记录决策并从合约文档生成实现。
+Forge 是一个给 AI 开发协作用的决策协议框架。它把文档从代码的衍生品变成项目的唯一真相：人类在关键分歧点做选择，AI 记录决策，并从合约文档生成实现。
 
-## 核心理念
+## 默认适合什么任务
 
-```
-旧认知：代码是源代码，文档是衍生品
-Forge：文档是源代码，代码是文档在某个模型能力下的投影
-```
+Forge 的默认入口不是完整生命周期，而是**已有项目上的小功能迭代**：
 
-同一份合约文档：
+- 你已经知道大概要做什么，只差把决策补完整
+- 你希望 AI 先补 detail 合约，再生成实现，再做偏差 review
+- 你不想一开始就展开完整能力地图和整套治理机制
 
-- 2024 + GPT-4 → Express + React 18 + CSS Modules
-- 2025 + Claude 4 → Hono + React 19 + Tailwind
-- 2027 + 更强模型 → 更好的实现，合约不变
+如果需求边界还不清，再往前补 `define`。如果只是一个很小的端点或模块改动，可以直接从 `detail` 起步。
 
-**代码会腐烂，但决策不会过期。**
+## 默认主链
 
-## 安装与使用
+| 场景 | 默认链路 |
+|------|----------|
+| 需求明确的小功能 | `detail -> codegen -> review` |
+| 边界还不清晰的功能 | `define -> detail -> codegen -> review` |
+
+这就是 Forge 的默认心智模型。`plan`、`test`、`deploy`、`research`、`think`、`learn` 都保留，但属于按需能力，不是首页必修课。
+
+## 默认最小文档集
+
+默认只要求 3 类文档：
+
+- `contract.md`：共享约束和跨领域骨架
+- `modules/*.md`：模块级接口、数据和行为
+- `changelog.md`：这个 feature 的决策历史
+
+按需再补：
+
+- `PRD.md`：需求边界还不清时再写
+- `plan.md`：任务复杂、需要切片或并行时再写
+- `testing/`、`deploy/`：测试或发布要独立建模时再开
+- `docs/timeline.md`：项目级决策演进或跨 feature 影响时再开
+- `docs/status.md`：多 feature 并行协调时再开
+
+## 怎么开始
 
 ### Claude Code 插件安装
 
@@ -35,7 +55,34 @@ Forge：文档是源代码，代码是文档在某个模型能力下的投影
 /reload-plugins
 ```
 
-安装后在任意项目中启动 Claude Code，Forge skill 会自动可用。直接用自然语言描述目标，Claude Code 会按 skill 描述触发对应的 Forge 决策协议。
+安装后直接用自然语言描述目标，Forge 会按 skill 描述触发相应协议。
+
+### 默认 prompt
+
+- `用 Forge 为已有 feature 补 detail 合约`
+- `按 contract 生成这个 feature 的实现`
+- `review 当前修改是否偏离 contract`
+
+插件发布到 Codex / Claude Code 的目录布局和 manifest 约束见 [docs/plugin-publishing.md](docs/plugin-publishing.md)。
+
+## 按需能力
+
+Forge 不是只会 4 步主链，只是默认先从这里开始。下面这些能力都保留，但建议在真的需要时再显式进入：
+
+| 能力 | 什么时候再用 |
+|------|--------------|
+| `plan` | 任务复杂，需要垂直切片、依赖图或并行矩阵 |
+| `test` | 需要独立维护测试策略和测试用例产物 |
+| `deploy` | 需要明确灰度、回滚、监控和发布清单 |
+| `research` | PRD 里出现实时、搜索、推荐、优化、媒体处理等技术信号 |
+| `think` | 需要 Socratic / First Principles / Red Team 深挖 |
+| `learn` | 同类偏差反复出现，要回到方法论层面修正 |
+| `timeline` | 需要项目级演化记录 |
+| `status` | 需要多 feature 全局协调视图 |
+
+Advanced 入口见 [docs/advanced.md](docs/advanced.md)。
+
+常见场景怎么选流程，见 [docs/usage-scenarios.md](docs/usage-scenarios.md)。
 
 ## 开发自检
 
@@ -63,15 +110,13 @@ node --test
 node scripts/evaluate-skills.mjs
 ```
 
-评测自检会校验 `evals/skills-suite/manifest.json`：至少 10 个固定任务、覆盖全部 24 个 skill、fixtures 存在、oracle check 可机器读取。这个命令只证明评测合约完整，不证明某次 agent 行为有效。
+评测自检会校验 `evals/skills-suite/manifest.json`：至少 10 个固定任务、覆盖全部 24 个 skill、fixtures 存在、oracle check 可机器读取。这只证明评测合约完整，不证明某次 agent 行为有效。
 
 要评价真实运行，把 agent 执行记录整理成 `evals/skills-suite/report.schema.json` 格式，然后运行：
 
 ```bash
 node scripts/evaluate-skills.mjs --report path/to/report.json
 ```
-
-报告模式会逐 case 检查触发的 skill、产物、决策门、验证命令和禁用行为。评测方法详见 `docs/skill-suite-evaluation.md`。
 
 也可以直接用 Codex CLI 跑真实 fixtures：
 
@@ -81,166 +126,39 @@ node scripts/run-skills-benchmark.mjs --case thinking-red-team
 node scripts/evaluate-skills.mjs --allow-partial --report .eval-runs/skills-suite/<run-id>/report.json
 ```
 
-`run-skills-benchmark.mjs` 会为每个 case 创建临时工作区，调用 `codex exec`，并保存 transcript、last message 和 report。
-
 如果全量运行被 Codex usage limit 中断，可以只评分已完成 case：
 
 ```bash
 node scripts/evaluate-skills.mjs --skip-blocked --report .eval-runs/skills-suite/<run-id>/report.json
 ```
 
-## 使用方式
+## 完整能力地图
 
-Forge 不维护独立的指令层。用户用自然语言表达当前目标，运行时由 skill 描述触发对应决策协议。
+默认入口收窄了，但完整框架没有删：
 
-运行时闭环的边界是：skill 是协议节点，控制系统产生在“路由 skill -> 读取状态 -> 产出文档 -> 下游投影 -> 反馈偏差 -> 修正文档/代码/方法论”的执行过程中。详见 `docs/runtime-control-loop.md`；suite 控制面由 `registry.yaml` 描述。
-
-| 场景 | 触发的 skill | 产出 |
-|------|-------------|------|
-| 探索模糊想法 | `forge-brainstorm` | `idea-brief.md` |
-| 初始化项目 | `forge-init` | `docs/project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
-| 定义需求 | `forge-define` | `PRD.md` |
-| 设计交互和视觉 | `forge-design` | `interaction-spec.md` + `DESIGN.md` |
-| 技术详设 | `forge-detail` | `contract.md` + `modules/` |
-| 任务分解 | `forge-plan` | `plan.md` + `testing/test-cases.md` |
-| 生成代码 | `forge-codegen` | `src/` + `tests/` |
-| 测试规划 | `forge-test` | `testing/contract.md` + `testing/test-cases.md` |
-| 前端验收 | `forge-fe-accept` | `fe-acceptance-report.md` |
-| 独立审查 | `forge-review` | 审查报告 |
-| 发布规划 | `forge-deploy` | `deploy/contract.md` |
-| 深度思考 | `forge-think` | `docs/thinking/*.md` |
-
-## 流程选择
-
-不是每个项目都需要走完全部阶段：
-
-| 流程 | 适用场景 | 阶段链路 |
-|------|----------|----------|
-| 完整 | 新项目从零开始 | brainstorm → init → define → design → detail → plan → codegen → test → review → deploy |
-| 标准 | 已有项目，新功能 | define → detail → plan → codegen → test → review |
-| 快速 | 已有项目，小功能 | detail → plan → codegen |
-| 最小 | 加一个端点或模块 | detail → codegen |
-
-跳过原则：已有 `docs/project.md` 和 `DESIGN.md` 可跳过 init；需求明确可跳过 brainstorm 和 define；纯后端可跳过 design；改动很小时可跳过 plan。
+- 全量 skill 和阶段说明：见 [AGENTS.md](AGENTS.md)
+- 运行时控制回路：见 [docs/runtime-control-loop.md](docs/runtime-control-loop.md)
+- 架构审计：见 [docs/skill-architecture-audit.md](docs/skill-architecture-audit.md)
+- Skills Suite 评测：见 [docs/skill-suite-evaluation.md](docs/skill-suite-evaluation.md)
 
 ## 8 阶段 × 24 个 Skill
 
-| 阶段 | Skill | 产出 |
-|------|-------|------|
-| 探索 | `forge-brainstorm` | `idea-brief.md` |
-| 定义 | `forge-business-alignment` | `project.md` 业务目标段落 |
-| 定义 | `forge-define` | `PRD.md` |
-| 研究 | `forge-research` | `research-brief.md` |
-| 设计 | `forge-interaction-design` | `interaction-spec.md` |
-| 设计 | `forge-fe-system` | `DESIGN.md` |
-| 设计 | `forge-technical-design` | `docs/project.md` 技术决策 |
-| 详设 | `forge-api-design` | `api/contract.md` + `api/modules/` |
-| 详设 | `forge-db-design` | `database/contract.md` |
-| 详设 | `forge-frontend-design` | `frontend/contract.md` + `frontend/modules/` |
-| 任务 | `forge-plan` | `plan.md` |
-| 构建 | `forge-codegen` | `src/` + `tests/` |
-| 构建 | `forge-fe-artifact` | 前端代码 |
-| 测试 | `forge-test-strategy` | `testing/contract.md` |
-| 测试 | `forge-test-cases` | `testing/test-cases.md` |
-| 测试 | `forge-fe-accept` | 前端验收报告 |
-| 审查 | `forge-review` | 文档审查或代码审查报告 |
-| 交付 | `forge-deploy` | `deploy/contract.md` |
-| 思考增强 | `forge-think` | `docs/thinking/*.md` |
-| 编排 | `forge-init` | 项目级初始化文件 |
-| 编排 | `forge-design` | 交互 + 设计系统汇总 |
-| 编排 | `forge-detail` | API + DB + 前端详设汇总 |
-| 编排 | `forge-test` | 测试策略 + 测试用例汇总 |
+这套完整地图仍然保留，只是不再作为默认入口。需要完整阶段矩阵、编排 skill 和治理能力时，直接读 [AGENTS.md](AGENTS.md) 或 [docs/advanced.md](docs/advanced.md)。
 
-## 三层文档体系
+## 核心理念
 
-```
-Root 级      → Forge 本身的核心理念和架构（AGENTS.md）
-Project 级   → 具体项目的技术选型和设计语言
-Feature 级   → 具体功能的全流程产物
+```text
+旧认知：代码是源代码，文档是衍生品
+Forge：文档是源代码，代码是文档在某个模型能力下的投影
 ```
 
-```
-改动频率：
-  AGENTS.md       核心原则很少改
-  project.md      项目建立时写一次，技术栈升级时改
-  DESIGN.md       项目建立时写一次，设计语言升级时改
-  PRD.md          功能立项时写，需求变更时改
-  contract.md     技术设计时写，大重构时改
-  modules/*.md    每次迭代都可能改
-```
+同一份合约文档：
 
-## 目标项目结构
+- 2024 + GPT-4 → Express + React 18 + CSS Modules
+- 2025 + Claude 4 → Hono + React 19 + Tailwind
+- 2027 + 更强模型 → 更好的实现，合约不变
 
-```
-my-project/
-├── docs/
-│   ├── project.md
-│   ├── timeline.md
-│   ├── timeline/
-│   └── features/
-│       └── task-management/
-│           ├── contract.md
-│           ├── changelog.md
-│           ├── api/
-│           ├── frontend/
-│           ├── database/
-│           ├── testing/
-│           └── deploy/
-├── DESIGN.md
-├── AGENTS.md
-├── CLAUDE.md
-├── src/
-└── tests/
-```
-
-本仓库自带的 `docs/features/task-management/` 是文档树示例，只保留 contract、modules、testing 和 deploy 等文档产物。
-
-## 核心原则
-
-### 1. 决策留痕
-
-每个技术选择都必须记录：选了什么、为什么选、拒绝什么。框架会换，人会走，决策记录是项目唯一不会过时的东西。
-
-### 2. 文档即源代码
-
-文档不是代码的注释，文档是代码的源头。一份好的 `contract.md` 应该让任何未来模型重建系统。模型越强，从同一份文档生成的代码越好。
-
-### 3. 人类决策，AI 执行
-
-AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。AI 不应该替人类做架构决策；在关键分歧点停下来，等人类确认，把选择固化成文档。
-
-## Skill 抽象
-
-Skill 永远抽象，产物文档永远具体。
-
-```
-Skill（抽象，不过期）              产物文档（具体，每个项目不同）
-───────────────────────────────────────────────────────────────
-方法论："资源导向设计"              本项目选了什么：父子资源
-不变原则："团队经验 > 技术先进性"    本项目团队熟悉：React 19
-业务问题："日活多少？"              本项目答案：< 10 万
-                                  ↓
-                                  模型搜索后推荐具体方案
-                                  人类确认
-                                  写入产物文档
-```
-
-Skill 只写方法论、业务问题和不变原则；具体技术由模型搜索最新方案后推荐，人类确认后写入产物文档。
-
-## 验证教训
-
-端到端验证的核心结论：要证明文档完备，唯一可靠方法是删除代码后从同一份 `contract.md` 重建，并对比行为一致性。
-
-四层结构各层不可替代：
-
-| 层 | 回答的问题 | 如果缺失 |
-|----|------------|----------|
-| WHAT | 做什么？怎么算对？ | 测试无法推导，边界条件遗漏 |
-| WHY | 为什么这么选？拒绝了什么？ | 新 session 会重新做决策，可能选不同方案 |
-| HOW | 字段、状态码、接口、技术栈是什么？ | 两次生成的实现会 diverge |
-| CONSTRAINTS | 安全、性能、兼容约束是什么？ | 生成代码缺少非功能性考量 |
-
-WHY 层是 Forge 独有的价值。传统文档常只记 WHAT 和 HOW，但选择理由一旦丢失，未来模型无法做出一致的扩展决策。
+**代码会腐烂，但决策不会过期。**
 
 ## 许可证
 

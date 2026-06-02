@@ -14,6 +14,46 @@
 
 **代码会腐烂，但决策不会过期。**
 
+## 默认入口：小功能迭代
+
+Forge 的默认目标不是把每个用户都带进完整生命周期，而是先降低日常 feature 迭代的心智负担。
+
+### 默认主链
+
+| 场景 | 默认链路 | 何时使用 |
+|------|----------|---------|
+| 需求明确的小功能 | `detail → codegen → review` | 已有项目、只差补齐决策和实现 |
+| 边界还不清晰的功能 | `define → detail → codegen → review` | 需要先澄清需求，再进入实现 |
+
+`plan`、`test`、`deploy`、`research`、`think`、`learn` 都保留，但默认不进入首页叙事。只有在任务复杂度或治理需求明确提高时才显式启用。
+
+### 默认最小产物
+
+默认只要求 3 类 feature 文档：
+
+| 文档 | 默认角色 |
+|------|---------|
+| `contract.md` | 记录共享约束、跨领域骨架和关键决策 |
+| `modules/*.md` | 记录模块接口、行为和数据细节 |
+| `changelog.md` | 记录这个 feature 的决策历史 |
+
+按需再补：
+
+- `PRD.md`：需求边界还不清时启用
+- `plan.md`：任务切片、依赖图、并行矩阵有价值时启用
+- `testing/`、`deploy/`：需要独立测试或发布产物时启用
+- `docs/timeline.md`：项目级演进或跨 feature 影响时启用
+- `docs/status.md`：多 feature 并行协调时启用
+
+### Advanced 入口
+
+完整生命周期、三层控制回路、评测系统和方法论进化都仍然存在，但默认放进 Advanced 语境：
+
+- 团队治理和多 feature 协调：看 `docs/status.md`、`docs/timeline.md`
+- 运行时控制面：看 `docs/runtime-control-loop.md`
+- 架构审计和评测：看 `docs/skill-architecture-audit.md`、`docs/skill-suite-evaluation.md`
+- 方法论进化：看 `docs/timeline.md` 和 `skills/learn/`
+
 ### 操作宪法（D1–D9）
 
 所有 skill 自动遵守以下条款，不重复内容，只引用编号。
@@ -55,7 +95,7 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 
 ---
 
-## 全生命周期架构
+## Advanced：全生命周期架构
 
 软件开发不只有技术设计。Forge 用阶段制 skill 覆盖从业务讨论到上线发布的完整生命周期，每个 skill 遵循相同范式：
 
@@ -105,7 +145,7 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 
 每个阶段的产物是下一阶段的输入。PRD 约束技术方案，技术方案约束详设，详设驱动编码，编码驱动测试。
 
-### 三层控制回路
+### Advanced：三层控制回路
 
 Forge 是闭环系统——文档是 setpoint，代码是投影，偏差信号驱动修正。
 
@@ -153,10 +193,10 @@ Feature 级   → 这个功能的全流程产物                     迭代时�
 ```
 my-project/
 ├── docs/project.md        # 技术决策 + 共享约束
-├── docs/status.md         # Feature 阶段追踪看板（多 feature 全局视图）
-├── docs/timeline.md       # 项目时间线（最近 10 条详细 + 更早压缩）
-├── docs/timeline/         # 时间线归档（按年/季度）
-├── docs/thinking/         # 深度思考产物（L1/L2 分析、攻击报告）
+├── docs/status.md         # 可选：多 feature 协调看板
+├── docs/timeline.md       # 可选：项目级演进记录
+├── docs/timeline/         # 可选：timeline 归档（按年/季度）
+├── docs/thinking/         # 可选：深度思考产物（L1/L2 分析、攻击报告）
 ├── DESIGN.md              # 设计系统（颜色、间距、交互模式、组件模式）
 ├── AGENTS.md              # AI 行为指令（从 project.md + DESIGN.md 投影）
 └── CLAUDE.md              # Claude Code 入口（指向 AGENTS.md）
@@ -168,7 +208,7 @@ my-project/
 |------|---------|---------|
 | project.md | 技术上怎么做 | technical-design 的共享决策 |
 | DESIGN.md | 视觉上怎么呈现 | fe-system 决策 |
-| status.md | 各 feature 当前在哪个阶段 | 每个 skill 完成时自动更新 |
+| status.md | 各 feature 当前在哪个阶段（启用时） | 多 feature 协调时更新 |
 | AGENTS.md | 你应该怎么工作 | project.md + DESIGN.md 投影 |
 | CLAUDE.md | 读 AGENTS.md | 入口指针 |
 
@@ -196,15 +236,15 @@ my-project/
 │
 ├── docs/
 │   ├── project.md                    # Project 级（~100 行，很少变）
-│   ├── timeline.md                   # 项目时间线（最近 10 条，≤100 行）
-│   ├── timeline/                     # 时间线归档
-│   ├── thinking/                     # 深度思考产物（L1/L2 分析、攻击报告）
+│   ├── timeline.md                   # 可选：项目时间线（最近 10 条，≤100 行）
+│   ├── timeline/                     # 可选：时间线归档
+│   ├── thinking/                     # 可选：深度思考产物（L1/L2 分析、攻击报告）
 │   │   └── archive/                  #   被推翻的分析归档
 │   │
 │   └── features/
 │       ├── task-management/          # 一个功能 = 一棵文档树
-│       │   ├── PRD.md                #   需求定义（define 阶段，整体加载）
-│       │   ├── plan.md               #   任务分解（plan 阶段，整体加载）
+│       │   ├── PRD.md                #   可选：需求定义（define 阶段，整体加载）
+│       │   ├── plan.md               #   可选：任务分解（plan 阶段，整体加载）
 │       │   ├── contract.md           #   feature 级共享骨架（~80 行）
 │       │   ├── changelog.md          #   功能变更历史（最近 5 条，≤100 行）
 │       │   ├── changelog/            #   变更历史归档
@@ -213,8 +253,8 @@ my-project/
 │       │   │   └── modules/          #     共享决策指向 project.md
 │       │   ├── frontend/             #   前端领域
 │       │   ├── database/             #   数据库领域
-│       │   ├── testing/              #   测试领域
-│       │   └── deploy/               #   部署领域
+│       │   ├── testing/              #   可选：测试领域
+│       │   └── deploy/               #   可选：部署领域
 │       └── billing/                  # 另一个功能，同样结构
 │
 ├── DESIGN.md                         # Project 级（设计系统）
@@ -339,18 +379,18 @@ AI 做任务时需要全部读，不存在"只读某一段"的场景。大小与
 
 ### 流程选择
 
-不是每个项目都需要走完 8 个阶段：
+默认先用 4 步主链，不要一上来展开完整生命周期：
 
 | 流程 | 链路 | 适用场景 |
 |------|------|---------|
-| **完整** | brainstorm → init → define → design → detail → plan | 新项目从零开始 |
-| **标准** | define → detail → plan | 已有项目，新功能 |
-| **快速** | detail → plan | 已有项目，小功能迭代 |
-| **最小** | detail | 已有项目，加一个端点 |
+| **默认** | define → detail → codegen → review | 已有项目，新功能但边界还不够清楚 |
+| **快速** | detail → codegen → review | 已有项目，小功能迭代 |
+| **最小** | detail → codegen | 已有项目，加一个端点或模块 |
+| **完整** | brainstorm → init → define → design → detail → plan → codegen → test → review → deploy | 新项目从零开始，或需要完整治理链 |
 
-**跳过原则**：已有 project.md + DESIGN.md → 跳过 init · 需求明确 → 跳过 brainstorm 和 define · 纯后端 → 跳过 design · 一个端点 → 跳过 plan
+**跳过原则**：已有 project.md + DESIGN.md → 跳过 init · 需求明确 → 跳过 define · 纯后端 → 跳过 design · 改动很小时 → 跳过 plan / test / deploy
 
-**research 自动触发**：define 完成后，AI 扫描 PRD 中的技术信号词，默认建议 research，只在明确不需要时跳过。
+**research 自动触发**：只有走了 define 路径后，AI 才扫描 PRD 中的技术信号词并建议 research；小功能默认链路不主动展开 research。
 
 技术信号词（出现任一即触发）：
 - 实时/同步/协作（CRDT vs OT vs 锁）
@@ -379,7 +419,7 @@ Claude Code 根据 skill 的 `description` / `when_to_use` 自动选择最小相
 | L1 patch | 局部 contract / code 修正 | 最小改动，执行可用验证 |
 | L2 stage | 完整阶段执行 | 产出或更新阶段文档 + 历史记录 |
 
-**默认规则**：用户未显式点名阶段时，选择 L0/L1 轻量调用；用户显式点名阶段或 skill 时，默认 L2 阶段调用，除非用户说"只看看"、"简单 review"或等价限制。轻量调用如果改变 contract 语义，必须回写对应文档。
+**默认规则**：用户未显式点名阶段时，优先走 `detail → codegen → review` 的 L0/L1 轻量调用；用户显式点名阶段或 skill 时，默认 L2 阶段调用，除非用户说"只看看"、"简单 review"或等价限制。轻量调用如果改变 contract 语义，必须回写对应文档。
 
 | 阶段 | 做什么 | 加载的 skill | 产出 |
 |------|--------|-------------|------|
@@ -393,13 +433,15 @@ Claude Code 根据 skill 的 `description` / `when_to_use` 自动选择最小相
 | ⑥ 测试 | 测试策略 + 测试用例 | test-strategy + test-cases | `testing/contract.md` + `testing/test-cases.md` |
 | ⑦ 交付 | 灰度 + 回滚 + 监控 | deploy | `deploy/contract.md` |
 
+上表是完整能力地图，不是默认必经链路。`detail`、`codegen`、`review` 仍然是日常迭代的主入口。
+
 **detail 按需加载**：读 project.md → 有前端框架？读已有文档 → 有 frontend/ 目录？不确定 → 问用户。
 
 ### 自然语言执行
 
 | 你说 | AI 做什么 |
 |------|----------|
-| "生成代码" | 读 plan.md → 按任务序列生成 src/ + tests/ |
+| "生成代码" | 优先读 contract.md + modules/*.md；若存在 plan.md，再按任务序列生成 src/ + tests/ |
 | "做一只壁虎" | brainstorm + research 的组合（产品探索 + 算法菜单） |
 | "创建任务报 500" | 读 contract.md + 代码 → 找分歧 → 修代码 |
 | "给任务加标签" | detail + build 的组合（加模块） |
@@ -411,28 +453,30 @@ Claude Code 根据 skill 的 `description` / `when_to_use` 自动选择最小相
 
 ---
 
-## 历史记录（自动维护）
+## 历史记录（默认最小集 + 按需扩展）
 
-每次文档变更后，AI 自动更新两层历史记录。
+默认只维护 feature 级 `changelog.md`。`timeline.md` 是项目级扩展，只有在项目决策演进、跨 feature 影响或需要发布摘要时才启用。
 
 | 文件 | 粒度 | 格式 |
 |------|------|------|
-| `docs/timeline.md` | 一条 = 一次发布 | 日期 + 变更摘要 + 触发原因 + 影响范围 |
 | `docs/features/<feature>/changelog.md` | 一条 = 一个决策 | 触发 + 决策 + 影响 + 类型 |
+| `docs/timeline.md` | 一条 = 一次项目级演进（启用时） | 日期 + 变更摘要 + 触发原因 + 影响范围 |
 
-**触发规则**：contract.md / modules/*.md 变更 → 追加 changelog · 阶段完成 → 追加 timeline · 新增 feature → 新建 changelog + 追加 timeline · 跨 feature 共享决策变更 → 追加 timeline 并标注影响
+**默认触发规则**：contract.md / modules/*.md 变更 → 追加 changelog。
+
+**timeline 启用后**：阶段完成、新增 feature、跨 feature 共享决策变更或项目级发布摘要 → 追加 timeline。
 
 **压缩规则**：见上方「膨胀控制 → 追加型」。
 
-**AI 怎么用**：改分页逻辑 → 读 timeline.md 看到 v1.1 改过 page → cursor（触发：性能）→ 读 changelog.md 看详细决策 → 知道上次为什么选 cursor，避免重复犯错。
+**AI 怎么用**：默认先读 changelog.md 了解这个 feature 的局部决策历史；只有启用了 timeline.md，才额外回看项目级演进脉络。
 
 ---
 
 ## 阶段追踪（多 Feature 协调）
 
-`docs/status.md` 是 feature 阶段的**全局快照**，解决"多 feature 并行时，不知道整体进展"的问题。
+`docs/status.md` 是可选的 feature 阶段**全局快照**，只在多 feature 并行协调时建议开启。
 
-**与历史记录的关系**：status.md 是"现在在哪"（快照），timeline/changelog 是"发生了什么"（历史）。三者互补，不重复。
+**与历史记录的关系**：status.md 是"现在在哪"（快照，启用时）；changelog 是默认历史；timeline 是项目级扩展历史。三者互补，但不是默认一起维护。
 
 ### 状态机语义
 
@@ -461,7 +505,7 @@ Feature B 的 detail 需要 Feature A 的 api/contract.md
 
 ### 更新规则
 
-每个 skill 完成时，在「历史维护」步骤中同步更新 status.md：
+启用 status.md 后，每个 skill 完成时，在「历史维护」步骤中同步更新 status.md：
 
 1. 当前阶段状态 → `✅`
 2. 下一阶段状态 → `🔄`（如果有明确的下一步）

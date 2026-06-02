@@ -1,6 +1,6 @@
 {
   "name": "forge",
-  "version": "0.27.1",
+  "version": "0.27.2",
   "description": "文档是源代码，代码是投影。模型越强，同一份文档生成的代码越好。",
   "author": {
     "name": "ZeroZ-lab",
@@ -44,7 +44,7 @@
   "interface": {
     "displayName": "Forge",
     "shortDescription": "文档即源代码——决策协议驱动的 AI 开发工作流",
-    "longDescription": "Forge 把文档从代码的衍生品变成项目的唯一真相。每个 skill 是一份决策协议：在关键分歧点呈现选项，等人类拍板，把选择固化成 contract.md。模型从 contract.md 生成代码——模型越强，同一份文档生成的代码越好。",
+    "longDescription": "Forge 默认服务已有项目的小功能迭代：先补 detail 合约，再按 contract 生成实现，最后 review 当前修改是否偏离决策文档。需求边界不清时再往前补 define；完整生命周期和治理机制按需展开。",
     "developerName": "ZeroZ-lab",
     "category": "Engineering",
     "capabilities": [
@@ -54,7 +54,9 @@
     ],
     "websiteURL": "https://github.com/ZeroZ-lab/forge",
     "defaultPrompt": [
-      "用 Forge 设计一个 API 合约"
+      "用 Forge 为已有 feature 补 detail 合约",
+      "按 contract 生成这个 feature 的实现",
+      "review 当前修改是否偏离 contract"
     ]
   }
 }
