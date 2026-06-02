@@ -1,0 +1,60 @@
+{
+  "name": "forge",
+  "version": "0.27.0",
+  "description": "文档是源代码，代码是投影。模型越强，同一份文档生成的代码越好。",
+  "author": {
+    "name": "ZeroZ-lab",
+    "url": "https://github.com/ZeroZ-lab/forge"
+  },
+  "homepage": "https://github.com/ZeroZ-lab/forge",
+  "repository": "https://github.com/ZeroZ-lab/forge",
+  "license": "MIT",
+  "keywords": [
+    "documentation",
+    "decision-records",
+    "ai-agent",
+    "contract-first"
+  ],
+  "skills": [
+    "../../skills/brainstorm",
+    "../../skills/research",
+    "../../skills/init",
+    "../../skills/business-alignment",
+    "../../skills/define",
+    "../../skills/design",
+    "../../skills/interaction-design",
+    "../../skills/fe-system",
+    "../../skills/technical-design",
+    "../../skills/detail",
+    "../../skills/api-design",
+    "../../skills/db-design",
+    "../../skills/frontend-design",
+    "../../skills/plan",
+    "../../skills/codegen",
+    "../../skills/fe-artifact",
+    "../../skills/test",
+    "../../skills/test-strategy",
+    "../../skills/test-cases",
+    "../../skills/fe-accept",
+    "../../skills/review",
+    "../../skills/deploy",
+    "../../skills/learn",
+    "../../skills/think"
+  ],
+  "interface": {
+    "displayName": "Forge",
+    "shortDescription": "文档即源代码——决策协议驱动的 AI 开发工作流",
+    "longDescription": "Forge 把文档从代码的衍生品变成项目的唯一真相。每个 skill 是一份决策协议：在关键分歧点呈现选项，等人类拍板，把选择固化成 contract.md。模型从 contract.md 生成代码——模型越强，同一份文档生成的代码越好。",
+    "developerName": "ZeroZ-lab",
+    "category": "Engineering",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/ZeroZ-lab/forge",
+    "defaultPrompt": [
+      "用 Forge 设计一个 API 合约"
+    ]
+  }
+}

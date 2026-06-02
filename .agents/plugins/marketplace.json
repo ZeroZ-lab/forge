@@ -8,7 +8,7 @@
       "name": "forge",
       "source": {
         "source": "local",
-        "path": "./"
+        "path": "./plugins/forge"
       },
       "policy": {
         "installation": "AVAILABLE",

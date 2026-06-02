@@ -82,6 +82,7 @@ const packageJson = json('package.json');
 const claudePlugin = json('.claude-plugin/plugin.json');
 const codexPlugin = json('.codex-plugin/plugin.json');
 const claudeMarketplace = json('.claude-plugin/marketplace.json');
+const codexMarketplace = json('.agents/plugins/marketplace.json');
 const runtimeRegistry = json('registry.yaml');
 
 assert(
@@ -96,6 +97,11 @@ assert(packageJson.scripts?.['eval:skills'] === 'node scripts/evaluate-skills.mj
 assert(packageJson.scripts?.['eval:skills:run'] === 'node scripts/run-skills-benchmark.mjs', 'package.json: missing scripts.eval:skills:run');
 assert(packageJson.scripts?.['plugin:install:local'] === 'node scripts/install-local-codex-plugin.mjs', 'package.json: missing scripts.plugin:install:local');
 assert(codexPlugin.skills === './skills', '.codex-plugin/plugin.json: skills must point to ./skills');
+assert(exists('plugins/forge/.codex-plugin/plugin.json'), 'plugins/forge/.codex-plugin/plugin.json: missing');
+assert(
+  codexMarketplace.plugins?.find((plugin) => plugin.name === 'forge')?.source?.path === './plugins/forge',
+  '.agents/plugins/marketplace.json: forge source.path must point to ./plugins/forge',
+);
 
 const skillsDir = path.join(root, 'skills');
 const skillDirs = fs
