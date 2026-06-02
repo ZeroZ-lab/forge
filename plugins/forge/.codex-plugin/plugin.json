@@ -7,7 +7,7 @@
   },
   "version": "0.27.0",
   "homepage": "https://github.com/ZeroZ-lab/forge",
-  "skills": "../../skills",
+  "skills": "./skills",
   "interface": {
     "displayName": "Forge",
     "shortDescription": "文档即源代码的 AI 开发决策协议。",

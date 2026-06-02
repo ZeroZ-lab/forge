@@ -98,9 +98,19 @@ assert(packageJson.scripts?.['eval:skills:run'] === 'node scripts/run-skills-ben
 assert(packageJson.scripts?.['plugin:install:local'] === 'node scripts/install-local-codex-plugin.mjs', 'package.json: missing scripts.plugin:install:local');
 assert(codexPlugin.skills === './skills', '.codex-plugin/plugin.json: skills must point to ./skills');
 assert(exists('plugins/forge/.codex-plugin/plugin.json'), 'plugins/forge/.codex-plugin/plugin.json: missing');
+assert(exists('plugins/forge/.claude-plugin/plugin.json'), 'plugins/forge/.claude-plugin/plugin.json: missing');
+assert(exists('plugins/forge/skills'), 'plugins/forge/skills: missing');
 assert(
   codexMarketplace.plugins?.find((plugin) => plugin.name === 'forge')?.source?.path === './plugins/forge',
   '.agents/plugins/marketplace.json: forge source.path must point to ./plugins/forge',
+);
+const packagedCodexPlugin = json('plugins/forge/.codex-plugin/plugin.json');
+const packagedClaudePlugin = json('plugins/forge/.claude-plugin/plugin.json');
+assert(packagedCodexPlugin.skills === './skills', 'plugins/forge/.codex-plugin/plugin.json: skills must point to ./skills');
+const packagedClaudeSkills = Array.isArray(packagedClaudePlugin.skills) ? packagedClaudePlugin.skills : [];
+assert(
+  packagedClaudeSkills.every((skillPath) => typeof skillPath === 'string' && skillPath.startsWith('./skills/')),
+  'plugins/forge/.claude-plugin/plugin.json: skills must point to ./skills/*',
 );
 
 const skillsDir = path.join(root, 'skills');
