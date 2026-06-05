@@ -140,3 +140,11 @@ review 是慢回路的 sensor + analyzer。它不只判断“有没有问题”�
   - 进入代码生成
   - 规划发布
 ```
+
+## Change Unit / Rebuild Control
+
+- 审查报告必须引用当前 CU；P0/P1、文档漂移和偏差归因写入 CU 风险/后续动作。
+- 如果审查导致事实源变化，先更新 CU，再同步 contract/current docs。
+- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
+- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
+- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

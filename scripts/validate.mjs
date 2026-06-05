@@ -96,10 +96,12 @@ assert(packageJson.scripts?.test === 'node --test', 'package.json: missing scrip
 assert(packageJson.scripts?.['eval:skills'] === 'node scripts/evaluate-skills.mjs', 'package.json: missing scripts.eval:skills');
 assert(packageJson.scripts?.['eval:skills:run'] === 'node scripts/run-skills-benchmark.mjs', 'package.json: missing scripts.eval:skills:run');
 assert(packageJson.scripts?.['plugin:install:local'] === 'node scripts/install-local-codex-plugin.mjs', 'package.json: missing scripts.plugin:install:local');
+assert(packageJson.scripts?.['plugin:sync'] === 'node scripts/sync-packaged-plugin.mjs', 'package.json: missing scripts.plugin:sync');
 assert(codexPlugin.skills === './skills', '.codex-plugin/plugin.json: skills must point to ./skills');
 assert(exists('plugins/forge/.codex-plugin/plugin.json'), 'plugins/forge/.codex-plugin/plugin.json: missing');
 assert(exists('plugins/forge/.claude-plugin/plugin.json'), 'plugins/forge/.claude-plugin/plugin.json: missing');
 assert(exists('plugins/forge/skills'), 'plugins/forge/skills: missing');
+assert(exists('scripts/sync-packaged-plugin.mjs'), 'scripts/sync-packaged-plugin.mjs: missing');
 assert(
   codexMarketplace.plugins?.find((plugin) => plugin.name === 'forge')?.source?.path === './plugins/forge',
   '.agents/plugins/marketplace.json: forge source.path must point to ./plugins/forge',
@@ -207,6 +209,13 @@ for (const skill of runtimeRegistry.skills ?? []) {
     assertArrayOfStrings(skill.own_produces, `registry.yaml: ${skill.name}.own_produces`);
     assertArrayOfStrings(skill.orchestrated_produces, `registry.yaml: ${skill.name}.orchestrated_produces`);
   }
+  const producedArtifacts = hasDirectProduces
+    ? skill.produces
+    : [...(skill.own_produces ?? []), ...(skill.orchestrated_produces ?? [])];
+  assert(
+    producedArtifacts.includes('docs/change-units/CU-*.md'),
+    `registry.yaml: ${skill.name} must declare docs/change-units/CU-*.md`,
+  );
   if ('external_downstream' in skill) {
     assertArrayOfStrings(skill.external_downstream, `registry.yaml: ${skill.name}.external_downstream`);
   }
@@ -319,6 +328,11 @@ const sharedKnowledgeFiles = [
   'skills/shared/output-contracts/deviation-report.md',
   'skills/shared/output-contracts/review-result.md',
   'skills/shared/output-contracts/runtime-control.md',
+  'skills/shared/change-unit-template.md',
+  'skills/shared/doc-sync-checklist.md',
+  'skills/shared/code-map-template.md',
+  'skills/shared/current-state-template.md',
+  'skills/shared/rebuild-guide-template.md',
 ];
 
 for (const file of sharedKnowledgeFiles) {
@@ -332,9 +346,10 @@ const skillsEvalManifest = json('evals/skills-suite/manifest.json');
 assert(exists('scripts/evaluate-skills.mjs'), 'scripts/evaluate-skills.mjs: missing');
 assert(exists('scripts/run-skills-benchmark.mjs'), 'scripts/run-skills-benchmark.mjs: missing');
 assert(exists('scripts/install-local-codex-plugin.mjs'), 'scripts/install-local-codex-plugin.mjs: missing');
+assert(exists('scripts/sync-packaged-plugin.mjs'), 'scripts/sync-packaged-plugin.mjs: missing');
 assert(exists('evals/skills-suite/README.md'), 'evals/skills-suite/README.md: missing');
 assert(exists('evals/skills-suite/report.schema.json'), 'evals/skills-suite/report.schema.json: missing');
-assert(skillsEvalManifest.version === 1, 'evals/skills-suite/manifest.json: version must be 1');
+assert(skillsEvalManifest.version === 2, 'evals/skills-suite/manifest.json: version must be 2');
 assert(skillsEvalManifest.name === 'forge-skills-suite-benchmark', 'evals/skills-suite/manifest.json: unexpected benchmark name');
 assert(Array.isArray(skillsEvalManifest.cases), 'evals/skills-suite/manifest.json: cases must be an array');
 assert(
@@ -346,8 +361,11 @@ const evalCoveredSkills = new Set();
 const evalCaseIds = new Set();
 const allowedEvalCheckTypes = new Set([
   'artifact_reported',
+  'change_unit_reported',
+  'code_map_covers',
   'command_reported',
   'decision_gate_reported',
+  'doc_sync_completed',
   'evidence_contains',
   'forbidden_behavior_absent',
   'skill_triggered',
@@ -366,6 +384,10 @@ for (const testCase of skillsEvalManifest.cases ?? []) {
   assertArrayOfStrings(testCase.required_evidence, `${testCase.id}.required_evidence`);
   assertArrayOfStrings(testCase.forbidden_behaviors, `${testCase.id}.forbidden_behaviors`);
   assert(Array.isArray(testCase.oracle_checks) && testCase.oracle_checks.length > 0, `${testCase.id}: oracle_checks are required`);
+  assert(
+    testCase.oracle_checks.some((check) => check.type === 'change_unit_reported'),
+    `${testCase.id}: must check Change Unit reporting`,
+  );
 
   for (const skillName of testCase.expected_skills ?? []) {
     assert(registryByName[skillName], `${testCase.id}: unknown expected skill ${skillName}`);
@@ -373,6 +395,12 @@ for (const testCase of skillsEvalManifest.cases ?? []) {
   }
   for (const check of testCase.oracle_checks ?? []) {
     assert(allowedEvalCheckTypes.has(check.type), `${testCase.id}: unknown oracle check type ${check.type}`);
+    if (check.type === 'doc_sync_completed') {
+      assert(
+        testCase.expected_artifacts.includes(check.target),
+        `${testCase.id}: doc_sync target ${check.target} must be listed in expected_artifacts`,
+      );
+    }
   }
 }
 
@@ -471,6 +499,25 @@ assertIncludes('skills/shared/concepts/execution-discipline.md', [
   '## Decision boundaries',
   '## Projection rule',
 ]);
+
+function assertSameFile(left, right) {
+  assert(exists(left), `${left}: missing`);
+  assert(exists(right), `${right}: missing`);
+  if (!exists(left) || !exists(right)) return;
+  assert(read(left) === read(right), `${right}: packaged plugin drift; run node scripts/sync-packaged-plugin.mjs`);
+}
+
+assertSameFile('.codex-plugin/plugin.json', 'plugins/forge/.codex-plugin/plugin.json');
+assertSameFile('.claude-plugin/plugin.json', 'plugins/forge/.claude-plugin/plugin.json');
+
+for (const file of filesUnder('skills')) {
+  assertSameFile(file, `plugins/forge/${file}`);
+}
+
+for (const file of filesUnder('plugins/forge/skills')) {
+  const rootSkillFile = file.replace(/^plugins\/forge\//, '');
+  assert(exists(rootSkillFile), `${file}: packaged skill has no root counterpart`);
+}
 
 const stalePatterns = [
   ['AGENTS.md', /BA1-BA5/],

@@ -45,6 +45,26 @@ Forge 的默认目标不是把每个用户都带进完整生命周期，而是�
 - `docs/timeline.md`：项目级演进或跨 feature 影响时启用
 - `docs/status.md`：多 feature 并行协调时启用
 
+### Change Unit + Rebuild Control
+
+Forge 0.28 起，每次 feature、bugfix、refactor、release 或方法论更新都应有一个 Change Unit：
+
+```txt
+docs/change-units/CU-<date>-<slug>.md
+```
+
+CU 是完整事件记录：为什么改、行为变化、影响模块、契约变化、数据变化、测试、风险、回滚、验证证据和需要同步的长期文档。`changelog.md` 与 `docs/timeline.md` 只写摘要并链接 CU，不复制完整事件。
+
+项目可重建性由三类 Rebuild Control 文档维护：
+
+| 文档 | 角色 |
+|------|------|
+| `docs/CURRENT_STATE.md` | 当前系统快照，只写现在是什么 |
+| `docs/REBUILD_GUIDE.md` | 从文档重建代码的顺序、输入和验证 |
+| `docs/CODE_MAP.yml` | 文档到代码/测试文件的投影映射 |
+
+如果代码或 contract 改变，必须同步当前 CU 与相关 Rebuild Control；如果只更新 Current Snapshot / Rebuild Control 而没有 CU，视为不可追溯变更。
+
 ### Advanced 入口
 
 完整生命周期、三层控制回路、评测系统和方法论进化都仍然存在，但默认放进 Advanced 语境：

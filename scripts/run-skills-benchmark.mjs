@@ -87,6 +87,14 @@ function artifactPaths(run) {
   );
 }
 
+function changeUnitPaths(run) {
+  return new Set(
+    (run.change_units ?? [])
+      .map((changeUnit) => (typeof changeUnit === 'string' ? changeUnit : changeUnit?.path))
+      .filter(isChangeUnitPath),
+  );
+}
+
 function globMatch(pattern, value) {
   if (!pattern.includes('*')) return value === pattern;
   const escaped = pattern
@@ -102,6 +110,28 @@ function decisionIds(run) {
   );
 }
 
+function docSyncTargets(run) {
+  return new Set(
+    (run.doc_sync ?? [])
+      .filter((item) => item?.status === 'completed')
+      .map((item) => item?.target)
+      .filter(Boolean),
+  );
+}
+
+function codeMapCoveredPaths(run) {
+  const paths = new Set();
+  for (const entry of run.code_map_entries ?? []) {
+    if (entry?.source) paths.add(entry.source);
+    for (const projectedPath of entry?.projects_to ?? []) paths.add(projectedPath);
+  }
+  return paths;
+}
+
+function isChangeUnitPath(value) {
+  return typeof value === 'string' && /^docs\/change-units\/CU-[^/]+\.md$/.test(value);
+}
+
 function evidenceText(run) {
   return [...(run.evidence ?? []), run.notes ?? ''].join('\n');
 }
@@ -109,8 +139,11 @@ function evidenceText(run) {
 function checkRun(testCase, run) {
   const triggeredSkills = new Set(run.triggered_skills ?? []);
   const artifacts = artifactPaths(run);
+  const changeUnits = changeUnitPaths(run);
   const commands = new Set(run.commands_run ?? []);
   const decisions = decisionIds(run);
+  const docSync = docSyncTargets(run);
+  const codeMapPaths = codeMapCoveredPaths(run);
   const forbiddenBehaviors = new Set(run.forbidden_behaviors ?? []);
   const evidence = evidenceText(run);
 
@@ -120,8 +153,15 @@ function checkRun(testCase, run) {
     if (check.type === 'artifact_reported') {
       passed = [...artifacts].some((artifactPath) => globMatch(check.path, artifactPath));
     }
+    if (check.type === 'change_unit_reported') {
+      passed = [...changeUnits].some((changeUnitPath) => globMatch(check.path, changeUnitPath));
+    }
+    if (check.type === 'code_map_covers') {
+      passed = [...codeMapPaths].some((coveredPath) => globMatch(check.path, coveredPath));
+    }
     if (check.type === 'command_reported') passed = commands.has(check.command);
     if (check.type === 'decision_gate_reported') passed = decisions.has(check.decision);
+    if (check.type === 'doc_sync_completed') passed = docSync.has(check.target);
     if (check.type === 'evidence_contains') passed = evidence.includes(check.text);
     if (check.type === 'forbidden_behavior_absent') passed = !forbiddenBehaviors.has(check.behavior);
     return { passed, check };
@@ -155,6 +195,9 @@ function generateSummary(report, manifest, reportPath) {
     totalChecks += checkResults.length;
 
     const artifacts = (run.artifacts ?? []).map((artifact) => (typeof artifact === 'string' ? artifact : artifact.path));
+    const changeUnits = (run.change_units ?? [])
+      .map((changeUnit) => (typeof changeUnit === 'string' ? changeUnit : changeUnit.path))
+      .filter(isChangeUnitPath);
     const decisions = (run.decisions ?? []).map((decision) => (typeof decision === 'string' ? decision : decision.id));
     const firstEvidence = run.evidence?.[0] ?? run.notes ?? '-';
 
@@ -164,6 +207,7 @@ function generateSummary(report, manifest, reportPath) {
       `${casePassedChecks}/${checkResults.length}`,
       truncateList(run.triggered_skills ?? []),
       truncateList(artifacts),
+      truncateList(changeUnits, 2),
       truncateList(run.commands_run ?? [], 2),
       truncateList(decisions),
       firstEvidence,
@@ -191,8 +235,8 @@ Runner: ${report.runner ?? '-'}
 
 ## Cases
 
-| Case | Status | Oracle | Skills | Artifacts | Commands | Decisions | First evidence |
-|---|---:|---:|---|---|---|---|---|
+| Case | Status | Oracle | Skills | Artifacts | CU | Commands | Decisions | First evidence |
+|---|---:|---:|---|---|---|---|---|---|
 ${rows.map((row) => `| ${row.map(markdownTableCell).join(' | ')} |`).join('\n')}
 
 ## Scoring
@@ -241,6 +285,9 @@ ${fixture}
   "status": "pass" | "fail" | "blocked",
   "triggered_skills": ["forge-..."],
   "artifacts": ["path/or/dir"],
+  "change_units": ["docs/change-units/CU-....md"],
+  "doc_sync": [{"target": "docs/CURRENT_STATE.md", "status": "completed"}],
+  "code_map_entries": [{"source": "docs/features/<feature>/contract.md", "projects_to": ["src/..."]}],
   "commands_run": ["exact command"],
   "decisions": ["decision_id"],
   "forbidden_behaviors": [],
@@ -248,7 +295,7 @@ ${fixture}
   "notes": "short note"
 }
 
-只有真实执行或明确遵循了对应 skill 协议，才能把 skill 放进 triggered_skills。`;
+	只有真实执行或明确遵循了对应 skill 协议，才能把 skill 放进 triggered_skills。change_units 必须指向 docs/change-units/CU-*.md；doc_sync 必须是带 status 的对象，只有 completed 算同步完成；code_map_entries 必须是对象；source 必须是 docs/ 下的源文档，projects_to 才能填写 src/、tests/ 或其他投影目标。`;
 }
 
 function runCase({ codexBin, runDir, testCase }) {
@@ -296,6 +343,9 @@ function runCase({ codexBin, runDir, testCase }) {
       status: 'blocked',
       triggered_skills: [],
       artifacts: [],
+      change_units: [],
+      doc_sync: [],
+      code_map_entries: [],
       commands_run: [],
       decisions: [],
       forbidden_behaviors: [],
@@ -311,6 +361,9 @@ function runCase({ codexBin, runDir, testCase }) {
       status: 'blocked',
       triggered_skills: [],
       artifacts: [],
+      change_units: [],
+      doc_sync: [],
+      code_map_entries: [],
       commands_run: [],
       decisions: [],
       forbidden_behaviors: [],
@@ -327,6 +380,9 @@ function runCase({ codexBin, runDir, testCase }) {
       status: 'fail',
       triggered_skills: [],
       artifacts: [],
+      change_units: [],
+      doc_sync: [],
+      code_map_entries: [],
       commands_run: [],
       decisions: [],
       forbidden_behaviors: [],
@@ -361,7 +417,7 @@ const runDir = path.join(root, '.eval-runs', 'skills-suite', args.runId);
 fs.mkdirSync(runDir, { recursive: true });
 
 const report = {
-  version: 1,
+  version: 2,
   suite: 'forge',
   run_id: args.runId,
   runner: `codex exec (${codexBin})`,
@@ -385,6 +441,9 @@ for (const testCase of cases) {
         status: 'blocked',
         triggered_skills: [],
         artifacts: [],
+        change_units: [],
+        doc_sync: [],
+        code_map_entries: [],
         commands_run: [],
         decisions: [],
         forbidden_behaviors: [],

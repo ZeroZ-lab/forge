@@ -5,7 +5,7 @@
   "type": "object",
   "required": ["version", "suite", "run_id", "cases"],
   "properties": {
-    "version": { "const": 1 },
+    "version": { "const": 2 },
     "suite": { "const": "forge" },
     "run_id": { "type": "string", "minLength": 1 },
     "model": { "type": "string" },
@@ -15,7 +15,17 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["case_id", "status", "triggered_skills", "artifacts", "commands_run", "evidence"],
+        "required": [
+          "case_id",
+          "status",
+          "triggered_skills",
+          "artifacts",
+          "change_units",
+          "doc_sync",
+          "code_map_entries",
+          "commands_run",
+          "evidence"
+        ],
         "properties": {
           "case_id": { "type": "string" },
           "status": { "enum": ["pass", "fail", "blocked"] },
@@ -34,6 +44,47 @@
                   }
                 }
               ]
+            }
+          },
+          "change_units": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                { "type": "string", "pattern": "^docs/change-units/CU-[^/]+\\.md$" },
+                {
+                  "type": "object",
+                  "required": ["path"],
+                  "properties": {
+                    "path": { "type": "string", "pattern": "^docs/change-units/CU-[^/]+\\.md$" },
+                    "type": { "type": "string" },
+                    "status": { "type": "string" }
+                  }
+                }
+              ]
+            }
+          },
+          "doc_sync": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["target", "status"],
+              "properties": {
+                "target": { "type": "string" },
+                "status": { "enum": ["completed", "pending", "blocked"] },
+                "notes": { "type": "string" }
+              }
+            }
+          },
+          "code_map_entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["source", "projects_to"],
+              "properties": {
+                "source": { "type": "string", "pattern": "^docs/" },
+                "projects_to": { "type": "array", "items": { "type": "string" } },
+                "notes": { "type": "string" }
+              }
             }
           },
           "commands_run": { "type": "array", "items": { "type": "string" } },

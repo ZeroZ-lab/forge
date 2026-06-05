@@ -6,121 +6,176 @@
       "id": "brainstorm.idea_brief",
       "name": "idea brief",
       "produced_by": "forge-brainstorm",
-      "consumed_by": ["forge-business-alignment"]
+      "consumed_by": [
+        "forge-business-alignment"
+      ]
     },
     {
       "id": "business_alignment.go_decision",
       "name": "go decision",
       "produced_by": "forge-business-alignment",
-      "consumed_by": ["forge-define", "forge-technical-design"]
+      "consumed_by": [
+        "forge-define",
+        "forge-technical-design"
+      ]
     },
     {
       "id": "define.prd",
       "name": "PRD",
       "produced_by": "forge-define",
-      "consumed_by": ["forge-research", "forge-interaction-design", "forge-detail"]
+      "consumed_by": [
+        "forge-research",
+        "forge-interaction-design",
+        "forge-detail"
+      ]
     },
     {
       "id": "define.acceptance_criteria",
       "name": "acceptance criteria",
       "produced_by": "forge-define",
-      "consumed_by": ["forge-test-cases", "forge-plan", "forge-test-strategy", "forge-detail"]
+      "consumed_by": [
+        "forge-test-cases",
+        "forge-plan",
+        "forge-test-strategy",
+        "forge-detail"
+      ]
     },
     {
       "id": "research.algorithm_menu",
       "name": "algorithm menu",
       "produced_by": "forge-research",
-      "consumed_by": ["forge-technical-design"]
+      "consumed_by": [
+        "forge-technical-design"
+      ]
     },
     {
       "id": "interaction_design.interaction_spec",
       "name": "interaction spec",
       "produced_by": "forge-interaction-design",
-      "consumed_by": ["forge-fe-system", "forge-frontend-design", "forge-detail"]
+      "consumed_by": [
+        "forge-fe-system",
+        "forge-frontend-design",
+        "forge-detail"
+      ]
     },
     {
       "id": "fe_system.design_tokens",
       "name": "design tokens",
       "produced_by": "forge-fe-system",
-      "consumed_by": ["forge-frontend-design", "forge-fe-artifact", "forge-fe-accept"]
+      "consumed_by": [
+        "forge-frontend-design",
+        "forge-fe-artifact",
+        "forge-fe-accept"
+      ]
     },
     {
       "id": "technical_design.architecture_decisions",
       "name": "architecture decisions",
       "produced_by": "forge-technical-design",
-      "consumed_by": ["forge-detail"]
+      "consumed_by": [
+        "forge-detail"
+      ]
     },
     {
       "id": "api_design.api_setpoint",
       "name": "API setpoint",
       "produced_by": "forge-api-design",
-      "consumed_by": ["forge-db-design", "forge-frontend-design", "forge-plan"]
+      "consumed_by": [
+        "forge-db-design",
+        "forge-frontend-design",
+        "forge-plan"
+      ]
     },
     {
       "id": "api_design.shared_data_model",
       "name": "shared data model",
       "produced_by": "forge-api-design",
-      "consumed_by": ["forge-db-design"]
+      "consumed_by": [
+        "forge-db-design"
+      ]
     },
     {
       "id": "db_design.database_setpoint",
       "name": "database setpoint",
       "produced_by": "forge-db-design",
-      "consumed_by": ["forge-plan"]
+      "consumed_by": [
+        "forge-plan"
+      ]
     },
     {
       "id": "frontend_design.frontend_setpoint",
       "name": "frontend setpoint",
       "produced_by": "forge-frontend-design",
-      "consumed_by": ["forge-plan"]
+      "consumed_by": [
+        "forge-plan"
+      ]
     },
     {
       "id": "detail.feature_contract",
       "name": "feature contract",
       "produced_by": "forge-detail",
-      "consumed_by": ["forge-plan", "forge-codegen"]
+      "consumed_by": [
+        "forge-plan",
+        "forge-codegen"
+      ]
     },
     {
       "id": "plan.task_sequence",
       "name": "task sequence",
       "produced_by": "forge-plan",
-      "consumed_by": ["forge-codegen"]
+      "consumed_by": [
+        "forge-codegen"
+      ]
     },
     {
       "id": "codegen.generated_code",
       "name": "generated code",
       "produced_by": "forge-codegen",
-      "consumed_by": ["forge-review", "forge-fe-accept"]
+      "consumed_by": [
+        "forge-review",
+        "forge-fe-accept"
+      ]
     },
     {
       "id": "codegen.deviation_summary",
       "name": "deviation summary",
       "produced_by": "forge-codegen",
-      "consumed_by": ["forge-detail"]
+      "consumed_by": [
+        "forge-detail"
+      ]
     },
     {
       "id": "codegen.l1_signal",
       "name": "repeated L1 deviation",
       "produced_by": "forge-codegen",
-      "consumed_by": ["forge-detail"]
+      "consumed_by": [
+        "forge-detail"
+      ]
     },
     {
       "id": "test_strategy.test_strategy",
       "name": "test strategy",
       "produced_by": "forge-test-strategy",
-      "consumed_by": ["forge-test-cases"]
+      "consumed_by": [
+        "forge-test-cases"
+      ]
     },
     {
       "id": "test_cases.test_case_setpoint",
       "name": "test case setpoint",
       "produced_by": "forge-test-cases",
-      "consumed_by": ["forge-codegen"]
+      "consumed_by": [
+        "forge-codegen"
+      ]
     },
     {
       "id": "review.deviation_attribution",
       "name": "deviation attribution",
       "produced_by": "forge-review",
-      "consumed_by": ["forge-learn", "forge-detail"]
+      "consumed_by": [
+        "forge-learn",
+        "forge-detail"
+      ]
     },
     {
       "id": "deploy.release_plan",
@@ -138,7 +193,81 @@
       "id": "think.reasoning_record",
       "name": "reasoning record",
       "produced_by": "forge-think",
-      "consumed_by": ["forge-brainstorm", "forge-define", "forge-detail", "forge-review", "forge-learn"]
+      "consumed_by": [
+        "forge-brainstorm",
+        "forge-define",
+        "forge-detail",
+        "forge-review",
+        "forge-learn"
+      ]
+    },
+    {
+      "id": "change_unit.created",
+      "name": "Change Unit created",
+      "produced_by": "forge-init",
+      "consumed_by": [
+        "forge-define",
+        "forge-design",
+        "forge-detail",
+        "forge-plan",
+        "forge-codegen",
+        "forge-review",
+        "forge-deploy",
+        "forge-learn"
+      ]
+    },
+    {
+      "id": "change_unit.updated",
+      "name": "Change Unit updated",
+      "produced_by": "forge-detail",
+      "consumed_by": [
+        "forge-plan",
+        "forge-codegen",
+        "forge-test",
+        "forge-review",
+        "forge-deploy",
+        "forge-learn"
+      ]
+    },
+    {
+      "id": "doc_sync.completed",
+      "name": "doc sync completed",
+      "produced_by": "forge-review",
+      "consumed_by": [
+        "forge-codegen",
+        "forge-deploy",
+        "forge-learn"
+      ]
+    },
+    {
+      "id": "code_map.updated",
+      "name": "CODE_MAP updated",
+      "produced_by": "forge-detail",
+      "consumed_by": [
+        "forge-codegen",
+        "forge-fe-artifact",
+        "forge-review"
+      ]
+    },
+    {
+      "id": "current_snapshot.updated",
+      "name": "Current Snapshot updated",
+      "produced_by": "forge-init",
+      "consumed_by": [
+        "forge-detail",
+        "forge-review",
+        "forge-learn"
+      ]
+    },
+    {
+      "id": "rebuild_control.updated",
+      "name": "Rebuild Control updated",
+      "produced_by": "forge-init",
+      "consumed_by": [
+        "forge-codegen",
+        "forge-review",
+        "forge-deploy"
+      ]
     }
   ],
   "skills": [
@@ -160,17 +289,22 @@
       ],
       "consumes": [
         "user intent",
-        "problem context"
+        "problem context",
+        "docs/change-units/CU-*.md"
       ],
       "produces": [
-        "idea-brief.md"
+        "idea-brief.md",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
-        "user uncertainty"
+        "user uncertainty",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "validated direction",
-        "assumption list"
+        "assumption list",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "方向无法排序",
@@ -220,18 +354,23 @@
       ],
       "consumes": [
         "idea-brief.md",
-        "user business context"
+        "user business context",
+        "docs/change-units/CU-*.md"
       ],
       "produces": [
-        "docs/project.md business goals"
+        "docs/project.md business goals",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
-        "direction decision"
+        "direction decision",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "Go decision",
         "No-Go decision",
-        "business constraints"
+        "business constraints",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "用户画像、指标、资源不对齐"
@@ -287,17 +426,22 @@
       ],
       "consumes": [
         "docs/project.md business goals",
-        "user requirements"
+        "user requirements",
+        "docs/change-units/CU-*.md"
       ],
       "produces": [
-        "PRD.md"
+        "PRD.md",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
-        "business constraints"
+        "business constraints",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "testable acceptance criteria",
-        "scope exclusions"
+        "scope exclusions",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "验收条件不可测试",
@@ -330,6 +474,11 @@
           "signal": "scope exclusions",
           "to": "forge-detail",
           "when": "feature setpoint needs technical detailing"
+        },
+        {
+          "signal": "change_unit.created",
+          "to": "forge-detail",
+          "when": "when requirements become feature contracts"
         }
       ]
     },
@@ -351,17 +500,22 @@
       ],
       "consumes": [
         "PRD.md",
-        "technical signal words"
+        "technical signal words",
+        "docs/change-units/CU-*.md"
       ],
       "produces": [
-        "research-brief.md"
+        "research-brief.md",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
-        "PRD technical signals"
+        "PRD technical signals",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "algorithm menu",
-        "technical recommendation"
+        "technical recommendation",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "技术信号词存在但没有可行方案",
@@ -412,17 +566,22 @@
       ],
       "consumes": [
         "PRD.md",
-        "user flow constraints"
+        "user flow constraints",
+        "docs/change-units/CU-*.md"
       ],
       "produces": [
-        "docs/features/<feature>/interaction-spec.md"
+        "docs/features/<feature>/interaction-spec.md",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
-        "acceptance criteria"
+        "acceptance criteria",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "interaction paths",
-        "component behavior"
+        "component behavior",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "异常流程缺失",
@@ -475,18 +634,23 @@
         "docs/project.md",
         "PRD.md",
         "interaction-spec.md",
-        "brand references"
+        "brand references",
+        "docs/change-units/CU-*.md"
       ],
       "produces": [
-        "DESIGN.md"
+        "DESIGN.md",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
         "product tone",
-        "page archetype"
+        "page archetype",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "design tokens",
-        "component patterns"
+        "component patterns",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "视觉方向冲突",
@@ -539,17 +703,22 @@
       ],
       "consumes": [
         "docs/project.md business goals",
-        "team constraints"
+        "team constraints",
+        "docs/change-units/CU-*.md"
       ],
       "produces": [
-        "docs/project.md technical decisions"
+        "docs/project.md technical decisions",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
-        "business and resource constraints"
+        "business and resource constraints",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "technical constraints",
-        "architecture decisions"
+        "architecture decisions",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "团队经验、业务约束、运维能力缺失"
@@ -600,9 +769,17 @@
       "consumes": [
         "user project intent",
         "existing docs/project.md",
-        "existing DESIGN.md"
+        "existing DESIGN.md",
+        "docs/CURRENT_STATE.md",
+        "docs/REBUILD_GUIDE.md",
+        "docs/change-units/CU-*.md"
       ],
-      "own_produces": [],
+      "own_produces": [
+        "docs/CURRENT_STATE.md",
+        "docs/REBUILD_GUIDE.md",
+        "docs/CODE_MAP.yml",
+        "docs/change-units/CU-*.md"
+      ],
       "orchestrated_produces": [
         "docs/project.md",
         "DESIGN.md",
@@ -610,11 +787,18 @@
         "CLAUDE.md"
       ],
       "signals_in": [
-        "missing project files"
+        "missing project files",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "project initialized",
-        "phase skipped"
+        "phase skipped",
+        "change_unit.created",
+        "current_snapshot.updated",
+        "rebuild_control.updated",
+        "code_map.updated",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "已有文件与新决策冲突",
@@ -645,6 +829,16 @@
           "signal": "phase skipped",
           "to": "forge-detail",
           "when": "existing project files allow direct detailing"
+        },
+        {
+          "signal": "change_unit.created",
+          "to": "forge-define",
+          "when": "when initialization creates a project evolution record"
+        },
+        {
+          "signal": "rebuild_control.updated",
+          "to": "forge-codegen",
+          "when": "when generated project docs can drive implementation"
         }
       ]
     },
@@ -666,20 +860,26 @@
       "consumes": [
         "PRD.md",
         "existing DESIGN.md",
-        "feature context"
+        "feature context",
+        "docs/change-units/CU-*.md"
       ],
-      "own_produces": [],
+      "own_produces": [
+        "docs/change-units/CU-*.md"
+      ],
       "orchestrated_produces": [
         "interaction-spec.md",
         "DESIGN.md updates"
       ],
       "signals_in": [
         "design needed",
-        "frontend absent"
+        "frontend absent",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "interaction spec ready",
-        "design tokens ready"
+        "design tokens ready",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "用户不确认视觉方向",
@@ -731,10 +931,14 @@
         "PRD.md",
         "interaction-spec.md",
         "DESIGN.md",
-        "codegen deviation summary"
+        "codegen deviation summary",
+        "docs/change-units/CU-*.md",
+        "docs/CODE_MAP.yml",
+        "docs/CURRENT_STATE.md"
       ],
       "own_produces": [
-        "feature contract.md"
+        "feature contract.md",
+        "docs/change-units/CU-*.md"
       ],
       "orchestrated_produces": [
         "api/contract.md",
@@ -743,12 +947,18 @@
       ],
       "signals_in": [
         "repeated L1 from forge-codegen",
-        "document drift from forge-review"
+        "document drift from forge-review",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "contract updated",
         "downstream drift report",
-        "human decision needed"
+        "human decision needed",
+        "change_unit.updated",
+        "code_map.updated",
+        "current_snapshot.updated",
+        "doc_sync.completed"
       ],
       "escalates_when": [
         "contract ambiguity",
@@ -788,6 +998,16 @@
           "signal": "human decision needed",
           "to": "human decision",
           "when": "L2 drift or domain boundary conflict exists"
+        },
+        {
+          "signal": "doc_sync.completed",
+          "to": "forge-review",
+          "when": "when changed source docs must be checked for drift"
+        },
+        {
+          "signal": "code_map.updated",
+          "to": "forge-codegen",
+          "when": "when contract projection paths are ready"
         }
       ]
     },
@@ -808,18 +1028,23 @@
       ],
       "consumes": [
         "docs/project.md",
-        "PRD.md"
+        "PRD.md",
+        "docs/change-units/CU-*.md"
       ],
       "produces": [
         "api/contract.md",
-        "api/modules/*.md"
+        "api/modules/*.md",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
-        "requirements and technical constraints"
+        "requirements and technical constraints",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "API setpoint",
-        "shared data model"
+        "shared data model",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "资源模型无法确认",
@@ -870,17 +1095,22 @@
       ],
       "consumes": [
         "docs/project.md",
-        "api/contract.md"
+        "api/contract.md",
+        "docs/change-units/CU-*.md"
       ],
       "produces": [
-        "database/contract.md"
+        "database/contract.md",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
-        "API data model"
+        "API data model",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "database setpoint",
-        "migration rules"
+        "migration rules",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "API 模型和存储模型冲突",
@@ -932,20 +1162,25 @@
       "consumes": [
         "interaction-spec.md",
         "DESIGN.md",
-        "api/contract.md"
+        "api/contract.md",
+        "docs/change-units/CU-*.md"
       ],
       "produces": [
         "frontend/contract.md",
-        "frontend/modules/*.md"
+        "frontend/modules/*.md",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
         "API setpoint",
         "design tokens",
-        "interaction spec"
+        "interaction spec",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "frontend setpoint",
-        "component modules"
+        "component modules",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "API 合约缺失",
@@ -1001,18 +1236,26 @@
       ],
       "consumes": [
         "contract.md",
-        "modules/*.md"
+        "modules/*.md",
+        "docs/change-units/CU-*.md",
+        "docs/REBUILD_GUIDE.md"
       ],
       "own_produces": [
-        "plan.md"
+        "plan.md",
+        "docs/change-units/CU-*.md"
       ],
       "orchestrated_produces": [],
       "signals_in": [
-        "domain contracts"
+        "domain contracts",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "task sequence",
-        "checkpoints"
+        "checkpoints",
+        "change_unit.updated",
+        "rebuild_control.updated",
+        "doc_sync.completed"
       ],
       "escalates_when": [
         "任务无法垂直切片",
@@ -1044,6 +1287,11 @@
           "signal": "checkpoints",
           "to": "forge-test",
           "when": "testing stage needs task-derived checkpoints"
+        },
+        {
+          "signal": "doc_sync.completed",
+          "to": "forge-review",
+          "when": "when changed source docs must be checked for drift"
         }
       ]
     },
@@ -1068,21 +1316,31 @@
         "DESIGN.md",
         "contract.md",
         "modules/*.md",
-        "plan.md"
+        "plan.md",
+        "docs/change-units/CU-*.md",
+        "docs/CODE_MAP.yml",
+        "docs/REBUILD_GUIDE.md"
       ],
       "produces": [
         "src/",
         "tests/",
-        "deviation summary"
+        "deviation summary",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
         "contract setpoint",
-        "task sequence"
+        "task sequence",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "L0 noise",
         "L1 deviation",
-        "L2 drift"
+        "L2 drift",
+        "change_unit.updated",
+        "code_map.updated",
+        "rebuild_control.updated",
+        "doc_sync.completed"
       ],
       "escalates_when": [
         "L2 drift",
@@ -1123,6 +1381,16 @@
           "signal": "generated code",
           "to": "forge-review",
           "when": "projection is ready for independent review"
+        },
+        {
+          "signal": "doc_sync.completed",
+          "to": "forge-review",
+          "when": "when changed source docs must be checked for drift"
+        },
+        {
+          "signal": "change_unit.updated",
+          "to": "forge-review",
+          "when": "when generated code and evidence need independent review"
         }
       ]
     },
@@ -1147,19 +1415,26 @@
         "frontend/contract.md",
         "frontend/modules/*.md",
         "api/modules/*.md",
-        "plan.md"
+        "plan.md",
+        "docs/change-units/CU-*.md",
+        "docs/CODE_MAP.yml"
       ],
       "produces": [
         "frontend source files",
-        "frontend validation evidence"
+        "frontend validation evidence",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
         "frontend task",
-        "design tokens"
+        "design tokens",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "frontend artifact ready",
-        "preview blocked"
+        "preview blocked",
+        "change_unit.updated",
+        "code_map.updated"
       ],
       "escalates_when": [
         "无法运行或预览",
@@ -1218,20 +1493,27 @@
         "modules/*.md",
         "plan.md",
         "existing testing/contract.md",
-        "existing testing/test-cases.md"
+        "existing testing/test-cases.md",
+        "docs/change-units/CU-*.md"
       ],
-      "own_produces": [],
+      "own_produces": [
+        "docs/change-units/CU-*.md"
+      ],
       "orchestrated_produces": [
         "testing/contract.md",
         "testing/test-cases.md"
       ],
       "signals_in": [
         "test planning needed",
-        "missing test cases"
+        "missing test cases",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "test strategy ready",
-        "test cases ready"
+        "test cases ready",
+        "change_unit.updated",
+        "doc_sync.completed"
       ],
       "escalates_when": [
         "验收条件缺失",
@@ -1270,6 +1552,11 @@
           "signal": "requirements not testable",
           "to": "forge-detail",
           "when": "setpoint cannot produce reliable tests"
+        },
+        {
+          "signal": "doc_sync.completed",
+          "to": "forge-review",
+          "when": "when changed source docs must be checked for drift"
         }
       ]
     },
@@ -1291,18 +1578,23 @@
       "consumes": [
         "contract.md",
         "modules/*.md",
-        "plan.md"
+        "plan.md",
+        "docs/change-units/CU-*.md"
       ],
       "produces": [
-        "testing/contract.md"
+        "testing/contract.md",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
         "business risk",
-        "test constraints"
+        "test constraints",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "test strategy",
-        "quality gate"
+        "quality gate",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "关键路径无法覆盖",
@@ -1355,17 +1647,22 @@
         "contract.md",
         "modules/*.md",
         "plan.md",
-        "testing/contract.md"
+        "testing/contract.md",
+        "docs/change-units/CU-*.md"
       ],
       "produces": [
-        "testing/test-cases.md"
+        "testing/test-cases.md",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
         "acceptance criteria",
-        "test strategy"
+        "test strategy",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
-        "test case setpoint"
+        "test case setpoint",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "验收条件不可测试",
@@ -1424,17 +1721,22 @@
         "interaction-spec.md",
         "frontend/contract.md",
         "frontend/modules/*.md",
-        "frontend source files"
+        "frontend source files",
+        "docs/change-units/CU-*.md"
       ],
       "produces": [
-        "frontend acceptance report"
+        "frontend acceptance report",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
-        "frontend artifact ready"
+        "frontend artifact ready",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "P0/P1/P2 frontend issues",
-        "acceptance status"
+        "acceptance status",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "无法运行或预览却要求通过",
@@ -1494,19 +1796,27 @@
         "src/",
         "tests/",
         "changelog",
-        "timeline"
+        "timeline",
+        "docs/change-units/CU-*.md",
+        "docs/CURRENT_STATE.md"
       ],
       "produces": [
         "review report",
-        "deviation attribution"
+        "deviation attribution",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
         "artifact ready",
-        "health check trigger"
+        "health check trigger",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "P0/P1/P2 issues",
-        "skill/document/code attribution"
+        "skill/document/code attribution",
+        "change_unit.updated",
+        "current_snapshot.updated",
+        "doc_sync.completed"
       ],
       "escalates_when": [
         "P0/P1 found",
@@ -1547,6 +1857,16 @@
           "signal": "P0/P1 issues",
           "to": "human decision",
           "when": "blocking issue needs prioritization or waiver"
+        },
+        {
+          "signal": "doc_sync.completed",
+          "to": "forge-review",
+          "when": "when changed source docs must be checked for drift"
+        },
+        {
+          "signal": "doc_sync.completed",
+          "to": "forge-deploy",
+          "when": "when review clears release readiness docs"
         }
       ]
     },
@@ -1573,23 +1893,31 @@
         "tests/",
         "testing/test-cases.md",
         "contract.md",
-        "review report"
+        "review report",
+        "docs/change-units/CU-*.md",
+        "docs/REBUILD_GUIDE.md"
       ],
       "produces": [
         "deploy/contract.md",
-        "release checklist"
+        "release checklist",
+        "docs/change-units/CU-*.md"
       ],
       "external_downstream": [
         "runtime release execution"
       ],
       "signals_in": [
         "code review passed",
-        "test results"
+        "test results",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "release plan",
         "rollback plan",
-        "release blocked"
+        "release blocked",
+        "change_unit.updated",
+        "rebuild_control.updated",
+        "doc_sync.completed"
       ],
       "escalates_when": [
         "无回滚方案",
@@ -1620,6 +1948,11 @@
           "signal": "release blocked",
           "to": "human decision",
           "when": "rollback, health check, or monitoring is missing"
+        },
+        {
+          "signal": "doc_sync.completed",
+          "to": "forge-review",
+          "when": "when changed source docs must be checked for drift"
         }
       ]
     },
@@ -1641,21 +1974,29 @@
       "consumes": [
         "review attribution",
         "changelog",
-        "timeline"
+        "timeline",
+        "docs/change-units/CU-*.md",
+        "docs/CURRENT_STATE.md"
       ],
       "produces": [
-        "skill improvement recommendation"
+        "skill improvement recommendation",
+        "docs/change-units/CU-*.md"
       ],
       "external_downstream": [
         "skill maintenance"
       ],
       "signals_in": [
         "same-class deviation >= 3",
-        "cross-project deviation"
+        "cross-project deviation",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "methodology change proposal",
-        "evidence chain"
+        "evidence chain",
+        "change_unit.updated",
+        "current_snapshot.updated",
+        "doc_sync.completed"
       ],
       "escalates_when": [
         "证据不足",
@@ -1683,6 +2024,16 @@
           "signal": "evidence chain",
           "to": "human decision",
           "when": "methodology change requires approval"
+        },
+        {
+          "signal": "doc_sync.completed",
+          "to": "forge-review",
+          "when": "when changed source docs must be checked for drift"
+        },
+        {
+          "signal": "change_unit.updated",
+          "to": "skill maintenance",
+          "when": "when methodology update evidence is complete"
         }
       ]
     },
@@ -1706,22 +2057,27 @@
       "consumes": [
         "user question",
         "current decision context",
-        "target document"
+        "target document",
+        "docs/change-units/CU-*.md"
       ],
       "produces": [
         "docs/thinking/*.md",
-        "decision rationale excerpt"
+        "decision rationale excerpt",
+        "docs/change-units/CU-*.md"
       ],
       "signals_in": [
         "high-impact decision",
         "unclear assumption",
-        "user asks for challenge"
+        "user asks for challenge",
+        "change_unit.created",
+        "change_unit.updated"
       ],
       "signals_out": [
         "reasoning record",
         "assumption risk",
         "direction changed",
-        "needs research"
+        "needs research",
+        "change_unit.updated"
       ],
       "escalates_when": [
         "方案被击穿",

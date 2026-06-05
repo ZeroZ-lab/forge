@@ -69,6 +69,45 @@ test('runtime recovery blockers are encoded as registry signals', () => {
   assert.ok(byName['forge-learn'].avoid_when.includes('没有足够偏差证据'));
 });
 
+test('runtime registry includes Change Unit and rebuild-control signals', () => {
+  const signalIds = new Set(registry.signal_vocabulary.map((signal) => signal.id));
+  for (const signalId of [
+    'change_unit.created',
+    'change_unit.updated',
+    'doc_sync.completed',
+    'code_map.updated',
+    'current_snapshot.updated',
+    'rebuild_control.updated',
+  ]) {
+    assert.ok(signalIds.has(signalId), `missing signal ${signalId}`);
+  }
+
+  const byName = Object.fromEntries(registry.skills.map((skill) => [skill.name, skill]));
+  assert.ok(byName['forge-detail'].signals_out.includes('code_map.updated'));
+  assert.ok(byName['forge-codegen'].consumes.includes('docs/CODE_MAP.yml'));
+  assert.ok(byName['forge-review'].signals_out.includes('doc_sync.completed'));
+});
+
+test('every skill declares Change Unit participation', () => {
+  for (const skill of registry.skills) {
+    const produces = skill.produces ?? [...(skill.own_produces ?? []), ...(skill.orchestrated_produces ?? [])];
+    assert.ok(produces.includes('docs/change-units/CU-*.md'), `${skill.name} missing CU output`);
+    assert.ok(skill.signals_out.includes('change_unit.updated'), `${skill.name} missing CU signal`);
+  }
+});
+
+test('Change Unit protocol templates exist', () => {
+  for (const file of [
+    'skills/shared/change-unit-template.md',
+    'skills/shared/doc-sync-checklist.md',
+    'skills/shared/code-map-template.md',
+    'skills/shared/current-state-template.md',
+    'skills/shared/rebuild-guide-template.md',
+  ]) {
+    assert.ok(fs.existsSync(file), `${file} missing`);
+  }
+});
+
 test('runtime control documentation rejects per-skill MAPE-K templating', () => {
   const doc = fs.readFileSync('docs/runtime-control-loop.md', 'utf8');
   assert.match(doc, /skills 是协议节点，不是控制系统本体/);

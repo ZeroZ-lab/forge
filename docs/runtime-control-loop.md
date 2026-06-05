@@ -21,6 +21,8 @@ Forge 真正需要满足的是运行时闭环：
   -> 修正文档 / 修正代码 / 改进方法论 / 请求人类决策
 ```
 
+Forge 0.28 在闭环中加入 Change Unit：每次 feature、bugfix、refactor、release 或方法论更新都先形成 `docs/change-units/CU-*.md`，再同步 Current Snapshot 和 Rebuild Control。CU 是事件事实源；timeline/changelog 只保留摘要和链接。
+
 ## 2. Runtime MAPE-K 映射
 
 | MAPE-K 模块 | Forge 运行时含义 | 主要协议节点 |
@@ -32,6 +34,21 @@ Forge 真正需要满足的是运行时闭环：
 | Knowledge | 提供方法论、模板、历史决策、偏差记录和共享约束 | `skills/shared/`、各 skill `references/`、`docs/timeline.md`、feature `changelog.md` |
 | Feedback | 通过测试、validate、review、前端验收和用户确认判断结果是否达标 | `scripts/validate.mjs`、`forge-review`、`forge-fe-accept`、测试文档 |
 | Recovery | 修代码、修文档、级联更新、回滚发布、聚合偏差并改进方法论、升级给人类决策 | `forge-codegen`、`forge-detail`、`forge-review`、`forge-learn`、`forge-deploy` |
+
+## 2.1 Change Unit / Rebuild Control
+
+新增运行时信号：
+
+| 信号 | 来源 | 处理 |
+|------|------|------|
+| `change_unit.created` | `forge-init` / `forge-define` | 作为本次变更事件入口传给后续阶段 |
+| `change_unit.updated` | `forge-detail` / `forge-codegen` / `forge-review` 等 | 累积行为变化、风险、验证和 doc sync |
+| `doc_sync.completed` | `forge-detail` / `forge-test` / `forge-review` 等 | 证明 Current Snapshot / feature docs 已同步 |
+| `code_map.updated` | `forge-detail` / `forge-codegen` | 证明文档到代码投影映射已更新 |
+| `current_snapshot.updated` | `forge-init` / `forge-detail` / `forge-review` | 维护 `docs/CURRENT_STATE.md` |
+| `rebuild_control.updated` | `forge-init` / `forge-plan` / `forge-codegen` / `forge-deploy` | 维护 `docs/REBUILD_GUIDE.md` 与重建路径 |
+
+如果 `docs/CURRENT_STATE.md`、`docs/REBUILD_GUIDE.md` 或 `docs/CODE_MAP.yml` 变化但没有对应 CU，review 必须标记为不可追溯变更。
 
 ## 3. 三层控制回路
 

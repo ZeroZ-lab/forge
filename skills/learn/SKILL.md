@@ -150,3 +150,11 @@ when_to_use: Use when the user asks to review the method, improve skills, do a r
   确认建议       — 执行 skill 修改
   继续积累       — 等更多偏差数据再分析
 ```
+
+## Change Unit / Rebuild Control
+
+- 方法论变更也必须有 CU，记录证据链、被拒方案、影响 skill 和验证结果。
+- 没有重复偏差证据时只输出建议，不修改 skill，也不写完成态 CU。
+- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
+- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
+- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

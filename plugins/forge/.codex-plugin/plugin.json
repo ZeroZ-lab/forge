@@ -5,13 +5,13 @@
     "name": "ZeroZ-lab",
     "url": "https://github.com/ZeroZ-lab/forge"
   },
-  "version": "0.27.2",
+  "version": "0.28.1",
   "homepage": "https://github.com/ZeroZ-lab/forge",
   "skills": "./skills",
   "interface": {
     "displayName": "Forge",
     "shortDescription": "文档即源代码的 AI 开发决策协议。",
-    "longDescription": "Forge 默认服务已有项目的小功能迭代：先补 detail 合约，再按 contract 生成实现，最后 review 当前修改是否偏离决策文档。完整生命周期、运行时闭环和评测能力仍然保留，但按需再展开。",
+    "longDescription": "Forge 默认服务已有项目的小功能迭代：先补 detail 合约，再按 contract 生成实现，最后 review 当前修改是否偏离决策文档。0.28 引入 Change Unit、Current Snapshot 和 CODE_MAP，使每次变更可追溯并支持从文档重建。",
     "developerName": "ZeroZ-lab",
     "category": "Engineering",
     "capabilities": [

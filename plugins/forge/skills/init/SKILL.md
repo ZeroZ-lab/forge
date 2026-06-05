@@ -177,3 +177,11 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
   detail 阶段       — 跳过需求，直接做技术详设
   自然语言            — 直接说"做任务管理功能"
 ```
+
+## Change Unit / Rebuild Control
+
+- 初始化时创建最小 Rebuild Control 内核：`docs/CURRENT_STATE.md`、`docs/REBUILD_GUIDE.md`、`docs/CODE_MAP.yml`。
+- 本阶段的初始化决策写入 `docs/change-units/CU-*.md`；timeline 只摘要并链接 CU。
+- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
+- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
+- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

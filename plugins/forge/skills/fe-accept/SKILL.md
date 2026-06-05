@@ -108,3 +108,11 @@ when_to_use: Use when the user asks to accept frontend work, inspect a page, com
   - 做独立审查
   - 规划发布
 ```
+
+## Change Unit / Rebuild Control
+
+- 四维验收结果写入当前 CU 的 Completion Evidence。
+- 发现设计/实现漂移时更新 CU 风险和回写目标，不只生成验收报告。
+- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
+- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
+- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

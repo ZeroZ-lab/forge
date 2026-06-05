@@ -14,7 +14,7 @@
 ## 运行时治理
 
 - [Runtime Control Loop](runtime-control-loop.md)
-  说明 `detail -> codegen -> review -> learn` 的运行时闭环、偏差信号和恢复路径。
+  说明 `detail -> codegen -> review -> learn` 的运行时闭环、Change Unit、doc sync、CODE_MAP、偏差信号和恢复路径。
 - [Skill Architecture Audit](skill-architecture-audit.md)
   说明运行时控制面、typed edges 和协议角色的审计结论。
 
@@ -47,6 +47,8 @@
 
 Advanced 入口关注：
 
+- `docs/change-units/CU-*.md`
+- `docs/CURRENT_STATE.md` / `docs/REBUILD_GUIDE.md` / `docs/CODE_MAP.yml`
 - `timeline.md` / `status.md`
 - 完整阶段矩阵
 - 运行时控制回路

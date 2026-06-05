@@ -34,12 +34,14 @@ Forge 的默认入口不是完整生命周期，而是**已有项目上的小功
 - `contract.md`：共享约束和跨领域骨架
 - `modules/*.md`：模块级接口、数据和行为
 - `changelog.md`：这个 feature 的决策历史
+- `docs/change-units/CU-*.md`：每次 feature / bugfix / refactor 的完整事件记录
 
 按需再补：
 
 - `PRD.md`：需求边界还不清时再写
 - `plan.md`：任务复杂、需要切片或并行时再写
 - `testing/`、`deploy/`：测试或发布要独立建模时再开
+- `docs/CURRENT_STATE.md`、`docs/REBUILD_GUIDE.md`、`docs/CODE_MAP.yml`：需要从文档重建代码或检查投影映射时维护
 - `docs/timeline.md`：项目级决策演进或跨 feature 影响时再开
 - `docs/status.md`：多 feature 并行协调时再开
 
@@ -94,7 +96,7 @@ node scripts/validate.mjs
 
 自检会校验版本同步、24 个 skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 投影回流。
 
-运行时控制面也会被校验：`registry.yaml` 必须覆盖全部 24 个 skill，并声明每个协议节点的 `runtime_role`、输入输出、typed edges、偏差信号和升级条件；`docs/runtime-control-loop.md` 和 `docs/skill-architecture-audit.md` 必须存在；shared Knowledge 层、编排 skill 的运行时恢复规则，以及 `codegen -> detail -> review -> learn` 信号链必须完整。`registry.yaml` 是 JSON-compatible YAML，保持严格 JSON 语法以便无依赖校验。
+运行时控制面也会被校验：`registry.yaml` 必须覆盖全部 24 个 skill，并声明每个协议节点的 `runtime_role`、输入输出、typed edges、偏差信号和升级条件；`docs/runtime-control-loop.md` 和 `docs/skill-architecture-audit.md` 必须存在；shared Knowledge 层、编排 skill 的运行时恢复规则，`Change Unit -> doc sync -> CODE_MAP` 重建控制信号，以及 `codegen -> detail -> review -> learn` 偏差信号链必须完整。`registry.yaml` 是 JSON-compatible YAML，保持严格 JSON 语法以便无依赖校验。
 
 ### 行为测试
 
@@ -110,7 +112,7 @@ node --test
 node scripts/evaluate-skills.mjs
 ```
 
-评测自检会校验 `evals/skills-suite/manifest.json`：至少 10 个固定任务、覆盖全部 24 个 skill、fixtures 存在、oracle check 可机器读取。这只证明评测合约完整，不证明某次 agent 行为有效。
+评测自检会校验 `evals/skills-suite/manifest.json`：至少 10 个固定任务、覆盖全部 24 个 skill、fixtures 存在、v2 oracle check 可机器读取，并要求 Change Unit / doc sync / CODE_MAP 证据。这只证明评测合约完整，不证明某次 agent 行为有效。
 
 要评价真实运行，把 agent 执行记录整理成 `evals/skills-suite/report.schema.json` 格式，然后运行：
 

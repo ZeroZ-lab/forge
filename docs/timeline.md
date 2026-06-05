@@ -1,5 +1,17 @@
 # Timeline — Forge 方法论进化记录
 
+### 2026-06-05 — Change Unit 驱动的可追溯重建协议
+
+- **触发**：用户希望重构升级 skills suite，使项目不是一次性生成说明书，而是通过 feature / bugfix / refactor 的可验证补丁包逐步演化。
+- **核心判断**：Forge 原有 timeline/changelog 能记录历史，但缺少“每次变更的完整事件记录”和“文档到代码投影映射”。需要把 Change Unit 作为演化事实源，把 Current Snapshot 和 Rebuild Control 作为可重建控制面。
+- **改动**：
+  - 新增 shared 模板：Change Unit、doc sync checklist、CODE_MAP、CURRENT_STATE、REBUILD_GUIDE。
+  - 24 个 skill 接入 `Change Unit / Rebuild Control` 协议引用。
+  - `registry.yaml` 新增 CU、doc sync、CODE_MAP、Current Snapshot、Rebuild Control 信号。
+  - skills-suite benchmark 升级到 v2，report 新增 `change_units`、`doc_sync`、`code_map_entries`，并新增 bugfix regression case。
+  - validator 新增 packaged plugin 漂移检查和 v2 oracle 校验。
+- **验证目标**：`node scripts/validate.mjs` + `node --test` + `node scripts/evaluate-skills.mjs`。
+
 ### 2026-05-31 — 可验证 Skills Suite 评测合约
 
 - **触发**：用户希望把当前项目变成可验证的 skills suite，否则无法判断 skill 是否真的有用

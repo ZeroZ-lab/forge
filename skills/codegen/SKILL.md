@@ -229,3 +229,11 @@ Smoke Gate：✅ 编译通过 · ✅ 服务启动 · ✅ 基础响应正常
   发布规划 — 灰度 + 回滚 + 监控
   自然语言       — 直接说"跑测试"或"修 bug"
 ```
+
+## Change Unit / Rebuild Control
+
+- 生成前读取 `docs/CODE_MAP.yml`；缺失时只能推导最小映射，并把推导写入当前 CU。
+- 生成后在 CU 中记录 code projection、verification command、L0/L1/L2 偏差信号和未验证项。
+- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
+- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
+- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

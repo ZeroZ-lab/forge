@@ -103,3 +103,11 @@ DESIGN.md（更新）                               # 来自 Phase 2
   detail 阶段  — 做技术详设（API + 数据库 + 前端）
   自然语言       — 直接说"设计 API"或"设计数据库"单独进入某个领域
 ```
+
+## Change Unit / Rebuild Control
+
+- 交互或设计系统变化必须更新当前 CU 的 Behavior Change、Affected Surface 和 Docs To Sync。
+- 完成后按 doc-sync checklist 同步 Current Snapshot；设计历史只在 changelog/timeline 摘要。
+- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
+- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
+- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

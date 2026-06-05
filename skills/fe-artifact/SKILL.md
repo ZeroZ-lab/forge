@@ -130,3 +130,11 @@ disable-model-invocation: false
   - 做独立审查
   - 继续测试策略
 ```
+
+## Change Unit / Rebuild Control
+
+- 前端投影前读取 `docs/CODE_MAP.yml` 和当前 CU，确认组件/状态/测试的目标文件。
+- 视觉或交互实现证据写入 CU；截图/验收报告只作为 evidence，不替代 fact source。
+- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
+- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
+- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

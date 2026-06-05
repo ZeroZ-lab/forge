@@ -185,3 +185,11 @@ docs/features/<feature>/deploy/
   自然语言       — 直接说"发布"执行发布清单
   继续迭代       — 回到 detail 阶段调整技术方案
 ```
+
+## Change Unit / Rebuild Control
+
+- 发布计划写入当前 CU 的 Rollback、Verification、Risks 和 Completion Evidence。
+- 缺少具体回滚或健康检查时阻塞发布，并在 CU 中记录阻塞原因。
+- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
+- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
+- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

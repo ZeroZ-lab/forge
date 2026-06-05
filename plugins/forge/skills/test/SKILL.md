@@ -114,3 +114,11 @@ docs/features/<feature>/
   发布规划 — 规划发布流程（灰度 + 回滚 + 监控）
   自然语言       — 直接说"生成代码"进入构建阶段
 ```
+
+## Change Unit / Rebuild Control
+
+- 测试阶段把策略、用例和验证证据回写当前 CU。
+- bugfix 必须沉淀 regression test，或在 CU 中明确说明为什么不需要。
+- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
+- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
+- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

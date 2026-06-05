@@ -17,6 +17,20 @@ node scripts/evaluate-skills.mjs --report path/to/report.json
 
 No-report mode must not be used as evidence that the skills are effective. It only proves the evaluation harness is intact.
 
+## V2 Traceability Contract
+
+The benchmark contract is now version 2. Every scored case must prove that the run is traceable through a Change Unit and, when implementation or rebuild state changes, through Rebuild Control.
+
+Each case report includes:
+
+- `change_units`: `docs/change-units/CU-*.md` records for the feature, bugfix, release, or methodology update.
+- `doc_sync`: structured sync entries such as `{ "target": "docs/CURRENT_STATE.md", "status": "completed" }`.
+- `code_map_entries`: `docs/CODE_MAP.yml` entries showing which source docs project to which code or test files.
+
+The evaluator rejects a report when Current Snapshot or Rebuild Control artifacts change without a valid Change Unit path. CODE_MAP oracle checks fail unless the reported map covers the checked artifact or source document.
+
+Every `expected_artifacts` entry must be reported by the run. Non-CU artifacts must appear in `artifacts`; CU artifacts must appear in `change_units` and match `docs/change-units/CU-*.md`. `doc_sync` and `code_map_entries` must be structured objects; string-only sync or CODE_MAP evidence is not accepted.
+
 For Codex-based smoke runs:
 
 ```bash
@@ -49,6 +63,12 @@ Each case defines:
 - forbidden behaviors
 - oracle checks
 
+V2 oracle checks include the original routing/artifact/decision checks plus:
+
+- `change_unit_reported`
+- `doc_sync_completed`
+- `code_map_covers`
+
 The baseline suite contains at least 10 cases and covers all registered Forge skills.
 
 ## Report Contract
@@ -59,6 +79,9 @@ Each case report records:
 
 - `triggered_skills`
 - `artifacts`
+- `change_units`
+- `doc_sync`
+- `code_map_entries`
 - `commands_run`
 - `decisions`
 - `forbidden_behaviors`

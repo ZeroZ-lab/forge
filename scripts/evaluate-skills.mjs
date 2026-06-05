@@ -8,8 +8,11 @@ const root = process.cwd();
 const failures = [];
 const allowedCheckTypes = new Set([
   'artifact_reported',
+  'change_unit_reported',
+  'code_map_covers',
   'command_reported',
   'decision_gate_reported',
+  'doc_sync_completed',
   'evidence_contains',
   'forbidden_behavior_absent',
   'skill_triggered',
@@ -65,7 +68,7 @@ function parseArgs(argv) {
 function validateManifest(registry, manifest) {
   const registrySkills = new Set((registry.skills ?? []).map((skill) => skill.name));
 
-  assert(manifest.version === 1, 'manifest.version must be 1');
+  assert(manifest.version === 2, 'manifest.version must be 2');
   assert(manifest.name === 'forge-skills-suite-benchmark', 'manifest.name must be forge-skills-suite-benchmark');
   assert(manifest.report_schema === 'evals/skills-suite/report.schema.json', 'manifest.report_schema must point to report.schema.json');
   assert(exists(manifest.report_schema), `${manifest.report_schema}: missing`);
@@ -98,8 +101,11 @@ function validateManifest(registry, manifest) {
       assert(allowedCheckTypes.has(check.type), `${testCase.id}: unknown oracle check type ${check.type}`);
       if (check.type === 'skill_triggered') assert(registrySkills.has(check.skill), `${testCase.id}: unknown oracle skill ${check.skill}`);
       if (check.type === 'artifact_reported') assert(typeof check.path === 'string' && check.path.length > 0, `${testCase.id}: artifact_reported.path is required`);
+      if (check.type === 'change_unit_reported') assert(typeof check.path === 'string' && check.path.length > 0, `${testCase.id}: change_unit_reported.path is required`);
+      if (check.type === 'code_map_covers') assert(typeof check.path === 'string' && check.path.length > 0, `${testCase.id}: code_map_covers.path is required`);
       if (check.type === 'command_reported') assert(typeof check.command === 'string' && check.command.length > 0, `${testCase.id}: command_reported.command is required`);
       if (check.type === 'decision_gate_reported') assert(typeof check.decision === 'string' && check.decision.length > 0, `${testCase.id}: decision_gate_reported.decision is required`);
+      if (check.type === 'doc_sync_completed') assert(typeof check.target === 'string' && check.target.length > 0, `${testCase.id}: doc_sync_completed.target is required`);
       if (check.type === 'evidence_contains') assert(typeof check.text === 'string' && check.text.length > 0, `${testCase.id}: evidence_contains.text is required`);
       if (check.type === 'forbidden_behavior_absent') assert(typeof check.behavior === 'string' && check.behavior.length > 0, `${testCase.id}: forbidden_behavior_absent.behavior is required`);
     }
@@ -118,6 +124,14 @@ function artifactPaths(run) {
   );
 }
 
+function changeUnitPaths(run) {
+  return new Set(
+    (run.change_units ?? [])
+      .map((changeUnit) => (typeof changeUnit === 'string' ? changeUnit : changeUnit?.path))
+      .filter(isChangeUnitPath),
+  );
+}
+
 function globMatch(pattern, value) {
   if (!pattern.includes('*')) return value === pattern;
   const escaped = pattern
@@ -133,6 +147,56 @@ function decisionIds(run) {
   );
 }
 
+function docSyncTargets(run) {
+  return new Set(
+    (run.doc_sync ?? [])
+      .filter((item) => item?.status === 'completed')
+      .map((item) => item?.target)
+      .filter(Boolean),
+  );
+}
+
+function codeMapCoveredPaths(run) {
+  const paths = new Set();
+  for (const entry of run.code_map_entries ?? []) {
+    if (entry?.source) paths.add(entry.source);
+    for (const projectedPath of entry?.projects_to ?? []) paths.add(projectedPath);
+  }
+  return paths;
+}
+
+function validCodeMapEntry(entry) {
+  return (
+    entry &&
+    typeof entry === 'object' &&
+    !Array.isArray(entry) &&
+    typeof entry.source === 'string' &&
+    entry.source.startsWith('docs/') &&
+    Array.isArray(entry.projects_to) &&
+    entry.projects_to.every((projectedPath) => typeof projectedPath === 'string' && projectedPath.length > 0)
+  );
+}
+
+function isChangeUnitPath(value) {
+  return typeof value === 'string' && /^docs\/change-units\/CU-[^/]+\.md$/.test(value);
+}
+
+function validChangeUnitEntry(entry) {
+  if (typeof entry === 'string') return isChangeUnitPath(entry);
+  return entry && typeof entry === 'object' && !Array.isArray(entry) && isChangeUnitPath(entry.path);
+}
+
+function validDocSyncEntry(entry) {
+  return (
+    entry &&
+    typeof entry === 'object' &&
+    !Array.isArray(entry) &&
+    typeof entry.target === 'string' &&
+    entry.target.length > 0 &&
+    ['completed', 'pending', 'blocked'].includes(entry.status)
+  );
+}
+
 function evidenceText(run) {
   return [...(run.evidence ?? []), run.notes ?? ''].join('\n');
 }
@@ -140,8 +204,11 @@ function evidenceText(run) {
 function checkRun(testCase, run) {
   const triggeredSkills = new Set(run.triggered_skills ?? []);
   const artifacts = artifactPaths(run);
+  const changeUnits = changeUnitPaths(run);
   const commands = new Set(run.commands_run ?? []);
   const decisions = decisionIds(run);
+  const docSync = docSyncTargets(run);
+  const codeMapPaths = codeMapCoveredPaths(run);
   const forbiddenBehaviors = new Set(run.forbidden_behaviors ?? []);
   const evidence = evidenceText(run);
   const results = [];
@@ -152,8 +219,15 @@ function checkRun(testCase, run) {
     if (check.type === 'artifact_reported') {
       passed = [...artifacts].some((artifactPath) => globMatch(check.path, artifactPath));
     }
+    if (check.type === 'change_unit_reported') {
+      passed = [...changeUnits].some((changeUnitPath) => globMatch(check.path, changeUnitPath));
+    }
+    if (check.type === 'code_map_covers') {
+      passed = [...codeMapPaths].some((coveredPath) => globMatch(check.path, coveredPath));
+    }
     if (check.type === 'command_reported') passed = commands.has(check.command);
     if (check.type === 'decision_gate_reported') passed = decisions.has(check.decision);
+    if (check.type === 'doc_sync_completed') passed = docSync.has(check.target);
     if (check.type === 'evidence_contains') passed = evidence.includes(check.text);
     if (check.type === 'forbidden_behavior_absent') passed = !forbiddenBehaviors.has(check.behavior);
     results.push({ passed, check });
@@ -163,7 +237,7 @@ function checkRun(testCase, run) {
 }
 
 function validateReport(manifest, registry, report, options = {}) {
-  assert(report.version === 1, 'report.version must be 1');
+  assert(report.version === 2, 'report.version must be 2');
   assert(report.suite === 'forge', 'report.suite must be forge');
   assert(typeof report.run_id === 'string' && report.run_id.length > 0, 'report.run_id is required');
   assert(Array.isArray(report.cases), 'report.cases must be an array');
@@ -181,10 +255,40 @@ function validateReport(manifest, registry, report, options = {}) {
     assert(arrayOfStrings(run.triggered_skills), `${run.case_id}: triggered_skills must be strings`);
     assert(arrayOfStrings(run.commands_run), `${run.case_id}: commands_run must be strings`);
     assert(Array.isArray(run.artifacts), `${run.case_id}: artifacts must be an array`);
+    assert(Array.isArray(run.change_units), `${run.case_id}: change_units must be an array`);
+    assert(Array.isArray(run.doc_sync), `${run.case_id}: doc_sync must be an array`);
+    assert(Array.isArray(run.code_map_entries), `${run.case_id}: code_map_entries must be an array`);
     assert(Array.isArray(run.evidence), `${run.case_id}: evidence must be an array`);
+    for (const entry of run.change_units ?? []) {
+      assert(validChangeUnitEntry(entry), `${run.case_id}: change_units must point to docs/change-units/CU-*.md`);
+    }
+    for (const entry of run.doc_sync ?? []) {
+      assert(validDocSyncEntry(entry), `${run.case_id}: doc_sync must be { target, status } objects`);
+    }
+    for (const entry of run.code_map_entries ?? []) {
+      assert(validCodeMapEntry(entry), `${run.case_id}: code_map_entries must be { source: "docs/...", projects_to: [...] } objects`);
+    }
 
     for (const skillName of run.triggered_skills ?? []) {
       assert(registrySkills.has(skillName), `${run.case_id}: unknown triggered skill ${skillName}`);
+    }
+
+    if (!(run.status === 'blocked' && options.skipBlocked)) {
+      const artifacts = artifactPaths(run);
+      const changeUnits = changeUnitPaths(run);
+      for (const expectedArtifact of manifestById.get(run.case_id)?.expected_artifacts ?? []) {
+        const reported = expectedArtifact.startsWith('docs/change-units/')
+          ? [...changeUnits].some((changeUnitPath) => globMatch(expectedArtifact, changeUnitPath))
+          : [...artifacts].some((artifactPath) => globMatch(expectedArtifact, artifactPath));
+        if (!reported) fail(`${run.case_id}: expected artifact not reported ${expectedArtifact}`);
+      }
+
+      const changedCurrentDocs = [...artifacts].some((artifactPath) =>
+        ['docs/CURRENT_STATE.md', 'docs/REBUILD_GUIDE.md', 'docs/CODE_MAP.yml'].some((currentPath) => globMatch(currentPath, artifactPath)),
+      );
+      if (changedCurrentDocs && changeUnits.size === 0) {
+        fail(`${run.case_id}: current/rebuild docs changed without a Change Unit`);
+      }
     }
   }
 
