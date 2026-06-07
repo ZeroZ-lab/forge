@@ -1,5 +1,16 @@
 # Timeline — Forge 方法论进化记录
 
+### 2026-06-07 — Skills Suite 链路压缩
+
+- **触发**：用户希望压缩当前项目的 skills suite，保证链路完整并删除冗余。
+- **核心判断**：删除孤立重复 case，而不是降低覆盖要求；把自然 handoff 的相邻阶段合并成完整链路。
+- **改动**：
+  - `interaction-design-system` 合并前端实现和验收，覆盖 design → interaction-design → fe-system → fe-artifact → fe-accept。
+  - `codegen-implementation` 合并计划和测试用例，覆盖 plan → test-cases → codegen。
+  - 删除 `frontend-artifact-acceptance` 和 `plan-test-cases` 两个冗余 fixture，suite 从 12 个 case 压缩到 10 个 case。
+  - 新增 Change Unit：`docs/change-units/CU-20260607-skills-suite-compression.md`。
+- **验证目标**：`node scripts/evaluate-skills.mjs` + `node scripts/validate.mjs` + `node --test tests/skills-suite-evaluation.test.mjs`。
+
 ### 2026-06-07 — Evaluator 目录化
 
 - **触发**：用户希望 evaluator 放到一个目录里。

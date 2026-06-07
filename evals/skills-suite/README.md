@@ -8,7 +8,7 @@ Run the deterministic contract check:
 node scripts/evaluate-skills.mjs
 ```
 
-That command proves the benchmark definition is complete: at least 10 cases, all registered skills covered, fixtures present, v2 Change Unit oracle checks valid, and goal verification evidence required where relevant.
+That command proves the benchmark definition is complete: 10 non-redundant chain cases, all registered skills covered, fixtures present, v2 Change Unit oracle checks valid, and goal verification evidence required where relevant.
 
 To score a real agent run, collect a JSON report matching `report.schema.json` and run:
 

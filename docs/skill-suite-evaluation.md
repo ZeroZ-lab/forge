@@ -67,7 +67,9 @@ V2 oracle checks include:
 - `change_unit_reported`
 - `goal_verified`
 
-The baseline suite contains at least 10 cases and covers all registered Forge skills.
+The baseline suite contains 10 non-redundant chain cases and covers all registered Forge skills.
+
+Cases should prefer complete adjacent chains over isolated single-stage prompts when the chain has a natural runtime handoff. For example, frontend design should continue through implementation acceptance, and implementation planning should continue through test cases and codegen. Keep standalone cases only when the skill is intentionally a sidecar, such as red-team thinking.
 
 ## Report Contract
 

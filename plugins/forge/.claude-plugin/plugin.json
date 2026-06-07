@@ -1,7 +1,7 @@
 {
   "name": "forge",
-  "version": "0.28.2",
-  "description": "\u6587\u6863\u662f\u76ee\u6807\u7ea6\u675f\u3002\u76ee\u6807\u662f\u4ec0\u4e48\u3001\u8fb9\u754c\u5728\u54ea\u3001\u600e\u4e48\u7b97\u5b8c\u6210\u3002",
+  "version": "0.28.5",
+  "description": "文档是目标约束。目标是什么、边界在哪、怎么算完成。",
   "author": {
     "name": "ZeroZ-lab",
     "url": "https://github.com/ZeroZ-lab/forge"
@@ -43,8 +43,8 @@
   ],
   "interface": {
     "displayName": "Forge",
-    "shortDescription": "\u76ee\u6807\u7ea6\u675f\u9a71\u52a8\u7684 AI \u5f00\u53d1\u51b3\u7b56\u534f\u8bae",
-    "longDescription": "Forge \u9ed8\u8ba4\u670d\u52a1\u5df2\u6709\u9879\u76ee\u7684\u5c0f\u529f\u80fd\u8fed\u4ee3\uff1a\u5148\u660e\u786e\u76ee\u6807\u548c\u7ea6\u675f\uff0c\u518d\u81ea\u4e3b\u5b9e\u73b0\uff0c\u6700\u540e\u9a8c\u8bc1\u7ed3\u679c\u662f\u5426\u8fbe\u6807\u30020.28 \u5f15\u5165 Change Unit\uff0c\u4f7f\u6bcf\u6b21\u53d8\u66f4\u53ef\u8ffd\u6eaf\u3002",
+    "shortDescription": "目标约束驱动的 AI 开发决策协议",
+    "longDescription": "Forge 默认服务已有项目的小功能迭代：先明确目标和约束，再自主实现，最后验证结果是否达标。0.28 引入 Change Unit，使每次变更可追溯。",
     "developerName": "ZeroZ-lab",
     "category": "Engineering",
     "capabilities": [
@@ -54,9 +54,9 @@
     ],
     "websiteURL": "https://github.com/ZeroZ-lab/forge",
     "defaultPrompt": [
-      "\u7528 Forge \u4e3a\u5df2\u6709 feature \u8865 detail \u5408\u7ea6",
-      "\u6309 contract \u751f\u6210\u8fd9\u4e2a feature \u7684\u5b9e\u73b0",
-      "review \u5f53\u524d\u4fee\u6539\u662f\u5426\u504f\u79bb contract"
+      "用 Forge 为已有 feature 补 detail 合约",
+      "按 contract 生成这个 feature 的实现",
+      "review 当前修改是否偏离 contract"
     ]
   }
 }

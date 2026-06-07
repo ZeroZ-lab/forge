@@ -1,7 +1,7 @@
 {
   "version": 2,
   "name": "forge-skills-suite-benchmark",
-  "description": "A deterministic v2 contract for checking whether Forge skills are triggered, bounded, verified, traceable through Change Units, and goal-aware during representative agent runs.",
+  "description": "A deterministic v2 contract for checking whether Forge skills are triggered through complete, non-redundant chains; bounded, verified, traceable through Change Units, and goal-aware during representative agent runs.",
   "minimum_cases": 10,
   "scoring_model": {
     "version": 1,
@@ -254,17 +254,21 @@
     },
     {
       "id": "interaction-design-system",
-      "title": "\u4ea4\u4e92\u6d41\u7a0b\u548c\u8bbe\u8ba1\u7cfb\u7edf\u534f\u540c",
-      "level": "L2 stage",
+      "title": "\u524d\u7aef\u8bbe\u8ba1\u5230\u5b9e\u73b0\u9a8c\u6536\u95ed\u73af",
+      "level": "L2 chain",
       "fixture": "evals/skills-suite/fixtures/interaction-design-system.md",
       "expected_skills": [
         "forge-design",
         "forge-interaction-design",
-        "forge-fe-system"
+        "forge-fe-system",
+        "forge-fe-artifact",
+        "forge-fe-accept"
       ],
       "expected_artifacts": [
         "docs/features/onboarding/interaction-spec.md",
         "DESIGN.md",
+        "src/components/",
+        "docs/features/onboarding/frontend/fe-acceptance-report.md",
         "docs/change-units/CU-*.md",
         "goal.md"
       ],
@@ -272,11 +276,17 @@
         "primary flow",
         "component states",
         "token decisions",
-        "Change Unit"
+        "design token use",
+        "visual/runtime evidence",
+        "\u56db\u7ef4\u9a8c\u6536",
+        "Change Unit",
+        "goal verification"
       ],
       "forbidden_behaviors": [
         "landing_page_instead_of_workflow",
         "visual_tokens_without_interaction_context",
+        "component_without_state_contract",
+        "unverified_visual_claim",
         "current_docs_without_change_unit"
       ],
       "oracle_checks": [
@@ -293,12 +303,32 @@
           "skill": "forge-fe-system"
         },
         {
+          "type": "skill_triggered",
+          "skill": "forge-fe-artifact"
+        },
+        {
+          "type": "skill_triggered",
+          "skill": "forge-fe-accept"
+        },
+        {
           "type": "artifact_reported",
           "path": "docs/features/onboarding/interaction-spec.md"
         },
         {
+          "type": "artifact_reported",
+          "path": "docs/features/onboarding/frontend/fe-acceptance-report.md"
+        },
+        {
           "type": "decision_gate_reported",
           "decision": "primary_flow"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "\u56db\u7ef4\u9a8c\u6536"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "unverified_visual_claim"
         },
         {
           "type": "change_unit_reported",
@@ -307,6 +337,10 @@
         {
           "type": "forbidden_behavior_absent",
           "behavior": "current_docs_without_change_unit"
+        },
+        {
+          "type": "goal_covers",
+          "path": "src/components/"
         },
         {
           "type": "goal_verified",
@@ -385,17 +419,20 @@
       ]
     },
     {
-      "id": "plan-test-cases",
-      "title": "\u5782\u76f4\u5207\u7247\u4efb\u52a1\u548c\u6d4b\u8bd5\u7528\u4f8b\u8ffd\u6eaf",
-      "level": "L2 stage",
-      "fixture": "evals/skills-suite/fixtures/plan-test-cases.md",
+      "id": "codegen-implementation",
+      "title": "\u8ba1\u5212\u5230\u4ee3\u7801\u5b9e\u73b0\u548c\u9a8c\u8bc1\u95ed\u73af",
+      "level": "L1 chain",
+      "fixture": "evals/skills-suite/fixtures/codegen-goal.md",
       "expected_skills": [
         "forge-plan",
-        "forge-test-cases"
+        "forge-test-cases",
+        "forge-codegen"
       ],
       "expected_artifacts": [
         "docs/features/tags/plan.md",
         "docs/features/tags/testing/test-cases.md",
+        "src/",
+        "tests/",
         "docs/change-units/CU-*.md",
         "goal.md"
       ],
@@ -403,11 +440,18 @@
         "vertical slices",
         "AC traceability",
         "dependency order",
-        "Change Unit"
+        "contract read set",
+        "generated files",
+        "verification command",
+        "deviation classification",
+        "Change Unit",
+        "goal verification"
       ],
       "forbidden_behaviors": [
         "horizontal_layer_plan",
         "test_cases_without_acceptance_ids",
+        "code_without_contract_trace",
+        "claimed_complete_without_runtime_evidence",
         "current_docs_without_change_unit"
       ],
       "oracle_checks": [
@@ -420,6 +464,10 @@
           "skill": "forge-test-cases"
         },
         {
+          "type": "skill_triggered",
+          "skill": "forge-codegen"
+        },
+        {
           "type": "artifact_reported",
           "path": "docs/features/tags/plan.md"
         },
@@ -428,62 +476,16 @@
           "path": "docs/features/tags/testing/test-cases.md"
         },
         {
-          "type": "evidence_contains",
-          "text": "AC-"
-        },
-        {
-          "type": "change_unit_reported",
-          "path": "docs/change-units/CU-*.md"
-        },
-        {
-          "type": "forbidden_behavior_absent",
-          "behavior": "current_docs_without_change_unit"
-        },
-        {
-          "type": "goal_verified",
-          "target": "goal.md"
-        }
-      ]
-    },
-    {
-      "id": "codegen-implementation",
-      "title": "\u4ece\u76ee\u6807\u5b9e\u73b0\u4ee3\u7801\u5e76\u8bb0\u5f55\u95ee\u9898\u4fe1\u53f7",
-      "level": "L1 patch",
-      "fixture": "evals/skills-suite/fixtures/codegen-goal.md",
-      "expected_skills": [
-        "forge-codegen"
-      ],
-      "expected_artifacts": [
-        "src/",
-        "tests/",
-        "docs/change-units/CU-*.md",
-        "goal.md"
-      ],
-      "required_evidence": [
-        "contract read set",
-        "generated files",
-        "verification command",
-        "deviation classification",
-        "Change Unit",
-        "goal verification"
-      ],
-      "forbidden_behaviors": [
-        "code_without_contract_trace",
-        "claimed_complete_without_runtime_evidence",
-        "current_docs_without_change_unit"
-      ],
-      "oracle_checks": [
-        {
-          "type": "skill_triggered",
-          "skill": "forge-codegen"
-        },
-        {
           "type": "artifact_reported",
           "path": "src/"
         },
         {
           "type": "artifact_reported",
           "path": "tests/"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "AC-"
         },
         {
           "type": "command_reported",
@@ -504,72 +506,6 @@
         {
           "type": "goal_covers",
           "path": "src/"
-        },
-        {
-          "type": "goal_verified",
-          "target": "goal.md"
-        }
-      ]
-    },
-    {
-      "id": "frontend-artifact-acceptance",
-      "title": "\u524d\u7aef\u5b9e\u73b0\u548c\u56db\u7ef4\u9a8c\u6536",
-      "level": "L1 patch",
-      "fixture": "evals/skills-suite/fixtures/frontend-artifact-acceptance.md",
-      "expected_skills": [
-        "forge-fe-artifact",
-        "forge-fe-accept"
-      ],
-      "expected_artifacts": [
-        "src/components/",
-        "docs/features/onboarding/frontend/fe-acceptance-report.md",
-        "docs/change-units/CU-*.md",
-        "goal.md"
-      ],
-      "required_evidence": [
-        "design token use",
-        "state coverage",
-        "visual/runtime evidence",
-        "Change Unit",
-        "goal verification"
-      ],
-      "forbidden_behaviors": [
-        "unverified_visual_claim",
-        "component_without_state_contract",
-        "current_docs_without_change_unit"
-      ],
-      "oracle_checks": [
-        {
-          "type": "skill_triggered",
-          "skill": "forge-fe-artifact"
-        },
-        {
-          "type": "skill_triggered",
-          "skill": "forge-fe-accept"
-        },
-        {
-          "type": "artifact_reported",
-          "path": "docs/features/onboarding/frontend/fe-acceptance-report.md"
-        },
-        {
-          "type": "evidence_contains",
-          "text": "\u56db\u7ef4\u9a8c\u6536"
-        },
-        {
-          "type": "forbidden_behavior_absent",
-          "behavior": "unverified_visual_claim"
-        },
-        {
-          "type": "change_unit_reported",
-          "path": "docs/change-units/CU-*.md"
-        },
-        {
-          "type": "forbidden_behavior_absent",
-          "behavior": "current_docs_without_change_unit"
-        },
-        {
-          "type": "goal_covers",
-          "path": "src/components/"
         },
         {
           "type": "goal_verified",
