@@ -137,7 +137,7 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 | **⑧ 进化** | learn | 偏差驱动进化 | AI + 用户 | 方法论改进 |
 | **思考增强** | think | 结构化深度思考 | AI + 用户 | thinking 产物 + 决策依据回写 |
 
-编排 skill：`init`、`design`、`detail`、`test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。`think` 不是生命周期阶段，而是可在任意阶段调用的思考增强层。
+编排 skill：`init`、`design`、`detail`、`test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。`init` 是项目级引导（技术栈选型 + 设计语言基线），`design` 是 feature 级设计阶段（交互流程 + 组件增量），两者复用 `technical-design`、`fe-system` 等子 skill 但粒度不同。`think` 不是生命周期阶段，而是可在任意阶段调用的思考增强层。
 
 > 每个 skill 的完整方法论、AI 角色、边界声明和引导技巧见 `skills/*/SKILL.md`。
 
