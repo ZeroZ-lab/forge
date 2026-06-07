@@ -95,7 +95,6 @@
 - 加 `deploy`：需要灰度、回滚、监控
 - 开 `docs/status.md`：多个 feature 并行
 - 开 `docs/timeline.md`：项目级决策演进
-- 进 `learn`：同类偏差反复出现
 - 进 `think`：需要深度推演
 
 ## 决策表
@@ -114,7 +113,7 @@
 | 需要发布、灰度、回滚、监控 | `deploy` | 不把上线动作混进 `codegen/review` |
 | 多个 feature 并行推进 | 开 `docs/status.md` | 单 feature 不开 |
 | 需要记录项目级演进或跨 feature 决策 | 开 `docs/timeline.md` | 普通小改动不必开 |
-| 同类偏差反复出现 2-3 次 | `learn` | 不一直局部打补丁 |
+| 同类偏差反复出现 2-3 次 | 重新审视 `define`/`detail` 目标定义 | 不一直局部打补丁 |
 
 ## 最短记忆版
 

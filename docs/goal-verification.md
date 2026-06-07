@@ -12,7 +12,7 @@ Forge uses a simple goal verification model instead of traditional drift detecti
 | executor | 实现目标 | codegen, fe-artifact, deploy |
 | verifier | 验证目标是否达成 | review, fe-accept, test-strategy |
 | governance | 独立审查和升级 | review |
-| knowledge | 方法论沉淀和进化 | learn, shared/ |
+| knowledge | 方法论沉淀 | shared/ |
 | orchestrator | 按需加载子 skill | init, design, detail, test |
 | decision-protocol | 领域决策 | api-design, db-design, frontend-design |
 
@@ -22,7 +22,7 @@ Forge uses a simple goal verification model instead of traditional drift detecti
 
 - 快回路（单任务）：codegen 生成 → 目标对照 → 修正 → 收敛
 - 中回路（单次迭代）：detail 改目标 → 读下游依赖 → 级联更新
-- 慢回路（跨项目）：review 差距分析 → learn 聚合 → 修改方法论
+- 慢回路（跨项目）：review 差距分析 → 聚合重复模式 → 人工判断是否修改方法论
 
 ## How it works
 
@@ -51,7 +51,6 @@ Forge uses a simple goal verification model instead of traditional drift detecti
 
 - **codegen**: Verifies each task against the stated goal after implementation. consumes: goal.md, produces: src/ + tests/ + verification summary. signals_in: contract goal, signals_out: goal not met / goal conflict, escalates_when: 3 corrections without convergence
 - **review**: Checks whether implementation meets stated goals across documents, code, and tests. produces: review report. escalates_when: P0/P1 blocking issue
-- **learn**: Aggregates repeated failure patterns and proposes methodology improvements. consumes: review reports + changelogs. produces: methodology change proposals
 
 ## Anti-patterns
 

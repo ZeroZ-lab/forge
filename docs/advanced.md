@@ -14,7 +14,7 @@
 ## 运行时治理
 
 - [Goal Verification](goal-verification.md)
-  说明 `detail -> codegen -> review -> learn` 的目标验证闭环、信号传递和升级路径。
+  说明 `detail -> codegen -> review` 的目标验证闭环、信号传递和升级路径。
 - [Skill Architecture Audit](skill-architecture-audit.md)
   说明运行时控制面、typed edges 和协议角色的审计结论。
 
@@ -31,8 +31,6 @@
 
 - [Feature Stage Tracking Thinking](thinking/feature-stage-tracking.md)
   说明为什么 `status.md` 只应在多 feature 协调时启用。
-- `skills/learn/`
-  用于归纳同类偏差，回到方法论层面修正。
 - `skills/test/`、`skills/deploy/`
   需要测试治理或发布治理时再展开。
 

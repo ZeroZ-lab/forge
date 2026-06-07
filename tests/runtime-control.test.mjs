@@ -58,7 +58,6 @@ test('typed signal routes cover goal verification loops', () => {
   const byName = Object.fromEntries(registry.skills.map((skill) => [skill.name, skill]));
   assert.ok(byName['forge-codegen'].signal_routes.some((route) => route.signal === 'goal not met' && route.to === 'forge-detail'));
   assert.ok(byName['forge-codegen'].signal_routes.some((route) => route.signal === 'goal conflict' && route.to === 'human decision'));
-  assert.ok(byName['forge-review'].signal_routes.some((route) => route.signal === 'skill/document/code gap attribution' && route.to === 'forge-learn'));
 });
 
 test('runtime recovery blockers are encoded as registry signals', () => {

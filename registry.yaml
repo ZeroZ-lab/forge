@@ -173,7 +173,6 @@
       "name": "deviation attribution",
       "produced_by": "forge-review",
       "consumed_by": [
-        "forge-learn",
         "forge-detail"
       ]
     },
@@ -184,12 +183,6 @@
       "consumed_by": []
     },
     {
-      "id": "learn.methodology_proposal",
-      "name": "methodology change proposal",
-      "produced_by": "forge-learn",
-      "consumed_by": []
-    },
-    {
       "id": "think.reasoning_record",
       "name": "reasoning record",
       "produced_by": "forge-think",
@@ -197,8 +190,7 @@
         "forge-brainstorm",
         "forge-define",
         "forge-detail",
-        "forge-review",
-        "forge-learn"
+        "forge-review"
       ]
     },
     {
@@ -212,8 +204,7 @@
         "forge-plan",
         "forge-codegen",
         "forge-review",
-        "forge-deploy",
-        "forge-learn"
+        "forge-deploy"
       ]
     },
     {
@@ -225,8 +216,7 @@
         "forge-codegen",
         "forge-test",
         "forge-review",
-        "forge-deploy",
-        "forge-learn"
+        "forge-deploy"
       ]
     },
     {
@@ -235,8 +225,7 @@
       "produced_by": "forge-review",
       "consumed_by": [
         "forge-codegen",
-        "forge-deploy",
-        "forge-learn"
+        "forge-deploy"
       ]
     },
     {
@@ -255,8 +244,7 @@
       "produced_by": "forge-init",
       "consumed_by": [
         "forge-detail",
-        "forge-review",
-        "forge-learn"
+        "forge-review"
       ]
     },
     {
@@ -1772,7 +1760,7 @@
       "path": "skills/review/SKILL.md",
       "phase": "review",
       "type": "governance",
-      "role": "verifier",
+      "role": "governance",
       "triggers": [
         "审查文档",
         "审查代码",
@@ -1827,8 +1815,7 @@
       ],
       "maturity": "stable",
       "stage_next": [
-        "forge-deploy",
-        "forge-learn"
+        "forge-deploy"
       ],
       "feedback_to": [
         "forge-detail",
@@ -1842,11 +1829,6 @@
           "signal": "document inconsistency",
           "to": "forge-detail",
           "when": "review attributes issue to document drift"
-        },
-        {
-          "signal": "skill/document/code gap attribution",
-          "to": "forge-learn",
-          "when": "same-class deviation >= 3 or cross-project deviation appears"
         },
         {
           "signal": "P0/P1 issues",
@@ -1952,87 +1934,6 @@
       ]
     },
     {
-      "name": "forge-learn",
-      "path": "skills/learn/SKILL.md",
-      "phase": "learn",
-      "type": "governance",
-      "role": "governance",
-      "triggers": [
-        "复盘",
-        "方法论回顾",
-        "改进 skill"
-      ],
-      "avoid_when": [
-        "没有足够差距证据",
-        "只是单次偶发问题"
-      ],
-      "consumes": [
-        "review attribution",
-        "changelog",
-        "timeline",
-        "docs/change-units/CU-*.md",
-        "goal.md"
-      ],
-      "produces": [
-        "skill improvement recommendation",
-        "docs/change-units/CU-*.md"
-      ],
-      "external_downstream": [
-        "skill maintenance"
-      ],
-      "signals_in": [
-        "same-class deviation >= 3",
-        "cross-project deviation",
-        "change_unit.created",
-        "change_unit.updated"
-      ],
-      "signals_out": [
-        "methodology change proposal",
-        "evidence chain",
-        "change_unit.updated",
-        "project_state.updated",
-        "goal_verification.completed"
-      ],
-      "escalates_when": [
-        "证据不足",
-        "建议会导致 skill 膨胀或冲突"
-      ],
-      "output_contract": [
-        "模式识别",
-        "修改建议",
-        "证据链",
-        "反向验证"
-      ],
-      "maturity": "stable",
-      "stage_next": [],
-      "feedback_to": [
-        "forge-review"
-      ],
-      "quality_gates": [],
-      "signal_routes": [
-        {
-          "signal": "methodology change proposal",
-          "to": "skill maintenance",
-          "when": "human confirms evidence-backed methodology update"
-        },
-        {
-          "signal": "evidence chain",
-          "to": "human decision",
-          "when": "methodology change requires approval"
-        },
-        {
-          "signal": "goal_verification.completed",
-          "to": "forge-review",
-          "when": "when implementation needs goal verification"
-        },
-        {
-          "signal": "change_unit.updated",
-          "to": "skill maintenance",
-          "when": "when methodology update evidence is complete"
-        }
-      ]
-    },
-    {
       "name": "forge-think",
       "path": "skills/think/SKILL.md",
       "phase": "orchestration",
@@ -2095,8 +1996,7 @@
         "forge-brainstorm",
         "forge-define",
         "forge-detail",
-        "forge-review",
-        "forge-learn"
+        "forge-review"
       ],
       "quality_gates": [],
       "signal_routes": [

@@ -25,7 +25,7 @@ Forge 的默认目标不是把每个用户都带进完整生命周期，而是�
 | 需求明确的小功能 | `detail → codegen → review` | 已有项目、只差补齐决策和实现 |
 | 边界还不清晰的功能 | `define → detail → codegen → review` | 需要先澄清需求，再进入实现 |
 
-`plan`、`test`、`deploy`、`research`、`think`、`learn` 都保留，但默认不进入首页叙事。只有在任务复杂度或治理需求明确提高时才显式启用。
+`plan`、`test`、`deploy`、`research`、`think` 都保留，但默认不进入首页叙事。只有在任务复杂度或治理需求明确提高时才显式启用。
 
 ### 默认最小产物
 
@@ -61,7 +61,7 @@ CU 记录：为什么改、行为变化、影响范围、风险、验证证据�
 
 - 团队治理和多 feature 协调：看 `docs/status.md`、`docs/timeline.md`
 - 架构审计和评测：看 `docs/skill-architecture-audit.md`、`docs/skill-suite-evaluation.md`
-- 方法论进化：看 `docs/timeline.md` 和 `skills/learn/`
+- 方法论进化：看 `docs/timeline.md`
 
 ### 操作纪律（D1–D9）
 
@@ -112,7 +112,7 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 决策协议（skill）→ 明确目标 → AI 自主实现 → 验证结果
 ```
 
-### 8 阶段 × 19 个领域 Skill + 4 个编排 Skill + 1 个思考增强 Skill
+### 7 阶段 × 18 个领域 Skill + 4 个编排 Skill + 1 个思考增强 Skill
 
 | 阶段 | Skill | 方法论 | 角色 | 产出 |
 |------|-------|--------|------|------|
@@ -134,7 +134,6 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 | | fe-accept | 四维验收 | QA + 设计 | 验收报告 |
 | **⑥.5 审查** | review | subagent 独立审查 | AI + 用户 | 审查报告 |
 | **⑦ 交付** | deploy | 可逆发布 | DevOps + 开发 | 发布清单 |
-| **⑧ 进化** | learn | 偏差驱动进化 | AI + 用户 | 方法论改进 |
 | **思考增强** | think | 结构化深度思考 | AI + 用户 | thinking 产物 + 决策依据回写 |
 
 编排 skill：`init`、`design`、`detail`、`test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。`init` 是项目级引导（技术栈选型 + 设计语言基线），`design` 是 feature 级设计阶段（交互流程 + 组件增量），两者复用 `technical-design`、`fe-system` 等子 skill 但粒度不同。`think` 不是生命周期阶段，而是可在任意阶段调用的思考增强层。
@@ -162,7 +161,6 @@ Forge 是闭环系统——文档定义目标，AI 自主实现，验证结果�
 |------|------|------|
 | **实现** | codegen 读取目标 → 生成代码 → 验证目标是否达成 | 同类失败 ≥ 2 → 触发目标审视 |
 | **审查** | review 检查实现是否满足目标 → 差距分析 | 目标冲突 → 需要人类决策 |
-| **进化** | learn 聚合重复失败模式 → 改进方法论 | 方法论变更 → 影响所有环节 |
 
 **前馈机制**：detail 阶段从历史失败中提取高频风险 → 写入目标文档「已知风险」→ codegen 读目标时自然获得，零额外成本。
 
@@ -496,7 +494,7 @@ init（编排器）          →  加载子 skill + 模板 → 生成项目文�
 forge/
 ├── AGENTS.md                        # 本文件
 ├── references/                      # 补充文档（使用示例、验证教训）
-├── skills/                          # 24 个决策协议（flat list）
+├── skills/                          # 23 个决策协议（flat list）
 │   ├── brainstorm/            # ⓪ 探索
 │   ├── init/                  # 初始化编排（+ agents/claude 模板）
 │   ├── business-alignment/    # ① 业务对齐
@@ -519,7 +517,6 @@ forge/
 │   ├── fe-accept/             # ⑥ 前端质量验收
 │   ├── review/                # ⑥.5 subagent 独立审查（文档审查+代码审查）
 │   ├── deploy/                # ⑦ 部署发布
-│   ├── learn/                 # ⑧ 方法论进化
 │   ├── think/                 # 思考增强
 │   └── shared/                      # 共享模板和概念
 ├── .claude-plugin/plugin.json       # Claude Code 插件

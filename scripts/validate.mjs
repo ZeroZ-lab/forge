@@ -171,7 +171,6 @@ const allowedRegistryPhases = new Set([
   'test',
   'review',
   'deploy',
-  'learn',
 ]);
 
 const allowedRegistryTypes = new Set(['domain', 'orchestrator', 'execution', 'governance']);
@@ -410,10 +409,6 @@ assert(
   'registry.yaml: fast-to-middle loop must route goal-not-met signal from forge-codegen to forge-detail',
 );
 assert(
-  registryByName['forge-review']?.signal_routes?.some((route) => route.signal === 'skill/document/code gap attribution' && route.to === 'forge-learn'),
-  'registry.yaml: review-to-learn loop must route attributed gaps to forge-learn',
-);
-assert(
   registryByName['forge-deploy']?.escalates_when?.includes('无回滚方案'),
   'registry.yaml: deploy must block when rollback is missing',
 );
@@ -466,7 +461,7 @@ assert(
   marketplaceDescription.includes(`${skillCount} 个决策协议 skill`),
   `.claude-plugin/marketplace.json: forge description must mention "${skillCount} 个决策协议 skill"`,
 );
-assert(read('README.md').includes(`8 阶段 × ${skillCount} 个 Skill`), `README.md: must document 8 阶段 × ${skillCount} 个 Skill`);
+assert(read('README.md').includes(`7 阶段 × ${skillCount} 个 Skill`), `README.md: must document 7 阶段 × ${skillCount} 个 Skill`);
 assert(read('README.md').includes('registry.yaml'), 'README.md: must document registry.yaml runtime control surface');
 assert(read('README.md').includes('docs/goal-verification.md'), 'README.md: must document runtime control loop doc');
 assert(read('AGENTS.md').includes(`${skillCount} 个决策协议`), `AGENTS.md: must document ${skillCount} 个决策协议`);
@@ -553,12 +548,6 @@ const deploySkillPath = registryByName['forge-deploy']?.path ?? 'skills/deploy/S
 const deploySkill = read(deploySkillPath);
 for (const marker of ['### RL1:', '### RL2:', '### RL3:', '### RL4:', '### RL5:']) {
   assert(deploySkill.includes(marker), `${deploySkillPath}: missing ${marker}`);
-}
-
-const learnSkillPath = registryByName['forge-learn']?.path ?? 'skills/learn/SKILL.md';
-const learnSkill = read(learnSkillPath);
-for (const marker of ['### L1:', '### L2:', '### L3:', '### L4:']) {
-  assert(learnSkill.includes(marker), `${learnSkillPath}: missing ${marker}`);
 }
 
 const codegenSkillPath = registryByName['forge-codegen']?.path ?? 'skills/codegen/SKILL.md';
