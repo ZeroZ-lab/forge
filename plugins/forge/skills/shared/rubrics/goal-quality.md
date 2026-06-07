@@ -1,6 +1,6 @@
-# Contract quality rubric
+# Goal quality rubric
 
-Use this rubric when checking whether a contract can drive reliable implementation.
+Use this rubric when checking whether a goal can drive reliable implementation.
 
 | Dimension | Check |
 |-----------|-------|
@@ -11,4 +11,4 @@ Use this rubric when checking whether a contract can drive reliable implementati
 | Runtime fit | Acceptance conditions can drive tests, review, and codegen checks. |
 | Drift handling | Changes can produce a clear cascade update or human decision point. |
 
-Contracts that fail source completeness or reconstructability should not proceed directly to codegen.
+Goals that fail source completeness or reconstructability should not proceed directly to codegen.

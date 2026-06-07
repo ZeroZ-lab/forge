@@ -449,7 +449,7 @@
       "id": "codegen-implementation",
       "title": "\u4ece\u76ee\u6807\u5b9e\u73b0\u4ee3\u7801\u5e76\u8bb0\u5f55\u95ee\u9898\u4fe1\u53f7",
       "level": "L1 patch",
-      "fixture": "evals/skills-suite/fixtures/codegen-projection.md",
+      "fixture": "evals/skills-suite/fixtures/codegen-goal.md",
       "expected_skills": [
         "forge-codegen"
       ],

@@ -1,7 +1,7 @@
 # frontend-module-template.md — 前端模块模板
 
-> frontend-design 专用。产出 frontend/contract.md。
-> 只放前端特有的决策（FE#）和组件索引。共享数据模型、编排、下游依赖在 feature/contract.md。
+> frontend-design 专用。产出 notes/frontend.md。
+> 只放前端特有的决策（FE#）和组件索引。共享数据模型、编排、下游依赖在 goal.md。
 > 目标：~80 行，几乎不变。
 
 ---
@@ -9,7 +9,7 @@
 # Frontend Contract — <Feature Name>
 
 > 前端技术合约：FE1-FE5 决策 + 前端约束 + 组件索引。
-> 共享数据模型、编排、下游依赖在 feature/contract.md。
+> 共享数据模型、编排、下游依赖在 goal.md。
 
 ## 前端决策
 
@@ -63,7 +63,7 @@
 
 ## 组件 Props / 类型
 
-> 前端组件的接口定义。跨领域共享的数据模型在 feature/contract.md。
+> 前端组件的接口定义。跨领域共享的数据模型在 goal.md。
 
 ```typescript
 interface SharedType {
@@ -75,7 +75,7 @@ interface SharedType {
 
 ## 前端约束
 
-> 前端特有的约束。共享约束在 feature/contract.md。
+> 前端特有的约束。共享约束在 goal.md。
 
 ### 性能
 
@@ -108,7 +108,7 @@ interface SharedType {
 ## 代码映射
 
 ```
-frontend/contract.md ──→ src/types/ (前端类型)
+notes/frontend.md ──→ src/types/ (前端类型)
                           src/stores/ (状态管理)
 
 modules/<name>.md ────→ src/components/<Name>.tsx

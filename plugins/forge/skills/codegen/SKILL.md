@@ -1,12 +1,12 @@
 ---
 name: codegen
 description: Implements goals into src and tests, verifying results meet stated criteria.
-when_to_use: Use by direct invocation or as a child protocol when the user explicitly asks to generate implementation from Forge contracts, run the build phase, or implement documented tasks into code and tests.
+when_to_use: Use by direct invocation or as a child protocol when the user explicitly asks to generate implementation from Forge goals, run the build phase, or implement documented tasks into code and tests.
 disable-model-invocation: false
 ---
 # Codegen — 构建阶段
 ## 职责
-从详设文档（contract.md + modules/）按 plan.md 的任务序列生成可运行代码（src/ + tests/）。
+从详设文档（goal.md + modules/）按 plan.md 的任务序列生成可运行代码（src/ + tests/）。
 **核心洞察**：目标是起点，实现是 AI 自主决策。codegen 读取目标文档，自主决定实现路径，验证目标是否达成。codegen 不是决策阶段——所有决策在 detail 和 plan 阶段已完成。codegen 的职责是实现目标并验证结果。
 **方法论**：读 → 生 → 验 → 修。
 ## 执行纪律
@@ -16,7 +16,7 @@ disable-model-invocation: false
 - **D8**：同类问题连续 ≥ 2 个任务 → 停下来建议重新审视目标定义
 - **D9**：每个任务生成后必须提供运行证据（运行验证），无法提供时标记"⚠️ 未验证"
 ## 与上下游的边界
-**上游**：读 contract.md + modules/（合约）+ plan.md（任务序列）+ project.md（技术选型）+ DESIGN.md（设计系统，如有前端）
+**上游**：读 goal.md + modules/（目标文档）+ plan.md（任务序列）+ project.md（技术选型）+ DESIGN.md（设计系统，如有前端）
 **下游**：src/ + tests/ 交给测试和部署阶段
 
 **和 plan 的切法**：plan 定义**任务序列**（目标+步骤+验证方式），codegen 按序列**逐个生成代码**
@@ -33,15 +33,15 @@ disable-model-invocation: false
 
 **行为**：
 - 读 project.md → 技术选型、共享约束、目录结构
-- 读 contract.md → 接口合约、数据模型、横切关注点
+- 读 goal.md → 接口合约、数据模型、横切关注点
 - 读 modules/*.md → 每个模块的业务规则、验收条件
 - 读 plan.md → 任务序列、依赖关系、执行顺序
 - 读 DESIGN.md（如有）→ 设计 Token、组件模式
-- 读 contract.md「已知风险」（如有）→ detail 阶段从历史问题提取的高频失误模式，生成时主动规避（前馈）
+- 读 goal.md「已知风险」（如有）→ detail 阶段从历史问题提取的高频失误模式，生成时主动规避（前馈）
 
 **不变原则**：
 - 先读完再写——跳过读直接生成 = 和文档分歧（D7：验证而非假设）
-- 注意决策编号（PD1-PDn 来自 project.md，FD1-FDn 来自 contract.md，DB1-DBn 来自 database/contract.md）——生成时关键逻辑分支要注释对应编号（D1：决策留痕）
+- 注意决策编号（PD1-PDn 来自 project.md，FD1-FDn 来自 goal.md，DB1-DBn 来自 notes/database.md）——生成时关键逻辑分支要注释对应编号（D1：决策留痕）
 - 注意共享约束（多租户、权限、软删除）——所有生成代码必须遵守
 
 ### 第二步：生（Generate）
@@ -57,9 +57,9 @@ disable-model-invocation: false
 **不变原则**：
 - 严格按任务序列——不跳任务、不合并任务、不改变顺序（D4：最小变更）
 - 每个文件职责单一——路由不管业务逻辑，服务不管 HTTP
-- 接口定义从 contract.md 推导——端点、参数、返回值、错误码都来自文档（D2：文档即源代码）
+- 接口定义从 goal.md 推导——端点、参数、返回值、错误码都来自文档（D2：文档即源代码）
 - 业务逻辑从 modules/ 推导——具体实现来自文档里的业务规则
-- AI 补充的部分要标注来源（`// From: contract.md FD3` 或 `// From: project.md PD2`）（D1：决策留痕）
+- AI 补充的部分要标注来源（`// From: goal.md FD3` 或 `// From: project.md PD2`）（D1：决策留痕）
 - 两次生成应该行为一致——同一份文档不应该生成不同的 API 行为
 
 ### 第三步：验（Verify）
@@ -85,7 +85,7 @@ disable-model-invocation: false
 
 **第二层：目标对照（文档 vs 代码）**
 
-- 和 contract.md 做目标对照：
+- 和 goal.md 做目标对照：
   - 接口：端点 + 参数 + 路径是否一致
   - 字段：数据模型 + 类型 + 约束是否一致
   - 状态码：响应码 + 错误格式是否一致
@@ -100,7 +100,7 @@ disable-model-invocation: false
 - 运行验证通过 + 测试通过 + 代码与文档对齐 = 任务完成（D9：运行实证）
 - 运行验证不通过 → 不进入目标对照，先修到能跑（D9）
 - 不一致 = 进入修正循环（见"修"步骤）
-- 需求根本歧义或 contract 矛盾 = 中止当前任务，输出报告，等待人工决策（D3：停下来等人类决策）
+- 需求根本歧义或目标矛盾 = 中止当前任务，输出报告，等待人工决策（D3：停下来等人类决策）
 - 文档是源头——代码和文档分歧时，以文档为准（D2：文档即源代码）
 - 每轮对照输出结果，不凭记忆判断（D7：验证而非假设）
 
@@ -121,7 +121,7 @@ disable-model-invocation: false
 
 **控制回路**：修正后回到"验"步骤。如果修了代码，从运行验证重跑；如果只修了文档对齐问题，从目标对照重跑。不一致项 > 0 → 修正 → 再验 → 收敛（全部对齐）→ 标记任务完成。修正 3 轮仍有问题 → 停下来让人工判断。
 
-**信号传递**：同类问题连续 ≥ 2 个任务出现 → 输出"⚠️ 同类问题重复，建议复查 contract 对应部分"（信号向上传递）。
+**信号传递**：同类问题连续 ≥ 2 个任务出现 → 输出"⚠️ 同类问题重复，建议复查 goal 对应部分"（信号向上传递）。
 
 **验证摘要**：每个任务完成后输出：`自动修正 N 处 · 中止 M 处 · 待确认 K 处 · 归因：skill 方法论 a / 文档未同步 b / 代码实现 c`。验证摘要沉淀到 timeline，供 learn 消费。
 
@@ -142,37 +142,37 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 
 | 文档来源 | 推导目标 | 推导方式 |
 |---------|---------|---------|
-| contract.md 端点定义 | src/routes/*.ts | METHOD + path + Auth + Request → 路由处理函数 |
-| contract.md 数据模型 | src/schemas/*.ts | 字段 + 类型 + 约束 → 验证 schema |
+| goal.md 端点定义 | src/routes/*.ts | METHOD + path + Auth + Request → 路由处理函数 |
+| goal.md 数据模型 | src/schemas/*.ts | 字段 + 类型 + 约束 → 验证 schema |
 | modules/*.md 业务规则 | src/services/*.ts | 业务逻辑 + 边界条件 → 服务函数 |
-| contract.md 数据模型 | src/db/schema.ts | 表 + 列 + 索引 → ORM 模型 |
-| contract.md 横切关注点 | src/middleware/*.ts | Auth + Error + Idempotency → 中间件 |
-| contract.md 验收条件 | tests/routes/*.test.ts | 正常 + 边界 + 错误 → 测试用例 |
+| goal.md 数据模型 | src/db/schema.ts | 表 + 列 + 索引 → ORM 模型 |
+| goal.md 横切关注点 | src/middleware/*.ts | Auth + Error + Idempotency → 中间件 |
+| goal.md 验收条件 | tests/routes/*.test.ts | 正常 + 边界 + 错误 → 测试用例 |
 | modules/*.md 边界条件 | tests/services/*.test.ts | 业务规则 → 单元测试 |
 | project.md 技术选型 | package.json + tsconfig | 框架 + 版本 → 依赖安装 |
-| contract.md 共享约束 | 所有文件 | 多租户 + 权限 + 软删除 → 注入每个服务 |
+| goal.md 共享约束 | 所有文件 | 多租户 + 权限 + 软删除 → 注入每个服务 |
 
-**注释规则**：每个关键逻辑分支注释对应的决策编号——FD# 优先（feature 级，来自 contract.md），PD# 补充（项目级共享约束，来自 project.md），DB# 引用（数据库约束，来自 database/contract.md）。测试文件额外注释 AC 编号（来自 modules/*.md，如 `// Test for: AC-01-1`），形成 PRD → 测试追溯链。modules 可能使用 AC1/AC2 重新编号（追溯至 PRD AC-XX-X），测试注释使用 module 的编号即可。让人类审查代码时可直接跳转文档理解 WHY。
+**注释规则**：每个关键逻辑分支注释对应的决策编号——FD# 优先（feature 级，来自 goal.md），PD# 补充（项目级共享约束，来自 project.md），DB# 引用（数据库约束，来自 notes/database.md）。测试文件额外注释 AC 编号（来自 modules/*.md，如 `// Test for: AC-01-1`），形成 PRD → 测试追溯链。modules 可能使用 AC1/AC2 重新编号（追溯至 PRD AC-XX-X），测试注释使用 module 的编号即可。让人类审查代码时可直接跳转文档理解 WHY。
 
 ## 文档约束
 
-**src/ 和 tests/ 的结构从 contract.md + project.md 推导**，不从技术惯例推导。实现路径由 AI 自主决定，但必须满足文档中的约束和验收条件。
+**src/ 和 tests/ 的结构从 goal.md + project.md 推导**，不从技术惯例推导。实现路径由 AI 自主决定，但必须满足文档中的约束和验收条件。
 **不应包含**：文档（docs/）· 部署配置（deploy/）· 监控配置（deploy/）
 
 ## 入口/出口条件
 
-**入口**：有 contract.md + modules/ + plan.md（或用户已有详设和任务分解）· review 文档审查通过（如有）
+**入口**：有 goal.md + modules/ + plan.md（或用户已有详设和任务分解）· review 文档审查通过（如有）
 
-**缺失处理**：缺 plan.md → 从 contract.md 推导最小任务序列（标注"无 plan，任务顺序为 AI 推导"）；缺 modules/ → 从 contract.md 推导，标注"模块文档缺失"。
+**缺失处理**：缺 plan.md → 从 goal.md 推导最小任务序列（标注"无 plan，任务顺序为 AI 推导"）；缺 modules/ → 从 goal.md 推导，标注"模块文档缺失"。
 
 **出口**：src/ + tests/ 已生成 · 运行验证通过（编译零错误 + 服务可启动 + 基础响应正常）· 所有测试通过 · 代码和文档对齐 · 用户确认（D9：运行实证）
 
 ## 运行时信号
 
-- 输入：`detail.feature_contract` + `plan.task_sequence`
+- 输入：`detail.feature_goal` + `plan.task_sequence`
 - 输出：`codegen.generated_code` + `codegen.verification_summary`
 - 路由：详见 `registry.yaml` 的 `forge-codegen` 节点；本节只保留人类可读摘要。
-- 升级：contract 矛盾或需求歧义 · 修正 3 轮不收敛
+- 升级：目标矛盾或需求歧义 · 修正 3 轮不收敛
 
 ## 何时不使用
 
@@ -184,7 +184,7 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 - 目标漂移（添加未要求的功能） → 参见 `${CLAUDE_SKILL_DIR}/../shared/red-flags/goal-drift.md`
 
 - 运行验证未执行就声明完成 → 强制先跑运行验证（D9：运行实证）
-- 代码和 contract.md 不一致 → 强制对齐
+- 代码和 goal.md 不一致 → 强制对齐
 - 测试覆盖不足（每个端点至少 3 个测试） → 强制补充
 - 没有错误处理（400、401、404、500） → 强制补充
 - 关键逻辑没有注释决策编号（FD# / PD# / DB#）→ 强制标注
@@ -196,11 +196,11 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 ## 验证清单
 
 - [ ] 是否读完所有文档再开始生成？
-- [ ] 文件结构是否从 contract.md + project.md 推导？
+- [ ] 文件结构是否从 goal.md + project.md 推导？
 - [ ] 运行验证是否通过（编译零错误 + 服务可启动 + 基础响应正常）？（D9）
 - [ ] 所有端点是否都有实现 + 测试（至少 3 个）？
 - [ ] 所有测试是否通过？
-- [ ] 代码和 contract.md 是否对齐（端点、参数、返回值、错误码）？
+- [ ] 代码和 goal.md 是否对齐（端点、参数、返回值、错误码）？
 - [ ] 关键逻辑是否注释了决策编号（FD# / PD# / DB#）？
 - [ ] 共享约束是否在所有相关文件中遵守？
 - [ ] 修正循环是否收敛（无无限修正循环）？

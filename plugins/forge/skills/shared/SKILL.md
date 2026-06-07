@@ -1,7 +1,7 @@
 ---
 name: shared
-description: Internal Forge knowledge package containing templates, rubrics, red flags, concepts, and output contracts. Do not invoke as a lifecycle protocol.
-when_to_use: Never as a user-facing protocol. Read specific files here only when another Forge skill references a shared template, rubric, concept, red flag, or output contract.
+description: Internal Forge knowledge package containing templates, rubrics, red flags, concepts, and output specifications. Do not invoke as a lifecycle protocol.
+when_to_use: Never as a user-facing protocol. Read specific files here only when another Forge skill references a shared template, rubric, concept, red flag, or output specification.
 disable-model-invocation: false
 ---
 
@@ -11,7 +11,7 @@ disable-model-invocation: false
 
 ## 用途
 
-- 为其他 Forge skill 提供模板、rubric、concept、red flag 和 output contract。
+- 为其他 Forge skill 提供模板、rubric、concept、red flag 和 output specification。
 - 只在上游 skill 明确引用具体文件时按需读取。
 
 ## 边界

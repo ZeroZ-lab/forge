@@ -748,7 +748,7 @@
         {
           "signal": "architecture decisions",
           "to": "forge-codegen",
-          "when": "code projection needs project-level decisions"
+          "when": "code generation needs project-level decisions"
         }
       ]
     },
@@ -1003,7 +1003,7 @@
         {
           "signal": "goal_coverage.updated",
           "to": "forge-codegen",
-          "when": "when contract projection paths are ready"
+          "when": "when goal coverage paths are ready"
         }
       ]
     },
@@ -1136,7 +1136,7 @@
         {
           "signal": "migration rules",
           "to": "forge-codegen",
-          "when": "code projection includes schema or migrations"
+          "when": "code generation includes schema or migrations"
         }
       ]
     },
@@ -1211,7 +1211,7 @@
         {
           "signal": "component modules",
           "to": "forge-codegen",
-          "when": "general code projection includes frontend modules"
+          "when": "general code generation includes frontend modules"
         }
       ]
     },
@@ -1758,7 +1758,7 @@
         {
           "signal": "P0/P1/P2 frontend issues",
           "to": "forge-codegen",
-          "when": "frontend projection needs fixes"
+          "when": "frontend implementation needs fixes"
         },
         {
           "signal": "acceptance status",

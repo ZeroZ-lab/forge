@@ -1,7 +1,7 @@
 ---
 name: deploy
 description: Plans reversible releases, deployment environments, CI or CD flow, rollout strategy, rollback steps, monitoring, and release checklists. Use for lightweight release review or full deploy stage execution.
-when_to_use: Use when the user asks about release, deploy, launch, production rollout, staging, CI or CD, containers, health checks, monitoring, alerts, gray release, rollback, or a deploy contract.
+when_to_use: Use when the user asks about release, deploy, launch, production rollout, staging, CI or CD, containers, health checks, monitoring, alerts, gray release, rollback, or a deploy plan.
 ---
 
 # Deploy — 交付阶段
@@ -22,8 +22,8 @@ when_to_use: Use when the user asks about release, deploy, launch, production ro
 
 ## 与上下游的边界
 
-**上游**：读 src/ + tests/（代码和测试）+ testing/test-cases.md（测试用例）+ contract.md（技术选型）
-**下游**：deploy/contract.md 交给 DevOps 执行发布
+**上游**：读 src/ + tests/（代码和测试）+ testing/test-cases.md（测试用例）+ goal.md（项目上下文）
+**下游**：deploy/plan.md 交给 DevOps 执行发布
 
 **和 test 的切法**：test 定义测试策略和用例，deploy 定义测试在 CI/CD 中的运行时机和失败策略
 **和 codegen 的切法**：codegen 生成代码，deploy 定义代码如何打包、部署、运行
@@ -118,14 +118,14 @@ when_to_use: Use when the user asks about release, deploy, launch, production ro
 
 ```
 docs/features/<feature>/deploy/
-├── contract.md      # RL1-RL5 决策 + 部署流程 + 回滚方案 + 监控告警
+├── plan.md      # RL1-RL5 决策 + 部署流程 + 回滚方案 + 监控告警
 └── changelog.md
 ```
 
 ## 文档约束
 
-**deploy/contract.md 必须包含**：RL1-RL5 决策（选择+理由+被拒）· 部署流程（从提交到上线）· 环境变量清单 · 健康检查端点 · 回滚步骤（具体命令）· 发布清单模板
-**deploy/contract.md 不应包含**：具体代码实现（codegen）· 具体测试用例（test-cases）· 业务需求（feature 级 contract.md）
+**deploy/plan.md 必须包含**：RL1-RL5 决策（选择+理由+被拒）· 部署流程（从提交到上线）· 环境变量清单 · 健康检查端点 · 回滚步骤（具体命令）· 发布清单模板
+**deploy/plan.md 不应包含**：具体代码实现（codegen）· 具体测试用例（test-cases）· 业务需求（feature 级 goal.md）
 
 ## 模板
 
@@ -140,7 +140,7 @@ docs/features/<feature>/deploy/
 - 缺 review → 标注"未经独立审查"，用户确认后仍可生成
 - 缺 testing/test-cases.md → 标注"无测试用例"，降级为最小发布流程
 
-**出口**：deploy/contract.md 已生成 · 部署流程已定义 · 回滚步骤已明确（具体命令）· 监控告警已配置 · 发布清单已就绪
+**出口**：deploy/plan.md 已生成 · 部署流程已定义 · 回滚步骤已明确（具体命令）· 监控告警已配置 · 发布清单已就绪
 
 ## 运行时信号
 
@@ -174,12 +174,12 @@ docs/features/<feature>/deploy/
 
 ## 历史维护（自动）
 
-完成后追加 `docs/timeline.md`：`### {日期} — {feature} 发布规划 · deploy/contract.md（灰度 + 回滚 + 监控）`。追加 `changelog.md`。超 100 行时归档。
+完成后追加 `docs/timeline.md`：`### {日期} — {feature} 发布规划 · deploy/plan.md（灰度 + 回滚 + 监控）`。追加 `changelog.md`。超 100 行时归档。
 
 ## 完成提示
 
 ```
-✅ 发布规划完成！deploy/contract.md 已生成。
+✅ 发布规划完成！deploy/plan.md 已生成。
 
 下一步你可以：
   自然语言       — 直接说"发布"执行发布清单

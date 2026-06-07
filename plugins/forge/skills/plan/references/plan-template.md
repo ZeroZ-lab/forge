@@ -8,7 +8,7 @@
 |------|-----|
 | 版本 | v1.0 |
 | 日期 | YYYY-MM-DD |
-| 来源 | contract.md + modules/ |
+| 来源 | goal.md + modules/ |
 
 ---
 

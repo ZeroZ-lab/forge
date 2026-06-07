@@ -6,8 +6,8 @@
 
 | 信息源头 | 下游引用方式 |
 |---------|------------|
-| project.md PD# | PRD / contract / plan / test 引用 "project.md PD3"，不重复具体内容 |
-| contract.md FD# | plan / test / codegen 引用 "contract.md FD4"，不重复 |
+| project.md PD# | PRD / goal / plan / test 引用 "project.md PD3"，不重复具体内容 |
+| goal.md FD# | plan / test / codegen 引用 "goal.md FD4"，不重复 |
 | PRD US-XX / AC-XX-X | test-cases / plan 引用 "US-01 / AC-01-1"，不重复验收条件全文 |
 | modules/\<name\>.md | codegen 读取完整内容，plan 引用模块名 |
 | DESIGN.md | frontend modules / fe-system 引用 "DESIGN.md Token 系统"，不重复 Token 值 |
@@ -27,7 +27,7 @@
 
 - 完整复制上游文档的表格或列表到新文档（导致同步维护灾难）
 - 在不同文档中对同一约束使用不同措辞（会导致歧义和矛盾）
-- 在新文档中扩展上游约束的范围而不标注（如 project.md 说 "≥80% 覆盖率"，testing/contract.md 说 "不做覆盖率门槛"）
+- 在新文档中扩展上游约束的范围而不标注（如 project.md 说 "≥80% 覆盖率"，testing/goal.md 说 "不做覆盖率门槛"）
 
 ## 检查方法
 

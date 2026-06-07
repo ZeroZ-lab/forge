@@ -1,7 +1,7 @@
 ---
 name: fe-artifact
-description: Implements DESIGN.md, interaction specs, frontend contracts, and modules into pages, components, hooks, and styles.
-when_to_use: Use by direct invocation or from codegen when documented frontend tasks need page, component, hook, style, or frontend test implementation from Forge contracts and design system goals.
+description: Implements DESIGN.md, interaction specs, frontend specifications, and modules into pages, components, hooks, and styles.
+when_to_use: Use by direct invocation or from codegen when documented frontend tasks need page, component, hook, style, or frontend test implementation from Forge specifications and design system goals.
 disable-model-invocation: false
 ---
 
@@ -19,14 +19,14 @@ disable-model-invocation: false
 
 ## 上下游边界
 
-**上游**：`DESIGN.md`、interaction-spec、frontend/contract.md、frontend/modules/*.md、api/modules/*.md、plan.md。
+**上游**：`DESIGN.md`、interaction-spec、notes/frontend.md、frontend/modules/*.md、api/modules/*.md、plan.md。
 
 **下游**：前端源码、样式、hooks、基础测试，交给 fe-accept 和 review。
 
 不重新做产品决策，不改 API 合约，不绕过 `DESIGN.md` 自行发明视觉语言。
 
 ## 何时不使用
-- 无前端合约（frontend/contract.md 不存在）
+- 无前端规格（notes/frontend.md 不存在）
 - 无 DESIGN.md（设计系统未建立）
 - 纯后端 API（无前端代码需要生成）
 - codegen 未处理前端任务时不单独调用
@@ -53,7 +53,7 @@ disable-model-invocation: false
 生成前必须读取：
 
 - `DESIGN.md`：token、组件模式、页面结构。
-- frontend/contract.md：前端边界和模块索引。
+- notes/frontend.md：前端边界和模块索引。
 - frontend/modules/*.md：组件职责、props、状态、交互。
 - api/modules/*.md：请求、响应、错误码。
 - plan.md：任务顺序和验证方式。
@@ -74,7 +74,7 @@ disable-model-invocation: false
 
 ## 文件结构规则
 
-文件结构从项目 `project.md` 和前端合约推导，不从个人偏好推导。若合约没有规定结构，优先复用现有项目模式。
+文件结构从项目 `project.md` 和前端规格推导，不从个人偏好推导。若规格没有规定结构，优先复用现有项目模式。
 
 每个文件职责单一：页面负责编排，组件负责展示和局部交互，hooks 负责数据和副作用，样式消费 token。
 
@@ -92,7 +92,7 @@ disable-model-invocation: false
 
 ## 入口/出口条件
 
-**入口**：已有前端合约或 codegen 正在处理前端任务。
+**入口**：已有前端规格或 codegen 正在处理前端任务。
 
 **出口**：相关前端文件已生成，基础验证完成，剩余风险已记录。
 
@@ -112,7 +112,7 @@ disable-model-invocation: false
 - 视觉状态无法被 fe-accept 验收 → 补充证据（截图/预览链接）
 
 ## 验证清单
-- [ ] 是否读取了 DESIGN.md + frontend/contract.md + frontend/modules/*.md + api/modules/*.md？
+- [ ] 是否读取了 DESIGN.md + notes/frontend.md + frontend/modules/*.md + api/modules/*.md？
 - [ ] API 类型、错误和加载状态是否完整？
 - [ ] 组件 props 是否与 module 文档一致？
 - [ ] 视觉是否消费 DESIGN.md Token（不自行发明颜色/间距）？

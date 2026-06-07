@@ -69,7 +69,7 @@ when_to_use: Use when the user asks to review the method, improve skills, do a r
 
 **反向验证**：如果之前因同类偏差修改过 skill，但偏差仍然出现 → 说明上次归因错误，应回滚修改并重新归因。避免 skill 无限膨胀。
 
-**排序规则**：先处理跨项目高频、会导致错误实现或阻塞发布的模式；再处理单项目高频；最后处理清晰度问题。同等证据强度下，优先改 shared rubric / red flag / output contract，再改具体 skill。
+**排序规则**：先处理跨项目高频、会导致错误实现或阻塞发布的模式；再处理单项目高频；最后处理清晰度问题。同等证据强度下，优先改 shared rubric / red flag / output specification，再改具体 skill。
 
 ### L4: 验证（Verify）
 

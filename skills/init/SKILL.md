@@ -12,7 +12,7 @@ when_to_use: Use when the user asks to initialize a project, start a new project
 
 `init` 是项目级 orchestrator。它不替代子 skill 做决策，而是读取当前项目状态，决定哪些初始化协议需要执行、哪些可以跳过，以及什么时候需要人类确认。
 
-运行时控制约束见 `${CLAUDE_SKILL_DIR}/../shared/concepts/control-loop.md`；阶段汇报可参考 `${CLAUDE_SKILL_DIR}/../shared/output-contracts/runtime-control.md`。
+运行时控制约束见 `${CLAUDE_SKILL_DIR}/../shared/concepts/control-loop.md`。
 
 ## 执行纪律
 
@@ -112,12 +112,12 @@ my-project/
 - 技术决策 → docs/project.md
 - 项目演进 → docs/timeline.md（每次开发前必读）
 - 设计系统 → DESIGN.md
-- 功能合约 → docs/features/<feature>/contract.md
+- 功能目标 → docs/features/<feature>/goal.md
 
 ## 开发流程
 1. 读 AGENTS.md 了解技术栈和工作流
 2. 读 docs/timeline.md 了解项目近期演进
-3. 读相关 feature 的 contract.md + changelog.md
+3. 读相关 feature 的 goal.md + changelog.md
 4. 按目标文档实现，注释决策编号（FD# feature 级 / PD# 项目级 / DB# 数据库级）
 5. 改完文档后自动追加 changelog.md + timeline.md
 ```

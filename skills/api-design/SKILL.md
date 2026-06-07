@@ -16,7 +16,7 @@ when_to_use: Use when the user asks whether an API is reasonable, wants to add o
 
 ## 与上下游的边界
 **上游**：读 project.md（技术选型+共享约束）+ PRD.md（用户故事+验收条件）
-**下游**：api/contract.md + modules/*.md 交给 db-design（数据模型）、frontend-design（消费接口）、plan 阶段（任务分解）
+**下游**：notes/api.md + modules/*.md 交给 db-design（数据模型）、frontend-design（消费接口）、plan 阶段（任务分解）
 **和 db-design 的切法**：
 - api-design 定义**资源是什么、怎么暴露**（接口层）
 - db-design 定义**数据怎么存、怎么查**（存储层）
@@ -35,7 +35,7 @@ when_to_use: Use when the user asks whether an API is reasonable, wants to add o
 | API6 并发 | 冲突风险者 | 从协作模式推导并发控制需求 |
 | API7 认证 | 架构匹配者 | 从系统架构推导认证方式 |
 ## 决策点
-> API 领域的决策编号使用 API# 前缀（API Decision）。项目级共享决策使用 PD# 前缀，记录在 project.md。Feature 级共享决策使用 FD# 前缀，记录在 feature/goal.md。数据库领域使用 DB# 前缀，记录在 database/contract.md。
+> API 领域的决策编号使用 API# 前缀（API Decision）。项目级共享决策使用 PD# 前缀，记录在 project.md。Feature 级共享决策使用 FD# 前缀，记录在 feature/goal.md。数据库领域使用 DB# 前缀，记录在 notes/database.md。
 ### API1: 资源建模
 **问**：系统管理哪些核心实体？关系是什么？有没有必须独立存在的实体？
 **不变原则**：URL 是资源地址不是动作调用 · 嵌套深度 ≤ 2 层 · 资源名用复数名词
@@ -99,7 +99,7 @@ METHOD /path
 - `${CLAUDE_SKILL_DIR}/../shared/changelog-template.md` — changelog.md 结构
 ## 入口/出口条件
 **入口**：有 project.md + PRD.md，或用户已有技术选型和需求文档
-**出口**：api/contract.md（API1-API7 完整）+ modules/*.md（接口合约完整）+ 共享数据模型
+**出口**：notes/api.md（API1-API7 完整）+ modules/*.md（接口合约完整）+ 共享数据模型
 
 **缺失处理**：
 - project.md 缺技术选型 → 要求先完成 technical-design，或在 API 设计中做最小选型标注
@@ -137,17 +137,17 @@ METHOD /path
    ```markdown
    ### v{版本} — {日期} — API 详设
    - **触发**：{用户说的一句话}
-   - **产出**：api/contract.md（API1-API7）+ {N} 个 modules
+   - **产出**：notes/api.md（API1-API7）+ {N} 个 modules
    ```
 2. **追加 docs/timeline.md**：
    ```markdown
    ### {日期} — {feature} API 详设
-   - 新增：api/contract.md + modules/
+   - 新增：notes/api.md + modules/
    ```
 3. **检查膨胀**：超 100 行时归档。
 ## 完成提示
 ```
-✅ API 详设完成！api/contract.md + modules/ 已生成。
+✅ API 详设完成！notes/api.md + modules/ 已生成。
 
 下一步（detail 编排自动继续）：
   数据库详设   — 表结构 + 索引 + 迁移

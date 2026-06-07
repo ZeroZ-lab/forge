@@ -22,8 +22,8 @@ when_to_use: Use when the user asks about table structure, data model, schema ch
 
 ## 与上下游的边界
 
-**上游**：读 api/contract.md（共享数据模型+接口合约）
-**下游**：database/contract.md 交给 plan 阶段（任务分解）和代码生成
+**上游**：读 notes/api.md（共享数据模型+接口合约）
+**下游**：notes/database.md 交给 plan 阶段（任务分解）和代码生成
 
 **和 api-design 的切法**：
 - api-design 定义**资源是什么、怎么暴露**（接口层）
@@ -119,17 +119,17 @@ updated_at: timestamp, not null, default now()
 
 ## 入口/出口条件
 
-**入口**：有 project.md + api/contract.md，或用户已有技术选型和 API 详设
-**出口**：database/contract.md（DB1-DB5 完整）+ 表清单 + 索引规划表 + 迁移规则
+**入口**：有 project.md + notes/api.md，或用户已有技术选型和 API 详设
+**出口**：notes/database.md（DB1-DB5 完整）+ 表清单 + 索引规划表 + 迁移规则
 
 **缺失处理**：
-- api/contract.md 缺失 → 要求先完成 API 详设（数据库设计从 API 资源模型推导，不从零开始）
+- notes/api.md 缺失 → 要求先完成 API 详设（数据库设计从 API 资源模型推导，不从零开始）
 - 共享数据模型不完整 → 从 PRD 推导最小模型，标注"待 API 详设确认"
 
 ## 运行时信号
 
 - 输入：`api_design.shared_data_model`
-- 输出：database contract、migration rules
+- 输出：database spec、migration rules
 - 路由：详见 `registry.yaml` 的 `forge-db-design` 节点；本节只保留人类可读摘要。
 - 升级：API 模型和存储模型冲突 · 迁移不可回滚
 
@@ -164,13 +164,13 @@ updated_at: timestamp, not null, default now()
    ```markdown
    ### v{版本} — {日期} — 数据库详设
    - **触发**：{用户说的一句话}
-   - **产出**：database/contract.md（DB1-DB5）+ {N} 张表 + {M} 个索引
+   - **产出**：notes/database.md（DB1-DB5）+ {N} 张表 + {M} 个索引
    ```
 
 2. **追加 docs/timeline.md**：
    ```markdown
    ### {日期} — {feature} 数据库详设
-   - 新增：database/contract.md
+   - 新增：notes/database.md
    ```
 
 3. **检查膨胀**：超 100 行时归档。
@@ -178,7 +178,7 @@ updated_at: timestamp, not null, default now()
 ## 完成提示
 
 ```
-✅ 数据库详设完成！database/contract.md 已生成。
+✅ 数据库详设完成！notes/database.md 已生成。
 
 下一步（detail 编排自动继续）：
   前端详设     — 组件 + 数据流 + 状态管理（如有前端）

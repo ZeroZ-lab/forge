@@ -8,7 +8,7 @@ when_to_use: Use when the user asks what to test, wants test cases, scenario cov
 
 ## 职责
 
-从详设文档（contract.md + modules/）的验收条件和业务规则推导出完整的测试用例。
+从详设文档（goal.md + modules/）的验收条件和业务规则推导出完整的测试用例。
 
 **核心洞察**：测试用例不是代码的翻译，是验收条件的可执行版本。好的测试覆盖 = 验收条件全覆盖 + 边界情况 + 错误处理，缺一不可。
 
@@ -22,7 +22,7 @@ when_to_use: Use when the user asks what to test, wants test cases, scenario cov
 
 ## 与上下游的边界
 
-**上游**：读 contract.md + modules/（验收条件 + 业务规则）+ plan.md（任务序列）
+**上游**：读 goal.md + modules/（验收条件 + 业务规则）+ plan.md（任务序列）
 **下游**：testing/test-cases.md 交给 codegen（测试代码生成）和 test-strategy（测试策略）
 
 **和 test-strategy 的切法**：test-strategy 定义**怎么测**（类型+覆盖+Mock），test-cases 定义**测什么**（具体用例）
@@ -34,7 +34,7 @@ when_to_use: Use when the user asks what to test, wants test cases, scenario cov
 
 从验收条件建立测试范围矩阵——确保每个验收条件都有对应测试。
 
-**核心问题**：contract.md 里有哪些验收条件？每个验收条件需要几个测试？优先级是什么？
+**核心问题**：goal.md 里有哪些验收条件？每个验收条件需要几个测试？优先级是什么？
 
 **不变原则**：
 - 测试范围从验收条件推导，不从代码推导（代码是 HOW，验收条件是 WHAT）
@@ -44,11 +44,11 @@ when_to_use: Use when the user asks what to test, wants test cases, scenario cov
 **记录**：测试范围矩阵（验收条件 → 测试用例 → 优先级）+ **优先级理由**（为什么这个 AC 是 P0？）
 
 **AC 编号规则**：
-- 验收条件编号来自上游：define 阶段的 PRD 编号为 `AC-{US编号}-{序号}`（如 AC-01-1），detail 阶段的 contract/modules 可能重新编号为 `AC1, AC2, ...`
+- 验收条件编号来自上游：define 阶段的 PRD 编号为 `AC-{US编号}-{序号}`（如 AC-01-1），detail 阶段的 modules 可能重新编号为 `AC1, AC2, ...`
 - 测试范围矩阵的"验收条件"列必须引用 AC 编号，不用自然语言描述
-- **追溯链**：PRD US-XX → [contract AC-XX →] test-cases TC-XXX
-  - 如果 contract/modules 有 AC 编号 → 引用 contract AC 编号
-  - 如果 contract 无 AC 编号 → 引用 PRD AC 编号（如 "→ US-01/AC-01-1"）
+- **追溯链**：PRD US-XX → [AC-XX →] test-cases TC-XXX
+  - 如果 modules 有 AC 编号 → 引用 module AC 编号
+  - 如果 modules 无 AC 编号 → 引用 PRD AC 编号（如 "→ US-01/AC-01-1"）
   - 每个测试用例分组标题标注来源：`### inspect 测试用例（→ US-01）`
 
 ### TC2: 正常（Happy Path）
@@ -107,7 +107,7 @@ when_to_use: Use when the user asks what to test, wants test cases, scenario cov
 
 | 阶段 | AI 角色 | 行为 |
 |------|---------|------|
-| 映射 | 验收条件解析者 | 读 contract.md，建立验收条件到测试用例的映射矩阵 |
+| 映射 | 验收条件解析者 | 读 goal.md，建立验收条件到测试用例的映射矩阵 |
 | 正常 | 正常路径设计者 | 从验收条件推导正常流程的输入输出和验证点 |
 | 边界 | 边界猎手 | 识别空值、最大值、并发等边界情况 |
 | 错误 | 错误场景设计者 | 从错误类型推导错误处理和用户提示 |
@@ -125,7 +125,7 @@ when_to_use: Use when the user asks what to test, wants test cases, scenario cov
 ```
 docs/features/<feature>/
 └── testing/
-    ├── contract.md     # 测试策略（来自 test-strategy）
+    ├── goal.md     # 测试策略（来自 test-strategy）
     └── test-cases.md   # 测试范围矩阵 + 测试用例清单 + 数据策略
 ```
 
@@ -146,15 +146,15 @@ docs/features/<feature>/
 
 ## 入口/出口条件
 
-**入口**：有 contract.md + modules/ + plan.md（或用户已有代码）
+**入口**：有 goal.md + modules/ + plan.md（或用户已有代码）
 **出口**：testing/test-cases.md 已生成 · 所有验收条件都有测试用例 · 正常+边界+错误全覆盖 · 数据策略已确定 · test-cases.md ≤ 200 行
 
 **缺失处理**：
 - 验收条件未编号 → 先补充 AC 编号（`AC-{US编号}-{序号}` 格式，追溯至 PRD），不凭空写测试
-- contract.md 存在但 modules/ 为空 → 从 contract.md 推导，标注"模块文档缺失"
+- goal.md 存在但 modules/ 为空 → 从 goal.md 推导，标注"模块文档缺失"
 
 **交叉验证**：
-- 读 testing/contract.md 覆盖矩阵 → 提取"可自动化"的模块列表
+- 读 testing/goal.md 覆盖矩阵 → 提取"可自动化"的模块列表
 - 读 test-cases.md 测试范围矩阵 → 提取覆盖的 AC 列表
 - 覆盖矩阵中有但 test-cases 无 → 补充或标注"手动验证"
 

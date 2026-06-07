@@ -1,7 +1,7 @@
 ---
 name: plan
-description: Converts contracts and modules into executable vertical-slice task plans with dependencies, ordering, risks, and verification criteria. Use for lightweight task planning or full plan stage execution.
-when_to_use: Use when the user asks to split tasks, make an execution plan, plan implementation from contract.md, order work, identify dependencies, create vertical slices, or turn Forge contracts into plan.md.
+description: Converts goals and modules into executable vertical-slice task plans with dependencies, ordering, risks, and verification criteria. Use for lightweight task planning or full plan stage execution.
+when_to_use: Use when the user asks to split tasks, make an execution plan, plan implementation from goal.md, order work, identify dependencies, create vertical slices, or turn Forge goals into plan.md.
 ---
 # Plan — 任务阶段
 
@@ -16,15 +16,15 @@ when_to_use: Use when the user asks to split tasks, make an execution plan, plan
 ## 执行纪律
 
 - **D4**：垂直切片不水平分层，每个任务是完整的用户价值
-- **D7**：每个任务必须有验证标准，验证从 contract.md 验收条件推导
+- **D7**：每个任务必须有验证标准，验证从 goal.md 验收条件推导
 - **D5**：只分解任务和排序，不涉及具体实现（codegen）
 
 ## 与上下游的边界
 
-**上游**：读 contract.md + modules/（来自 detail 阶段），知道有哪些模块和接口合约
+**上游**：读 goal.md + modules/（来自 detail 阶段），知道有哪些模块和接口合约
 **下游**：plan.md 交给代码生成（按任务序列生成 src/ + tests/）· 从验收条件自动推导 testing/test-cases.md（详见 test-cases skill）
 
-**和 detail 的切法**：detail 定义**做什么**（合约+模块），plan 定义**怎么做**（任务+顺序）
+**和 detail 的切法**：detail 定义**做什么**（目标+模块），plan 定义**怎么做**（任务+顺序）
 **和 codegen 的切法**：plan 定义**任务序列**（目标+步骤+验证），codegen 定义**具体实现**（代码）
 
 > Plan 使用 PL# 前缀（Plan Decision）。PL# 记录在 plan.md 中。仅用于关键规划决策（如任务拆分争议、风险优先级判断），不用于每个任务的步骤。
@@ -33,7 +33,7 @@ when_to_use: Use when the user asks to split tasks, make an execution plan, plan
 
 ### P1: 识别（Identify）
 
-读 contract.md + modules/，建立模块全景。不知道有什么就切不好。
+读 goal.md + modules/，建立模块全景。不知道有什么就切不好。
 
 **核心问题**：有哪些模块？每个模块包含哪些端点/组件？模块间依赖是什么？哪些是共享基础设施？
 
@@ -57,9 +57,9 @@ when_to_use: Use when the user asks to split tasks, make an execution plan, plan
 - 做减法是艺术——超过 7 步先问"能不能拆成两个独立可验证的路径？"
 - 禁止占位符（TBD/TODO/后续补充）——写不出步骤说明没想清楚
 
-**引用而非复述**：任务描述中的约束、数据模型、接口定义引用 contract.md（FD# / 模块名），不复述内容。
+**引用而非复述**：任务描述中的约束、数据模型、接口定义引用 goal.md（FD# / 模块名），不复述内容。
 - ❌ "guard 校验路径 sandbox + 像素限制 100MP + tile 限制 64 + 源文件保护"
-- ✅ "实现 guard 校验逻辑（约束见 contract.md FD4 + project.md PD3）"
+- ✅ "实现 guard 校验逻辑（约束见 goal.md FD4 + project.md PD3）"
 - 任务步骤中需要具体参数/字段时，引用模块文件而非复制数据模型
 
 **PRD 来源追溯**：每个任务标注对应的 PRD 用户故事和验收条件：
@@ -94,7 +94,7 @@ when_to_use: Use when the user asks to split tasks, make an execution plan, plan
 
 **不变原则**：
 - 没有验证标准 = 任务不存在——"怎么知道做对了？"是必须回答的问题
-- 验证标准从 contract.md 的验收条件推导，不是凭空编的
+- 验证标准从 goal.md 的验收条件推导，不是凭空编的
 - **TDD（RED → GREEN → REFACTOR）** 适用于：有业务逻辑的 API、复杂数据处理、核心算法
 - **直接验证**适用于：数据库迁移、配置文件、CI pipeline、纯 UI 样式、依赖安装
 - 每个有业务逻辑的任务至少有一个端到端验证（不只是单元测试）
@@ -134,7 +134,7 @@ when_to_use: Use when the user asks to split tasks, make an execution plan, plan
 
 | 阶段 | AI 角色 | 行为 |
 |------|---------|------|
-| 识别 | 模块分析师 | 读 contract.md，画模块依赖图，识别共享基础设施和风险点 |
+| 识别 | 模块分析师 | 读 goal.md，画模块依赖图，识别共享基础设施和风险点 |
 | 切片 | 切片设计师 | 拆成垂直切片，确保每个切片是完整用户价值 |
 | 排序 | 依赖规划者 | 确定拓扑顺序、并行机会、关键路径、风险优先级 |
 | 验证 | 验证定义者 | 从验收条件推导验证方式（TDD 或直接验证） |
@@ -162,15 +162,15 @@ when_to_use: Use when the user asks to split tasks, make an execution plan, plan
 
 ## 入口/出口条件
 
-**入口**：有 contract.md + modules/（来自 detail 阶段）或用户已有详设文档
+**入口**：有 goal.md + modules/（来自 detail 阶段）或用户已有详设文档
 
-**缺失处理**：contract.md 不完整 → 只切已有模块，标注"待补模块"；modules/ 为空 → 从 contract.md 推导最小切片。
+**缺失处理**：goal.md 不完整 → 只切已有模块，标注"待补模块"；modules/ 为空 → 从 goal.md 推导最小切片。
 
 **出口**：plan.md 已生成 · testing/test-cases.md 已生成（P6 从验收条件 + 验证方式推导） · 用户确认进入代码生成
 
 ## 运行时信号
 
-- 输入：domain contracts
+- 输入：domain specifications
 - 输出：task sequence、checkpoints
 - 路由：详见 `registry.yaml` 的 `forge-plan` 节点；本节只保留人类可读摘要。
 - 升级：任务无法垂直切片 · 验收标准缺失

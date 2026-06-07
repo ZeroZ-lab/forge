@@ -61,7 +61,7 @@
 | 文档来源 | 实现目标 |
 |----------|----------|
 | DESIGN.md tokens | CSS variables、theme、component variants |
-| frontend/contract.md | 页面结构、路由、模块边界 |
+| notes/frontend.md | 页面结构、路由、模块边界 |
 | frontend/modules/*.md | components、hooks、state、props |
 | api/modules/*.md | API client、types、error handling |
 | testing/test-cases.md | component tests、interaction tests |

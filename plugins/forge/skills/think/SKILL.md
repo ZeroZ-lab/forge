@@ -37,7 +37,7 @@ think：深度分析 → 输出 docs/thinking/*.md
 下游：原阶段继续执行，决策依据已在文档中可见
 ```
 
-**切法**：think 不改 contract.md 的技术内容、不改 PRD.md 的需求、不做技术选型。think 只做一件事：把「为什么这样选」的结论摘要追加到调用文档，附链接到完整推理链。
+**切法**：think 不改 goal.md 的技术内容、不改 PRD.md 的需求、不做技术选型。think 只做一件事：把「为什么这样选」的结论摘要追加到调用文档，附链接到完整推理链。
 
 ## 运行时角色
 
@@ -169,12 +169,12 @@ think：深度分析 → 输出 docs/thinking/*.md
 
 **docs/thinking/*.md 必须包含**：决策阶段 · 前提假设 + 有效期 · 问题重构（如有）· 分析过程 · 被否方案及理由 · 结论 + 置信度
 
-**docs/thinking/*.md 不应包含**：最终技术选型（那是 contract.md 的事）· 详细功能列表（那是 PRD.md 的事）· 代码
+**docs/thinking/*.md 不应包含**：最终技术选型（那是 goal.md 的事）· 详细功能列表（那是 PRD.md 的事）· 代码
 
 **文档生命周期**：
 - 前提假设变化 → 在文件顶部标注 `⚠️ 前提已变化：{原因}`
 - 决策被推翻 → 移到 `docs/thinking/archive/`，不删除（保留推理链）
-- 下游 skill 引用 → contract.md 中写 `决策依据：docs/thinking/{文件名}.md`
+- 下游 skill 引用 → goal.md 中写 `决策依据：docs/thinking/{文件名}.md`
 
 ## 模板
 
@@ -185,7 +185,7 @@ think：深度分析 → 输出 docs/thinking/*.md
 **入口**：用户面临需要深度思考的决策，或想质疑当前方向
 
 **回写目标确定**（入口时同步完成）：
-- 从某个 skill 执行中调用 → 回写目标是当前正在编辑的文档（contract.md / PRD.md / modules/*.md）
+- 从某个 skill 执行中调用 → 回写目标是当前正在编辑的文档（goal.md / PRD.md / modules/*.md）
 - 独立调用 → 问用户："这个分析结论写回哪个文档？"
 - 无目标文档 → 回写到 docs/thinking/*.md 自身顶部，后续手动迁移
 

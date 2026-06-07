@@ -11,11 +11,11 @@
 
 ### 2. 跨文档一致
 
-- project.md 技术选型是否和 contract.md 一致。
+- project.md 技术选型是否和 goal.md 一致。
 - DESIGN.md 是否被 frontend modules 消费。
-- API modules 是否和 database contract 对齐。
+- API modules 是否和 database specification 对齐。
 - plan 是否覆盖所有 modules 和验收条件。
-- testing 是否从 contract 和 modules 推导，而不是另起一套。
+- testing 是否从 goal 和 modules 推导，而不是另起一套。
 
 ### 3. 可消费性
 
@@ -49,7 +49,7 @@
 
 - 测试是否覆盖正常、边界、错误。
 - 是否存在 placeholder 测试。
-- 是否只验证实现细节而没验证合约行为。
+- 是否只验证实现细节而没验证规格行为。
 
 ## 偏差归因维度
 

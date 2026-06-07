@@ -6,7 +6,7 @@
 |------|-----|
 | 决策阶段 | {brainstorm / define / design / detail / ...} |
 | 模式 | {L0 挑战 / L1 分析 / L2 攻击} |
-| 回写目标 | {触发本次思考的文档路径，如 docs/features/X/api/contract.md} |
+| 回写目标 | {触发本次思考的文档路径，如 docs/features/X/notes/api.md} |
 | 前提假设 | {列出核心假设，逗号分隔} |
 | 有效期 | {前提不变时有效 / 具体时间范围} |
 | 过期触发器 | {什么条件变化时这个分析需要重做} |
@@ -78,6 +78,6 @@
 
 以下文档可以引用本分析（回写已自动完成，此处记录其他潜在引用方）：
 
-- {contract.md / PRD.md / 其他 docs/thinking/*.md}
+- {goal.md / PRD.md / 其他 docs/thinking/*.md}
 
 引用方式：`决策依据：docs/thinking/{本文件名}.md`

@@ -1,16 +1,16 @@
 ---
 name: detail
-description: Orchestrates the full detail stage across multiple domain contracts to produce contract.md and modules. Use only when the user explicitly asks for detail stage or cross-domain contracts must be coordinated.
-when_to_use: Use when the user says technical detail design, detail stage, full contract design, coordinate multiple domain contracts, turn PRD or design docs into technical contracts, or resolve cross-domain contract inconsistency.
+description: Orchestrates the full detail stage across multiple domain documents to produce goal.md and modules. Use only when the user explicitly asks for detail stage or cross-domain documents must be coordinated.
+when_to_use: Use when the user says technical detail design, detail stage, full goal design, coordinate multiple domain documents, turn PRD or design docs into technical goals, or resolve cross-domain goal inconsistency.
 ---
 
 # Forge Detail — 详设阶段编排
 
-根据项目上下文按需加载领域 skill，产出技术合约文档。
+根据项目上下文按需加载领域 skill，产出技术详设文档。
 
 ## 运行时角色
 
-`detail` 是目标细化器。它把上游 PRD、project、DESIGN 和问题信号转成可操作的目标，并在 codegen/review 发现一致性问题时负责 contract 复查和级联更新决策。
+`detail` 是目标细化器。它把上游 PRD、project、DESIGN 和问题信号转成可操作的目标，并在 codegen/review 发现一致性问题时负责 goal 复查和级联更新决策。
 
 运行时目标验证参考 `docs/goal-verification.md`；目标漂移红旗参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/goal-drift.md`。
 
@@ -25,7 +25,7 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 
 ## 何时不使用
 - 只有一个模块的简单功能（直接使用 api-design 或 frontend-design）
-- 已有完整的 contract.md + modules/（无需重新详设）
+- 已有完整的 goal.md + modules/（无需重新详设）
 - 用户只想改一个端点（L1 patch，直接用 api-design）
 
 ## 加载判断
@@ -46,24 +46,24 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 开始前读取：
 
 - `docs/project.md` 的技术选型、共享约束和核心算法（如有）
-- `PRD.md` 或等价需求说明（检查是否有 AC 编号，有则 contract 验收条件可追溯）
+- `PRD.md` 或等价需求说明（检查是否有 AC 编号，有则 goal 验收条件可追溯）
 - `DESIGN.md` 和 interaction-spec（如有前端）
-- 已有 feature `contract.md`、领域 contract 和 modules
+- 已有 feature `goal.md`、领域 notes 和 modules
 - `codegen` 偏差摘要或 `review` 一致性报告（如本次由偏差触发）
-- **交叉验证**：读 project.md 工程约束中的测试策略 → 确认即将生成的 contract.md 不与之矛盾（如 project.md 写了 "≥80% 覆盖率"，contract 不能暗示不需要测试）
+- **交叉验证**：读 project.md 工程约束中的测试策略 → 确认即将生成的 goal.md 不与之矛盾（如 project.md 写了 "≥80% 覆盖率"，goal 不能暗示不需要测试）
 
 ## 分支与恢复
 
-- 缺 PRD/需求输入 → 不直接写 contract，先要求补需求或明确走最小 detail。
+- 缺 PRD/需求输入 → 不直接写 goal，先要求补需求或明确走最小 detail。
 - 前端存在性不确定 → 暂停询问，不默认加载 frontend-design。
-- 由同类 L1 偏差触发 → 先复查对应 contract/module 盲区，再决定是否改代码。
+- 由同类 L1 偏差触发 → 先复查对应 goal/module 盲区，再决定是否改代码。
 - 发现目标定义不清 → 中止详设输出，列出需要人类决策的矛盾点。
 - 下游一致性问题影响范围不清 → 不自动级联修改，先输出一致性报告。
 
 ## 红旗清单
 - 前端存在性不确定 → 暂停询问（不默认加载 frontend-design）
-- PRD 缺失 → 不直接写 contract，先要求补需求或明确走最小 detail
-- 由同类 L1 偏差触发 → 先复查 contract 盲区，再决定是否改代码
+- PRD 缺失 → 不直接写 goal，先要求补需求或明确走最小 detail
+- 由同类 L1 偏差触发 → 先复查 goal 盲区，再决定是否改代码
 - L2 目标定义不清 → 中止详设，列出矛盾点等用户决策
 - feature/goal.md 的 FD# 与 project.md 的 PD# 编号冲突 → 重新分配编号
 - 下游一致性问题影响范围不清 → 不自动级联修改，先输出一致性报告
@@ -100,7 +100,7 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 3. 如索引缺失该 feature → 追加条目（Feature 名 + 目录路径 + 状态 + 说明）
 4. 如索引有已删除的 feature → 标注提醒用户确认删除
 5. 如索引的 feature 名称/路径与实际不符 → 修正
-6. 检查 project.md 共享决策（PD#）与本次 feature contract（FD#）无编号冲突
+6. 检查 project.md 共享决策（PD#）与本次 feature goal（FD#）无编号冲突
 7. **Module 结构校验**：扫描所有 modules/*.md 文件，检查是否包含共享模板的必需节：
    - 后端模块（`${CLAUDE_SKILL_DIR}/../shared/module-template.md`）：入口 · 公共接口 · 内部函数 · 依赖关系 · 接口合约
    - 前端模块（`${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md`）：入口 · 公共接口 · 组件结构 · 数据消费 · 内部函数 · 依赖关系
@@ -110,26 +110,26 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
    对 feature/goal.md 模块索引中的每个模块：
    a. 检查 `modules/<name>.md` 是否存在
    b. 不存在 → 按领域对应模板生成骨架（后端用 `${CLAUDE_SKILL_DIR}/../shared/module-template.md`，前端用 `${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md`）
-   c. 骨架内容从 contract.md 共享数据模型推导：
+   c. 骨架内容从 goal.md 共享数据模型推导：
       - 模块专属的数据模型子集（输入/输出类型）
-      - 公共接口签名（从 contract 编排的调用链推导）
+      - 公共接口签名（从 goal 编排的调用链推导）
       - 验收条件（从 PRD 对应 US 的 AC 编号追溯，格式 `AC-{US编号}-{序号}`，如 AC-01-1）
       - 依赖关系（从编排调用链推导：该模块 import 了哪些其他模块）
    d. 模块数 ≥ 5 → **必须生成** module specs，不允许跳过
-   e. 模块数 < 5 → 可选生成，但 contract.md 模块索引需包含完整接口签名（而非仅一行描述）
+   e. 模块数 < 5 → 可选生成，但 goal.md 模块索引需包含完整接口签名（而非仅一行描述）
 
-**contract.md 共享数据模型节制规则**：
+**goal.md 共享数据模型节制规则**：
 - 只放**跨模块共享**的核心类型（如 Point/Rect/CommandResult 等基础结构）
 - 模块专属的输入/输出类型 → 放 `modules/<name>.md` 数据模型段
-- 如果模块有独立 module spec → contract.md 只列类型名 + 一行说明，不展开字段
-- contract.md 目标 ~100 行，含完整数据模型时 ≤ 200 行
+- 如果模块有独立 module spec → goal.md 只列类型名 + 一行说明，不展开字段
+- goal.md 目标 ~100 行，含完整数据模型时 ≤ 200 行
 
 ## 一致性检查
 
 所有 Phase 完成后，检查跨文档一致性：
 
-1. 读每个领域 contract.md 的「下游依赖」表（如有）
-2. 逐一检查下游文档的依赖内容是否仍与当前 contract 一致
+1. 读每个领域 notes 文件的「下游依赖」表（如有）
+2. 逐一检查下游文档的依赖内容是否仍与当前 notes 一致
 3. 汇总：
    - **一致**：记录"下游已同步"
    - **不一致**：列出偏移点和位置，提示用户确认级联更新
@@ -139,28 +139,26 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 - 不一致 ≠ 错误——上游改了下游没跟，可能需要更新也可能不需要
 - 不一致点呈现给用户决策，AI 不自动修改下游文档
 
-**问题信号接收**：如果 codegen 验证摘要中同类问题连续 ≥ 2 个任务出现，建议复查 contract 对应部分——问题可能是 contract 盲区而非代码问题。
+**问题信号接收**：如果 codegen 验证摘要中同类问题连续 ≥ 2 个任务出现，建议复查 goal 对应部分——问题可能是 goal 盲区而非代码问题。
 
 ## 运行时信号
 
 - 输入：repeated L1 from forge-codegen、consistency issue from forge-review
-- 输出：contract updated、downstream consistency report、human decision needed
+- 输出：goal updated、downstream consistency report、human decision needed
 - 路由：详见 `registry.yaml` 的 `forge-detail` 节点；本节只保留人类可读摘要。
-- 升级：contract ambiguity · downstream consistency needs decision · frontend presence unclear
+- 升级：goal ambiguity · downstream consistency needs decision · frontend presence unclear
 
 ## 产出
 
 ```
 docs/features/<feature>/
-├── contract.md              # feature 级共享骨架（必选）
-├── api/                     # 有后端时
-│   ├── contract.md
-│   └── modules/*.md
-├── frontend/                # 有前端时
-│   ├── contract.md
-│   └── modules/*.md
-└── database/                # 有后端时
-    └── contract.md
+├── goal.md                   # feature 级共享骨架（必选）
+├── notes/                    # 领域补充说明（按需）
+│   ├── api.md                # 有后端时
+│   ├── database.md           # 有后端时
+│   └── frontend.md           # 有前端时
+└── modules/                  # 模块详细规格（按需）
+    └── *.md
 ```
 
 ## 历史维护（自动）
@@ -180,10 +178,10 @@ docs/features/<feature>/
 ## 出口条件
 
 完成后必须满足：
-- 所有加载的领域 skill 产出完整（api/contract.md API1-API7 / frontend/contract.md FE1-FE5 / database/contract.md DB1-DB5）
-- feature/goal.md（FD#）与各领域 contract（FE# / API# / DB#）无编号冲突
+- 所有加载的领域 skill 产出完整（notes/api.md API1-API7 / notes/frontend.md FE1-FE5 / notes/database.md DB1-DB5）
+- feature/goal.md（FD#）与各领域 notes（FE# / API# / DB#）无编号冲突
 - project.md Feature 索引已同步（Phase 4）
-- project.md 共享决策（PD#）与 feature contract（FD#）无编号冲突
+- project.md 共享决策（PD#）与 feature goal（FD#）无编号冲突
 - 一致性检查已完成（如有下游依赖表）
 - 所有 modules/*.md 包含模板必需节（Phase 4 第 7 步校验）
 
@@ -192,7 +190,7 @@ docs/features/<feature>/
 完成后向用户展示：
 
 ```
-✅ 详设完成！contract.md + modules/ 已生成。
+✅ 详设完成！goal.md + modules/ 已生成。
 
 下一步你可以：
   plan 阶段    — 把详设拆成可执行任务

@@ -317,13 +317,11 @@ const sharedKnowledgeFiles = [
   'skills/shared/concepts/document-as-goal.md',
   'skills/shared/concepts/execution-discipline.md',
   'skills/shared/rubrics/skill-quality.md',
-  'skills/shared/rubrics/contract-quality.md',
+  'skills/shared/rubrics/goal-quality.md',
   'skills/shared/rubrics/implementation-quality.md',
   'skills/shared/red-flags/goal-drift.md',
   'skills/shared/red-flags/scope-creep.md',
   'skills/shared/red-flags/unsafe-implementation.md',
-  'skills/shared/output-contracts/review-result.md',
-  'skills/shared/output-contracts/runtime-control.md',
   'skills/shared/change-unit-template.md',
   'skills/shared/goal-template.md',
 ];
@@ -476,7 +474,7 @@ assert(read('AGENTS.md').includes('信号传递'), 'AGENTS.md: must document sig
 assert(read('AGENTS.md').includes('registry.yaml'), 'AGENTS.md: must document registry.yaml runtime control surface');
 assert(read('AGENTS.md').includes('docs/goal-verification.md'), 'AGENTS.md: must document runtime control loop doc');
 assertIncludes('AGENTS.md', ['### AI 执行纪律', '最小变更', '不引入未要求的抽象']);
-assertIncludes('skills/init/references/agents-template.md', ['## AI 执行纪律', '需要同步的契约文件', '执行可用验证']);
+assertIncludes('skills/init/references/agents-template.md', ['## AI 执行纪律', '需要同步的目标文件', '执行可用验证']);
 assertIncludes('skills/shared/concepts/execution-discipline.md', [
   '# Execution discipline',
   '## Runtime meaning',
@@ -571,7 +569,7 @@ for (const marker of ['读', '生', '验', '修', '运行验证']) {
 
 assert(
   !exists('docs/features/task-management/implementation'),
-  'docs/features/task-management/implementation: remove non-runnable projection examples from the repo',
+  'docs/features/task-management/implementation: remove non-runnable example code from the repo',
 );
 
 for (const file of filesUnder('docs/features')) {

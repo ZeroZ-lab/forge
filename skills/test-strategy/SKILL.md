@@ -1,7 +1,7 @@
 ---
 name: test-strategy
 description: Designs how to test a feature through test types, risk coverage, data strategy, mocking, isolation, CI gates, and quality thresholds. Use for lightweight testing strategy review or full test-strategy execution.
-when_to_use: Use when the user asks how to test, which test layers to use, coverage strategy, mock strategy, test data, CI integration, quality gate, automation scope, or testing/contract.md planning.
+when_to_use: Use when the user asks how to test, which test layers to use, coverage strategy, mock strategy, test data, CI integration, quality gate, automation scope, or testing/strategy.md planning.
 ---
 
 # Test Strategy — 测试阶段
@@ -22,8 +22,8 @@ when_to_use: Use when the user asks how to test, which test layers to use, cover
 
 ## 与上下游的边界
 
-**上游**：读 contract.md + modules/（验收条件+业务规则）+ plan.md（任务序列）
-**下游**：testing/contract.md 交给 test-cases（测试用例推导）和 codegen（测试生成）
+**上游**：读 goal.md + modules/（验收条件+业务规则）+ plan.md（任务序列）
+**下游**：testing/strategy.md 交给 test-cases（测试用例推导）和 codegen（测试生成）
 
 **和 test-cases 的切法**：test-strategy 定义**怎么测**（类型+覆盖+Mock），test-cases 定义**测什么**（具体用例）
 **和 codegen 的切法**：test-strategy 定义测试框架和规范，codegen 按规范生成测试代码
@@ -94,7 +94,7 @@ when_to_use: Use when the user asks how to test, which test layers to use, cover
 
 ## 产出格式（T1-T5 通用）
 
-每个 T# 决策在 testing/contract.md 中的产出必须包含三部分：
+每个 T# 决策在 testing/strategy.md 中的产出必须包含三部分：
 
 ```
 ## T#: {决策名}
@@ -136,13 +136,13 @@ when_to_use: Use when the user asks how to test, which test layers to use, cover
 
 ```
 docs/features/<feature>/testing/
-├── contract.md      # T1-T5 决策 + 覆盖矩阵 + 测试规范
+├── strategy.md      # T1-T5 决策 + 覆盖矩阵 + 测试规范
 └── changelog.md
 ```
 
 ## 文档约束
 
-**testing/contract.md 必须包含**：T1-T5 决策（选择+理由+被拒） · 测试框架表 · 覆盖矩阵 · 测试规范（命名+隔离+环境）
+**testing/strategy.md 必须包含**：T1-T5 决策（选择+理由+被拒） · 测试框架表 · 覆盖矩阵 · 测试规范（命名+隔离+环境）
 **不应包含**：具体测试用例（test-cases）· CI 配置文件（deploy）
 
 ## 模板
@@ -152,11 +152,11 @@ docs/features/<feature>/testing/
 
 ## 入口/出口条件
 
-**入口**：有 contract.md + modules/ + plan.md，或用户已有详设和任务分解
+**入口**：有 goal.md + modules/ + plan.md，或用户已有详设和任务分解
 
-**缺失处理**：缺 plan.md → 从 contract.md 推导最小任务序列；缺 modules/ → 从 contract.md 推导覆盖矩阵。
+**缺失处理**：缺 plan.md → 从 goal.md 推导最小任务序列；缺 modules/ → 从 goal.md 推导覆盖矩阵。
 
-**出口**：testing/contract.md（T1-T5 完整） · 测试框架已选 · 覆盖矩阵已填 · 测试规范已明确
+**出口**：testing/strategy.md（T1-T5 完整） · 测试框架已选 · 覆盖矩阵已填 · 测试规范已明确
 
 ## 运行时信号
 
@@ -187,14 +187,14 @@ docs/features/<feature>/testing/
 - [ ] 外部依赖是否有 Mock 策略？
 - [ ] CI 中是否配置了测试运行？
 - [ ] 测试失败是否阻断发布？
-- [ ] **跨文档一致性**：testing/contract.md 的覆盖率策略是否与 project.md 工程约束中的测试策略一致？
-  - 如果 project.md 写了 "目标 ≥80% 覆盖率"，testing/contract.md 不能写 "不做覆盖率门槛"
-  - 不一致 → 停下来让用户决策，更新 project.md 或 testing/contract.md
-- [ ] **引用纪律**：testing/contract.md 的约束是否引用 project.md PD#，而非重复内容？
+- [ ] **跨文档一致性**：testing/strategy.md 的覆盖率策略是否与 project.md 工程约束中的测试策略一致？
+  - 如果 project.md 写了 "目标 ≥80% 覆盖率"，testing/strategy.md 不能写 "不做覆盖率门槛"
+  - 不一致 → 停下来让用户决策，更新 project.md 或 testing/strategy.md
+- [ ] **引用纪律**：testing/strategy.md 的约束是否引用 project.md PD#，而非重复内容？
 
 ## 历史维护（自动）
 
-完成后追加 `docs/timeline.md`：`### {日期} — {feature} 测试策略 · testing/contract.md（T1-T5）`。追加 `changelog.md`。
+完成后追加 `docs/timeline.md`：`### {日期} — {feature} 测试策略 · testing/strategy.md（T1-T5）`。追加 `changelog.md`。
 
 **更新 docs/status.md**：⑥测试 → `🔄`（test-cases 完成后由 test 编排或 test-cases 标记 `✅`）。
 
@@ -203,7 +203,7 @@ docs/features/<feature>/testing/
 ## 完成提示
 
 ```
-✅ 测试策略完成！testing/contract.md 已生成。
+✅ 测试策略完成！testing/strategy.md 已生成。
 
 下一步你可以：
   test-cases — 定义具体测试用例（正常/边界/错误）

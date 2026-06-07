@@ -20,8 +20,8 @@ when_to_use: Use when the user asks how to split components, structure pages, ma
 3. **约束一致性** — 样式、交互、错误处理在整个产品中保持一致
 每个决策点都是这套方法论的一个切面。
 ## 与上下游的边界
-**上游**：读 interaction-spec（交互规格）+ api/contract.md（接口合约）+ DESIGN.md（设计系统）
-**下游**：frontend/contract.md + modules/*.md 交给 plan 阶段（任务分解）和代码生成
+**上游**：读 interaction-spec（交互规格）+ notes/api.md（接口合约）+ DESIGN.md（设计系统）
+**下游**：notes/frontend.md + modules/*.md 交给 plan 阶段（任务分解）和代码生成
 **和 api-design 的切法**：
 - api-design 定义**接口合约**（端点+请求+响应）
 - frontend-design 定义**怎么消费接口**（数据请求+缓存+状态管理）
@@ -114,22 +114,22 @@ src/
 - `${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md` — frontend/modules/*.md 结构（组件结构 + 数据消费 + 依赖）
 - `${CLAUDE_SKILL_DIR}/../shared/changelog-template.md` — changelog.md 结构
 ## 与 project.md 的关系
-- project.md 已列出的技术选型 → frontend/contract.md 引用不重复
-- frontend/contract.md 只补充前端特有的依赖（如 @react-spring/three、Lucide React）
+- project.md 已列出的技术选型 → notes/frontend.md 引用不重复
+- notes/frontend.md 只补充前端特有的依赖（如 @react-spring/three、Lucide React）
 - 格式：`> 完整技术栈见 project.md，以下为前端补充`
 - FE1-FE5 的框架选型如果和 project.md 的前端框架一致，直接引用不重复
 ## 入口/出口条件
 **入口**：有 project.md + PRD.md + interaction-spec.md，或用户已有技术选型、需求和交互设计
-**出口**：frontend/contract.md（FE1-FE5 完整）+ modules/*.md + 技术选型表 + 共享约束
+**出口**：notes/frontend.md（FE1-FE5 完整）+ modules/*.md + 技术选型表 + 共享约束
 
 **缺失处理**：
 - 无 interaction-spec.md → 从 PRD 推导最小交互路径，标注"无交互规格，组件行为需用户确认"
 - 无 DESIGN.md → 跳过 FE3 样式方案决策（使用框架默认样式），标注"无设计系统"
-- api/contract.md 缺失 → 要求先完成 API 详设，或标注"接口待定义"
+- notes/api.md 缺失 → 要求先完成 API 详设，或标注"接口待定义"
 
 ## 运行时信号
 - 输入：API contract、design tokens、interaction spec
-- 输出：frontend contract、component modules
+- 输出：frontend specification、component modules
 - 路由：详见 `registry.yaml` 的 `forge-frontend-design` 节点；本节只保留人类可读摘要。
 - 升级：API 合约缺失 · DESIGN.md 缺失 · 状态方案冲突
 ## 何时不使用
@@ -158,17 +158,17 @@ src/
    ```markdown
    ### v{版本} — {日期} — 前端详设
    - **触发**：{用户说的一句话}
-   - **产出**：frontend/contract.md（FE1-FE5）+ {N} 个页面/组件 modules
+   - **产出**：notes/frontend.md（FE1-FE5）+ {N} 个页面/组件 modules
    ```
 2. **追加 docs/timeline.md**：
    ```markdown
    ### {日期} — {feature} 前端详设
-   - 新增：frontend/contract.md + modules/
+   - 新增：notes/frontend.md + modules/
    ```
 3. **检查膨胀**：超 100 行时归档。
 ## 完成提示
 ```
-✅ 前端详设完成！frontend/contract.md + modules/ 已生成。
+✅ 前端详设完成！notes/frontend.md + modules/ 已生成。
 
 下一步你可以：
   plan 阶段  — 进入任务分解（垂直切片 + 依赖图 + 测试推导）

@@ -1,7 +1,7 @@
 ---
 name: review
-description: Performs independent review of diffs, documents, contracts, code, tests, and consistency before build or release. Use for lightweight review requests and for full quality-gate review when explicitly requested.
-when_to_use: Use when the user asks to review changes, inspect a diff, check code quality, audit documents, find contract inconsistency, run an adversarial review, verify implementation against docs, or assess release readiness.
+description: Performs independent review of diffs, documents, code, tests, and consistency before build or release. Use for lightweight review requests and for full quality-gate review when explicitly requested.
+when_to_use: Use when the user asks to review changes, inspect a diff, check code quality, audit documents, find goal inconsistency, run an adversarial review, verify implementation against docs, or assess release readiness.
 ---
 
 # Review — 独立审查
@@ -21,7 +21,7 @@ review 的目标不是总结优点，而是发现会导致目标未达成、错�
 
 ## 上下游边界
 
-**上游**：PRD、project.md、DESIGN.md、contract.md、modules、plan、src、tests、changelog、timeline。
+**上游**：PRD、project.md、DESIGN.md、goal.md、modules、plan、src、tests、changelog、timeline。
 
 **下游**：审查报告、阻塞项、文档补全清单、豁免记录。
 
@@ -49,7 +49,7 @@ review 是目标验证器。它不只判断”有没有问题”，还必须把�
 在 codegen 前执行。检查：
 
 - 是否有足够的 WHAT / WHY / HOW / CONSTRAINTS。
-- project、DESIGN、contract、modules、plan 是否一致。
+- project、DESIGN、goal、modules、plan 是否一致。
 - 模块边界、入口、公共接口、依赖关系是否可验证。
 - 是否有未记录的人类决策。
 
@@ -58,7 +58,7 @@ review 是目标验证器。它不只判断”有没有问题”，还必须把�
 在 deploy 前执行。检查：
 
 - 代码是否满足声明的目标。
-- API、数据模型、错误码、权限、测试是否和合约一致。
+- API、数据模型、错误码、权限、测试是否和目标一致。
 - 关键逻辑是否引用决策编号（FD# / PD# / DB#）。
 - 测试是否覆盖验收条件和风险边界。
 
@@ -105,9 +105,9 @@ review 是目标验证器。它不只判断”有没有问题”，还必须把�
 
 ## 红旗清单
 - 只做摘要不列问题 → 强制列出具体问题（证据+影响+修复建议）
-- 只检查格式不检查跨文档一致性 → 强制检查 contract vs code
+- 只检查格式不检查跨文档一致性 → 强制检查 goal vs code
 - 没读 changelog/timeline 就评价当前决策 → 先读历史再评价
-- 测试通过但代码和合约不一致 → 标记为 P1（测试覆盖 ≠ 合约对齐）
+- 测试通过但代码和合约不一致 → 标记为 P1（测试覆盖 ≠ 目标对齐）
 - 文档缺 WHY 却直接允许 codegen → 阻塞，先补 WHY
 - 发现问题后没有重新审查 → 修复后必须复审
 - 发现偏差后没有归因 → 强制差距分析到三层之一（skill 方法论 / 文档未同步 / 代码实现）

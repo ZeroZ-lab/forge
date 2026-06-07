@@ -23,10 +23,10 @@ Forge methods define what should happen; execution discipline defines how an AI 
 ## Runtime meaning
 
 - State the goal, boundary, assumptions, and verification target before non-trivial edits.
-- Prefer the smallest change that satisfies the current contract.
-- Touch only files that directly trace to the requested goal or required contract synchronization.
+- Prefer the smallest change that satisfies the current goal.
+- Touch only files that directly trace to the requested goal or required specification synchronization.
 - Record unrelated findings instead of fixing them opportunistically.
-- After code or contract changes, run the available verification or state why it cannot run.
+- After code or specification changes, run the available verification or state why it cannot run.
 
 ## Decision boundaries
 
@@ -34,7 +34,7 @@ Stop and ask the human when a change would:
 
 - replace an architecture decision rather than implement an existing one;
 - introduce a new dependency, compatibility layer, or configuration surface;
-- delete or rename a public API, persisted field, or contract section;
+- delete or rename a public API, persisted field, or specification section;
 - keep failing after repeated same-class fixes, suggesting the goal definition may be wrong.
 
 ## Inheritance rule

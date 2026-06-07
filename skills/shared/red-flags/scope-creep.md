@@ -4,7 +4,7 @@ Scope creep means the runtime starts doing work outside the current goal without
 
 ## Red flags
 
-- New feature behavior appears during codegen without PRD or contract support.
+- New feature behavior appears during codegen without PRD or goal specification.
 - A task grows beyond the plan's file or step limits.
 - A design decision becomes a product requirement without user confirmation.
 - Deployment work introduces architecture changes not recorded in project decisions.
