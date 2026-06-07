@@ -1,15 +1,37 @@
 # Timeline — Forge 方法论进化记录
 
+### 2026-06-07 — Evaluator 目录化
+
+- **触发**：用户希望 evaluator 放到一个目录里。
+- **核心判断**：保留 `scripts/evaluate-skills.mjs` 兼容入口，实际实现移动到 `scripts/evaluate-skills/index.mjs`，避免破坏 npm scripts、文档命令和外部调用。
+- **改动**：
+  - 新增 `scripts/evaluate-skills/` 目录并移动 evaluator 实现。
+  - `scripts/evaluate-skills.mjs` 改为薄 wrapper。
+  - `scripts/validate.mjs`、`docs/goal_map.yml`、`docs/goal.md`、`docs/goal_verification.md` 同步新路径。
+- **验证目标**：`node scripts/evaluate-skills.mjs` + `node scripts/evaluate-skills/index.mjs` + `node scripts/validate.mjs` + `node --test`。
+
+### 2026-06-07 — Skills Suite 评分系统
+
+- **触发**：用户希望 Forge 有完整的 skills suite 评价系统和打分系统。
+- **核心判断**：硬性 oracle 仍然是 release gate；分数用于诊断和横向比较，不能替代 pass/fail。评价应覆盖 routing、artifacts、decision gates、verification、scope control、traceability 和 cost/control。
+- **改动**：
+  - `evals/skills-suite/manifest.json` 新增 `scoring_model`：评分轴、权重和等级阈值。
+  - `scripts/evaluate-skills.mjs` 新增 per-case/per-axis/overall score、等级输出和 `--score-out` JSON 导出。
+  - `evals/skills-suite/report.schema.json` 新增可选 `metrics`，支持用户干预、turn 数和文件变更数等成本指标。
+  - `docs/skill-suite-evaluation.md` 新增评分系统说明。
+  - 新增 CU 与 Rebuild Control 文件：`docs/change-units/CU-20260607-skills-suite-scoring.md`、`docs/goal.md`、`docs/goal_verification.md`、`docs/goal_map.yml`。
+- **验证目标**：`node scripts/evaluate-skills.mjs` + `node --test tests/skills-suite-evaluation.test.mjs` + `node scripts/validate.mjs` + `node --test`。
+
 ### 2026-06-05 — Change Unit 驱动的可追溯重建协议
 
 - **触发**：用户希望重构升级 skills suite，使项目不是一次性生成说明书，而是通过 feature / bugfix / refactor 的可验证补丁包逐步演化。
-- **核心判断**：Forge 原有 timeline/changelog 能记录历史，但缺少“每次变更的完整事件记录”和“文档到代码投影映射”。需要把 Change Unit 作为演化事实源，把 Current Snapshot 和 Rebuild Control 作为可重建控制面。
+- **核心判断**：Forge 原有 timeline/changelog 能记录历史，但缺少“每次变更的完整事件记录”和“文档到代码实现映射”。需要把 Change Unit 作为演化事实源，把 Current Snapshot 和 Rebuild Control 作为可重建控制面。
 - **改动**：
-  - 新增 shared 模板：Change Unit、doc sync checklist、CODE_MAP、CURRENT_STATE、REBUILD_GUIDE。
+  - 新增 shared 模板：Change Unit、doc sync checklist、goal_map、goal、goal_verification。
   - 24 个 skill 接入 `Change Unit / Rebuild Control` 协议引用。
-  - `registry.yaml` 新增 CU、doc sync、CODE_MAP、Current Snapshot、Rebuild Control 信号。
-  - skills-suite benchmark 升级到 v2，report 新增 `change_units`、`doc_sync`、`code_map_entries`，并新增 bugfix regression case。
-  - validator 新增 packaged plugin 漂移检查和 v2 oracle 校验。
+  - `registry.yaml` 新增 CU、doc sync、goal_map、Current Snapshot、Rebuild Control 信号。
+  - skills-suite benchmark 升级到 v2，report 新增 `change_units`、`goal_verification`、`code_map_entries`，并新增 bugfix regression case。
+  - validator 新增 packaged plugin 偏移检查和 v2 oracle 校验。
 - **验证目标**：`node scripts/validate.mjs` + `node --test` + `node scripts/evaluate-skills.mjs`。
 
 ### 2026-05-31 — 可验证 Skills Suite 评测合约
@@ -23,7 +45,7 @@
   - 新增 `scripts/evaluate-skills.mjs`：无依赖评测合约校验和 report oracle 评分
   - 新增 `scripts/run-skills-benchmark.mjs`：调用 Codex CLI 逐 case 生成真实运行 report
   - 新增 `docs/skill-suite-evaluation.md`：说明 no-report 模式和 report 模式的证据边界
-  - `validate` 和 `node --test` 接入评测链锚点，防止评测资产漂移
+  - `validate` 和 `node --test` 接入评测链锚点，防止评测资产偏移
 - **验证目标**：`node scripts/evaluate-skills.mjs` + `node scripts/validate.mjs` + `node --test`
 
 ### 2026-05-31 — 深度思考能力探索（think skill）
@@ -60,7 +82,7 @@
   - 新增 `skills/shared/concepts/execution-discipline.md`，作为 shared Knowledge 层的执行纪律锚点。
   - AGENTS.md 新增「AI 执行纪律」，放在核心理念之后，约束 Forge 自身维护。
   - init 的 AGENTS 模板新增「AI 执行纪律」，让新项目继承压缩后的 clarify / minimize / scope / verify 约束。
-  - validator 新增轻量锚点检查，保证 root、模板和 shared concept 不漂移。
+  - validator 新增轻量锚点检查，保证 root、模板和 shared concept 不偏移。
 - **验证目标**：`node scripts/validate.mjs` + `node --test`。
 
 ---

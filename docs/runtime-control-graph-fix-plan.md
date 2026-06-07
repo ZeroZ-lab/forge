@@ -1,5 +1,7 @@
 # Runtime Control Graph Fix Plan
 
+> **状态：已完成**（2026-06-07 确认）。registry 已迁移到 typed edges（`stage_next` / `feedback_to` / `quality_gates` / `signal_routes`），validator 和测试已升级，`docs/runtime-control-loop.md` 已被 `docs/goal-verification.md` 替代。Phase 1 目标文件由 goal-verification.md 承接，原计划内容保留供参考。
+>
 > 日期：2026-05-25  
 > 目标：修复 `registry.yaml` 当前把阶段流转、反馈回路、质量门和外部执行目标压成同一组 `upstream/downstream` 的问题，让 Forge 的运行时控制面更准确表达控制论 / MAPE-K 闭环。
 

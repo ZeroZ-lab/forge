@@ -1,6 +1,6 @@
 # Scope creep red flags
 
-Scope creep means the runtime starts doing work outside the current setpoint without a recorded decision.
+Scope creep means the runtime starts doing work outside the current goal without a recorded decision.
 
 ## Red flags
 

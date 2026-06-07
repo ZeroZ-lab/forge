@@ -1,6 +1,6 @@
 {
   "name": "forge",
-  "description": "文档是源代码，代码是投影。模型越强，同一份文档生成的代码越好。",
+  "description": "文档是目标约束。目标是什么、边界在哪、怎么算完成。",
   "author": {
     "name": "ZeroZ-lab",
     "url": "https://github.com/ZeroZ-lab/forge"
@@ -10,8 +10,8 @@
   "skills": "./skills",
   "interface": {
     "displayName": "Forge",
-    "shortDescription": "文档即源代码的 AI 开发决策协议。",
-    "longDescription": "Forge 默认服务已有项目的小功能迭代：先补 detail 合约，再按 contract 生成实现，最后 review 当前修改是否偏离决策文档。0.28 引入 Change Unit、Current Snapshot 和 CODE_MAP，使每次变更可追溯并支持从文档重建。",
+    "shortDescription": "目标约束驱动的 AI 开发决策协议的 AI 开发决策协议。",
+    "longDescription": "Forge 默认服务已有项目的小功能迭代：先明确目标和约束，再自主实现，最后验证结果是否达标。0.28 引入 Change Unit，使每次变更可追溯。",
     "developerName": "ZeroZ-lab",
     "category": "Engineering",
     "capabilities": [

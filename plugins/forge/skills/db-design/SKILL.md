@@ -113,7 +113,7 @@ updated_at: timestamp, not null, default now()
 ## 模板
 
 使用共享模板：
-- `${CLAUDE_SKILL_DIR}/../shared/contract-template.md` — contract.md 结构
+- `${CLAUDE_SKILL_DIR}/../shared/goal-template.md` — goal.md 结构
 - `${CLAUDE_SKILL_DIR}/../shared/changelog-template.md` — changelog.md 结构
 - `${CLAUDE_SKILL_DIR}/../shared/module-template.md` — 如有数据库领域模块文件
 
@@ -129,7 +129,7 @@ updated_at: timestamp, not null, default now()
 ## 运行时信号
 
 - 输入：`api_design.shared_data_model`
-- 输出：database setpoint、migration rules
+- 输出：database contract、migration rules
 - 路由：详见 `registry.yaml` 的 `forge-db-design` 节点；本节只保留人类可读摘要。
 - 升级：API 模型和存储模型冲突 · 迁移不可回滚
 
@@ -185,10 +185,3 @@ updated_at: timestamp, not null, default now()
   plan 阶段  — 跳过前端，直接进入任务分解
 ```
 
-## Change Unit / Rebuild Control
-
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

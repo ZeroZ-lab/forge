@@ -1,7 +1,7 @@
 {
   "name": "forge",
   "version": "0.28.1",
-  "description": "文档是源代码，代码是投影。模型越强，同一份文档生成的代码越好。",
+  "description": "文档是目标约束。目标是什么、边界在哪、怎么算完成。",
   "scripts": {
     "eval:skills": "node scripts/evaluate-skills.mjs",
     "eval:skills:run": "node scripts/run-skills-benchmark.mjs",
@@ -12,7 +12,12 @@
   },
   "author": "ZeroZ-lab",
   "license": "MIT",
-  "keywords": ["documentation", "decision-records", "ai-agent", "contract-first"],
+  "keywords": [
+    "documentation",
+    "decision-records",
+    "ai-agent",
+    "contract-first"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/ZeroZ-lab/forge"

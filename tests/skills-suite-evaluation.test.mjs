@@ -13,27 +13,27 @@ function reportEvidenceFor(testCase) {
   const decisions = new Set();
   const changeUnits = new Set();
   const docSync = new Set();
-  const codeMapEntries = [];
+  const goalCoverageEntries = [];
   const evidence = new Set(testCase.required_evidence);
   const sourceDoc =
-    testCase.expected_artifacts.find((artifact) => artifact.startsWith('docs/') && artifact !== 'docs/CODE_MAP.yml' && artifact !== 'docs/CURRENT_STATE.md') ??
+    testCase.expected_artifacts.find((artifact) => artifact.startsWith('docs/') && artifact !== 'docs/goal.md') ??
     'docs/synthetic-source.md';
 
   for (const check of testCase.oracle_checks) {
     if (check.type === 'command_reported') commands.add(check.command);
     if (check.type === 'decision_gate_reported') decisions.add(check.decision);
     if (check.type === 'change_unit_reported') changeUnits.add(check.path.replace('*', 'synthetic'));
-    if (check.type === 'doc_sync_completed') docSync.add(check.target);
-    if (check.type === 'code_map_covers') {
-      codeMapEntries.push({ source: check.path.startsWith('docs/') ? check.path : sourceDoc, projects_to: [check.path] });
+    if (check.type === 'goal_verified') docSync.add(check.target);
+    if (check.type === 'goal_covers') {
+      goalCoverageEntries.push({ source: check.path.startsWith('docs/') ? check.path : sourceDoc, covers: [check.path] });
     }
     if (check.type === 'evidence_contains') evidence.add(check.text);
   }
 
   return {
     change_units: [...changeUnits],
-    doc_sync: [...docSync].map((target) => ({ target, status: 'completed' })),
-    code_map_entries: codeMapEntries,
+    goal_verification: [...docSync].map((target) => ({ target, status: 'completed' })),
+    goal_coverage_entries: goalCoverageEntries,
     commands_run: [...commands],
     decisions: [...decisions],
     evidence: [...evidence],
@@ -47,10 +47,10 @@ test('skills-suite benchmark covers every registered skill', () => {
   assert.deepEqual([...covered].sort(), [...expected].sort());
 });
 
-test('skills-suite doc sync targets are visible as expected artifacts', () => {
+test('skills-suite goal verification targets are visible as expected artifacts', () => {
   for (const testCase of manifest.cases) {
     for (const check of testCase.oracle_checks) {
-      if (check.type === 'doc_sync_completed') {
+      if (check.type === 'goal_verified') {
         assert.ok(
           testCase.expected_artifacts.includes(check.target),
           `${testCase.id} syncs ${check.target} but does not list it as an expected artifact`,
@@ -91,7 +91,49 @@ test('skills-suite evaluator scores a complete report', () => {
   });
 
   assert.match(output, /report passed/);
+  assert.match(output, /Score: 100\/100 \(A\)/);
   fs.unlinkSync(reportPath);
+});
+
+test('skills-suite evaluator writes a machine-readable score report', () => {
+  const reportPath = path.join(os.tmpdir(), `forge-skills-score-source-${process.pid}.json`);
+  const scorePath = path.join(os.tmpdir(), `forge-skills-score-output-${process.pid}.json`);
+  const cases = manifest.cases.map((testCase) => {
+    return {
+      case_id: testCase.id,
+      status: 'pass',
+      triggered_skills: testCase.expected_skills,
+      artifacts: testCase.expected_artifacts,
+      ...reportEvidenceFor(testCase),
+      forbidden_behaviors: [],
+      metrics: {
+        user_interventions: 0,
+        turns: 4,
+        changed_files: 4,
+      },
+      notes: 'synthetic evaluator score report; not behavior evidence',
+    };
+  });
+
+  fs.writeFileSync(
+    reportPath,
+    JSON.stringify({ version: 2, suite: 'forge', run_id: 'synthetic-score', cases }, null, 2),
+  );
+
+  const output = execFileSync(
+    process.execPath,
+    ['scripts/evaluate-skills.mjs', '--report', reportPath, '--score-out', scorePath],
+    { encoding: 'utf8' },
+  );
+  const score = JSON.parse(fs.readFileSync(scorePath, 'utf8'));
+
+  assert.match(output, /Score report written/);
+  assert.equal(score.score, 100);
+  assert.equal(score.grade, 'A');
+  assert.equal(score.axes.goal_verification, 100);
+  assert.equal(score.cases.length, manifest.cases.length);
+  fs.unlinkSync(reportPath);
+  fs.unlinkSync(scorePath);
 });
 
 test('skills-suite evaluator supports partial reports and artifact globs', () => {
@@ -128,7 +170,7 @@ test('skills-suite evaluator supports partial reports and artifact globs', () =>
 test('skills-suite evaluator can skip externally blocked cases', () => {
   const reportPath = path.join(os.tmpdir(), `forge-skills-blocked-report-${process.pid}.json`);
   const passedCase = manifest.cases[0];
-  const blockedCase = manifest.cases.find((candidate) => candidate.id === 'codegen-projection');
+  const blockedCase = manifest.cases.find((candidate) => candidate.id === 'codegen-implementation');
 
   const report = {
     version: 2,
@@ -149,8 +191,8 @@ test('skills-suite evaluator can skip externally blocked cases', () => {
         triggered_skills: [],
         artifacts: [],
         change_units: [],
-        doc_sync: [],
-        code_map_entries: [],
+        goal_verification: [],
+        goal_coverage_entries: [],
         commands_run: [],
         decisions: [],
         forbidden_behaviors: [],
@@ -199,9 +241,9 @@ test('skills-suite evaluator rejects current docs without a Change Unit', () => 
   fs.unlinkSync(reportPath);
 });
 
-test('skills-suite evaluator rejects missing CODE_MAP coverage', () => {
+test('skills-suite evaluator rejects missing goal_map coverage', () => {
   const reportPath = path.join(os.tmpdir(), `forge-skills-missing-code-map-${process.pid}.json`);
-  const testCase = manifest.cases.find((candidate) => candidate.id === 'codegen-projection');
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'codegen-implementation');
   const report = {
     version: 2,
     suite: 'forge',
@@ -213,7 +255,7 @@ test('skills-suite evaluator rejects missing CODE_MAP coverage', () => {
         triggered_skills: testCase.expected_skills,
         artifacts: testCase.expected_artifacts,
         ...reportEvidenceFor(testCase),
-        code_map_entries: [],
+        goal_coverage_entries: [],
         forbidden_behaviors: [],
       },
     ],
@@ -224,7 +266,7 @@ test('skills-suite evaluator rejects missing CODE_MAP coverage', () => {
     encoding: 'utf8',
   });
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /code_map_covers/);
+  assert.match(result.stderr, /goal_covers/);
   fs.unlinkSync(reportPath);
 });
 
@@ -257,9 +299,9 @@ test('skills-suite evaluator rejects missing expected artifacts', () => {
   fs.unlinkSync(reportPath);
 });
 
-test('skills-suite evaluator rejects string CODE_MAP entries', () => {
+test('skills-suite evaluator rejects string goal_map entries', () => {
   const reportPath = path.join(os.tmpdir(), `forge-skills-string-code-map-${process.pid}.json`);
-  const testCase = manifest.cases.find((candidate) => candidate.id === 'codegen-projection');
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'codegen-implementation');
   const report = {
     version: 2,
     suite: 'forge',
@@ -271,7 +313,7 @@ test('skills-suite evaluator rejects string CODE_MAP entries', () => {
         triggered_skills: testCase.expected_skills,
         artifacts: testCase.expected_artifacts,
         ...reportEvidenceFor(testCase),
-        code_map_entries: ['src/'],
+        goal_coverage_entries: ['src/'],
         forbidden_behaviors: [],
       },
     ],
@@ -282,11 +324,11 @@ test('skills-suite evaluator rejects string CODE_MAP entries', () => {
     encoding: 'utf8',
   });
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /code_map_entries must be/);
+  assert.match(result.stderr, /goal_coverage_entries must be/);
   fs.unlinkSync(reportPath);
 });
 
-test('skills-suite evaluator rejects string doc sync entries', () => {
+test('skills-suite evaluator rejects string goal verification entries', () => {
   const reportPath = path.join(os.tmpdir(), `forge-skills-string-doc-sync-${process.pid}.json`);
   const testCase = manifest.cases.find((candidate) => candidate.id === 'ambiguous-idea-alignment');
   const report = {
@@ -300,7 +342,7 @@ test('skills-suite evaluator rejects string doc sync entries', () => {
         triggered_skills: testCase.expected_skills,
         artifacts: testCase.expected_artifacts,
         ...reportEvidenceFor(testCase),
-        doc_sync: ['docs/CURRENT_STATE.md'],
+        goal_verification: ['docs/goal.md'],
         forbidden_behaviors: [],
       },
     ],
@@ -311,7 +353,7 @@ test('skills-suite evaluator rejects string doc sync entries', () => {
     encoding: 'utf8',
   });
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /doc_sync must be/);
+  assert.match(result.stderr, /goal_verification must be/);
   fs.unlinkSync(reportPath);
 });
 
@@ -329,7 +371,7 @@ test('skills-suite evaluator rejects non-CU paths in change_units', () => {
         triggered_skills: testCase.expected_skills,
         artifacts: ['docs/idea-brief.md'],
         ...reportEvidenceFor(testCase),
-        change_units: ['docs/project.md', 'docs/CURRENT_STATE.md', 'docs/change-units/CU-synthetic.md'],
+        change_units: ['docs/project.md', 'docs/goal.md', 'docs/change-units/CU-synthetic.md'],
         forbidden_behaviors: [],
       },
     ],
@@ -341,5 +383,36 @@ test('skills-suite evaluator rejects non-CU paths in change_units', () => {
   });
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /change_units must point to docs\/change-units\/CU-\*\.md/);
+  fs.unlinkSync(reportPath);
+});
+
+test('skills-suite evaluator rejects invalid runtime metrics', () => {
+  const reportPath = path.join(os.tmpdir(), `forge-skills-invalid-metrics-${process.pid}.json`);
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'thinking-red-team');
+  const report = {
+    version: 2,
+    suite: 'forge',
+    run_id: 'invalid-metrics-smoke',
+    cases: [
+      {
+        case_id: testCase.id,
+        status: 'pass',
+        triggered_skills: testCase.expected_skills,
+        artifacts: testCase.expected_artifacts,
+        ...reportEvidenceFor(testCase),
+        forbidden_behaviors: [],
+        metrics: {
+          user_interventions: -1,
+        },
+      },
+    ],
+  };
+
+  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+  const result = spawnSync(process.execPath, ['scripts/evaluate-skills.mjs', '--allow-partial', '--report', reportPath], {
+    encoding: 'utf8',
+  });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /metrics must contain only non-negative numeric runtime metrics/);
   fs.unlinkSync(reportPath);
 });

@@ -1,6 +1,6 @@
 # Contract quality rubric
 
-Use this rubric when checking whether a contract can drive reliable projection.
+Use this rubric when checking whether a contract can drive reliable implementation.
 
 | Dimension | Check |
 |-----------|-------|

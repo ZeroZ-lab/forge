@@ -8,4 +8,4 @@ Expected behavior:
 
 - Trigger test orchestration, test-strategy, and test-cases.
 - Connect risk tiers to test cases.
-- Produce both testing contract and test case setpoint.
+- Produce both testing contract and test case plan.

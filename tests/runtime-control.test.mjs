@@ -21,7 +21,7 @@ test('runtime registry records static control-surface fields for every skill', (
   for (const skill of registry.skills) {
     assert.equal(skill.path, `skills/${skill.name.replace(/^forge-/, '')}/SKILL.md`);
     assert.ok(fs.existsSync(skill.path));
-    for (const field of ['runtime_role', 'consumes', 'signals_in', 'signals_out', 'escalates_when', 'stage_next', 'feedback_to', 'quality_gates', 'signal_routes']) {
+    for (const field of ['role', 'consumes', 'signals_in', 'signals_out', 'escalates_when', 'stage_next', 'feedback_to', 'quality_gates', 'signal_routes']) {
       assert.ok(skill[field], `${skill.name} missing ${field}`);
     }
     assert.ok(
@@ -54,38 +54,32 @@ test('typed registry edges only link known skills or allowed external targets', 
   }
 });
 
-test('typed signal routes cover fast, middle, and slow deviation loops', () => {
+test('typed signal routes cover goal verification loops', () => {
   const byName = Object.fromEntries(registry.skills.map((skill) => [skill.name, skill]));
-  assert.ok(byName['forge-codegen'].signal_routes.some((route) => route.signal === 'L1 deviation' && route.to === 'forge-detail'));
-  assert.ok(byName['forge-codegen'].signal_routes.some((route) => route.signal === 'L2 drift' && route.to === 'human decision'));
-  assert.ok(byName['forge-review'].signal_routes.some((route) => route.signal === 'document drift' && route.to === 'forge-detail'));
-  assert.ok(byName['forge-review'].signal_routes.some((route) => route.signal === 'skill/document/code attribution' && route.to === 'forge-learn'));
+  assert.ok(byName['forge-codegen'].signal_routes.some((route) => route.signal === 'goal not met' && route.to === 'forge-detail'));
+  assert.ok(byName['forge-codegen'].signal_routes.some((route) => route.signal === 'goal conflict' && route.to === 'human decision'));
+  assert.ok(byName['forge-review'].signal_routes.some((route) => route.signal === 'skill/document/code gap attribution' && route.to === 'forge-learn'));
 });
 
 test('runtime recovery blockers are encoded as registry signals', () => {
   const byName = Object.fromEntries(registry.skills.map((skill) => [skill.name, skill]));
-  assert.ok(byName['forge-codegen'].escalates_when.includes('L2 drift'));
+  assert.ok(byName['forge-codegen'].escalates_when.includes('goal conflict'));
+  assert.ok(byName['forge-codegen'].escalates_when.includes('3 corrections without convergence'));
   assert.ok(byName['forge-deploy'].escalates_when.includes('无回滚方案'));
-  assert.ok(byName['forge-learn'].avoid_when.includes('没有足够偏差证据'));
 });
 
-test('runtime registry includes Change Unit and rebuild-control signals', () => {
+test('runtime registry includes Change Unit and goal verification signals', () => {
   const signalIds = new Set(registry.signal_vocabulary.map((signal) => signal.id));
   for (const signalId of [
     'change_unit.created',
     'change_unit.updated',
-    'doc_sync.completed',
-    'code_map.updated',
-    'current_snapshot.updated',
-    'rebuild_control.updated',
+    'goal_verification.completed',
   ]) {
     assert.ok(signalIds.has(signalId), `missing signal ${signalId}`);
   }
 
   const byName = Object.fromEntries(registry.skills.map((skill) => [skill.name, skill]));
-  assert.ok(byName['forge-detail'].signals_out.includes('code_map.updated'));
-  assert.ok(byName['forge-codegen'].consumes.includes('docs/CODE_MAP.yml'));
-  assert.ok(byName['forge-review'].signals_out.includes('doc_sync.completed'));
+  assert.ok(byName['forge-review'].signals_out.includes('goal_verification.completed'));
 });
 
 test('every skill declares Change Unit participation', () => {
@@ -99,17 +93,16 @@ test('every skill declares Change Unit participation', () => {
 test('Change Unit protocol templates exist', () => {
   for (const file of [
     'skills/shared/change-unit-template.md',
-    'skills/shared/doc-sync-checklist.md',
-    'skills/shared/code-map-template.md',
-    'skills/shared/current-state-template.md',
-    'skills/shared/rebuild-guide-template.md',
+    'skills/shared/goal-template.md',
   ]) {
     assert.ok(fs.existsSync(file), `${file} missing`);
   }
 });
 
-test('runtime control documentation rejects per-skill MAPE-K templating', () => {
-  const doc = fs.readFileSync('docs/runtime-control-loop.md', 'utf8');
-  assert.match(doc, /skills 是协议节点，不是控制系统本体/);
-  assert.match(doc, /不校验每个 skill 是否有 MAPE-K 标题/);
+test('runtime control documentation defines goal verification model', () => {
+  const doc = fs.readFileSync('docs/goal-verification.md', 'utf8');
+  assert.match(doc, /skills 是协议节点/);
+  assert.match(doc, /goal-refiner/);
+  assert.match(doc, /executor/);
+  assert.match(doc, /verifier/);
 });

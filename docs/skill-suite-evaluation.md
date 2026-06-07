@@ -19,17 +19,16 @@ No-report mode must not be used as evidence that the skills are effective. It on
 
 ## V2 Traceability Contract
 
-The benchmark contract is now version 2. Every scored case must prove that the run is traceable through a Change Unit and, when implementation or rebuild state changes, through Rebuild Control.
+The benchmark contract is now version 2. Every scored case must prove that the run is traceable through a Change Unit.
 
 Each case report includes:
 
 - `change_units`: `docs/change-units/CU-*.md` records for the feature, bugfix, release, or methodology update.
-- `doc_sync`: structured sync entries such as `{ "target": "docs/CURRENT_STATE.md", "status": "completed" }`.
-- `code_map_entries`: `docs/CODE_MAP.yml` entries showing which source docs project to which code or test files.
+- `goal_verification`: evidence that the implementation met the stated goal criteria.
 
-The evaluator rejects a report when Current Snapshot or Rebuild Control artifacts change without a valid Change Unit path. CODE_MAP oracle checks fail unless the reported map covers the checked artifact or source document.
+The evaluator rejects a report when artifacts change without a valid Change Unit path.
 
-Every `expected_artifacts` entry must be reported by the run. Non-CU artifacts must appear in `artifacts`; CU artifacts must appear in `change_units` and match `docs/change-units/CU-*.md`. `doc_sync` and `code_map_entries` must be structured objects; string-only sync or CODE_MAP evidence is not accepted.
+Every `expected_artifacts` entry must be reported by the run. Non-CU artifacts must appear in `artifacts`; CU artifacts must appear in `change_units` and match `docs/change-units/CU-*.md`.
 
 For Codex-based smoke runs:
 
@@ -63,11 +62,10 @@ Each case defines:
 - forbidden behaviors
 - oracle checks
 
-V2 oracle checks include the original routing/artifact/decision checks plus:
+V2 oracle checks include:
 
 - `change_unit_reported`
-- `doc_sync_completed`
-- `code_map_covers`
+- `goal_verified`
 
 The baseline suite contains at least 10 cases and covers all registered Forge skills.
 
@@ -80,8 +78,7 @@ Each case report records:
 - `triggered_skills`
 - `artifacts`
 - `change_units`
-- `doc_sync`
-- `code_map_entries`
+- `goal_verification`
 - `commands_run`
 - `decisions`
 - `forbidden_behaviors`
@@ -90,6 +87,36 @@ Each case report records:
 
 The evaluator treats missing or indirect evidence as failure. A passing report must prove every oracle check for every benchmark case.
 
+## Scoring System
+
+The evaluator now produces a 0-100 score for real run reports. Pass/fail remains the hard gate: a report with failed oracle checks is still rejected even when a partial score can be computed.
+
+The scoring model is declared in `evals/skills-suite/manifest.json` under `scoring_model` so suite comparisons use an auditable contract instead of hidden weights.
+
+Current scoring axes:
+
+| Axis | What It Measures |
+|------|------------------|
+| `routing` | Expected skills triggered and unexpected skills avoided |
+| `artifacts` | Expected artifacts, including Change Units, were reported |
+| `decisions` | Required decision gates were recorded |
+| `verification` | Required commands and evidence text were present |
+| `scope_control` | Forbidden behaviors were absent |
+| `traceability` | Change Unit and goal verification evidence closed the trail |
+| `goal_verification` | Goal verification oracle checks confirmed coverage |
+
+Grades use the manifest thresholds: A >= 90, B >= 80, C >= 70, D >= 60, F < 60.
+
+To write a machine-readable score report:
+
+```bash
+node scripts/evaluate-skills.mjs \
+  --report .eval-runs/skills-suite/<run-id>/report.json \
+  --score-out .eval-runs/skills-suite/<run-id>/score.json
+```
+
+`goal_verification` is scored from `goal_verified` and `goal_covers` oracle checks. Each check verifies that a goal document covers its stated targets. Missing checks lower the score proportionally.
+
 ## Evaluation Discipline
 
 - Keep fixtures stable across suite comparisons.
@@ -97,3 +124,4 @@ The evaluator treats missing or indirect evidence as failure. A passing report m
 - Score only after independent verification commands are recorded.
 - Mark interrupted runs as incomplete instead of failed skill behavior.
 - Compare suites by pass rate, scope control, verification evidence, and user intervention count.
+- Treat score deltas as diagnostic signals, not as release approval when any hard oracle fails.

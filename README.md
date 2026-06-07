@@ -4,9 +4,9 @@
 
 # Forge
 
-**文档是源代码，代码是投影。**
+**文档是目标约束。**
 
-Forge 是一个给 AI 开发协作用的决策协议框架。它把文档从代码的衍生品变成项目的唯一真相：人类在关键分歧点做选择，AI 记录决策，并从合约文档生成实现。
+Forge 是一个给 AI 开发协作用的决策协议框架。它把文档定义为项目的目标约束——目标是什么、边界在哪、怎么算完成——人类在关键分歧点做选择，AI 记录决策并自主实现。
 
 ## 默认适合什么任务
 
@@ -41,7 +41,7 @@ Forge 的默认入口不是完整生命周期，而是**已有项目上的小功
 - `PRD.md`：需求边界还不清时再写
 - `plan.md`：任务复杂、需要切片或并行时再写
 - `testing/`、`deploy/`：测试或发布要独立建模时再开
-- `docs/CURRENT_STATE.md`、`docs/REBUILD_GUIDE.md`、`docs/CODE_MAP.yml`：需要从文档重建代码或检查投影映射时维护
+- `docs/change-units/`：重大变更的可追溯记录
 - `docs/timeline.md`：项目级决策演进或跨 feature 影响时再开
 - `docs/status.md`：多 feature 并行协调时再开
 
@@ -94,9 +94,9 @@ Advanced 入口见 [docs/advanced.md](docs/advanced.md)。
 node scripts/validate.mjs
 ```
 
-自检会校验版本同步、24 个 skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 投影回流。
+自检会校验版本同步、24 个 skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 目标回流。
 
-运行时控制面也会被校验：`registry.yaml` 必须覆盖全部 24 个 skill，并声明每个协议节点的 `runtime_role`、输入输出、typed edges、偏差信号和升级条件；`docs/runtime-control-loop.md` 和 `docs/skill-architecture-audit.md` 必须存在；shared Knowledge 层、编排 skill 的运行时恢复规则，`Change Unit -> doc sync -> CODE_MAP` 重建控制信号，以及 `codegen -> detail -> review -> learn` 偏差信号链必须完整。`registry.yaml` 是 JSON-compatible YAML，保持严格 JSON 语法以便无依赖校验。
+运行时控制面也会被校验：`registry.yaml` 必须覆盖全部 24 个 skill，并声明每个协议节点的输入输出和升级条件；`docs/goal-verification.md` 和 `docs/skill-architecture-audit.md` 必须存在；编排 skill 的运行时恢复规则，`codegen -> detail -> review -> learn` 目标验证链必须完整。`registry.yaml` 是 JSON-compatible YAML，保持严格 JSON 语法以便无依赖校验。
 
 ### 行为测试
 
@@ -104,7 +104,7 @@ node scripts/validate.mjs
 node --test
 ```
 
-行为测试验证 suite 运行时控制面的静态完整性，不模拟真实 skill 执行；它不要求每个 skill 文件都长成完整 MAPE-K 模板。
+行为测试验证 suite 运行时控制面的静态完整性，不模拟真实 skill 执行。
 
 ### Skill Suite 评测
 
@@ -112,7 +112,7 @@ node --test
 node scripts/evaluate-skills.mjs
 ```
 
-评测自检会校验 `evals/skills-suite/manifest.json`：至少 10 个固定任务、覆盖全部 24 个 skill、fixtures 存在、v2 oracle check 可机器读取，并要求 Change Unit / doc sync / CODE_MAP 证据。这只证明评测合约完整，不证明某次 agent 行为有效。
+评测自检会校验 `evals/skills-suite/manifest.json`：至少 10 个固定任务、覆盖全部 24 个 skill、fixtures 存在、v2 oracle check 可机器读取，并要求 Change Unit 和目标验证证据。这只证明评测合约完整，不证明某次 agent 行为有效。
 
 要评价真实运行，把 agent 执行记录整理成 `evals/skills-suite/report.schema.json` 格式，然后运行：
 
@@ -139,7 +139,7 @@ node scripts/evaluate-skills.mjs --skip-blocked --report .eval-runs/skills-suite
 默认入口收窄了，但完整框架没有删：
 
 - 全量 skill 和阶段说明：见 [AGENTS.md](AGENTS.md)
-- 运行时控制回路：见 [docs/runtime-control-loop.md](docs/runtime-control-loop.md)
+- 目标验证闭环：见 [docs/goal-verification.md](docs/goal-verification.md)
 - 架构审计：见 [docs/skill-architecture-audit.md](docs/skill-architecture-audit.md)
 - Skills Suite 评测：见 [docs/skill-suite-evaluation.md](docs/skill-suite-evaluation.md)
 
@@ -151,14 +151,10 @@ node scripts/evaluate-skills.mjs --skip-blocked --report .eval-runs/skills-suite
 
 ```text
 旧认知：代码是源代码，文档是衍生品
-Forge：文档是源代码，代码是文档在某个模型能力下的投影
+Forge：文档是目标约束，代码是实现路径
 ```
 
-同一份合约文档：
-
-- 2024 + GPT-4 → Express + React 18 + CSS Modules
-- 2025 + Claude 4 → Hono + React 19 + Tailwind
-- 2027 + 更强模型 → 更好的实现，合约不变
+目标约束定义做什么、边界在哪、怎么算完成。实现路径会随技术演进变化，但目标和约束不变。
 
 **代码会腐烂，但决策不会过期。**
 

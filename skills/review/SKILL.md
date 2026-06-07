@@ -1,7 +1,7 @@
 ---
 name: review
-description: Performs independent review of diffs, documents, contracts, code, tests, and drift before build or release. Use for lightweight review requests and for full quality-gate review when explicitly requested.
-when_to_use: Use when the user asks to review changes, inspect a diff, check code quality, audit documents, find contract drift, run an adversarial review, verify implementation against docs, or assess release readiness.
+description: Performs independent review of diffs, documents, contracts, code, tests, and consistency before build or release. Use for lightweight review requests and for full quality-gate review when explicitly requested.
+when_to_use: Use when the user asks to review changes, inspect a diff, check code quality, audit documents, find contract inconsistency, run an adversarial review, verify implementation against docs, or assess release readiness.
 ---
 
 # Review — 独立审查
@@ -10,13 +10,14 @@ when_to_use: Use when the user asks to review changes, inspect a diff, check cod
 
 在关键阶段前做独立审查，找出文档、代码、测试和决策之间的不一致。
 
-review 的目标不是总结优点，而是发现会导致错误投影、错误发布或未来重建失败的问题。
+review 的目标不是总结优点，而是发现会导致目标未达成、错误发布或未来验证失败的问题。
 
 ## 执行纪律
 
 - **D1**：每个问题必须有证据、影响和修复建议
 - **D5**：不替代 codegen，不直接发布，不用同一轮自我确认代替独立检查
-- **D8**：发现偏差必须归因（skill 方法论 / 文档未同步 / 代码实现），不归因就无法反馈给 learn
+- **D8**：发现偏差必须做差距分析（skill 方法论 / 文档未同步 / 代码实现），不归因就无法反馈给 learn
+- 实现质量评价维度见 `${CLAUDE_SKILL_DIR}/../shared/rubrics/implementation-quality.md`
 
 ## 上下游边界
 
@@ -39,7 +40,7 @@ review 的目标不是总结优点，而是发现会导致错误投影、错误�
 
 ## 运行时角色
 
-review 是慢回路的 sensor + analyzer。它不只判断“有没有问题”，还必须把偏差归因成可传递信号：代码实现偏差回到 codegen，文档漂移回到 detail，方法论盲区进入 learn 聚合。
+review 是目标验证器。它不只判断”有没有问题”，还必须把差距分析成可传递信号：代码实现偏差回到 codegen，文档不一致回到 detail，方法论盲区进入 learn 聚合。
 
 ## 审查模式
 
@@ -49,29 +50,22 @@ review 是慢回路的 sensor + analyzer。它不只判断“有没有问题”�
 
 - 是否有足够的 WHAT / WHY / HOW / CONSTRAINTS。
 - project、DESIGN、contract、modules、plan 是否一致。
-- 模块边界、入口、公共接口、依赖关系是否可重建。
+- 模块边界、入口、公共接口、依赖关系是否可验证。
 - 是否有未记录的人类决策。
 
 ### 代码审查
 
 在 deploy 前执行。检查：
 
-- 代码是否忠实投影文档。
+- 代码是否满足声明的目标。
 - API、数据模型、错误码、权限、测试是否和合约一致。
 - 关键逻辑是否引用决策编号（FD# / PD# / DB#）。
 - 测试是否覆盖验收条件和风险边界。
 
-### 重建审查
-
-在重大版本或方法论验证时执行。检查：
-
-- 从文档能否重建同等行为。
-- 文档是否缺入口、调用链、参数类型、public/private 标记。
-- 生成差异是可接受投影差异，还是文档缺失。
 
 ## 审查流程
 
-1. 确定模式：文档、代码或重建。
+1. 确定模式：文档或代码。
 2. 收集范围：列出读取文件和不读取文件。
 3. 建立检查表：按模式选择维度。
 4. 执行审查：优先找 P0/P1，保留证据。
@@ -81,7 +75,7 @@ review 是慢回路的 sensor + analyzer。它不只判断“有没有问题”�
 ## 问题优先级
 
 - **P0**：会导致错误实现、数据损坏、安全漏洞、无法发布。
-- **P1**：会导致重要行为偏离、测试失真、未来重建失败。
+- **P1**：会导致重要行为偏离、测试失真、未来验证失败。
 - **P2**：清晰度、可维护性或局部一致性问题。
 
 ## 入口/出口条件
@@ -99,15 +93,15 @@ review 是慢回路的 sensor + analyzer。它不只判断“有没有问题”�
 - 输入：artifact ready、health check trigger
 - 输出：P0/P1/P2 issues、skill/document/code attribution
 - 路由：详见 `registry.yaml` 的 `forge-review` 节点；本节只保留人类可读摘要。
-- 升级：P0/P1 found · WHY missing before codegen · deviation has no attribution
+- 升级：P0/P1 found · WHY missing before codegen · gap has no root cause
 
-## 偏差归因
+## 差距分析
 
 每个问题归因到三层之一，根因不同修法不同：
 
 - **skill 方法论**：skill 的决策点或方法论缺陷导致遗漏 → 反馈给 learn
 - **文档未同步**：文档间不一致（上游改了下游没跟） → 级联更新
-- **代码实现**：代码未忠实投影文档 → 修代码
+- **代码实现**：代码未满足声明的目标 → 修代码
 
 ## 红旗清单
 - 只做摘要不列问题 → 强制列出具体问题（证据+影响+修复建议）
@@ -116,7 +110,7 @@ review 是慢回路的 sensor + analyzer。它不只判断“有没有问题”�
 - 测试通过但代码和合约不一致 → 标记为 P1（测试覆盖 ≠ 合约对齐）
 - 文档缺 WHY 却直接允许 codegen → 阻塞，先补 WHY
 - 发现问题后没有重新审查 → 修复后必须复审
-- 发现偏差后没有归因 → 强制归因到三层之一（skill 方法论 / 文档未同步 / 代码实现）
+- 发现偏差后没有归因 → 强制差距分析到三层之一（skill 方法论 / 文档未同步 / 代码实现）
 
 ## 验证清单
 
@@ -140,11 +134,3 @@ review 是慢回路的 sensor + analyzer。它不只判断“有没有问题”�
   - 进入代码生成
   - 规划发布
 ```
-
-## Change Unit / Rebuild Control
-
-- 审查报告必须引用当前 CU；P0/P1、文档漂移和偏差归因写入 CU 风险/后续动作。
-- 如果审查导致事实源变化，先更新 CU，再同步 contract/current docs。
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

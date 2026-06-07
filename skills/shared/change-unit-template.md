@@ -28,7 +28,7 @@
 - Features:
 - Modules:
 - Contracts:
-- Code projection:
+- Code implementation:
 - Tests:
 - Operations:
 
@@ -53,10 +53,7 @@
 
 ## Docs To Sync
 
-- [ ] docs/CURRENT_STATE.md
-- [ ] docs/REBUILD_GUIDE.md
-- [ ] docs/CODE_MAP.yml
-- [ ] feature contract / modules
+- [ ] feature goal.md
 - [ ] testing docs
 - [ ] deploy docs
 - [ ] changelog / timeline summary

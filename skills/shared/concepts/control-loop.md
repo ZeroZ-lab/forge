@@ -1,31 +1,12 @@
-# Runtime control loop anchor
+# Goal verification loop
 
-Forge runtime control is built from protocol nodes:
+> 完整定义见 `docs/goal-verification.md`。本文件是运行时概念摘要。
 
-```
-User task
-  -> route to skill
-  -> read current state
-  -> produce or update documents
-  -> downstream skill consumes documents
-  -> code or acceptance work exposes deviation
-  -> deviation signal flows back
-  -> code, documents, release plan, or methodology changes
-```
+Forge 用目标验证闭环替代传统漂移检测：
 
-## Three loops
+1. **定义目标** — 目标、边界、完成标准。
+2. **实现** — AI 自主选择实现路径。
+3. **验证** — 结果是否达成目标？
+4. **修正** — 未达成时分析差距，修正实现或细化目标。
 
-| Loop | Scope | Runtime path |
-|------|-------|--------------|
-| Fast | Single task | `codegen` projects code, validates, and handles L0/L1/L2. |
-| Middle | Iteration | `detail` revises contract and checks downstream drift. |
-| Slow | Cross-project | `review` attributes deviations and `learn` proposes methodology changes. |
-
-## Stop conditions
-
-- Setpoint lacks WHY but codegen is requested.
-- `codegen` reports L2 drift.
-- `detail` finds downstream drift with unclear impact.
-- `review` finds unresolved P0/P1 issues.
-- `deploy` lacks concrete rollback or health checks.
-- `learn` lacks repeated evidence for a methodology change.
+升级规则：同类失败 ≥ 2 → 重审目标；目标冲突 → 人类决策；3 次修正未收敛 → 人类决策。

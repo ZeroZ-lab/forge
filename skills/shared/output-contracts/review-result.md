@@ -10,8 +10,8 @@ Use this shape for document, code, frontend, or release review output.
 
 ## Attribution
 
-| Finding | Skill methodology | Document drift | Code projection | External state |
-|---------|-------------------|----------------|-----------------|----------------|
+| Finding | Skill methodology | Goal alignment | Code implementation | External state |
+|---------|-------------------|----------------|---------------------|----------------|
 | | | | | |
 
 ## Decision

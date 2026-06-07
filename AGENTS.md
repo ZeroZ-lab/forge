@@ -1,18 +1,18 @@
 # Forge
 
-> 文档是源代码，代码是投影。模型越强，同一份文档生成的代码越好。
+> 文档是目标约束。目标是什么、边界在哪、怎么算完成。
+> 路径、结构、技术选型是实现手段，AI 自主决定。
 
 ## 核心理念
 
-**旧认知**：代码是源代码，文档是衍生品  
-**Forge 的认知**：文档是源代码，代码是文档在某个模型能力下的投影
+文档只回答三个问题：
+1. **目标是什么** — 做什么、解决什么问题
+2. **边界在哪** — 不做什么、约束条件、已知限制
+3. **怎么算完成** — 验收标准、成功指标
 
-同一份合约文档：
-- 2024 + GPT-4 → Express + React 18 + CSS Modules
-- 2025 + Claude 4 → Hono + React 19 + Tailwind
-- 2027 + 更强模型 → 更好的实现，合约不变
+实现路径、项目结构、技术选型——都是达成目标的手段。同一份目标约束，不同模型能力下会有不同实现，但目标不变。
 
-**代码会腐烂，但决策不会过期。**
+**决策不会过期，代码会。** 记录为什么选 A 不选 B，比记录 A 怎么实现更重要。框架会换，人会走，决策记录是项目唯一不会过时的东西。
 
 ## 默认入口：小功能迭代
 
@@ -29,80 +29,69 @@ Forge 的默认目标不是把每个用户都带进完整生命周期，而是�
 
 ### 默认最小产物
 
-默认只要求 3 类 feature 文档：
+默认只要求 2 类 feature 文档：
 
 | 文档 | 默认角色 |
 |------|---------|
-| `contract.md` | 记录共享约束、跨领域骨架和关键决策 |
-| `modules/*.md` | 记录模块接口、行为和数据细节 |
+| `goal.md` | 记录目标、边界、完成标准和关键决策 |
 | `changelog.md` | 记录这个 feature 的决策历史 |
 
 按需再补：
 
+- `notes/*.md`：需要领域补充说明时启用（API、前端、数据库等）
 - `PRD.md`：需求边界还不清时启用
 - `plan.md`：任务切片、依赖图、并行矩阵有价值时启用
 - `testing/`、`deploy/`：需要独立测试或发布产物时启用
 - `docs/timeline.md`：项目级演进或跨 feature 影响时启用
 - `docs/status.md`：多 feature 并行协调时启用
 
-### Change Unit + Rebuild Control
+### Change Unit
 
-Forge 0.28 起，每次 feature、bugfix、refactor、release 或方法论更新都应有一个 Change Unit：
+每次 feature、bugfix、refactor、release 或方法论更新都应有一个 Change Unit：
 
 ```txt
 docs/change-units/CU-<date>-<slug>.md
 ```
 
-CU 是完整事件记录：为什么改、行为变化、影响模块、契约变化、数据变化、测试、风险、回滚、验证证据和需要同步的长期文档。`changelog.md` 与 `docs/timeline.md` 只写摘要并链接 CU，不复制完整事件。
-
-项目可重建性由三类 Rebuild Control 文档维护：
-
-| 文档 | 角色 |
-|------|------|
-| `docs/CURRENT_STATE.md` | 当前系统快照，只写现在是什么 |
-| `docs/REBUILD_GUIDE.md` | 从文档重建代码的顺序、输入和验证 |
-| `docs/CODE_MAP.yml` | 文档到代码/测试文件的投影映射 |
-
-如果代码或 contract 改变，必须同步当前 CU 与相关 Rebuild Control；如果只更新 Current Snapshot / Rebuild Control 而没有 CU，视为不可追溯变更。
+CU 记录：为什么改、行为变化、影响范围、风险、验证证据。`changelog.md` 与 `docs/timeline.md` 只写摘要并链接 CU，不复制完整事件。
 
 ### Advanced 入口
 
-完整生命周期、三层控制回路、评测系统和方法论进化都仍然存在，但默认放进 Advanced 语境：
+完整生命周期、评测系统和方法论进化都仍然存在，但默认放进 Advanced 语境：
 
 - 团队治理和多 feature 协调：看 `docs/status.md`、`docs/timeline.md`
-- 运行时控制面：看 `docs/runtime-control-loop.md`
 - 架构审计和评测：看 `docs/skill-architecture-audit.md`、`docs/skill-suite-evaluation.md`
 - 方法论进化：看 `docs/timeline.md` 和 `skills/learn/`
 
-### 操作宪法（D1–D9）
+### 操作纪律（D1–D9）
 
 所有 skill 自动遵守以下条款，不重复内容，只引用编号。
 
-**D1：决策留痕**  
+**D1：决策留痕**
 每个技术选择都记录：选了什么、为什么选、拒绝什么。框架会换，人会走，决策记录是项目唯一不会过时的东西。
 
-**D2：文档即源代码**  
-文档不是代码的注释，是代码的源头。一份好的 contract.md 应该让任何模型重建系统。模型越强，从同一份文档生成的代码越好。
+**D2：目标约束**
+文档定义目标和边界，不定义实现。AI 自主选择路径和结构。清晰的目标比详细的蓝图更有价值。
 
-**D3：人类决策，AI 执行**  
+**D3：人类决策，AI 执行**
 AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。在关键分歧点停下来，等人类确认，把选择固化成文档。
 
-**D4：最小变更**  
-优先满足当前合约的最小变更，不引入未要求的抽象、配置或兼容层。
+**D4：最小变更**
+优先满足当前目标的最小变更，不引入未要求的抽象、配置或兼容层。
 
-**D5：目标边界**  
+**D5：目标边界**
 改动前确认目标、边界、假设和验证方式。只编辑与目标直接相关的文件；发现无关问题只记录，不顺手修改。
 
-**D6：暴露假设**  
+**D6：暴露假设**
 做决策时列出假设。如果假设可能不成立，停下来向人类确认。
 
-**D7：验证而非假设**  
+**D7：验证而非假设**
 每次代码或文档变更后，执行可用验证，或明确说明无法验证的原因。
 
-**D8：累积升级**  
-同类问题修正 ≥ 2 次，停下来建议回退上游 skill 重新审视决策。偏差可能是 setpoint 的盲区，不是投影的问题。
+**D8：累积升级**
+同类问题修正 ≥ 2 次，停下来建议重新审视目标定义。重复失败可能是目标本身的盲区。
 
-**D9：运行实证（Evidence over claims）**  
+**D9：运行实证（Evidence over claims）**
 任何代码变更声明"完成"之前，必须提供运行证据。编译通过、服务启动、测试绿灯——至少一项，视项目类型而定。无法提供运行证据时，必须说明原因并标记"⚠️ 未验证"。不跑就说完了 = 猜。
 D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就跳过运行验证。
 
@@ -120,7 +109,7 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 软件开发不只有技术设计。Forge 用阶段制 skill 覆盖从业务讨论到上线发布的完整生命周期，每个 skill 遵循相同范式：
 
 ```
-决策协议（skill）→ 产物文档 → 下游消费（代码/设计稿/任务清单/测试用例...）
+决策协议（skill）→ 明确目标 → AI 自主实现 → 验证结果
 ```
 
 ### 8 阶段 × 19 个领域 Skill + 4 个编排 Skill + 1 个思考增强 Skill
@@ -138,7 +127,7 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 | | frontend-design | 组件驱动 | 前端开发 | 组件规格 |
 | | db-design | 模型驱动 | 后端开发 | 数据模型 |
 | **④ 任务** | plan | 垂直切片 | 开发 | 任务分解 |
-| **⑤ 构建** | codegen | 文档投影 | AI | src/ + tests/ |
+| **⑤ 构建** | codegen | 目标驱动实现 | AI | src/ + tests/ |
 | | fe-artifact | 五层翻译 | AI | 前端代码 |
 | **⑥ 测试** | test-strategy | 风险分层 | QA + 开发 | 测试策略 |
 | | test-cases | 场景覆盖 | QA | 测试用例 |
@@ -156,7 +145,7 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 
 ```
 ⓪ 探索         ① 定义         ①.5 研究       ② 设计                      ③ 详设
-方向简报  →  项目章程 → PRD  →  算法菜单  →    交互规格 + 设计系统 + 技术方案    →    contract + modules/
+方向简报  →  项目章程 → PRD  →  算法菜单  →    交互规格 + 设计系统 + 技术方案    →    goal.md + notes/
                                                                               │
                                                                               ↓
 ⑦ 交付          ⑥.5 审查        ⑥ 测试                     ⑤ 构建         ④ 任务
@@ -165,45 +154,25 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 
 每个阶段的产物是下一阶段的输入。PRD 约束技术方案，技术方案约束详设，详设驱动编码，编码驱动测试。
 
-### Advanced：三层控制回路
+### 目标验证
 
-Forge 是闭环系统——文档是 setpoint，代码是投影，偏差信号驱动修正。
+Forge 是闭环系统——文档定义目标，AI 自主实现，验证结果是否达标。信号传递在环节间完成，闭环控制由 `registry.yaml` 驱动，完整定义见 `docs/goal-verification.md`。
 
-这里的控制论约束发生在运行时，不要求每个 `SKILL.md` 文件都独立长成完整 MAPE-K 模板。skill 是协议节点；控制系统产生在一次任务执行中：路由 skill、读取项目状态、生成或更新文档、下游投影、检测偏差、回流信号、修正文档/代码/方法论或等待人类决策。运行时控制面以 `registry.yaml` 为 typed edges / signal routes 的事实源；每个 skill 的 `## 运行时信号` 节只是人类可读摘要，必须与 registry 对齐。完整定义见 `docs/runtime-control-loop.md`，审计记录见 `docs/skill-architecture-audit.md`。
+| 环节 | 机制 | 信号 |
+|------|------|------|
+| **实现** | codegen 读取目标 → 生成代码 → 验证目标是否达成 | 同类失败 ≥ 2 → 触发目标审视 |
+| **审查** | review 检查实现是否满足目标 → 差距分析 | 目标冲突 → 需要人类决策 |
+| **进化** | learn 聚合重复失败模式 → 改进方法论 | 方法论变更 → 影响所有环节 |
 
-| 回路 | 速度 | 机制 | 信号传递 |
-|------|------|------|---------|
-| **快回路** | 单任务 | codegen 生成 → 四维对照 → L0/L1/L2 分级 → 修正 → 收敛 | 同类 L1 ≥ 2 → 触发中回路 |
-| **中回路** | 单次迭代 | detail 改 contract → 读下游依赖表 → 漂移检测 → 级联更新 | 偏差归因 → 喂给慢回路 |
-| **慢回路** | 跨项目 | review 偏差归因 → learn 聚合 → 修改 skill 方法论 | 方法论变更 → 影响所有回路 |
+**前馈机制**：detail 阶段从历史失败中提取高频风险 → 写入目标文档「已知风险」→ codegen 读目标时自然获得，零额外成本。
 
-**前馈机制**：detail 阶段从历史偏差提取高频失误 → 写入 contract「已知风险」→ codegen 读 contract 时自然获得，零额外成本。
+**累积升级规则**：如果你在本次 session 中反复修正同类问题（≥ 2 次），停下来建议用户重新审视目标定义。重复失败可能是目标本身的盲区。
 
-**自适应频率**：codegen 按任务复杂度选择对照频率——简单任务整任务对照，复杂任务逐函数对照。连续零偏差触发健康检查（验证检查机制本身是否有效）。
-
-**控制论映射**：contract = setpoint · codegen = actuator · 四维对照 = sensor · 偏差信号 = error signal · 修正循环 = controller。
-
-#### 关键路由规则
-
-以下是跨 skill 的核心信号路由摘要；完整 typed edges 和条件以 `registry.yaml` 为准。
-
-| 触发 | 发射方 | 路由到 | 条件 |
-|------|--------|--------|------|
-| 同类 L1 偏差 ≥ 2 | codegen | detail | 中回路触发 |
-| L2 偏差 | codegen | 人类决策 | setpoint 矛盾 |
-| 3 次修正不收敛 | codegen | 人类决策 | 快回路卡死 |
-| 文档漂移 | review | detail | 归因到文档层 |
-| 同类偏差 ≥ 3 | review | learn | 慢回路触发 |
-| P0/P1 阻塞 | review | 人类决策 | 需要优先级裁决 |
-
-**累积升级规则**：如果你在本次 session 中反复修正同类问题（≥ 2 次），停下来建议用户回退到上游 skill 重新审视决策。偏差可能是 setpoint 的盲区，不是投影的问题。
-
-### 三层文档体系
+### 两层文档体系
 
 ```
-Root 级      → Forge 本身的核心理念和架构（AGENTS.md）    永不变
 Project 级   → 这个项目的技术选型和设计语言              很少变
-Feature 级   → 这个功能的全流程产物                     迭代时变
+Feature 级   → 这个功能的目标、决策和历史                迭代时变
 ```
 
 ### 项目级文件
@@ -216,20 +185,18 @@ my-project/
 ├── docs/status.md         # 可选：多 feature 协调看板
 ├── docs/timeline.md       # 可选：项目级演进记录
 ├── docs/timeline/         # 可选：timeline 归档（按年/季度）
-├── docs/thinking/         # 可选：深度思考产物（L1/L2 分析、攻击报告）
+├── docs/thinking/         # 可选：深度思考产物
 ├── DESIGN.md              # 设计系统（颜色、间距、交互模式、组件模式）
-├── AGENTS.md              # AI 行为指令（从 project.md + DESIGN.md 投影）
+├── AGENTS.md              # AI 行为指令（从 project.md + DESIGN.md 生成）
 └── CLAUDE.md              # Claude Code 入口（指向 AGENTS.md）
 ```
-
-**project.md 是源头，AGENTS.md / CLAUDE.md 是它的投影。** contract.md 生成代码，project.md 生成项目配置文件。
 
 | 文件 | 告诉 AI | 生成来源 |
 |------|---------|---------|
 | project.md | 技术上怎么做 | technical-design 的共享决策 |
 | DESIGN.md | 视觉上怎么呈现 | fe-system 决策 |
 | status.md | 各 feature 当前在哪个阶段（启用时） | 多 feature 协调时更新 |
-| AGENTS.md | 你应该怎么工作 | project.md + DESIGN.md 投影 |
+| AGENTS.md | 你应该怎么工作 | project.md + DESIGN.md 生成 |
 | CLAUDE.md | 读 AGENTS.md | 入口指针 |
 
 ### Skill vs 产物文档
@@ -258,140 +225,90 @@ my-project/
 │   ├── project.md                    # Project 级（~100 行，很少变）
 │   ├── timeline.md                   # 可选：项目时间线（最近 10 条，≤100 行）
 │   ├── timeline/                     # 可选：时间线归档
-│   ├── thinking/                     # 可选：深度思考产物（L1/L2 分析、攻击报告）
+│   ├── thinking/                     # 可选：深度思考产物
 │   │   └── archive/                  #   被推翻的分析归档
 │   │
 │   └── features/
-│       ├── task-management/          # 一个功能 = 一棵文档树
-│       │   ├── PRD.md                #   可选：需求定义（define 阶段，整体加载）
-│       │   ├── plan.md               #   可选：任务分解（plan 阶段，整体加载）
-│       │   ├── contract.md           #   feature 级共享骨架（~80 行）
-│       │   ├── changelog.md          #   功能变更历史（最近 5 条，≤100 行）
+│       ├── task-management/          # 一个功能 = 一个 goal + 按需补充
+│       │   ├── goal.md               #   目标 + 边界 + 完成标准 + 决策
+│       │   ├── changelog.md          #   决策历史（最近 5 条，≤100 行）
 │       │   ├── changelog/            #   变更历史归档
-│       │   ├── api/                  #   API 领域
-│       │   │   ├── contract.md       #     只记 feature 特有决策
-│       │   │   └── modules/          #     共享决策指向 project.md
-│       │   ├── frontend/             #   前端领域
-│       │   ├── database/             #   数据库领域
-│       │   ├── testing/              #   可选：测试领域
-│       │   └── deploy/               #   可选：部署领域
+│       │   ├── PRD.md                #   可选：需求定义（define 阶段）
+│       │   ├── plan.md               #   可选：任务分解（plan 阶段）
+│       │   └── notes/                #   可选：领域补充说明
+│       │       ├── api.md            #     API 相关说明
+│       │       ├── frontend.md       #     前端相关说明
+│       │       └── database.md       #     数据库相关说明
 │       └── billing/                  # 另一个功能，同样结构
 │
 ├── DESIGN.md                         # Project 级（设计系统）
 ├── AGENTS.md                         # Project 级（AI 行为指令）
 ├── CLAUDE.md                         # Project 级（入口指针）
-├── src/                              # 全部由 AI 从文档生成
-└── tests/                            # 全部由 AI 从文档生成
+├── src/                              # 由 AI 实现
+└── tests/                            # 由 AI 实现
 ```
 
-### 领域间的引用关系
+### Feature 级 goal.md
 
-```
-feature/contract.md（feature 级共享骨架）
-  │
-  ├── api/contract.md ──────────→ database/contract.md
-  │     数据模型                     表结构、索引、迁移
-  │
-  ├── api/modules/*.md ─────────→ frontend/modules/*.md
-  │     端点合约                      组件的 API 调用、类型引用
-  │
-  ├── api/ + frontend/ ─────────→ testing/contract.md
-  │     验收条件 + 组件               测试用例来源
-  │
-  └── 所有领域 ──────────────────→ deploy/contract.md
-        运行依赖                      容器化、环境变量、健康检查
-```
-
-**规则：下游领域引用上游领域，不反向。**
-
-### 文件到代码的映射
-
-```
-api/contract.md ───────────→ src/middleware/ (auth, error, idempotency)
-api/modules/<name>.md ─────→ src/routes/, src/schemas/, src/services/
-frontend/modules/<name>.md → src/components/, src/hooks/
-database/contract.md ──────→ src/db/schema.ts, src/db/migrations/
-deploy/contract.md ────────→ Dockerfile, .github/workflows/
-testing/contract.md ───────→ tests/ 结构和策略
-```
-
-### Feature 级 contract.md
-
-每个功能的顶层 contract.md 放跨领域共享信息：
+每个功能的核心文档，回答三个问题：
 
 ```markdown
 # Task Management
 
 > 团队协作的任务管理系统
 
+## 目标
+
+- 用户可以创建、分配和追踪任务
+- 支持多租户隔离
+- 支持看板和列表两种视图
+
+## 边界
+
+### 包含
+- 任务 CRUD
+- 状态流转（todo → in-progress → done）
+- 成员分配
+- 标签分类
+
+### 不包含
+- 时间追踪（v2）
+- 文件附件（v2）
+- 评论 @提及通知
+
+## 完成标准
+
+- [ ] 任务 CRUD 全流程可操作
+- [ ] 多租户数据隔离
+- [ ] 看板拖拽排序
+- [ ] 权限：admin 全权限，member 限操作自己的
+
+## 决策记录
+
+| # | 决策 | 选择 | 理由 | 拒绝 |
+|---|------|------|------|------|
+| 1 | 分页方式 | cursor | 数据量大时稳定 | offset（深度分页慢） |
+| 2 | 软删除 | 是 | 恢复需求 | 硬删除（数据不可恢复） |
+
 ## 共享约束
 
-- 多租户隔离（所有领域）
-- 软删除（API + 数据库）
-- 权限：admin 全权限，member 限操作自己的（API + 前端）
-
-## 领域索引
-
-| 领域 | 目录 | 状态 | 模块数 |
-|------|------|------|--------|
-| API | api/ | v1.2 | 3 |
-| Frontend | frontend/ | v1.1 | 3 |
-| Database | database/ | v1.0 | - |
-| Testing | testing/ | v1.0 | - |
-| Deploy | deploy/ | v1.0 | - |
+> 引用 project.md 约束，只补充本 feature 新增。
 ```
 
 ---
 
 ## 膨胀控制
 
-**原则**：一次任务加载的总上下文 < 30K tokens（≈ 3,000 行）。
-按需加载的文件控制单文件大小，整体加载的文件按 scope 自然增长。
-
-### 按需加载（单文件 ≤ 200 行）
-
-AI 每次任务只读 1-2 个，控制单次 token 消耗。
-
-```
-feature/contract.md     ~100 行   几乎不变
-api/contract.md         ~100 行   几乎不变
-api/modules/*.md        100-200 行  迭代时修改
-frontend/contract.md    ~80 行    几乎不变
-frontend/modules/*.md   100-200 行  迭代时修改
-project.md / DESIGN.md  ~200 行   很少变
-```
-
-AI 按需加载：
-
-```
-"加标签功能"
-  → 读 feature/contract.md（共享约束，~100 行）
-  → 读 api/contract.md + api/modules/tasks.md（参考模式，~220 行）
-  → 读 frontend/contract.md + frontend/modules/task-list.md（参考，~200 行）
-  → 写 api/modules/labels.md + frontend/modules/labels.md
-  → 改 database/contract.md（追加表）
-  → 生成代码
-  → 总共读 ~500 行，不碰其他领域和模块
-```
-
-### 整体加载（无硬约束，超 400 行检查）
-
-AI 做任务时需要全部读，不存在"只读某一段"的场景。大小与 scope 正相关。
-
-| 文件类型 | 说明 |
-|---------|------|
-| PRD.md | `docs/features/<feature>/PRD.md`，大小与 US 数量正相关，拆开会丢失全局视野 |
-| plan.md | `docs/features/<feature>/plan.md`，依赖图 + 并行矩阵需要整体可见 |
-| interaction-spec.md | 流程 + 线框 + 组件复用需要交叉引用 |
-| idea-brief.md | 发散阶段，不宜过早压缩 |
+**原则**：文档只记目标、决策和约束。不记录实现细节——那是代码的事。
 
 ### 追加型（≤ 100 行，超出归档）
 
 | 文件类型 | 上限 | 超出时 |
 |---------|------|--------|
+| goal.md | 100 行 | 分拆为多个 feature 或精简 |
 | timeline.md | 100 行 | 旧条目压缩成年度摘要，移到 timeline/年.md |
 | changelog.md | 100 行 | 旧版本移到 changelog/v*.md |
-| timeline/年.md | 200 行 | 按季度拆分 |
+| notes/*.md | 200 行 | 按子领域拆分 |
 
 ---
 
@@ -399,7 +316,7 @@ AI 做任务时需要全部读，不存在"只读某一段"的场景。大小与
 
 ### 流程选择
 
-默认先用 4 步主链，不要一上来展开完整生命周期：
+默认先用简短链路，不要一上来展开完整生命周期：
 
 | 流程 | 链路 | 适用场景 |
 |------|------|---------|
@@ -436,38 +353,22 @@ Claude Code 根据 skill 的 `description` / `when_to_use` 自动选择最小相
 | 深度 | 用途 | 行为 |
 |------|------|------|
 | L0 lens | 判断、分析、review 一个点 | 只读必要上下文，不改文件 |
-| L1 patch | 局部 contract / code 修正 | 最小改动，执行可用验证 |
+| L1 patch | 局部目标 / code 修正 | 最小改动，执行可用验证 |
 | L2 stage | 完整阶段执行 | 产出或更新阶段文档 + 历史记录 |
 
-**默认规则**：用户未显式点名阶段时，优先走 `detail → codegen → review` 的 L0/L1 轻量调用；用户显式点名阶段或 skill 时，默认 L2 阶段调用，除非用户说"只看看"、"简单 review"或等价限制。轻量调用如果改变 contract 语义，必须回写对应文档。
-
-| 阶段 | 做什么 | 加载的 skill | 产出 |
-|------|--------|-------------|------|
-| ⓪ 探索 | 发散可能性 + 圈定方向 | brainstorm | `idea-brief.md` |
-| 初始化 | 业务 + 技术 + 设计 | business-alignment + technical-design + fe-system | `project.md` + `DESIGN.md` + `AGENTS.md` + `CLAUDE.md` |
-| ① 定义 | 需求分析 + PRD | requirements | `PRD.md` |
-| ①.5 研究 | 扫描 PRD 技术信号 + 算法搜索 | research | `research-brief.md` |
-| ② 设计 | 交互 + 视觉 | interaction-design + fe-system | `interaction-spec.md` + `DESIGN.md` |
-| ③ 详设 | API + DB + 前端（按需） | api-design + db-design (+ frontend-design) | `contract.md` + `modules/` |
-| ④ 任务 | 垂直切片 + 自动推导测试 | plan + test-cases | `plan.md` + `testing/test-cases.md` |
-| ⑥ 测试 | 测试策略 + 测试用例 | test-strategy + test-cases | `testing/contract.md` + `testing/test-cases.md` |
-| ⑦ 交付 | 灰度 + 回滚 + 监控 | deploy | `deploy/contract.md` |
-
-上表是完整能力地图，不是默认必经链路。`detail`、`codegen`、`review` 仍然是日常迭代的主入口。
-
-**detail 按需加载**：读 project.md → 有前端框架？读已有文档 → 有 frontend/ 目录？不确定 → 问用户。
+**默认规则**：用户未显式点名阶段时，优先走 `detail → codegen → review` 的 L0/L1 轻量调用；用户显式点名阶段或 skill 时，默认 L2 阶段调用，除非用户说"只看看"、"简单 review"或等价限制。轻量调用如果改变目标语义，必须回写对应文档。
 
 ### 自然语言执行
 
 | 你说 | AI 做什么 |
 |------|----------|
-| "生成代码" | 优先读 contract.md + modules/*.md；若存在 plan.md，再按任务序列生成 src/ + tests/ |
+| "生成代码" | 读目标文档 → 自主实现 → 验证 |
 | "做一只壁虎" | brainstorm + research 的组合（产品探索 + 算法菜单） |
-| "创建任务报 500" | 读 contract.md + 代码 → 找分歧 → 修代码 |
+| "创建任务报 500" | 读目标 + 代码 → 找问题 → 修代码 |
 | "给任务加标签" | detail + build 的组合（加模块） |
-| "分页换成 cursor" | 改决策 → 级联更新文档 + 重新生成 |
-| "React 升级到 20" | 改 project.md → 级联更新 → 重新生成 |
-| "整个重写" | 重写所有 contract.md → 删代码 → 重新生成 |
+| "分页换成 cursor" | 更新决策 → 实现 → 验证 |
+| "React 升级到 20" | 更新 project.md → 重新实现 → 验证 |
+| "整个重写" | 保留目标和决策 → 重新实现 |
 
 > 完整对话示例和迭代模式详见 `references/usage-examples.md`。
 
@@ -482,7 +383,7 @@ Claude Code 根据 skill 的 `description` / `when_to_use` 自动选择最小相
 | `docs/features/<feature>/changelog.md` | 一条 = 一个决策 | 触发 + 决策 + 影响 + 类型 |
 | `docs/timeline.md` | 一条 = 一次项目级演进（启用时） | 日期 + 变更摘要 + 触发原因 + 影响范围 |
 
-**默认触发规则**：contract.md / modules/*.md 变更 → 追加 changelog。
+**默认触发规则**：goal.md / notes/*.md 变更 → 追加 changelog。
 
 **timeline 启用后**：阶段完成、新增 feature、跨 feature 共享决策变更或项目级发布摘要 → 追加 timeline。
 
@@ -517,7 +418,7 @@ Claude Code 根据 skill 的 `description` / `when_to_use` 自动选择最小相
 依赖是**产物依赖**，不是抽象关系：
 
 ```
-Feature B 的 detail 需要 Feature A 的 api/contract.md
+Feature B 的 detail 需要 Feature A 的 goal.md
 → status.md 中标注：B 依赖 A（③详设）
 → B 进入 detail 时，检查 A 的 detail 是否完成
 → 未完成 → B 的 detail 标记为 🚫阻塞
@@ -540,7 +441,7 @@ Feature B 的 detail 需要 Feature A 的 api/contract.md
 
 ---
 
-## 落地机制：投影链
+## 落地机制
 
 ### 两层 AGENTS.md
 
@@ -549,7 +450,7 @@ Forge 的 AGENTS.md 和项目实际使用的 AGENTS.md 是**不同的文件**。
 ```
 Forge 的 AGENTS.md（方法论）
        │
-       │ init 投影生成
+       │ init 生成
        ▼
 项目的 AGENTS.md（具体指令）  ← 实际项目开发读的是这个
        │
@@ -560,100 +461,30 @@ Forge 的 AGENTS.md（方法论）
 
 **Forge 的 AGENTS.md 只在 `forge init` 时被加载，之后项目靠自己的文件运转。**
 
-### 类比
-
-```
-Forge AGENTS.md     →  编译器源码
-项目 AGENTS.md      →  编译产物（可执行文件）
-项目 contract.md    →  输入数据
-项目代码            →  输出
-```
-
-用户不需要安装 Forge 源码来运行项目，就像不需要编译器源码来运行程序。
-
 ### 资源引用链
 
 **决策 Skill 不引用资源。** 只有编排型 Skill（init）引用模板。
 
 ```
 决策 Skill（抽象）     →  "问日活多少，推荐方案，记录决策"
-init（编排器）   →  加载子 skill + 模板 → 生成项目文件
-项目 AGENTS.md        →  告诉 AI 文件在哪、格式是什么
+init（编排器）          →  加载子 skill + 模板 → 生成项目文件
+项目 AGENTS.md         →  告诉 AI 文件在哪、格式是什么
 ```
 
-引用关系只存在于项目文件中：项目 AGENTS.md → project.md + DESIGN.md · Feature contract.md → 领域 contract.md · 模块文件 → 互相引用。
+引用关系只存在于项目文件中：项目 AGENTS.md → project.md + DESIGN.md · Feature goal.md → notes/*.md · 模块文件 → 互相引用。
 
 ---
 
 ## 验证教训
 
-### 验证 #1 — 2026-05-22 单次重建
+### 关键教训
 
-从 contract.md 生成实现 → 删除 → 从同一份 contract.md 重建 → 对比一致性。
-
-#### 四层结构各层不可替代
-
-| 层 | 回答的问题 | 如果缺失 |
-|---|-----------|---------|
-| WHAT（需求 + 验收条件） | 做什么？怎么算对？ | 测试无法推导，边界条件遗漏 |
-| WHY（决策 + 理由 + 拒绝） | 为什么不用 cursor 分页？ | 新 session 会重新做决策，可能选不同方案 |
-| HOW（数据模型 + 接口合约 + 技术栈） | 字段叫什么？状态码多少？ | 两次生成的实现会 diverge |
-| CONSTRAINTS（安全 + 性能 + 兼容） | 多租户怎么隔离？ | 生成的代码缺少非功能性考量 |
-
-**WHY 层是 Forge 独有的价值。** 传统文档只记 WHAT 和 HOW——但选择理由一旦丢失，未来模型无法做出一致的扩展决策。
-
-### 验证 #2 — 多轮迭代后重建
-
-#### 重建结果
-
-| 指标 | 值 |
-|------|-----|
-| 文件结构一致率 | 94% (16/17) |
-| 导出函数一致率 | 87% (47/54) |
-| 功能覆盖率 | 100% (10/10 轮全部实现) |
-| 数据模型一致率 | 95% |
-| 总代码行偏差 | -6% |
-
-#### 文档做得好的
-
-- **模块边界清晰** — 每个 .md 一个模块，职责单一
-- **数据模型精确** — 字段和类型被完整重建
-- **函数签名稳定** — 核心 API 在两版中完全一致
-- **changelog 全量覆盖** — 10 轮迭代的功能都被完整保留
-- **设计系统 token** — CSS 变量被完整复用
-
-#### 文档缺失导致的问题
-
-| 问题 | 原因 | 改进 |
-|------|------|------|
-| 渲染器参数类型变化 | 接口只写了函数名 | module template 加参数类型签名 |
-| 入口文件不明确 | 没标注哪个文件是 boot 入口 | contract.md 加 `## 入口文件` 节 |
-| public/private 接口混淆 | 接口列表未区分 | module template 加 `## 公共接口` vs `## 内部函数` |
-| 编排逻辑丢失 | sim-engine 的调用链未文档化 | plan.md 或 contract.md 记录编排层调用链 |
-| 模块 import 关系缺失 | 只在代码里体现 | contract.md 加 `## 模块依赖图` |
-
-#### 对 module template 的改进建议
-
-```markdown
-# module-name
-
-## 入口                    ← 新增
-- 是否项目入口？哪个文件 boot？
-
-## 公共接口                 ← 拆分
-- 哪些函数被其他模块调用？
-- 参数类型签名
-
-## 内部函数                 ← 新增
-- 模块内部使用，不需要导出
-
-## 依赖关系                 ← 新增
-- import 哪些模块的哪些函数？
-```
-
-### 通用教训
-
-**关键教训**：接口合约用缩进伪代码（人类可读 > 机器可解析）· 目录路径必须无歧义 · 代码注释引用决策编号（FD# / PD#）形成可追溯链 · 验证文档完备性的唯一方法是删除代码后重建 · 多轮迭代后文档仍然是唯一的信息源 · 编排层（入口 + 事件绑定 + 调用链）是最容易丢失的部分。
+- **目标清晰 > 实现精确**：模糊的目标导致 AI 反复修正，清晰的目标一次通过。
+- **决策留痕防止摇摆**：为什么选 A 不选 B 一旦丢失，新 session 可能选不同方案。
+- **完成标准必须可验证**：不可验证的标准等于没有标准。
+- **接口合约用缩进伪代码**（人类可读 > 机器可解析）。
+- **编排层（入口 + 事件绑定 + 调用链）是最容易丢失的部分**——如果涉及复杂编排，在目标文档中明确记录。
+- **代码注释引用决策编号**（FD# / PD#）形成可追溯链。
 
 > 详细验证方法见 `references/validation-lessons.md`。
 
@@ -690,7 +521,7 @@ forge/
 │   ├── deploy/                # ⑦ 部署发布
 │   ├── learn/                 # ⑧ 方法论进化
 │   ├── think/                 # 思考增强
-│   └── shared/                      # 共享模板（contract + module + changelog）
+│   └── shared/                      # 共享模板和概念
 ├── .claude-plugin/plugin.json       # Claude Code 插件
 └── .codex-plugin/plugin.json        # Codex CLI 插件
 ```

@@ -6,7 +6,7 @@ when_to_use: Use when the user asks whether an API is reasonable, wants to add o
 # API Design — 详设阶段（API 层）
 ## 职责
 设计资源的接口合约——URL 是资源的地址，不是动作的调用。
-**核心洞察**：好的 API 合约应该让任何未来模型重建系统。接口合约的四层信息（WHAT/WHY/HOW/CONSTRAINTS）缺一不可。
+**核心洞察**：好的 API 合约应该让任何未来模型理解系统设计。接口合约的四层信息（WHAT/WHY/HOW/CONSTRAINTS）缺一不可。
 **方法论**：资源导向设计——识别资源 → 建立关系 → 映射操作（CRUD→HTTP 动词）→ 统一接口（错误、分页、认证、幂等）。
 ## 执行纪律
 
@@ -35,7 +35,7 @@ when_to_use: Use when the user asks whether an API is reasonable, wants to add o
 | API6 并发 | 冲突风险者 | 从协作模式推导并发控制需求 |
 | API7 认证 | 架构匹配者 | 从系统架构推导认证方式 |
 ## 决策点
-> API 领域的决策编号使用 API# 前缀（API Decision）。项目级共享决策使用 PD# 前缀，记录在 project.md。Feature 级共享决策使用 FD# 前缀，记录在 feature/contract.md。数据库领域使用 DB# 前缀，记录在 database/contract.md。
+> API 领域的决策编号使用 API# 前缀（API Decision）。项目级共享决策使用 PD# 前缀，记录在 project.md。Feature 级共享决策使用 FD# 前缀，记录在 feature/goal.md。数据库领域使用 DB# 前缀，记录在 database/contract.md。
 ### API1: 资源建模
 **问**：系统管理哪些核心实体？关系是什么？有没有必须独立存在的实体？
 **不变原则**：URL 是资源地址不是动作调用 · 嵌套深度 ≤ 2 层 · 资源名用复数名词
@@ -94,7 +94,7 @@ METHOD /path
 - ID: string（不暴露数据库自增）
 ## 模板
 使用共享模板：
-- `${CLAUDE_SKILL_DIR}/../shared/contract-template.md` — contract.md 结构
+- `${CLAUDE_SKILL_DIR}/../shared/goal-template.md` — goal.md 结构
 - `${CLAUDE_SKILL_DIR}/../shared/module-template.md` — modules/*.md 结构
 - `${CLAUDE_SKILL_DIR}/../shared/changelog-template.md` — changelog.md 结构
 ## 入口/出口条件
@@ -107,9 +107,9 @@ METHOD /path
 
 ## 运行时信号
 - 输入：`define.acceptance_criteria` + `technical_design.architecture_decisions`
-- 输出：`api_design.api_setpoint` + `api_design.shared_data_model`
+- 输出：`api_design.api_target` + `api_design.shared_data_model`
 - 路由：
-  - `api_design.api_setpoint` → forge-db-design（数据模型约束）+ forge-frontend-design（接口消费）
+  - `api_design.api_target` → forge-db-design（数据模型约束）+ forge-frontend-design（接口消费）
   - `api_design.shared_data_model` → forge-db-design（存储模型）
 - 升级：资源模型无法确认 · 权限或幂等策略冲突
 ## 何时不使用
@@ -154,10 +154,4 @@ METHOD /path
   前端详设     — 组件 + 数据流 + 状态管理（如有前端）
 ```
 
-## Change Unit / Rebuild Control
 
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

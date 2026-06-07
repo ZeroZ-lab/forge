@@ -161,7 +161,7 @@ docs/features/<feature>/
 ## 运行时信号
 
 - 输入：`define.acceptance_criteria` + `test_strategy.test_strategy`
-- 输出：`test_cases.test_case_setpoint`
+- 输出：`test_cases.test_case_plan`
 - 路由：详见 `registry.yaml` 的 `forge-test-cases` 节点；本节只保留人类可读摘要。
 - 升级：验收条件不可测试 · 测试数据不可重复构造
 
@@ -203,10 +203,3 @@ docs/features/<feature>/
   自然语言        — 直接说"生成代码"
 ```
 
-## Change Unit / Rebuild Control
-
-- 新增/修改测试用例时更新当前 CU 的 Verification 和 Docs To Sync。
-- 回归用例必须链接触发 bug 或明确来源 AC，便于旧 bug 防复发。
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

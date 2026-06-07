@@ -112,18 +112,18 @@ function decisionIds(run) {
 
 function docSyncTargets(run) {
   return new Set(
-    (run.doc_sync ?? [])
+    (run.goal_verification ?? [])
       .filter((item) => item?.status === 'completed')
       .map((item) => item?.target)
       .filter(Boolean),
   );
 }
 
-function codeMapCoveredPaths(run) {
+function goalCoveragePaths(run) {
   const paths = new Set();
-  for (const entry of run.code_map_entries ?? []) {
+  for (const entry of run.goal_coverage_entries ?? []) {
     if (entry?.source) paths.add(entry.source);
-    for (const projectedPath of entry?.projects_to ?? []) paths.add(projectedPath);
+    for (const coveredPath of entry?.covers ?? []) paths.add(coveredPath);
   }
   return paths;
 }
@@ -143,7 +143,7 @@ function checkRun(testCase, run) {
   const commands = new Set(run.commands_run ?? []);
   const decisions = decisionIds(run);
   const docSync = docSyncTargets(run);
-  const codeMapPaths = codeMapCoveredPaths(run);
+  const goalCoverage = goalCoveragePaths(run);
   const forbiddenBehaviors = new Set(run.forbidden_behaviors ?? []);
   const evidence = evidenceText(run);
 
@@ -156,12 +156,12 @@ function checkRun(testCase, run) {
     if (check.type === 'change_unit_reported') {
       passed = [...changeUnits].some((changeUnitPath) => globMatch(check.path, changeUnitPath));
     }
-    if (check.type === 'code_map_covers') {
-      passed = [...codeMapPaths].some((coveredPath) => globMatch(check.path, coveredPath));
+    if (check.type === 'goal_covers') {
+      passed = [...goalCoverage].some((coveredPath) => globMatch(check.path, coveredPath));
     }
     if (check.type === 'command_reported') passed = commands.has(check.command);
     if (check.type === 'decision_gate_reported') passed = decisions.has(check.decision);
-    if (check.type === 'doc_sync_completed') passed = docSync.has(check.target);
+    if (check.type === 'goal_verified') passed = docSync.has(check.target);
     if (check.type === 'evidence_contains') passed = evidence.includes(check.text);
     if (check.type === 'forbidden_behavior_absent') passed = !forbiddenBehaviors.has(check.behavior);
     return { passed, check };
@@ -286,8 +286,8 @@ ${fixture}
   "triggered_skills": ["forge-..."],
   "artifacts": ["path/or/dir"],
   "change_units": ["docs/change-units/CU-....md"],
-  "doc_sync": [{"target": "docs/CURRENT_STATE.md", "status": "completed"}],
-  "code_map_entries": [{"source": "docs/features/<feature>/contract.md", "projects_to": ["src/..."]}],
+  "goal_verification": [{"target": "docs/goal.md", "status": "completed"}],
+  "goal_coverage_entries": [{"source": "docs/features/<feature>/goal.md", "covers": ["src/..."]}],
   "commands_run": ["exact command"],
   "decisions": ["decision_id"],
   "forbidden_behaviors": [],
@@ -295,7 +295,7 @@ ${fixture}
   "notes": "short note"
 }
 
-	只有真实执行或明确遵循了对应 skill 协议，才能把 skill 放进 triggered_skills。change_units 必须指向 docs/change-units/CU-*.md；doc_sync 必须是带 status 的对象，只有 completed 算同步完成；code_map_entries 必须是对象；source 必须是 docs/ 下的源文档，projects_to 才能填写 src/、tests/ 或其他投影目标。`;
+	只有真实执行或明确遵循了对应 skill 协议，才能把 skill 放进 triggered_skills。change_units 必须指向 docs/change-units/CU-*.md；goal_verification 必须是带 status 的对象，只有 completed 算同步完成；goal_coverage_entries 必须是对象；source 必须是 docs/ 下的源文档，covers 才能填写 src/、tests/ 或其他实现目标。`;
 }
 
 function runCase({ codexBin, runDir, testCase }) {
@@ -344,8 +344,8 @@ function runCase({ codexBin, runDir, testCase }) {
       triggered_skills: [],
       artifacts: [],
       change_units: [],
-      doc_sync: [],
-      code_map_entries: [],
+      goal_verification: [],
+      goal_coverage_entries: [],
       commands_run: [],
       decisions: [],
       forbidden_behaviors: [],
@@ -362,8 +362,8 @@ function runCase({ codexBin, runDir, testCase }) {
       triggered_skills: [],
       artifacts: [],
       change_units: [],
-      doc_sync: [],
-      code_map_entries: [],
+      goal_verification: [],
+      goal_coverage_entries: [],
       commands_run: [],
       decisions: [],
       forbidden_behaviors: [],
@@ -381,8 +381,8 @@ function runCase({ codexBin, runDir, testCase }) {
       triggered_skills: [],
       artifacts: [],
       change_units: [],
-      doc_sync: [],
-      code_map_entries: [],
+      goal_verification: [],
+      goal_coverage_entries: [],
       commands_run: [],
       decisions: [],
       forbidden_behaviors: [],
@@ -442,8 +442,8 @@ for (const testCase of cases) {
         triggered_skills: [],
         artifacts: [],
         change_units: [],
-        doc_sync: [],
-        code_map_entries: [],
+        goal_verification: [],
+        goal_coverage_entries: [],
         commands_run: [],
         decisions: [],
         forbidden_behaviors: [],

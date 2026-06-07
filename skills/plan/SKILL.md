@@ -220,10 +220,4 @@ when_to_use: Use when the user asks to split tasks, make an execution plan, plan
 
 **注意**：deploy 不在 plan 的完成提示里。deploy 的入口条件是「有 src/ + tests/ + testing/test-cases.md，review 通过」，这些在 plan 之后都不存在。deploy 应出现在 codegen 或 test 的完成提示中。
 
-## Change Unit / Rebuild Control
 
-- 任务切分写入当前 CU 的 implementation surface、risk、verification 和 checkpoint 摘要。
-- `plan.md` 完成后同步 `docs/REBUILD_GUIDE.md` 的重建顺序和 `docs/CODE_MAP.yml` 的任务到代码映射。
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

@@ -102,6 +102,7 @@ assert(exists('plugins/forge/.codex-plugin/plugin.json'), 'plugins/forge/.codex-
 assert(exists('plugins/forge/.claude-plugin/plugin.json'), 'plugins/forge/.claude-plugin/plugin.json: missing');
 assert(exists('plugins/forge/skills'), 'plugins/forge/skills: missing');
 assert(exists('scripts/sync-packaged-plugin.mjs'), 'scripts/sync-packaged-plugin.mjs: missing');
+assert(exists('scripts/evaluate-skills/index.mjs'), 'scripts/evaluate-skills/index.mjs: missing');
 assert(
   codexMarketplace.plugins?.find((plugin) => plugin.name === 'forge')?.source?.path === './plugins/forge',
   '.agents/plugins/marketplace.json: forge source.path must point to ./plugins/forge',
@@ -148,12 +149,12 @@ assert(
 );
 
 const allowedRuntimeRoles = new Set([
-  'setpoint-generator',
+  'goal-refiner',
   'orchestrator',
-  'controller',
+  'decision-protocol',
   'planner',
-  'actuator',
-  'sensor',
+  'executor',
+  'verifier',
   'governance',
   'knowledge',
 ]);
@@ -183,7 +184,7 @@ for (const skill of runtimeRegistry.skills ?? []) {
   assert(exists(skill.path), `registry.yaml: missing path for ${skill.name}: ${skill.path}`);
   assert(allowedRegistryPhases.has(skill.phase), `registry.yaml: ${skill.name} invalid phase "${skill.phase}"`);
   assert(allowedRegistryTypes.has(skill.type), `registry.yaml: ${skill.name} invalid type "${skill.type}"`);
-  assert(allowedRuntimeRoles.has(skill.runtime_role), `registry.yaml: ${skill.name} invalid runtime_role "${skill.runtime_role}"`);
+  assert(allowedRuntimeRoles.has(skill.role), `registry.yaml: ${skill.name} invalid runtime_role "${skill.role}"`);
   for (const field of [
     'triggers',
     'avoid_when',
@@ -250,9 +251,9 @@ for (const skill of runtimeRegistry.skills ?? []) {
   }
 }
 
-for (const role of ['orchestrator', 'controller', 'actuator', 'sensor', 'governance', 'setpoint-generator']) {
+for (const role of ['orchestrator', 'goal-refiner', 'executor', 'verifier', 'governance', 'decision-protocol']) {
   assert(
-    (runtimeRegistry.skills ?? []).some((skill) => skill.runtime_role === role),
+    (runtimeRegistry.skills ?? []).some((skill) => skill.role === role),
     `registry.yaml: missing runtime role "${role}"`,
   );
 }
@@ -278,27 +279,24 @@ for (const skillName of skillDirs) {
   }
 }
 
-assert(exists('docs/runtime-control-loop.md'), 'docs/runtime-control-loop.md: missing');
+assert(exists('docs/goal-verification.md'), 'docs/goal-verification.md: missing');
 assert(exists('docs/skill-architecture-audit.md'), 'docs/skill-architecture-audit.md: missing');
 assert(exists('docs/skill-suite-evaluation.md'), 'docs/skill-suite-evaluation.md: missing');
-assertIncludes('docs/runtime-control-loop.md', [
-  'skills 是协议节点，不是控制系统本体',
-  'Runtime MAPE-K 映射',
-  '快回路',
-  '中回路',
-  '慢回路',
-  'runtime role',
+assertIncludes('docs/goal-verification.md', [
+  'skills 是协议节点',
+  'Runtime goal verification',
+  'goal-refiner',
+  'executor',
+  'verifier',
   'consumes',
   'produces',
-  'signals_in',
-  'signals_out',
   'escalates_when',
 ]);
 assertIncludes('docs/skill-architecture-audit.md', [
-  '运行时控制回路判定',
+  '运行时目标验证判定',
   '运行时闭环',
   'registry.yaml',
-  'docs/runtime-control-loop.md',
+  'docs/goal-verification.md',
 ]);
 assertIncludes('docs/skill-suite-evaluation.md', [
   'Benchmark contract is valid',
@@ -315,24 +313,19 @@ for (const skillName of expectedRegistryNames) {
 }
 
 const sharedKnowledgeFiles = [
-  'skills/shared/concepts/mape-k.md',
   'skills/shared/concepts/control-loop.md',
-  'skills/shared/concepts/document-as-source.md',
+  'skills/shared/concepts/document-as-goal.md',
   'skills/shared/concepts/execution-discipline.md',
   'skills/shared/rubrics/skill-quality.md',
   'skills/shared/rubrics/contract-quality.md',
-  'skills/shared/rubrics/projection-quality.md',
-  'skills/shared/red-flags/contract-drift.md',
+  'skills/shared/rubrics/implementation-quality.md',
+  'skills/shared/red-flags/goal-drift.md',
   'skills/shared/red-flags/scope-creep.md',
-  'skills/shared/red-flags/unsafe-projection.md',
-  'skills/shared/output-contracts/deviation-report.md',
+  'skills/shared/red-flags/unsafe-implementation.md',
   'skills/shared/output-contracts/review-result.md',
   'skills/shared/output-contracts/runtime-control.md',
   'skills/shared/change-unit-template.md',
-  'skills/shared/doc-sync-checklist.md',
-  'skills/shared/code-map-template.md',
-  'skills/shared/current-state-template.md',
-  'skills/shared/rebuild-guide-template.md',
+  'skills/shared/goal-template.md',
 ];
 
 for (const file of sharedKnowledgeFiles) {
@@ -344,6 +337,7 @@ for (const file of sharedKnowledgeFiles) {
 
 const skillsEvalManifest = json('evals/skills-suite/manifest.json');
 assert(exists('scripts/evaluate-skills.mjs'), 'scripts/evaluate-skills.mjs: missing');
+assert(exists('scripts/evaluate-skills/index.mjs'), 'scripts/evaluate-skills/index.mjs: missing');
 assert(exists('scripts/run-skills-benchmark.mjs'), 'scripts/run-skills-benchmark.mjs: missing');
 assert(exists('scripts/install-local-codex-plugin.mjs'), 'scripts/install-local-codex-plugin.mjs: missing');
 assert(exists('scripts/sync-packaged-plugin.mjs'), 'scripts/sync-packaged-plugin.mjs: missing');
@@ -362,10 +356,10 @@ const evalCaseIds = new Set();
 const allowedEvalCheckTypes = new Set([
   'artifact_reported',
   'change_unit_reported',
-  'code_map_covers',
+  'goal_covers',
   'command_reported',
   'decision_gate_reported',
-  'doc_sync_completed',
+  'goal_verified',
   'evidence_contains',
   'forbidden_behavior_absent',
   'skill_triggered',
@@ -395,10 +389,10 @@ for (const testCase of skillsEvalManifest.cases ?? []) {
   }
   for (const check of testCase.oracle_checks ?? []) {
     assert(allowedEvalCheckTypes.has(check.type), `${testCase.id}: unknown oracle check type ${check.type}`);
-    if (check.type === 'doc_sync_completed') {
+    if (check.type === 'goal_verified') {
       assert(
         testCase.expected_artifacts.includes(check.target),
-        `${testCase.id}: doc_sync target ${check.target} must be listed in expected_artifacts`,
+        `${testCase.id}: goal_verification target ${check.target} must be listed in expected_artifacts`,
       );
     }
   }
@@ -414,12 +408,12 @@ for (const orchestrator of ['forge-init', 'forge-design', 'forge-detail', 'forge
 }
 
 assert(
-  registryByName['forge-codegen']?.signal_routes?.some((route) => route.signal === 'L1 deviation' && route.to === 'forge-detail'),
-  'registry.yaml: fast-to-middle loop must route L1 deviation from forge-codegen to forge-detail',
+  registryByName['forge-codegen']?.signal_routes?.some((route) => route.signal === 'goal not met' && route.to === 'forge-detail'),
+  'registry.yaml: fast-to-middle loop must route goal-not-met signal from forge-codegen to forge-detail',
 );
 assert(
-  registryByName['forge-review']?.signal_routes?.some((route) => route.signal === 'skill/document/code attribution' && route.to === 'forge-learn'),
-  'registry.yaml: review-to-learn loop must route attributed deviations to forge-learn',
+  registryByName['forge-review']?.signal_routes?.some((route) => route.signal === 'skill/document/code gap attribution' && route.to === 'forge-learn'),
+  'registry.yaml: review-to-learn loop must route attributed gaps to forge-learn',
 );
 assert(
   registryByName['forge-deploy']?.escalates_when?.includes('无回滚方案'),
@@ -459,24 +453,14 @@ assert(
   'skills/shared/module-template.md: exceeds 200 lines',
 );
 assert(
-  lineCount(read('skills/shared/contract-template.md')) <= 200,
-  'skills/shared/contract-template.md: exceeds 200 lines',
+  lineCount(read('skills/shared/goal-template.md')) <= 200,
+  'skills/shared/goal-template.md: exceeds 200 lines',
 );
-assertIncludes('skills/shared/contract-template.md', [
-  '## 模块索引',
-  '## 下游依赖',
-  '## 代码映射',
-  '## 编排',
-  '### 入口文件',
-  'contract-orchestration-template.md',
-]);
-assert(exists('skills/shared/contract-orchestration-template.md'), 'skills/shared/contract-orchestration-template.md: missing');
-assertIncludes('skills/shared/contract-orchestration-template.md', [
-  '### 入口文件',
-  '### 启动序列',
-  '### 主循环 / 请求处理',
-  '### 事件绑定',
-  '### 模式优先级',
+assertIncludes('skills/shared/goal-template.md', [
+  '## 目标',
+  '## 边界',
+  '## 完成标准',
+  '## 决策记录',
 ]);
 
 const marketplaceDescription = claudeMarketplace.plugins?.find((plugin) => plugin.name === 'forge')?.description ?? '';
@@ -486,18 +470,18 @@ assert(
 );
 assert(read('README.md').includes(`8 阶段 × ${skillCount} 个 Skill`), `README.md: must document 8 阶段 × ${skillCount} 个 Skill`);
 assert(read('README.md').includes('registry.yaml'), 'README.md: must document registry.yaml runtime control surface');
-assert(read('README.md').includes('docs/runtime-control-loop.md'), 'README.md: must document runtime control loop doc');
+assert(read('README.md').includes('docs/goal-verification.md'), 'README.md: must document runtime control loop doc');
 assert(read('AGENTS.md').includes(`${skillCount} 个决策协议`), `AGENTS.md: must document ${skillCount} 个决策协议`);
-assert(read('AGENTS.md').includes('信号传递'), 'AGENTS.md: must document signal passing between control loops');
+assert(read('AGENTS.md').includes('信号传递'), 'AGENTS.md: must document signal passing between goal verification loops');
 assert(read('AGENTS.md').includes('registry.yaml'), 'AGENTS.md: must document registry.yaml runtime control surface');
-assert(read('AGENTS.md').includes('docs/runtime-control-loop.md'), 'AGENTS.md: must document runtime control loop doc');
+assert(read('AGENTS.md').includes('docs/goal-verification.md'), 'AGENTS.md: must document runtime control loop doc');
 assertIncludes('AGENTS.md', ['### AI 执行纪律', '最小变更', '不引入未要求的抽象']);
 assertIncludes('skills/init/references/agents-template.md', ['## AI 执行纪律', '需要同步的契约文件', '执行可用验证']);
 assertIncludes('skills/shared/concepts/execution-discipline.md', [
   '# Execution discipline',
   '## Runtime meaning',
   '## Decision boundaries',
-  '## Projection rule',
+  '## Inheritance rule',
 ]);
 
 function assertSameFile(left, right) {
@@ -581,8 +565,8 @@ for (const marker of ['### L1:', '### L2:', '### L3:', '### L4:']) {
 
 const codegenSkillPath = registryByName['forge-codegen']?.path ?? 'skills/codegen/SKILL.md';
 const codegenSkill = read(codegenSkillPath);
-for (const marker of ['L0（噪声）', 'L1（偏差）', 'L2（漂移）', '前馈', '信号传递', '健康检查', '归因：']) {
-  assert(codegenSkill.includes(marker), `${codegenSkillPath}: missing cybernetic marker "${marker}"`);
+for (const marker of ['读', '生', '验', '修', '运行验证']) {
+  assert(codegenSkill.includes(marker), `${codegenSkillPath}: missing goal verification marker "${marker}"`);
 }
 
 assert(

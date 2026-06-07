@@ -1,6 +1,6 @@
 ---
 name: init
-description: Orchestrates full project initialization across business alignment, technical design, and design-system setup to create project.md, DESIGN.md, AGENTS.md, and CLAUDE.md. Use only for explicit new-project initialization.
+description: Orchestrates full project initialization across business alignment, technical design, and design-system setup to generate project.md, DESIGN.md, AGENTS.md, and CLAUDE.md. Use only for explicit new-project initialization.
 when_to_use: Use when the user asks to initialize a project, start a new project, create Forge project files, run init, bootstrap project-level decisions, or generate project instructions from business and technical choices.
 ---
 
@@ -45,7 +45,7 @@ when_to_use: Use when the user asks to initialize a project, start a new project
 - 无法判断是否有前端 → 暂停询问（不默认生成前端设计系统）
 - 用户跳过某 phase → 记录跳过原因 + 标注下游可能缺失的输入
 - 三个 phase 全跳过 → 确认是否真的需要 init，还是只需要补某个文件
-- 生成 AGENTS.md 超过 100 行 → 强制精简（project.md 是源头，AGENTS.md 是投影）
+- 生成 AGENTS.md 超过 100 行 → 强制精简（project.md 是源头，AGENTS.md 是生成物）
 
 ## 流程
 
@@ -67,7 +67,7 @@ my-project/
 ├── docs/project.md        # 技术决策 + 共享约束（来自 Phase 1+2）
 ├── docs/status.md         # 项目状态（从 ${CLAUDE_SKILL_DIR}/../shared/status-template.md 初始化）
 ├── DESIGN.md              # 设计系统（来自 Phase 3）
-├── AGENTS.md              # AI 行为指令（从 project.md + DESIGN.md 投影）
+├── AGENTS.md              # AI 行为指令（从 project.md + DESIGN.md 生成）
 └── CLAUDE.md              # Claude Code 入口（指向 AGENTS.md）
 ```
 
@@ -79,19 +79,19 @@ my-project/
 |------|------|------|
 | docs/project.md | `${CLAUDE_SKILL_DIR}/../shared/project-template.md` | Phase 1 business-alignment |
 | DESIGN.md | `${CLAUDE_SKILL_DIR}/../fe-system/references/design-system-template.md` | Phase 3 fe-system |
-| AGENTS.md | `${CLAUDE_SKILL_DIR}/references/agents-template.md` | Phase 1+2+3 投影 |
+| AGENTS.md | `${CLAUDE_SKILL_DIR}/references/agents-template.md` | Phase 1+2+3 生成 |
 | CLAUDE.md | `${CLAUDE_SKILL_DIR}/references/claude-template.md` | 入口指针 |
 
 ## AGENTS.md 生成规则
 
-从 Phase 1+2+3 的决策投影生成，不要手写。结构：
+从 Phase 1+2+3 的决策生成，不要手写。结构：
 
 1. **角色** — 一句话定义项目身份
 2. **技术栈** — 从 project.md 技术选型段提取
 3. **命令** — 构建、测试、类型检查的具体命令
 4. **项目结构** — 从 project.md 工程约束的「模块边界」提取实际目录结构
    - 如果 project.md 定义了 workspace / monorepo / 多 crate 结构 → AGENTS.md 必须反映该结构，不使用假设的默认结构（如 src/）
-   - 投影后与实际目录（`find` / `ls`）对照，不一致则修正
+   - 生成后与实际目录（`find` / `ls`）对照，不一致则修正
 5. **工作流** — Forge 方法论（固定）
 6. **代码标准** — 从 project.md 共享约束提取
 7. **设计约束** — 从 DESIGN.md 提取核心值
@@ -118,7 +118,7 @@ my-project/
 1. 读 AGENTS.md 了解技术栈和工作流
 2. 读 docs/timeline.md 了解项目近期演进
 3. 读相关 feature 的 contract.md + changelog.md
-4. 按 contract.md 写代码，注释决策编号（FD# feature 级 / PD# 项目级 / DB# 数据库级）
+4. 按目标文档实现，注释决策编号（FD# feature 级 / PD# 项目级 / DB# 数据库级）
 5. 改完文档后自动追加 changelog.md + timeline.md
 ```
 
@@ -143,14 +143,14 @@ my-project/
 **出口**：project.md + DESIGN.md + AGENTS.md + CLAUDE.md 已生成/更新 · 用户确认进入 define 阶段
 
 ## 方法论
-init 是编排器，不做独立决策。方法论 = 读状态 → 判断跳过 → 加载子 skill → 投影生成。
+init 是编排器，不做独立决策。方法论 = 读状态 → 判断跳过 → 加载子 skill → 生成产物。
 每个子 skill 有自己的方法论（business-alignment 的承诺四要素、technical-design 的约束→选项→权衡→验证、fe-system 的三层 Token）。
-init 的方法论是：**不替代子 skill 做决策，只负责状态判断和投影组装**。
+init 的方法论是：**不替代子 skill 做决策，只负责状态判断和项目初始化**。
 
 ## 验证清单
 - [ ] project.md 是否包含业务目标（用户/指标/约束）+ 技术决策（架构/选型/部署）？
 - [ ] DESIGN.md 是否包含三层 Token（primitive/semantic/component）？
-- [ ] AGENTS.md 是否从 project.md + DESIGN.md 投影（不含独立决策）？
+- [ ] AGENTS.md 是否从 project.md + DESIGN.md 生成（不含独立决策）？
 - [ ] AGENTS.md 项目结构是否与 project.md 工程约束中的模块边界一致？
 - [ ] AGENTS.md 项目结构是否与实际目录（`find` / `ls`）一致？
 - [ ] CLAUDE.md 是否 < 20 行且指向 AGENTS.md？
@@ -178,10 +178,3 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
   自然语言            — 直接说"做任务管理功能"
 ```
 
-## Change Unit / Rebuild Control
-
-- 初始化时创建最小 Rebuild Control 内核：`docs/CURRENT_STATE.md`、`docs/REBUILD_GUIDE.md`、`docs/CODE_MAP.yml`。
-- 本阶段的初始化决策写入 `docs/change-units/CU-*.md`；timeline 只摘要并链接 CU。
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

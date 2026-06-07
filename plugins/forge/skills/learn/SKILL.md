@@ -8,9 +8,9 @@ when_to_use: Use when the user asks to review the method, improve skills, do a r
 
 ## 职责
 
-从积累的偏差信号中发现 skill 方法论的系统性缺陷，提出修正建议。
+从积累的问题信号中发现 skill 方法论的系统性缺陷，提出修正建议。
 
-**核心洞察**：单次偏差可能是偶发，同类偏差高频出现说明方法论有盲区。learn 是慢回路的执行者——消费偏差归因，产出方法论改进。
+**核心洞察**：单次偏差可能是偶发，同类偏差高频出现说明方法论有盲区。learn 是方法论进化器——消费偏差归因，产出方法论改进。
 
 **方法论**：聚合 → 模式 → 建议 → 验证。
 
@@ -18,7 +18,7 @@ when_to_use: Use when the user asks to review the method, improve skills, do a r
 
 - **D3**：提出修改建议但不直接修改 skill，人类确认后执行
 - **D1**：每条建议必须有证据链（哪些偏差记录支撑）
-- **D8**：同类偏差 ≥ 3 次才构成模式，单次偏差不是慢回路的输入
+- **D8**：同类偏差 ≥ 3 次才构成模式，单次偏差不是方法进化的输入
 
 ## 与上下游的边界
 
@@ -32,7 +32,7 @@ when_to_use: Use when the user asks to review the method, improve skills, do a r
 
 ### L1: 聚合（Aggregate）
 
-收集所有可获得的偏差信号，按归因分类。
+收集所有可获得的问题信号，按归因分类。
 
 **数据源**：
 - review 报告的「归因汇总」表（主要来源）
@@ -40,7 +40,7 @@ when_to_use: Use when the user asks to review the method, improve skills, do a r
 - timeline 中的方法论进化历史（避免重复改进）
 
 **不变原则**：
-- 只看有归因标记的偏差——无归因的问题不是 learn 的输入
+- 只看有归因标记的偏差——无归因的问题不是方法进化的输入
 - 一条偏差不是模式，三条以上同类偏差才值得关注
 - 区分"高频出现"和"偶发"——频率是信号，单次是噪声
 
@@ -69,7 +69,7 @@ when_to_use: Use when the user asks to review the method, improve skills, do a r
 
 **反向验证**：如果之前因同类偏差修改过 skill，但偏差仍然出现 → 说明上次归因错误，应回滚修改并重新归因。避免 skill 无限膨胀。
 
-**排序规则**：先处理跨项目高频、会导致错误投影或阻塞发布的模式；再处理单项目高频；最后处理清晰度问题。同等证据强度下，优先改 shared rubric / red flag / output contract，再改具体 skill，避免把每个 skill 都塞成完整 MAPE-K 模板。
+**排序规则**：先处理跨项目高频、会导致错误实现或阻塞发布的模式；再处理单项目高频；最后处理清晰度问题。同等证据强度下，优先改 shared rubric / red flag / output contract，再改具体 skill。
 
 ### L4: 验证（Verify）
 
@@ -125,7 +125,7 @@ when_to_use: Use when the user asks to review the method, improve skills, do a r
 - 建议和已有方法论冲突 → 强制检查兼容性（"新建议和已有不变原则矛盾吗？"）
 - 之前因同类偏差改过 skill 但仍出现 → 回滚修改并重新归因（"上次归因可能错了"）
 - 建议会导致 skill 超 200 行 → 考虑提取 protocol 文件（"加内容前先想怎么压缩"）
-- 偏差归因不一致（review 说是 skill 问题，实际是文档漂移）→ 交叉验证归因
+- 归因不一致（review 说是 skill 问题，实际是目标定义问题）→ 交叉验证归因
 
 ## 验证清单
 
@@ -151,10 +151,4 @@ when_to_use: Use when the user asks to review the method, improve skills, do a r
   继续积累       — 等更多偏差数据再分析
 ```
 
-## Change Unit / Rebuild Control
 
-- 方法论变更也必须有 CU，记录证据链、被拒方案、影响 skill 和验证结果。
-- 没有重复偏差证据时只输出建议，不修改 skill，也不写完成态 CU。
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

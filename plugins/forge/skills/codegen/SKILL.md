@@ -1,29 +1,29 @@
 ---
 name: codegen
-description: Projects contract.md, modules, and plan.md into src and tests while checking document-code drift.
-when_to_use: Use by direct invocation or as a child protocol when the user explicitly asks to generate implementation from Forge contracts, run the build phase, or project documented tasks into code and tests.
+description: Implements goals into src and tests, verifying results meet stated criteria.
+when_to_use: Use by direct invocation or as a child protocol when the user explicitly asks to generate implementation from Forge contracts, run the build phase, or implement documented tasks into code and tests.
 disable-model-invocation: false
 ---
 # Codegen — 构建阶段
 ## 职责
 从详设文档（contract.md + modules/）按 plan.md 的任务序列生成可运行代码（src/ + tests/）。
-**核心洞察**：文档是源代码，代码是投影。模型越强，同一份文档生成的代码越好。codegen 不是决策阶段——所有决策在 detail 和 plan 阶段已完成。codegen 的职责是按文档忠实投影，并在投影过程中发现和修复文档与代码的分歧。
+**核心洞察**：目标是起点，实现是 AI 自主决策。codegen 读取目标文档，自主决定实现路径，验证目标是否达成。codegen 不是决策阶段——所有决策在 detail 和 plan 阶段已完成。codegen 的职责是实现目标并验证结果。
 **方法论**：读 → 生 → 验 → 修。
 ## 执行纪律
 - **D4**：生成范围不超出 plan.md 当前任务对应的 module 文件，不引入未要求的抽象
 - **D5**：只读与当前任务相关的文档，发现无关问题只记录不修改
 - **D7**：每个任务生成后立即验证（测试 + 文档对齐），验证不可用时说明原因
-- **D8**：同类 L1 偏差连续 ≥ 2 个任务 → 停下来建议回退 detail 重新审视 contract
-- **D9**：每个任务生成后必须提供运行证据（Smoke Gate），无法提供时标记"⚠️ 未验证"
+- **D8**：同类问题连续 ≥ 2 个任务 → 停下来建议重新审视目标定义
+- **D9**：每个任务生成后必须提供运行证据（运行验证），无法提供时标记"⚠️ 未验证"
 ## 与上下游的边界
 **上游**：读 contract.md + modules/（合约）+ plan.md（任务序列）+ project.md（技术选型）+ DESIGN.md（设计系统，如有前端）
 **下游**：src/ + tests/ 交给测试和部署阶段
 
 **和 plan 的切法**：plan 定义**任务序列**（目标+步骤+验证方式），codegen 按序列**逐个生成代码**
-**和 detail 的切法**：detail 定义**做什么**（合约+模块），codegen 定义**代码怎么投影**（从文档到实现）
+**和 detail 的切法**：detail 定义**做什么**（目标+约束），codegen 定义**怎么实现**（从目标到运行代码）
 **和 test 的切法**：codegen 生成基础测试（从验收条件推导），test 阶段补充测试策略和覆盖
 
-**和 fe-artifact 的关系**：codegen 遇到前端文件（组件、页面、hooks、样式）时加载 `fe-artifact` 作为前端子协议。codegen 负责通用投影规则（读→生→验→修），fe-artifact 负责前端特化的五层翻译逻辑。
+**和 fe-artifact 的关系**：codegen 遇到前端文件（组件、页面、hooks、样式）时加载 `fe-artifact` 作为前端子协议。codegen 负责通用实现流程（读→生→验→修），fe-artifact 负责前端特化的五层翻译逻辑。
 
 ## 方法论：读→生→验→修
 
@@ -37,7 +37,7 @@ disable-model-invocation: false
 - 读 modules/*.md → 每个模块的业务规则、验收条件
 - 读 plan.md → 任务序列、依赖关系、执行顺序
 - 读 DESIGN.md（如有）→ 设计 Token、组件模式
-- 读 contract.md「已知风险」（如有）→ detail 阶段从历史偏差提取的高频失误模式，生成时主动规避（前馈）
+- 读 contract.md「已知风险」（如有）→ detail 阶段从历史问题提取的高频失误模式，生成时主动规避（前馈）
 
 **不变原则**：
 - 先读完再写——跳过读直接生成 = 和文档分歧（D7：验证而非假设）
@@ -46,11 +46,11 @@ disable-model-invocation: false
 
 ### 第二步：生（Generate）
 
-按 plan.md 的任务序列逐个生成。每个任务走投影循环。
+按 plan.md 的任务序列逐个生成。每个任务走实现循环。
 
 **行为**：
 - 按 plan.md 的拓扑顺序执行（serial 串行，parallel 并行）
-- 每个任务：按投影规则（见下）生成代码
+- 每个任务：按实现规则（见下）生成代码
 - 有 TDD 验证的任务：RED（写失败测试）→ GREEN（最小实现）→ REFACTOR（重构）
 - 直接验证的任务：按验收条件生成实现 + 基础检查
 
@@ -68,11 +68,11 @@ disable-model-invocation: false
 
 **行为**：
 
-验证分两层，按顺序执行。Smoke Gate 是前置条件——跑不起来就不进入文档对照。
+验证分两层，按顺序执行。运行验证是前置条件——跑不起来就不进入目标对照。
 
-**第一层：Smoke Gate（D9：运行实证）**
+**第一层：运行验证（D9：运行实证）**
 
-代码生成后、文档对照前，先确认代码能跑：
+代码生成后、目标对照前，先确认代码能跑：
 
 1. **编译检查**：`tsc --noEmit`（或对应语言的类型/语法检查）零错误
 2. **启动检查**：`npm start`（或对应启动命令）在 30 秒内响应健康检查或监听端口
@@ -80,34 +80,29 @@ disable-model-invocation: false
 
 | 结果 | 行动 |
 |------|------|
-| 全部通过 | 进入第二层：四维对照 |
-| 任一失败 | 修代码，重新跑 Smoke Gate。3 次不通过 → 停下来输出错误日志，让人类判断 |
+| 全部通过 | 进入第二层：目标对照 |
+| 任一失败 | 修代码，重新跑运行验证。3 次不通过 → 停下来输出错误日志，让人类判断 |
 
-**第二层：四维对照（文档 vs 代码）**
+**第二层：目标对照（文档 vs 代码）**
 
-- 和 contract.md 做四维对照（偏差信号）：
+- 和 contract.md 做目标对照：
   - 接口：端点 + 参数 + 路径是否一致
   - 字段：数据模型 + 类型 + 约束是否一致
   - 状态码：响应码 + 错误格式是否一致
   - 约束：共享约束（多租户、权限、幂等）是否遵守
 - 运行当前任务的测试
 
-**偏差分级**：四维对照的结果按三级分类：
-- **L0（噪声）**：命名风格、注释差异、import 顺序 → 忽略，不触发修正
-- **L1（偏差）**：缺字段、状态码不一致、边界遗漏 → 修正当前函数
-- **L2（漂移）**：contract 矛盾、需求根本歧义 → 中止当前任务，输出报告，等待人工决策
-
 **自适应频率**：按任务复杂度选择对照频率，避免简单任务的无效检查：
 - 简单任务（验收条件 < 3 个）→ 整个任务完成后对照一次
 - 复杂任务（验收条件 ≥ 3 个或有复杂业务逻辑）→ 每个函数后对照
 
 **不变原则**：
-- Smoke Gate 通过 + 测试通过 + 零 L1 偏差 = 任务完成（D9：运行实证）
-- Smoke Gate 不通过 → 不进入四维对照，先修到能跑（D9）
-- L1 偏差 = 进入修正循环（见"修"步骤）
-- L2 偏差 = 中止，不修——setpoint 本身有问题（D3：停下来等人类决策）
+- 运行验证通过 + 测试通过 + 代码与文档对齐 = 任务完成（D9：运行实证）
+- 运行验证不通过 → 不进入目标对照，先修到能跑（D9）
+- 不一致 = 进入修正循环（见"修"步骤）
+- 需求根本歧义或 contract 矛盾 = 中止当前任务，输出报告，等待人工决策（D3：停下来等人类决策）
 - 文档是源头——代码和文档分歧时，以文档为准（D2：文档即源代码）
-- 每轮对照输出偏差信号，不凭记忆判断（D7：验证而非假设）
+- 每轮对照输出结果，不凭记忆判断（D7：验证而非假设）
 
 ### 第四步：修（Fix）
 
@@ -124,24 +119,24 @@ disable-model-invocation: false
 - 修文档要记录（追加 changelog）（D1：决策留痕）
 - 修复可能级联——改一个端点可能影响依赖它的其他任务（D5：注意边界）
 
-**控制回路**：修正后回到"验"步骤。如果修了代码，从 Smoke Gate 重跑；如果只修了文档对齐问题，从四维对照重跑。L1 偏差 > 0 → 修正 → 再验 → 收敛（L1 清零）→ 标记任务完成。修正 3 轮仍有偏差 → 停下来让人工判断。
+**控制回路**：修正后回到"验"步骤。如果修了代码，从运行验证重跑；如果只修了文档对齐问题，从目标对照重跑。不一致项 > 0 → 修正 → 再验 → 收敛（全部对齐）→ 标记任务完成。修正 3 轮仍有问题 → 停下来让人工判断。
 
-**信号传递**：同类 L1 偏差连续 ≥ 2 个任务出现 → 输出"⚠️ 同类偏差重复，建议复查 contract 对应部分"（偏差信号向上传递给中回路）。
+**信号传递**：同类问题连续 ≥ 2 个任务出现 → 输出"⚠️ 同类问题重复，建议复查 contract 对应部分"（信号向上传递）。
 
-**偏差摘要**：每个任务完成后输出：`自动修正 N 处 · L2 中止 M 处 · 待确认 K 处 · 归因：skill 方法论 a / 文档未同步 b / 代码实现 c`。偏差摘要沉淀到 timeline，供 learn 消费。
+**验证摘要**：每个任务完成后输出：`自动修正 N 处 · 中止 M 处 · 待确认 K 处 · 归因：skill 方法论 a / 文档未同步 b / 代码实现 c`。验证摘要沉淀到 timeline，供 learn 消费。
 
-**健康检查**：连续 3 个任务零偏差 → review 阶段触发重建审查（验证"检查机制本身是否在工作"，而非代码真的完美）。
+**健康检查**：连续 3 个任务零问题 → review 阶段触发重建审查（验证"检查机制本身是否在工作"，而非代码真的完美）。
 
 ## AI 的角色
 
 | 阶段 | AI 角色 | 行为 |
 |------|---------|------|
 | 读 | 文档解析者 | 读所有文档，建立生成上下文，识别决策编号（PD# / FD# / DB#）和共享约束 |
-| 生 | 代码投影者 | 按投影规则从文档生成代码，保持忠实投影 |
-| 验 | 一致性检查者 | Smoke Gate（运行验证）+ 测试通过 + 文档对齐三重验证 |
+| 生 | 代码实现者 | 按实现规则从文档生成代码，自主决定实现路径 |
+| 验 | 一致性检查者 | 运行验证 + 测试通过 + 文档对齐三重验证 |
 | 修 | 分歧诊断者 | 判断是代码错还是文档错，修复并防止级联 |
 
-## 投影规则
+## 实现规则
 
 codegen 的核心方法论——从文档的什么部分推导出什么代码。
 
@@ -161,7 +156,7 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 
 ## 文档约束
 
-**src/ 和 tests/ 的结构从 contract.md + project.md 推导**，不从技术惯例推导。
+**src/ 和 tests/ 的结构从 contract.md + project.md 推导**，不从技术惯例推导。实现路径由 AI 自主决定，但必须满足文档中的约束和验收条件。
 **不应包含**：文档（docs/）· 部署配置（deploy/）· 监控配置（deploy/）
 
 ## 入口/出口条件
@@ -170,14 +165,14 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 
 **缺失处理**：缺 plan.md → 从 contract.md 推导最小任务序列（标注"无 plan，任务顺序为 AI 推导"）；缺 modules/ → 从 contract.md 推导，标注"模块文档缺失"。
 
-**出口**：src/ + tests/ 已生成 · Smoke Gate 通过（编译零错误 + 服务可启动 + 基础响应正常）· 所有测试通过 · 代码和文档对齐 · 用户确认（D9：运行实证）
+**出口**：src/ + tests/ 已生成 · 运行验证通过（编译零错误 + 服务可启动 + 基础响应正常）· 所有测试通过 · 代码和文档对齐 · 用户确认（D9：运行实证）
 
 ## 运行时信号
 
 - 输入：`detail.feature_contract` + `plan.task_sequence`
-- 输出：`codegen.generated_code` + `codegen.deviation_summary` + `codegen.l1_signal`
+- 输出：`codegen.generated_code` + `codegen.verification_summary`
 - 路由：详见 `registry.yaml` 的 `forge-codegen` 节点；本节只保留人类可读摘要。
-- 升级：L2 drift · three correction loops without convergence
+- 升级：contract 矛盾或需求歧义 · 修正 3 轮不收敛
 
 ## 何时不使用
 
@@ -185,7 +180,10 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 
 ## 红旗清单
 
-- Smoke Gate 未执行就声明完成 → 强制先跑 Smoke Gate（D9：运行实证）
+- 目标不清或验收标准缺失 → 参见 `${CLAUDE_SKILL_DIR}/../shared/red-flags/unsafe-implementation.md`
+- 目标漂移（添加未要求的功能） → 参见 `${CLAUDE_SKILL_DIR}/../shared/red-flags/goal-drift.md`
+
+- 运行验证未执行就声明完成 → 强制先跑运行验证（D9：运行实证）
 - 代码和 contract.md 不一致 → 强制对齐
 - 测试覆盖不足（每个端点至少 3 个测试） → 强制补充
 - 没有错误处理（400、401、404、500） → 强制补充
@@ -193,19 +191,20 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 - 跳过任务或改变序列 → 强制按 plan.md 执行
 - 共享约束未遵守（多租户、权限） → 强制注入
 - AI 补充的部分没有标注来源 → 强制标注
+- 目标未达成就声明完成 → 强制回到验步骤
 
 ## 验证清单
 
 - [ ] 是否读完所有文档再开始生成？
 - [ ] 文件结构是否从 contract.md + project.md 推导？
-- [ ] Smoke Gate 是否通过（编译零错误 + 服务可启动 + 基础响应正常）？（D9）
+- [ ] 运行验证是否通过（编译零错误 + 服务可启动 + 基础响应正常）？（D9）
 - [ ] 所有端点是否都有实现 + 测试（至少 3 个）？
 - [ ] 所有测试是否通过？
 - [ ] 代码和 contract.md 是否对齐（端点、参数、返回值、错误码）？
 - [ ] 关键逻辑是否注释了决策编号（FD# / PD# / DB#）？
 - [ ] 共享约束是否在所有相关文件中遵守？
-- [ ] 偏差分级是否正确处理（L0 忽略 / L1 修正 / L2 中止）？
-- [ ] 控制回路是否收敛（无无限修正循环）？
+- [ ] 修正循环是否收敛（无无限修正循环）？
+- [ ] 同类问题是否被识别和上报（D8）？
 
 ## 历史维护（自动）
 
@@ -220,8 +219,8 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 ```
 ✅ 代码生成完成！src/ + tests/ 已生成。
 
-Smoke Gate：✅ 编译通过 · ✅ 服务启动 · ✅ 基础响应正常
-四维对照：✅ 零 L1 偏差 · {N} 处自动修正
+运行验证：✅ 编译通过 · ✅ 服务启动 · ✅ 基础响应正常
+目标对照：✅ 代码与文档对齐 · {N} 处自动修正
 
 下一步你可以：
   test 阶段          — 测试策略 + 测试用例
@@ -229,11 +228,3 @@ Smoke Gate：✅ 编译通过 · ✅ 服务启动 · ✅ 基础响应正常
   发布规划 — 灰度 + 回滚 + 监控
   自然语言       — 直接说"跑测试"或"修 bug"
 ```
-
-## Change Unit / Rebuild Control
-
-- 生成前读取 `docs/CODE_MAP.yml`；缺失时只能推导最小映射，并把推导写入当前 CU。
-- 生成后在 CU 中记录 code projection、verification command、L0/L1/L2 偏差信号和未验证项。
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

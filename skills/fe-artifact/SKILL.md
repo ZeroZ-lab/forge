@@ -1,15 +1,15 @@
 ---
 name: fe-artifact
-description: Projects DESIGN.md, interaction specs, frontend contracts, and modules into pages, components, hooks, and styles.
-when_to_use: Use by direct invocation or from codegen when documented frontend tasks need page, component, hook, style, or frontend test implementation from Forge contracts and design system inputs.
+description: Implements DESIGN.md, interaction specs, frontend contracts, and modules into pages, components, hooks, and styles.
+when_to_use: Use by direct invocation or from codegen when documented frontend tasks need page, component, hook, style, or frontend test implementation from Forge contracts and design system goals.
 disable-model-invocation: false
 ---
 
-# Fe Artifact — 前端代码投影
+# Fe Artifact — 前端实现
 
 ## 职责
 
-把前端文档投影成可运行、可验收的前端代码。它是 codegen 的前端子协议，负责把设计系统、交互规格、API 合约和组件规格落到页面与组件。
+把前端目标实现为可运行、可验收的前端代码。它是 codegen 的前端子协议，负责把设计系统、交互规格、API 合约和组件规格落到页面与组件。
 
 ## 执行纪律
 
@@ -123,7 +123,7 @@ disable-model-invocation: false
 ## 完成提示
 
 ```
-前端投影完成：相关页面、组件、hooks 和样式已生成。
+前端实现完成：相关页面、组件、hooks 和样式已生成。
 
 下一步：
   - 运行前端验收
@@ -131,10 +131,3 @@ disable-model-invocation: false
   - 继续测试策略
 ```
 
-## Change Unit / Rebuild Control
-
-- 前端投影前读取 `docs/CODE_MAP.yml` 和当前 CU，确认组件/状态/测试的目标文件。
-- 视觉或交互实现证据写入 CU；截图/验收报告只作为 evidence，不替代 fact source。
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

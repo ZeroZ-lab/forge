@@ -1,8 +1,55 @@
 {
   "version": 2,
   "name": "forge-skills-suite-benchmark",
-  "description": "A deterministic v2 contract for checking whether Forge skills are triggered, bounded, verified, traceable through Change Units, and rebuild-aware during representative agent runs.",
+  "description": "A deterministic v2 contract for checking whether Forge skills are triggered, bounded, verified, traceable through Change Units, and goal-aware during representative agent runs.",
   "minimum_cases": 10,
+  "scoring_model": {
+    "version": 1,
+    "grade_thresholds": {
+      "A": 90,
+      "B": 80,
+      "C": 70,
+      "D": 60,
+      "F": 0
+    },
+    "axes": [
+      {
+        "id": "routing",
+        "label": "Skill routing",
+        "weight": 15
+      },
+      {
+        "id": "artifacts",
+        "label": "Artifact completeness",
+        "weight": 15
+      },
+      {
+        "id": "decisions",
+        "label": "Decision gates",
+        "weight": 10
+      },
+      {
+        "id": "verification",
+        "label": "Verification evidence",
+        "weight": 15
+      },
+      {
+        "id": "scope_control",
+        "label": "Scope control",
+        "weight": 15
+      },
+      {
+        "id": "traceability",
+        "label": "Traceability",
+        "weight": 20
+      },
+      {
+        "id": "goal_verification",
+        "label": "Goal verification coverage",
+        "weight": 10
+      }
+    ]
+  },
   "report_schema": "evals/skills-suite/report.schema.json",
   "evaluation_axes": [
     "skill routing",
@@ -11,13 +58,12 @@
     "verification evidence",
     "scope control",
     "change unit traceability",
-    "doc sync completion",
-    "rebuild control coverage"
+    "goal verification coverage"
   ],
   "cases": [
     {
       "id": "ambiguous-idea-alignment",
-      "title": "模糊想法收敛到业务方向",
+      "title": "\u6a21\u7cca\u60f3\u6cd5\u6536\u655b\u5230\u4e1a\u52a1\u65b9\u5411",
       "level": "L2 stage",
       "fixture": "evals/skills-suite/fixtures/ambiguous-idea-alignment.md",
       "expected_skills": [
@@ -28,7 +74,7 @@
         "docs/idea-brief.md",
         "docs/project.md",
         "docs/change-units/CU-*.md",
-        "docs/CURRENT_STATE.md"
+        "goal.md"
       ],
       "required_evidence": [
         "triggered skills",
@@ -71,14 +117,14 @@
           "behavior": "current_docs_without_change_unit"
         },
         {
-          "type": "doc_sync_completed",
-          "target": "docs/CURRENT_STATE.md"
+          "type": "goal_verified",
+          "target": "goal.md"
         }
       ]
     },
     {
       "id": "project-bootstrap",
-      "title": "新项目初始化投影",
+      "title": "\u65b0\u9879\u76ee\u521d\u59cb\u5316",
       "level": "L2 stage",
       "fixture": "evals/skills-suite/fixtures/project-bootstrap.md",
       "expected_skills": [
@@ -92,16 +138,14 @@
         "AGENTS.md",
         "CLAUDE.md",
         "docs/change-units/CU-*.md",
-        "docs/CODE_MAP.yml",
-        "docs/CURRENT_STATE.md",
-        "docs/REBUILD_GUIDE.md"
+        "goal.md"
       ],
       "required_evidence": [
         "project decisions",
         "design tokens",
         "project agents projection",
         "Change Unit",
-        "CODE_MAP coverage"
+        "goal verification"
       ],
       "forbidden_behaviors": [
         "hardcoded_unconfirmed_stack",
@@ -138,18 +182,18 @@
           "behavior": "current_docs_without_change_unit"
         },
         {
-          "type": "doc_sync_completed",
-          "target": "docs/CURRENT_STATE.md"
+          "type": "goal_covers",
+          "path": "docs/project.md"
         },
         {
-          "type": "code_map_covers",
-          "path": "docs/project.md"
+          "type": "goal_verified",
+          "target": "goal.md"
         }
       ]
     },
     {
       "id": "requirements-research",
-      "title": "需求定义触发技术研究",
+      "title": "\u9700\u6c42\u5b9a\u4e49\u89e6\u53d1\u6280\u672f\u7814\u7a76",
       "level": "L2 stage",
       "fixture": "evals/skills-suite/fixtures/requirements-research.md",
       "expected_skills": [
@@ -160,7 +204,7 @@
         "docs/features/realtime-search/PRD.md",
         "docs/features/realtime-search/research-brief.md",
         "docs/change-units/CU-*.md",
-        "docs/CURRENT_STATE.md"
+        "goal.md"
       ],
       "required_evidence": [
         "acceptance criteria",
@@ -188,7 +232,7 @@
         },
         {
           "type": "evidence_contains",
-          "text": "技术信号词"
+          "text": "\u6280\u672f\u4fe1\u53f7\u8bcd"
         },
         {
           "type": "decision_gate_reported",
@@ -203,14 +247,14 @@
           "behavior": "current_docs_without_change_unit"
         },
         {
-          "type": "doc_sync_completed",
-          "target": "docs/CURRENT_STATE.md"
+          "type": "goal_verified",
+          "target": "goal.md"
         }
       ]
     },
     {
       "id": "interaction-design-system",
-      "title": "交互流程和设计系统协同",
+      "title": "\u4ea4\u4e92\u6d41\u7a0b\u548c\u8bbe\u8ba1\u7cfb\u7edf\u534f\u540c",
       "level": "L2 stage",
       "fixture": "evals/skills-suite/fixtures/interaction-design-system.md",
       "expected_skills": [
@@ -222,7 +266,7 @@
         "docs/features/onboarding/interaction-spec.md",
         "DESIGN.md",
         "docs/change-units/CU-*.md",
-        "docs/CURRENT_STATE.md"
+        "goal.md"
       ],
       "required_evidence": [
         "primary flow",
@@ -265,14 +309,14 @@
           "behavior": "current_docs_without_change_unit"
         },
         {
-          "type": "doc_sync_completed",
-          "target": "docs/CURRENT_STATE.md"
+          "type": "goal_verified",
+          "target": "goal.md"
         }
       ]
     },
     {
       "id": "detail-api-db-frontend",
-      "title": "详设生成跨领域 contract",
+      "title": "\u8be6\u8bbe\u751f\u6210\u8de8\u9886\u57df contract",
       "level": "L2 stage",
       "fixture": "evals/skills-suite/fixtures/detail-api-db-frontend.md",
       "expected_skills": [
@@ -287,15 +331,14 @@
         "docs/features/tags/database/contract.md",
         "docs/features/tags/frontend/contract.md",
         "docs/change-units/CU-*.md",
-        "docs/CODE_MAP.yml",
-        "docs/CURRENT_STATE.md"
+        "goal.md"
       ],
       "required_evidence": [
         "domain index",
         "downstream references",
         "shared data model",
         "Change Unit",
-        "CODE_MAP coverage"
+        "goal verification"
       ],
       "forbidden_behaviors": [
         "frontend_references_unwritten_api",
@@ -321,7 +364,7 @@
         },
         {
           "type": "evidence_contains",
-          "text": "下游依赖"
+          "text": "\u4e0b\u6e38\u4f9d\u8d56"
         },
         {
           "type": "change_unit_reported",
@@ -332,18 +375,18 @@
           "behavior": "current_docs_without_change_unit"
         },
         {
-          "type": "doc_sync_completed",
-          "target": "docs/CURRENT_STATE.md"
+          "type": "goal_covers",
+          "path": "docs/features/tags/contract.md"
         },
         {
-          "type": "code_map_covers",
-          "path": "docs/features/tags/contract.md"
+          "type": "goal_verified",
+          "target": "goal.md"
         }
       ]
     },
     {
       "id": "plan-test-cases",
-      "title": "垂直切片任务和测试用例追溯",
+      "title": "\u5782\u76f4\u5207\u7247\u4efb\u52a1\u548c\u6d4b\u8bd5\u7528\u4f8b\u8ffd\u6eaf",
       "level": "L2 stage",
       "fixture": "evals/skills-suite/fixtures/plan-test-cases.md",
       "expected_skills": [
@@ -354,7 +397,7 @@
         "docs/features/tags/plan.md",
         "docs/features/tags/testing/test-cases.md",
         "docs/change-units/CU-*.md",
-        "docs/CURRENT_STATE.md"
+        "goal.md"
       ],
       "required_evidence": [
         "vertical slices",
@@ -397,14 +440,14 @@
           "behavior": "current_docs_without_change_unit"
         },
         {
-          "type": "doc_sync_completed",
-          "target": "docs/CURRENT_STATE.md"
+          "type": "goal_verified",
+          "target": "goal.md"
         }
       ]
     },
     {
-      "id": "codegen-projection",
-      "title": "从 contract 投影代码并记录偏差信号",
+      "id": "codegen-implementation",
+      "title": "\u4ece\u76ee\u6807\u5b9e\u73b0\u4ee3\u7801\u5e76\u8bb0\u5f55\u95ee\u9898\u4fe1\u53f7",
       "level": "L1 patch",
       "fixture": "evals/skills-suite/fixtures/codegen-projection.md",
       "expected_skills": [
@@ -414,8 +457,7 @@
         "src/",
         "tests/",
         "docs/change-units/CU-*.md",
-        "docs/CODE_MAP.yml",
-        "docs/CURRENT_STATE.md"
+        "goal.md"
       ],
       "required_evidence": [
         "contract read set",
@@ -423,7 +465,7 @@
         "verification command",
         "deviation classification",
         "Change Unit",
-        "CODE_MAP coverage"
+        "goal verification"
       ],
       "forbidden_behaviors": [
         "code_without_contract_trace",
@@ -460,18 +502,18 @@
           "behavior": "current_docs_without_change_unit"
         },
         {
-          "type": "doc_sync_completed",
-          "target": "docs/CURRENT_STATE.md"
+          "type": "goal_covers",
+          "path": "src/"
         },
         {
-          "type": "code_map_covers",
-          "path": "src/"
+          "type": "goal_verified",
+          "target": "goal.md"
         }
       ]
     },
     {
       "id": "frontend-artifact-acceptance",
-      "title": "前端投影和四维验收",
+      "title": "\u524d\u7aef\u5b9e\u73b0\u548c\u56db\u7ef4\u9a8c\u6536",
       "level": "L1 patch",
       "fixture": "evals/skills-suite/fixtures/frontend-artifact-acceptance.md",
       "expected_skills": [
@@ -482,15 +524,14 @@
         "src/components/",
         "docs/features/onboarding/frontend/fe-acceptance-report.md",
         "docs/change-units/CU-*.md",
-        "docs/CODE_MAP.yml",
-        "docs/CURRENT_STATE.md"
+        "goal.md"
       ],
       "required_evidence": [
         "design token use",
         "state coverage",
         "visual/runtime evidence",
         "Change Unit",
-        "CODE_MAP coverage"
+        "goal verification"
       ],
       "forbidden_behaviors": [
         "unverified_visual_claim",
@@ -512,7 +553,7 @@
         },
         {
           "type": "evidence_contains",
-          "text": "四维验收"
+          "text": "\u56db\u7ef4\u9a8c\u6536"
         },
         {
           "type": "forbidden_behavior_absent",
@@ -527,18 +568,18 @@
           "behavior": "current_docs_without_change_unit"
         },
         {
-          "type": "doc_sync_completed",
-          "target": "docs/CURRENT_STATE.md"
+          "type": "goal_covers",
+          "path": "src/components/"
         },
         {
-          "type": "code_map_covers",
-          "path": "src/components/"
+          "type": "goal_verified",
+          "target": "goal.md"
         }
       ]
     },
     {
       "id": "test-strategy-suite",
-      "title": "风险分层测试策略和用例生成",
+      "title": "\u98ce\u9669\u5206\u5c42\u6d4b\u8bd5\u7b56\u7565\u548c\u7528\u4f8b\u751f\u6210",
       "level": "L2 stage",
       "fixture": "evals/skills-suite/fixtures/test-strategy-suite.md",
       "expected_skills": [
@@ -550,7 +591,7 @@
         "docs/features/billing/testing/contract.md",
         "docs/features/billing/testing/test-cases.md",
         "docs/change-units/CU-*.md",
-        "docs/CURRENT_STATE.md"
+        "goal.md"
       ],
       "required_evidence": [
         "risk tiers",
@@ -582,7 +623,7 @@
         },
         {
           "type": "evidence_contains",
-          "text": "风险分层"
+          "text": "\u98ce\u9669\u5206\u5c42"
         },
         {
           "type": "change_unit_reported",
@@ -593,14 +634,14 @@
           "behavior": "current_docs_without_change_unit"
         },
         {
-          "type": "doc_sync_completed",
-          "target": "docs/CURRENT_STATE.md"
+          "type": "goal_verified",
+          "target": "goal.md"
         }
       ]
     },
     {
       "id": "review-deploy-learn",
-      "title": "审查、交付和方法论回流",
+      "title": "\u5ba1\u67e5\u3001\u4ea4\u4ed8\u548c\u65b9\u6cd5\u8bba\u56de\u6d41",
       "level": "L2 stage",
       "fixture": "evals/skills-suite/fixtures/review-deploy-learn.md",
       "expected_skills": [
@@ -613,15 +654,14 @@
         "docs/features/tags/deploy/contract.md",
         "docs/thinking/methodology-proposal.md",
         "docs/change-units/CU-*.md",
-        "docs/CODE_MAP.yml",
-        "docs/CURRENT_STATE.md"
+        "goal.md"
       ],
       "required_evidence": [
         "deviation attribution",
         "rollback plan",
         "methodology evidence threshold",
         "Change Unit",
-        "CODE_MAP coverage"
+        "goal verification"
       ],
       "forbidden_behaviors": [
         "methodology_change_without_repeated_deviation",
@@ -658,18 +698,18 @@
           "behavior": "current_docs_without_change_unit"
         },
         {
-          "type": "doc_sync_completed",
-          "target": "docs/CURRENT_STATE.md"
+          "type": "goal_covers",
+          "path": "docs/features/tags/deploy/contract.md"
         },
         {
-          "type": "code_map_covers",
-          "path": "docs/features/tags/deploy/contract.md"
+          "type": "goal_verified",
+          "target": "goal.md"
         }
       ]
     },
     {
       "id": "thinking-red-team",
-      "title": "深度思考产物和回写闭环",
+      "title": "\u6df1\u5ea6\u601d\u8003\u4ea7\u7269\u548c\u56de\u5199\u95ed\u73af",
       "level": "L1 analysis",
       "fixture": "evals/skills-suite/fixtures/thinking-red-team.md",
       "expected_skills": [
@@ -678,7 +718,7 @@
       "expected_artifacts": [
         "docs/thinking/*.md",
         "docs/change-units/CU-*.md",
-        "docs/CURRENT_STATE.md"
+        "goal.md"
       ],
       "required_evidence": [
         "problem reframing",
@@ -702,7 +742,7 @@
         },
         {
           "type": "evidence_contains",
-          "text": "假设清单"
+          "text": "\u5047\u8bbe\u6e05\u5355"
         },
         {
           "type": "decision_gate_reported",
@@ -721,14 +761,14 @@
           "behavior": "current_docs_without_change_unit"
         },
         {
-          "type": "doc_sync_completed",
-          "target": "docs/CURRENT_STATE.md"
+          "type": "goal_verified",
+          "target": "goal.md"
         }
       ]
     },
     {
       "id": "bugfix-regression-change-unit",
-      "title": "Bugfix 通过 Change Unit 沉淀回归测试",
+      "title": "Bugfix \u901a\u8fc7 Change Unit \u6c89\u6dc0\u56de\u5f52\u6d4b\u8bd5",
       "level": "L1 patch",
       "fixture": "evals/skills-suite/fixtures/bugfix-regression-change-unit.md",
       "expected_skills": [
@@ -740,14 +780,13 @@
       "expected_artifacts": [
         "docs/change-units/CU-*.md",
         "docs/features/billing/testing/test-cases.md",
-        "docs/CODE_MAP.yml",
-        "docs/CURRENT_STATE.md"
+        "goal.md"
       ],
       "required_evidence": [
         "Change Unit",
         "Missing Invariant",
         "regression test",
-        "doc sync"
+        "goal verification"
       ],
       "forbidden_behaviors": [
         "bugfix_without_regression",
@@ -775,12 +814,8 @@
           "path": "docs/change-units/CU-*.md"
         },
         {
-          "type": "code_map_covers",
+          "type": "goal_covers",
           "path": "docs/features/billing/contract.md"
-        },
-        {
-          "type": "doc_sync_completed",
-          "target": "docs/CURRENT_STATE.md"
         },
         {
           "type": "evidence_contains",
@@ -793,6 +828,10 @@
         {
           "type": "forbidden_behavior_absent",
           "behavior": "bugfix_without_regression"
+        },
+        {
+          "type": "goal_verified",
+          "target": "goal.md"
         }
       ]
     }

@@ -77,8 +77,8 @@
       ]
     },
     {
-      "id": "api_design.api_setpoint",
-      "name": "API setpoint",
+      "id": "api_design.api_goal",
+      "name": "API goal",
       "produced_by": "forge-api-design",
       "consumed_by": [
         "forge-db-design",
@@ -95,16 +95,16 @@
       ]
     },
     {
-      "id": "db_design.database_setpoint",
-      "name": "database setpoint",
+      "id": "db_design.database_goal",
+      "name": "database goal",
       "produced_by": "forge-db-design",
       "consumed_by": [
         "forge-plan"
       ]
     },
     {
-      "id": "frontend_design.frontend_setpoint",
-      "name": "frontend setpoint",
+      "id": "frontend_design.frontend_goal",
+      "name": "frontend goal",
       "produced_by": "forge-frontend-design",
       "consumed_by": [
         "forge-plan"
@@ -129,7 +129,7 @@
     },
     {
       "id": "codegen.generated_code",
-      "name": "generated code",
+      "name": "implemented code",
       "produced_by": "forge-codegen",
       "consumed_by": [
         "forge-review",
@@ -138,7 +138,7 @@
     },
     {
       "id": "codegen.deviation_summary",
-      "name": "deviation summary",
+      "name": "verification summary",
       "produced_by": "forge-codegen",
       "consumed_by": [
         "forge-detail"
@@ -146,7 +146,7 @@
     },
     {
       "id": "codegen.l1_signal",
-      "name": "repeated L1 deviation",
+      "name": "repeated goal-not-met",
       "produced_by": "forge-codegen",
       "consumed_by": [
         "forge-detail"
@@ -161,8 +161,8 @@
       ]
     },
     {
-      "id": "test_cases.test_case_setpoint",
-      "name": "test case setpoint",
+      "id": "test_cases.test_case_goal",
+      "name": "test case goal",
       "produced_by": "forge-test-cases",
       "consumed_by": [
         "forge-codegen"
@@ -230,8 +230,8 @@
       ]
     },
     {
-      "id": "doc_sync.completed",
-      "name": "doc sync completed",
+      "id": "goal_verification.completed",
+      "name": "Goal verification completed",
       "produced_by": "forge-review",
       "consumed_by": [
         "forge-codegen",
@@ -240,8 +240,8 @@
       ]
     },
     {
-      "id": "code_map.updated",
-      "name": "CODE_MAP updated",
+      "id": "goal_coverage.updated",
+      "name": "Goal coverage updated",
       "produced_by": "forge-detail",
       "consumed_by": [
         "forge-codegen",
@@ -250,8 +250,8 @@
       ]
     },
     {
-      "id": "current_snapshot.updated",
-      "name": "Current Snapshot updated",
+      "id": "project_state.updated",
+      "name": "Project state updated",
       "produced_by": "forge-init",
       "consumed_by": [
         "forge-detail",
@@ -260,8 +260,8 @@
       ]
     },
     {
-      "id": "rebuild_control.updated",
-      "name": "Rebuild Control updated",
+      "id": "goal_verification.completed",
+      "name": "Goal verification completed",
       "produced_by": "forge-init",
       "consumed_by": [
         "forge-codegen",
@@ -276,7 +276,7 @@
       "path": "skills/brainstorm/SKILL.md",
       "phase": "explore",
       "type": "domain",
-      "runtime_role": "setpoint-generator",
+      "role": "goal-refiner",
       "triggers": [
         "想法模糊",
         "探索方向",
@@ -341,7 +341,7 @@
       "path": "skills/business-alignment/SKILL.md",
       "phase": "define",
       "type": "domain",
-      "runtime_role": "setpoint-generator",
+      "role": "goal-refiner",
       "triggers": [
         "验证需求",
         "项目目标",
@@ -413,7 +413,7 @@
       "path": "skills/define/SKILL.md",
       "phase": "define",
       "type": "domain",
-      "runtime_role": "setpoint-generator",
+      "role": "goal-refiner",
       "triggers": [
         "写 PRD",
         "定义需求",
@@ -473,7 +473,7 @@
         {
           "signal": "scope exclusions",
           "to": "forge-detail",
-          "when": "feature setpoint needs technical detailing"
+          "when": "feature goal needs technical detailing"
         },
         {
           "signal": "change_unit.created",
@@ -487,7 +487,7 @@
       "path": "skills/research/SKILL.md",
       "phase": "define",
       "type": "domain",
-      "runtime_role": "setpoint-generator",
+      "role": "goal-refiner",
       "triggers": [
         "技术探索",
         "算法菜单",
@@ -553,7 +553,7 @@
       "path": "skills/interaction-design/SKILL.md",
       "phase": "design",
       "type": "domain",
-      "runtime_role": "setpoint-generator",
+      "role": "goal-refiner",
       "triggers": [
         "交互设计",
         "用户流程",
@@ -620,7 +620,7 @@
       "path": "skills/fe-system/SKILL.md",
       "phase": "design",
       "type": "domain",
-      "runtime_role": "knowledge",
+      "role": "knowledge",
       "triggers": [
         "设计系统",
         "配色",
@@ -682,7 +682,7 @@
         {
           "signal": "component patterns",
           "to": "forge-fe-accept",
-          "when": "frontend acceptance needs visual setpoint"
+          "when": "frontend acceptance needs visual goal"
         }
       ]
     },
@@ -691,7 +691,7 @@
       "path": "skills/technical-design/SKILL.md",
       "phase": "design",
       "type": "domain",
-      "runtime_role": "setpoint-generator",
+      "role": "goal-refiner",
       "triggers": [
         "技术设计",
         "架构",
@@ -757,7 +757,7 @@
       "path": "skills/init/SKILL.md",
       "phase": "orchestration",
       "type": "orchestrator",
-      "runtime_role": "orchestrator",
+      "role": "orchestrator",
       "triggers": [
         "初始化项目",
         "新项目",
@@ -770,14 +770,11 @@
         "user project intent",
         "existing docs/project.md",
         "existing DESIGN.md",
-        "docs/CURRENT_STATE.md",
-        "docs/REBUILD_GUIDE.md",
+        "goal.md",
         "docs/change-units/CU-*.md"
       ],
       "own_produces": [
-        "docs/CURRENT_STATE.md",
-        "docs/REBUILD_GUIDE.md",
-        "docs/CODE_MAP.yml",
+        "goal.md",
         "docs/change-units/CU-*.md"
       ],
       "orchestrated_produces": [
@@ -795,9 +792,9 @@
         "project initialized",
         "phase skipped",
         "change_unit.created",
-        "current_snapshot.updated",
-        "rebuild_control.updated",
-        "code_map.updated",
+        "project_state.updated",
+        "goal_verification.completed",
+        "goal_coverage.updated",
         "change_unit.updated"
       ],
       "escalates_when": [
@@ -836,7 +833,7 @@
           "when": "when initialization creates a project evolution record"
         },
         {
-          "signal": "rebuild_control.updated",
+          "signal": "goal_verification.completed",
           "to": "forge-codegen",
           "when": "when generated project docs can drive implementation"
         }
@@ -847,7 +844,7 @@
       "path": "skills/design/SKILL.md",
       "phase": "orchestration",
       "type": "orchestrator",
-      "runtime_role": "orchestrator",
+      "role": "orchestrator",
       "triggers": [
         "做设计",
         "交互设计",
@@ -916,7 +913,7 @@
       "path": "skills/detail/SKILL.md",
       "phase": "orchestration",
       "type": "orchestrator",
-      "runtime_role": "controller",
+      "role": "goal-refiner",
       "triggers": [
         "技术详设",
         "详细设计",
@@ -933,8 +930,7 @@
         "DESIGN.md",
         "codegen deviation summary",
         "docs/change-units/CU-*.md",
-        "docs/CODE_MAP.yml",
-        "docs/CURRENT_STATE.md"
+        "goal.md"
       ],
       "own_produces": [
         "feature contract.md",
@@ -953,12 +949,12 @@
       ],
       "signals_out": [
         "contract updated",
-        "downstream drift report",
+        "downstream gap report",
         "human decision needed",
         "change_unit.updated",
-        "code_map.updated",
-        "current_snapshot.updated",
-        "doc_sync.completed"
+        "goal_coverage.updated",
+        "project_state.updated",
+        "goal_verification.completed"
       ],
       "escalates_when": [
         "contract ambiguity",
@@ -987,10 +983,10 @@
         {
           "signal": "contract updated",
           "to": "forge-plan",
-          "when": "setpoint is ready for task slicing"
+          "when": "goal is ready for task slicing"
         },
         {
-          "signal": "downstream drift report",
+          "signal": "downstream gap report",
           "to": "human decision",
           "when": "cascade impact is unclear"
         },
@@ -1000,12 +996,12 @@
           "when": "L2 drift or domain boundary conflict exists"
         },
         {
-          "signal": "doc_sync.completed",
+          "signal": "goal_verification.completed",
           "to": "forge-review",
-          "when": "when changed source docs must be checked for drift"
+          "when": "when implementation needs goal verification"
         },
         {
-          "signal": "code_map.updated",
+          "signal": "goal_coverage.updated",
           "to": "forge-codegen",
           "when": "when contract projection paths are ready"
         }
@@ -1016,7 +1012,7 @@
       "path": "skills/api-design/SKILL.md",
       "phase": "detail",
       "type": "domain",
-      "runtime_role": "setpoint-generator",
+      "role": "goal-refiner",
       "triggers": [
         "API 设计",
         "设计端点",
@@ -1042,7 +1038,7 @@
         "change_unit.updated"
       ],
       "signals_out": [
-        "API setpoint",
+        "API goal",
         "shared data model",
         "change_unit.updated"
       ],
@@ -1067,7 +1063,7 @@
       "quality_gates": [],
       "signal_routes": [
         {
-          "signal": "API setpoint",
+          "signal": "API goal",
           "to": "forge-db-design",
           "when": "storage model depends on API data model"
         },
@@ -1083,7 +1079,7 @@
       "path": "skills/db-design/SKILL.md",
       "phase": "detail",
       "type": "domain",
-      "runtime_role": "setpoint-generator",
+      "role": "goal-refiner",
       "triggers": [
         "数据库设计",
         "表结构",
@@ -1108,7 +1104,7 @@
         "change_unit.updated"
       ],
       "signals_out": [
-        "database setpoint",
+        "database goal",
         "migration rules",
         "change_unit.updated"
       ],
@@ -1133,7 +1129,7 @@
       "quality_gates": [],
       "signal_routes": [
         {
-          "signal": "database setpoint",
+          "signal": "database goal",
           "to": "forge-plan",
           "when": "task slicing needs persistence work"
         },
@@ -1149,7 +1145,7 @@
       "path": "skills/frontend-design/SKILL.md",
       "phase": "detail",
       "type": "domain",
-      "runtime_role": "setpoint-generator",
+      "role": "goal-refiner",
       "triggers": [
         "前端设计",
         "组件设计",
@@ -1171,14 +1167,14 @@
         "docs/change-units/CU-*.md"
       ],
       "signals_in": [
-        "API setpoint",
+        "API goal",
         "design tokens",
         "interaction spec",
         "change_unit.created",
         "change_unit.updated"
       ],
       "signals_out": [
-        "frontend setpoint",
+        "frontend goal",
         "component modules",
         "change_unit.updated"
       ],
@@ -1208,7 +1204,7 @@
       "quality_gates": [],
       "signal_routes": [
         {
-          "signal": "frontend setpoint",
+          "signal": "frontend goal",
           "to": "forge-fe-artifact",
           "when": "frontend implementation is requested"
         },
@@ -1224,7 +1220,7 @@
       "path": "skills/plan/SKILL.md",
       "phase": "plan",
       "type": "domain",
-      "runtime_role": "planner",
+      "role": "decision-protocol",
       "triggers": [
         "拆任务",
         "任务分解",
@@ -1238,7 +1234,7 @@
         "contract.md",
         "modules/*.md",
         "docs/change-units/CU-*.md",
-        "docs/REBUILD_GUIDE.md"
+        "goal.md"
       ],
       "own_produces": [
         "plan.md",
@@ -1254,8 +1250,8 @@
         "task sequence",
         "checkpoints",
         "change_unit.updated",
-        "rebuild_control.updated",
-        "doc_sync.completed"
+        "goal_verification.completed",
+        "goal_verification.completed"
       ],
       "escalates_when": [
         "任务无法垂直切片",
@@ -1289,9 +1285,9 @@
           "when": "testing stage needs task-derived checkpoints"
         },
         {
-          "signal": "doc_sync.completed",
+          "signal": "goal_verification.completed",
           "to": "forge-review",
-          "when": "when changed source docs must be checked for drift"
+          "when": "when implementation needs goal verification"
         }
       ]
     },
@@ -1300,7 +1296,7 @@
       "path": "skills/codegen/SKILL.md",
       "phase": "build",
       "type": "execution",
-      "runtime_role": "actuator",
+      "role": "executor",
       "triggers": [
         "生成代码",
         "写代码",
@@ -1318,39 +1314,38 @@
         "modules/*.md",
         "plan.md",
         "docs/change-units/CU-*.md",
-        "docs/CODE_MAP.yml",
-        "docs/REBUILD_GUIDE.md"
+        "goal.md"
       ],
       "produces": [
         "src/",
         "tests/",
-        "deviation summary",
+        "verification summary",
         "docs/change-units/CU-*.md"
       ],
       "signals_in": [
-        "contract setpoint",
+        "contract goal",
         "task sequence",
         "change_unit.created",
         "change_unit.updated"
       ],
       "signals_out": [
-        "L0 noise",
-        "L1 deviation",
-        "L2 drift",
+        "minor variance",
+        "goal not met",
+        "goal conflict",
         "change_unit.updated",
-        "code_map.updated",
-        "rebuild_control.updated",
-        "doc_sync.completed"
+        "goal_coverage.updated",
+        "goal_verification.completed",
+        "goal_verification.completed"
       ],
       "escalates_when": [
-        "L2 drift",
-        "three correction loops without convergence"
+        "goal conflict",
+        "3 corrections without convergence"
       ],
       "output_contract": [
-        "generated code",
+        "implemented code",
         "generated tests",
-        "deviation summary",
-        "repeated L1 deviation"
+        "verification summary",
+        "repeated goal-not-met"
       ],
       "maturity": "stable",
       "stage_next": [
@@ -1368,24 +1363,24 @@
       ],
       "signal_routes": [
         {
-          "signal": "L1 deviation",
+          "signal": "goal not met",
           "to": "forge-detail",
-          "when": "same-class L1 >= 2"
+          "when": "repeated goal-not-met >= 2"
         },
         {
-          "signal": "L2 drift",
+          "signal": "goal conflict",
           "to": "human decision",
-          "when": "setpoint contradiction or missing source truth"
+          "when": "goal contradiction or unclear goal"
         },
         {
-          "signal": "generated code",
+          "signal": "implemented code",
           "to": "forge-review",
-          "when": "projection is ready for independent review"
+          "when": "implementation ready for independent review"
         },
         {
-          "signal": "doc_sync.completed",
+          "signal": "goal_verification.completed",
           "to": "forge-review",
-          "when": "when changed source docs must be checked for drift"
+          "when": "when implementation needs goal verification"
         },
         {
           "signal": "change_unit.updated",
@@ -1399,7 +1394,7 @@
       "path": "skills/fe-artifact/SKILL.md",
       "phase": "build",
       "type": "execution",
-      "runtime_role": "actuator",
+      "role": "executor",
       "triggers": [
         "生成前端",
         "做页面",
@@ -1417,7 +1412,7 @@
         "api/modules/*.md",
         "plan.md",
         "docs/change-units/CU-*.md",
-        "docs/CODE_MAP.yml"
+        "goal.md"
       ],
       "produces": [
         "frontend source files",
@@ -1434,7 +1429,7 @@
         "frontend artifact ready",
         "preview blocked",
         "change_unit.updated",
-        "code_map.updated"
+        "goal_coverage.updated"
       ],
       "escalates_when": [
         "无法运行或预览",
@@ -1478,7 +1473,7 @@
       "path": "skills/test/SKILL.md",
       "phase": "orchestration",
       "type": "orchestrator",
-      "runtime_role": "orchestrator",
+      "role": "orchestrator",
       "triggers": [
         "做测试",
         "测试阶段",
@@ -1513,7 +1508,7 @@
         "test strategy ready",
         "test cases ready",
         "change_unit.updated",
-        "doc_sync.completed"
+        "goal_verification.completed"
       ],
       "escalates_when": [
         "验收条件缺失",
@@ -1551,12 +1546,12 @@
         {
           "signal": "requirements not testable",
           "to": "forge-detail",
-          "when": "setpoint cannot produce reliable tests"
+          "when": "goal cannot produce reliable tests"
         },
         {
-          "signal": "doc_sync.completed",
+          "signal": "goal_verification.completed",
           "to": "forge-review",
-          "when": "when changed source docs must be checked for drift"
+          "when": "when implementation needs goal verification"
         }
       ]
     },
@@ -1565,7 +1560,7 @@
       "path": "skills/test-strategy/SKILL.md",
       "phase": "test",
       "type": "domain",
-      "runtime_role": "planner",
+      "role": "decision-protocol",
       "triggers": [
         "测试策略",
         "测试覆盖",
@@ -1632,7 +1627,7 @@
       "path": "skills/test-cases/SKILL.md",
       "phase": "test",
       "type": "domain",
-      "runtime_role": "setpoint-generator",
+      "role": "goal-refiner",
       "triggers": [
         "写测试用例",
         "测试场景",
@@ -1661,7 +1656,7 @@
         "change_unit.updated"
       ],
       "signals_out": [
-        "test case setpoint",
+        "test case goal",
         "change_unit.updated"
       ],
       "escalates_when": [
@@ -1690,12 +1685,12 @@
       ],
       "signal_routes": [
         {
-          "signal": "test case setpoint",
+          "signal": "test case goal",
           "to": "forge-codegen",
           "when": "tests should be projected with code"
         },
         {
-          "signal": "test case setpoint",
+          "signal": "test case goal",
           "to": "forge-review",
           "when": "review needs acceptance coverage evidence"
         }
@@ -1706,7 +1701,7 @@
       "path": "skills/fe-accept/SKILL.md",
       "phase": "test",
       "type": "domain",
-      "runtime_role": "sensor",
+      "role": "verifier",
       "triggers": [
         "验收前端",
         "检查页面",
@@ -1777,7 +1772,7 @@
       "path": "skills/review/SKILL.md",
       "phase": "review",
       "type": "governance",
-      "runtime_role": "sensor",
+      "role": "verifier",
       "triggers": [
         "审查文档",
         "审查代码",
@@ -1798,7 +1793,7 @@
         "changelog",
         "timeline",
         "docs/change-units/CU-*.md",
-        "docs/CURRENT_STATE.md"
+        "goal.md"
       ],
       "produces": [
         "review report",
@@ -1813,10 +1808,10 @@
       ],
       "signals_out": [
         "P0/P1/P2 issues",
-        "skill/document/code attribution",
+        "skill/document/code gap attribution",
         "change_unit.updated",
-        "current_snapshot.updated",
-        "doc_sync.completed"
+        "project_state.updated",
+        "goal_verification.completed"
       ],
       "escalates_when": [
         "P0/P1 found",
@@ -1844,12 +1839,12 @@
       ],
       "signal_routes": [
         {
-          "signal": "document drift",
+          "signal": "document inconsistency",
           "to": "forge-detail",
           "when": "review attributes issue to document drift"
         },
         {
-          "signal": "skill/document/code attribution",
+          "signal": "skill/document/code gap attribution",
           "to": "forge-learn",
           "when": "same-class deviation >= 3 or cross-project deviation appears"
         },
@@ -1859,12 +1854,12 @@
           "when": "blocking issue needs prioritization or waiver"
         },
         {
-          "signal": "doc_sync.completed",
+          "signal": "goal_verification.completed",
           "to": "forge-review",
-          "when": "when changed source docs must be checked for drift"
+          "when": "when implementation needs goal verification"
         },
         {
-          "signal": "doc_sync.completed",
+          "signal": "goal_verification.completed",
           "to": "forge-deploy",
           "when": "when review clears release readiness docs"
         }
@@ -1875,7 +1870,7 @@
       "path": "skills/deploy/SKILL.md",
       "phase": "deploy",
       "type": "domain",
-      "runtime_role": "planner",
+      "role": "decision-protocol",
       "triggers": [
         "发布",
         "部署",
@@ -1895,7 +1890,7 @@
         "contract.md",
         "review report",
         "docs/change-units/CU-*.md",
-        "docs/REBUILD_GUIDE.md"
+        "goal.md"
       ],
       "produces": [
         "deploy/contract.md",
@@ -1916,8 +1911,8 @@
         "rollback plan",
         "release blocked",
         "change_unit.updated",
-        "rebuild_control.updated",
-        "doc_sync.completed"
+        "goal_verification.completed",
+        "goal_verification.completed"
       ],
       "escalates_when": [
         "无回滚方案",
@@ -1950,9 +1945,9 @@
           "when": "rollback, health check, or monitoring is missing"
         },
         {
-          "signal": "doc_sync.completed",
+          "signal": "goal_verification.completed",
           "to": "forge-review",
-          "when": "when changed source docs must be checked for drift"
+          "when": "when implementation needs goal verification"
         }
       ]
     },
@@ -1961,14 +1956,14 @@
       "path": "skills/learn/SKILL.md",
       "phase": "learn",
       "type": "governance",
-      "runtime_role": "governance",
+      "role": "governance",
       "triggers": [
         "复盘",
         "方法论回顾",
         "改进 skill"
       ],
       "avoid_when": [
-        "没有足够偏差证据",
+        "没有足够差距证据",
         "只是单次偶发问题"
       ],
       "consumes": [
@@ -1976,7 +1971,7 @@
         "changelog",
         "timeline",
         "docs/change-units/CU-*.md",
-        "docs/CURRENT_STATE.md"
+        "goal.md"
       ],
       "produces": [
         "skill improvement recommendation",
@@ -1995,8 +1990,8 @@
         "methodology change proposal",
         "evidence chain",
         "change_unit.updated",
-        "current_snapshot.updated",
-        "doc_sync.completed"
+        "project_state.updated",
+        "goal_verification.completed"
       ],
       "escalates_when": [
         "证据不足",
@@ -2026,9 +2021,9 @@
           "when": "methodology change requires approval"
         },
         {
-          "signal": "doc_sync.completed",
+          "signal": "goal_verification.completed",
           "to": "forge-review",
-          "when": "when changed source docs must be checked for drift"
+          "when": "when implementation needs goal verification"
         },
         {
           "signal": "change_unit.updated",
@@ -2042,7 +2037,7 @@
       "path": "skills/think/SKILL.md",
       "phase": "orchestration",
       "type": "governance",
-      "runtime_role": "knowledge",
+      "role": "knowledge",
       "triggers": [
         "想想",
         "分析一下",

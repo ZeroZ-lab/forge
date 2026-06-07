@@ -1,121 +1,116 @@
 # frontend-module-template.md — 前端模块模板
 
-> frontend-design 专用。产出 frontend/modules/*.md。
-> 目标：100-200 行。每个组件自包含：需求 + 验收条件 + 组件结构 + 数据消费 + 约束。
+> frontend-design 专用。产出 frontend/contract.md。
+> 只放前端特有的决策（FE#）和组件索引。共享数据模型、编排、下游依赖在 feature/contract.md。
+> 目标：~80 行，几乎不变。
 
 ---
 
-# <Component> 模块
+# Frontend Contract — <Feature Name>
 
-> 依赖共享决策 FD#，遵循共享约束。
+> 前端技术合约：FE1-FE5 决策 + 前端约束 + 组件索引。
+> 共享数据模型、编排、下游依赖在 feature/contract.md。
 
-## 入口
+## 前端决策
 
-- 是否项目入口组件？哪个文件引用？
-- 被哪些其他组件 import？
+> 完整技术栈见 project.md，以下只记前端特有的决策。
+> 项目类型为创意编码 / Canvas / WebGL 时，FE3-FE5 替换为 FE3'（渲染引擎）、FE4'（输入处理）、FE5'（动画系统）。
 
-## 需求
+| # | 决策 | 选择 | 详情 |
+|---|------|------|------|
+| FE1 | 框架 | | Next.js / Nuxt / Vite + React / ... |
+| FE2 | 状态管理 | | Zustand / Redux / Jotai / ... |
+| FE3 | 样式方案 | | Tailwind / CSS Modules / Styled Components / ... |
+| FE4 | 数据请求 | | fetch + cache / SWR / TanStack Query / ... |
+| FE5 | 表单方案 | | React Hook Form / Formik / 不需要 |
 
-- US-XX: （用户故事编号）
-- 功能点描述
+### FE1: 框架
 
-## 验收条件
+**选择**：  
+**理由**：  
+**拒绝**：
 
-- AC1: （可测试的验收条件）
-- AC2:
+### FE2: 状态管理
+
+**选择**：  
+**理由**：  
+**拒绝**：  
+**状态分类**：
+- 服务端状态：（来自 API 的数据）
+- 客户端状态：（UI 交互状态）
+
+### FE3: 样式方案
+
+**选择**：  
+**理由**：  
+**拒绝**：  
+**Token 来源**：（DESIGN.md CSS 变量 / 自定义 / 无设计系统）
+
+### FE4: 数据请求
+
+**选择**：  
+**理由**：  
+**拒绝**：  
+**缓存策略**：（内存缓存 / HTTP 缓存 / SWR / 无 API）
+
+### FE5: 表单方案
+
+**选择**：  
+**理由**：  
+**拒绝**：
 
 ---
 
-## 数据模型
+## 组件 Props / 类型
 
-> 本组件专属的类型定义。共享类型在 contract.md。
+> 前端组件的接口定义。跨领域共享的数据模型在 feature/contract.md。
 
 ```typescript
-interface ComponentProps {
-  prop1: type
-  prop2: type
+interface SharedType {
+  field: type
 }
 ```
 
 ---
 
-## 公共接口
+## 前端约束
 
-```
-ComponentName: React.FC<{ prop1: Type1, prop2?: Type2 }>
-  → 功能描述
-  → 渲染什么内容
-```
-
----
-
-## 组件结构
-
-> 组件树伪代码（JSX 结构 + 关键属性 + 条件渲染 + 交互事件）。
-
-```
-ComponentName (position/layout 说明)
-├── ChildA
-│   ├── prop={value}
-│   └── style/token 引用
-├── ChildB (条件渲染: condition)
-│   └── 嵌套结构
-└── 交互事件
-    ├── onClick → handler()
-    ├── onPointerOver → hover 效果
-    └── onKeyDown → 快捷键处理
-```
-
----
-
-## 数据消费
-
-> 从 store / hook / context / API 读取的数据。
-
-```
-from storeName: fieldA, fieldB, actionC()
-from useHookName: { data, loading, error }
-from context: contextValue
-```
-
----
-
-## 内部函数
-
-> 组件内部使用，不导出。
-
-```
-helperFunction(param: Type): ReturnType
-  → 功能描述
-```
-
----
-
-## 依赖关系
-
-> import 哪些模块的哪些函数/组件？
-
-```
-from stores/storeName: fieldA, actionB
-from hooks/useHookName: hookFunction
-from components/OtherComponent: OtherComponent
-from lucide-react: IconName
-```
-
----
-
-## 模块特有约束
-
-> 只放这个组件独有的约束，共享约束在 contract.md。
+> 前端特有的约束。共享约束在 feature/contract.md。
 
 ### 性能
 
-- （React.memo / useMemo / useCallback 策略）
+- （帧率目标 / 首屏加载 / 交互响应时间）
 
-### 交互
+### 可访问性
 
-- （动画时长 / 反馈机制 / 键盘支持）
+- （键盘导航 / aria 属性 / 颜色对比度）
 
-### 样式
+---
 
-- （响应式断点 / 暗色模式 / 组件特有 Token）
+## 技术选型
+
+> 完整技术栈见 project.md，以下为前端补充依赖。
+
+| 层 | 选择 | 版本 | 理由 |
+|---|------|------|------|
+| （前端特有依赖） | | | |
+
+---
+
+## 模块索引
+
+| 模块 | 文件 | 核心组件 | 说明 |
+|------|------|---------|------|
+| | modules/xxx.md | | |
+
+---
+
+## 代码映射
+
+```
+frontend/contract.md ──→ src/types/ (前端类型)
+                          src/stores/ (状态管理)
+
+modules/<name>.md ────→ src/components/<Name>.tsx
+                         src/hooks/use<Name>.ts
+```

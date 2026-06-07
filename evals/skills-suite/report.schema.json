@@ -3,14 +3,32 @@
   "$id": "https://example.invalid/forge/skills-suite-report.schema.json",
   "title": "Forge skills-suite evaluation report",
   "type": "object",
-  "required": ["version", "suite", "run_id", "cases"],
+  "required": [
+    "version",
+    "suite",
+    "run_id",
+    "cases"
+  ],
   "properties": {
-    "version": { "const": 2 },
-    "suite": { "const": "forge" },
-    "run_id": { "type": "string", "minLength": 1 },
-    "model": { "type": "string" },
-    "runner": { "type": "string" },
-    "started_at": { "type": "string" },
+    "version": {
+      "const": 2
+    },
+    "suite": {
+      "const": "forge"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": "string"
+    },
+    "runner": {
+      "type": "string"
+    },
+    "started_at": {
+      "type": "string"
+    },
     "cases": {
       "type": "array",
       "items": {
@@ -21,26 +39,47 @@
           "triggered_skills",
           "artifacts",
           "change_units",
-          "doc_sync",
-          "code_map_entries",
+          "goal_verification",
+          "goal_verification_entries",
           "commands_run",
           "evidence"
         ],
         "properties": {
-          "case_id": { "type": "string" },
-          "status": { "enum": ["pass", "fail", "blocked"] },
-          "triggered_skills": { "type": "array", "items": { "type": "string" } },
+          "case_id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pass",
+              "fail",
+              "blocked"
+            ]
+          },
+          "triggered_skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "artifacts": {
             "type": "array",
             "items": {
               "oneOf": [
-                { "type": "string" },
+                {
+                  "type": "string"
+                },
                 {
                   "type": "object",
-                  "required": ["path"],
+                  "required": [
+                    "path"
+                  ],
                   "properties": {
-                    "path": { "type": "string" },
-                    "action": { "type": "string" }
+                    "path": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string"
+                    }
                   }
                 }
               ]
@@ -50,63 +89,152 @@
             "type": "array",
             "items": {
               "oneOf": [
-                { "type": "string", "pattern": "^docs/change-units/CU-[^/]+\\.md$" },
+                {
+                  "type": "string",
+                  "pattern": "^docs/change-units/CU-[^/]+\\.md$"
+                },
                 {
                   "type": "object",
-                  "required": ["path"],
+                  "required": [
+                    "path"
+                  ],
                   "properties": {
-                    "path": { "type": "string", "pattern": "^docs/change-units/CU-[^/]+\\.md$" },
-                    "type": { "type": "string" },
-                    "status": { "type": "string" }
+                    "path": {
+                      "type": "string",
+                      "pattern": "^docs/change-units/CU-[^/]+\\.md$"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
                   }
                 }
               ]
             }
           },
-          "doc_sync": {
+          "goal_verification": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["target", "status"],
+              "required": [
+                "target",
+                "status"
+              ],
               "properties": {
-                "target": { "type": "string" },
-                "status": { "enum": ["completed", "pending", "blocked"] },
-                "notes": { "type": "string" }
+                "target": {
+                  "type": "string"
+                },
+                "status": {
+                  "enum": [
+                    "completed",
+                    "pending",
+                    "blocked"
+                  ]
+                },
+                "notes": {
+                  "type": "string"
+                }
               }
             }
           },
-          "code_map_entries": {
+          "goal_coverage_entries": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["source", "projects_to"],
+              "required": [
+                "source",
+                "covers"
+              ],
               "properties": {
-                "source": { "type": "string", "pattern": "^docs/" },
-                "projects_to": { "type": "array", "items": { "type": "string" } },
-                "notes": { "type": "string" }
+                "source": {
+                  "type": "string",
+                  "pattern": "^docs/"
+                },
+                "covers": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "notes": {
+                  "type": "string"
+                }
               }
             }
           },
-          "commands_run": { "type": "array", "items": { "type": "string" } },
+          "commands_run": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "decisions": {
             "type": "array",
             "items": {
               "oneOf": [
-                { "type": "string" },
+                {
+                  "type": "string"
+                },
                 {
                   "type": "object",
-                  "required": ["id"],
+                  "required": [
+                    "id"
+                  ],
                   "properties": {
-                    "id": { "type": "string" },
-                    "choice": { "type": "string" }
+                    "id": {
+                      "type": "string"
+                    },
+                    "choice": {
+                      "type": "string"
+                    }
                   }
                 }
               ]
             }
           },
-          "forbidden_behaviors": { "type": "array", "items": { "type": "string" } },
-          "evidence": { "type": "array", "items": { "type": "string" } },
-          "notes": { "type": "string" }
+          "forbidden_behaviors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "user_interventions": {
+                "type": "number",
+                "minimum": 0
+              },
+              "turns": {
+                "type": "number",
+                "minimum": 0
+              },
+              "changed_files": {
+                "type": "number",
+                "minimum": 0
+              },
+              "elapsed_ms": {
+                "type": "number",
+                "minimum": 0
+              },
+              "tokens": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          "notes": {
+            "type": "string"
+          }
         }
       }
     }

@@ -124,7 +124,7 @@ AI 的行为：
 ```markdown
 # my-project — AI 行为指令
 
-> 从 project.md + DESIGN.md 投影生成，不要手写。
+> 从 project.md + DESIGN.md 实现生成，不要手写。
 
 ## 技术栈（来自 project.md）
 - API: Hono + TypeScript

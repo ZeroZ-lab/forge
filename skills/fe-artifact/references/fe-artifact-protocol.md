@@ -56,9 +56,9 @@
 - 哪些设计或接口来自文档，哪些是合理推导。
 - 哪些不确定点需要用户确认。
 
-## 投影规则
+## 输出规则
 
-| 文档来源 | 代码目标 |
+| 文档来源 | 实现目标 |
 |----------|----------|
 | DESIGN.md tokens | CSS variables、theme、component variants |
 | frontend/contract.md | 页面结构、路由、模块边界 |

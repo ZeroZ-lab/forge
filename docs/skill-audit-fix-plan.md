@@ -113,20 +113,20 @@ signal_vocabulary:
     consumed_by: [forge-detail]
 
   # 详设阶段
-  - id: api_design.api_setpoint
-    name: API setpoint
+  - id: api_design.api_goal
+    name: API goal
     produced_by: forge-api-design
     consumed_by: [forge-db-design, forge-frontend-design, forge-plan]
   - id: api_design.shared_data_model
     name: shared data model
     produced_by: forge-api-design
     consumed_by: [forge-db-design]
-  - id: db_design.database_setpoint
-    name: database setpoint
+  - id: db_design.database_goal
+    name: database goal
     produced_by: forge-db-design
     consumed_by: [forge-plan]
-  - id: frontend_design.frontend_setpoint
-    name: frontend setpoint
+  - id: frontend_design.frontend_goal
+    name: frontend goal
     produced_by: forge-frontend-design
     consumed_by: [forge-plan]
   - id: detail.feature_contract
@@ -159,8 +159,8 @@ signal_vocabulary:
     name: test strategy
     produced_by: forge-test-strategy
     consumed_by: [forge-test-cases]
-  - id: test_cases.test_case_setpoint
-    name: test case setpoint
+  - id: test_cases.test_case_goal
+    name: test case goal
     produced_by: forge-test-cases
     consumed_by: [forge-codegen]
 
@@ -434,7 +434,7 @@ forge-detail:
 - 无法判断是否有前端 → 暂停询问（不默认生成前端设计系统）
 - 用户跳过某 phase → 记录跳过原因 + 标注下游可能缺失的输入
 - 三个 phase 全跳过 → 确认是否真的需要 init，还是只需要补某个文件
-- 生成 AGENTS.md 超过 100 行 → 强制精简（project.md 是源头，AGENTS.md 是投影）
+- 生成 AGENTS.md 超过 100 行 → 强制精简（project.md 是源头，AGENTS.md 是实现）
 ```
 
 **修复 3：补充「验证清单」**
@@ -445,7 +445,7 @@ forge-detail:
 ## 验证清单
 - [ ] project.md 是否包含业务目标（用户/指标/约束）+ 技术决策（架构/选型/部署）？
 - [ ] DESIGN.md 是否包含三层 Token（primitive/semantic/component）？
-- [ ] AGENTS.md 是否从 project.md + DESIGN.md 投影（不含独立决策）？
+- [ ] AGENTS.md 是否从 project.md + DESIGN.md 实现（不含独立决策）？
 - [ ] CLAUDE.md 是否 < 20 行且指向 AGENTS.md？
 - [ ] 四个文件之间是否无矛盾（技术选型与项目类型匹配、设计系统与产品气质匹配）？
 - [ ] Feature 索引是否为空表（不预填）？
@@ -467,9 +467,9 @@ forge-detail:
 
 ```markdown
 ## 方法论
-init 是编排器，不做独立决策。方法论 = 读状态 → 判断跳过 → 加载子 skill → 投影生成。
+init 是编排器，不做独立决策。方法论 = 读状态 → 判断跳过 → 加载子 skill → 实现生成。
 每个子 skill 有自己的方法论（business-alignment 的承诺四要素、technical-design 的约束→选项→权衡→验证、fe-system 的三层 Token）。
-init 的方法论是：**不替代子 skill 做决策，只负责状态判断和投影组装**。
+init 的方法论是：**不替代子 skill 做决策，只负责状态判断和实现组装**。
 ```
 
 **预计行数变化**：+35 行 → 177 行（安全）
@@ -673,9 +673,9 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 - 前端存在性不确定 → 暂停询问（不默认加载 frontend-design）
 - PRD 缺失 → 不直接写 contract，先要求补需求或明确走最小 detail
 - 由同类 L1 偏差触发 → 先复查 contract 盲区，再决定是否改代码
-- L2 setpoint 漂移 → 中止详设，列出矛盾点等用户决策
+- L2 goal 偏移 → 中止详设，列出矛盾点等用户决策
 - feature/contract.md 的 FD# 与 project.md 的 PD# 编号冲突 → 重新分配编号
-- 下游漂移影响范围不清 → 不自动级联修改，先输出漂移报告
+- 下游偏移影响范围不清 → 不自动级联修改，先输出偏移报告
 ```
 
 **修复 3：Phase 0 职责显式声明**
@@ -696,7 +696,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 - [ ] 所有加载的领域 skill 产出是否完整（API1-API7 / DB1-DB5 / FE1-FE5）？
 - [ ] FD# 与 PD# / API# / DB# / FE# 是否无编号冲突？
 - [ ] project.md Feature 索引是否已同步？
-- [ ] 漂移检测是否已完成？
+- [ ] 偏移检测是否已完成？
 - [ ] 所有 modules/*.md 是否包含模板必需节？
 ```
 
@@ -715,9 +715,9 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 ```markdown
 ## 运行时信号
 - 输入：`define.acceptance_criteria` + `technical_design.architecture_decisions`
-- 输出：`api_design.api_setpoint` + `api_design.shared_data_model`
+- 输出：`api_design.api_goal` + `api_design.shared_data_model`
 - 路由：
-  - `api_design.api_setpoint` → forge-db-design（数据模型约束）+ forge-frontend-design（接口消费）
+  - `api_design.api_goal` → forge-db-design（数据模型约束）+ forge-frontend-design（接口消费）
   - `api_design.shared_data_model` → forge-db-design（存储模型）
   - 资源模型无法确认 → 升级到用户决策
 - 升级：资源模型无法确认 · 权限或幂等策略冲突
@@ -942,7 +942,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 
 ```markdown
 ## 红旗清单
-- 缺 contract/modules → 不生成测试策略，先回到 detail 补 setpoint
+- 缺 contract/modules → 不生成测试策略，先回到 detail 补 goal
 - 缺验收条件或验收条件不可测试 → 回到 define/detail，不凭空编测试
 - 测试策略和测试用例冲突 → 暂停并列出冲突，不让 codegen 消费矛盾输入
 - plan 已推导 test-cases.md → Phase 2 只补遗漏场景，不重复推导
@@ -1047,7 +1047,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 
 ```markdown
 - 输入：`define.acceptance_criteria` + `test_strategy.test_strategy`
-- 输出：`test_cases.test_case_setpoint`
+- 输出：`test_cases.test_case_goal`
 ```
 
 **预计行数变化**：+8 行 → 203 行（需压缩 3 行）
@@ -1198,7 +1198,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 - 建议和已有方法论冲突 → 强制检查兼容性（"新建议和已有不变原则矛盾吗？"）
 - 之前因同类偏差改过 skill 但仍出现 → 回滚修改并重新归因（"上次归因可能错了"）
 - 建议会导致 skill 超 200 行 → 考虑提取 protocol 文件（"加内容前先想怎么压缩"）
-- 偏差归因不一致（review 说是 skill 问题，实际是文档漂移）→ 交叉验证归因
+- 偏差归因不一致（review 说是 skill 问题，实际是文档偏移）→ 交叉验证归因
 ```
 
 **修复 3：补充闭环路由说明**

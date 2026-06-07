@@ -24,7 +24,7 @@ when_to_use: Use when the user says run the test stage, full testing plan, coord
 
 ## 分支与恢复
 
-- 缺 contract/modules → 不生成测试策略，先回到 detail 补 setpoint。
+- 缺 contract/modules → 不生成测试策略，先回到 detail 补合约。
 - 缺验收条件或验收条件不可测试 → 回到 define/detail，不凭空编测试。
 - 已有 testing/contract.md → Phase 1 只更新缺口和冲突。
 - plan 已推导 testing/test-cases.md → Phase 2 只补遗漏场景。
@@ -74,7 +74,7 @@ docs/features/<feature>/
 完成后追加 `docs/timeline.md` + feature `changelog.md`（一条汇总记录）。`test-strategy` 和 `test-cases` 作为子阶段时不单独追加历史。超 100 行时归档。
 
 ## 红旗清单
-- 缺 contract/modules → 不生成测试策略，先回到 detail 补 setpoint
+- 缺 contract/modules → 不生成测试策略，先回到 detail 补合约
 - 缺验收条件或验收条件不可测试 → 回到 define/detail，不凭空编测试
 - 测试策略和测试用例冲突 → 暂停并列出冲突，不让 codegen 消费矛盾输入
 - plan 已推导 test-cases.md → Phase 2 只补遗漏场景，不重复推导
@@ -115,10 +115,3 @@ docs/features/<feature>/
   自然语言       — 直接说"生成代码"进入构建阶段
 ```
 
-## Change Unit / Rebuild Control
-
-- 测试阶段把策略、用例和验证证据回写当前 CU。
-- bugfix 必须沉淀 regression test，或在 CU 中明确说明为什么不需要。
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

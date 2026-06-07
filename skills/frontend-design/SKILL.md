@@ -110,7 +110,7 @@ src/
 ```
 ## 模板
 使用前端专用模板：
-- `${CLAUDE_SKILL_DIR}/../shared/frontend-contract-template.md` — frontend/contract.md 结构（FE1-FE5 决策 + 前端约束 + 组件索引）
+- `${CLAUDE_SKILL_DIR}/../shared/frontend-goal-template.md` — frontend/goal.md 结构（FE1-FE5 决策 + 前端约束 + 组件索引）
 - `${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md` — frontend/modules/*.md 结构（组件结构 + 数据消费 + 依赖）
 - `${CLAUDE_SKILL_DIR}/../shared/changelog-template.md` — changelog.md 结构
 ## 与 project.md 的关系
@@ -128,8 +128,8 @@ src/
 - api/contract.md 缺失 → 要求先完成 API 详设，或标注"接口待定义"
 
 ## 运行时信号
-- 输入：API setpoint、design tokens、interaction spec
-- 输出：frontend setpoint、component modules
+- 输入：API contract、design tokens、interaction spec
+- 输出：frontend contract、component modules
 - 路由：详见 `registry.yaml` 的 `forge-frontend-design` 节点；本节只保留人类可读摘要。
 - 升级：API 合约缺失 · DESIGN.md 缺失 · 状态方案冲突
 ## 何时不使用
@@ -174,10 +174,3 @@ src/
   plan 阶段  — 进入任务分解（垂直切片 + 依赖图 + 测试推导）
 ```
 
-## Change Unit / Rebuild Control
-
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。

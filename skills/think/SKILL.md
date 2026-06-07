@@ -41,7 +41,7 @@ think：深度分析 → 输出 docs/thinking/*.md
 
 ## 运行时角色
 
-**思考增强器**——不产生 setpoint，不执行投影，不检测偏差。它提升的是 setpoint 的质量：让决策的前提更扎实、推理更严密、盲区更少。
+**思考增强器**——不直接修改文件，不检测偏差。它提升的是决策的质量：让决策的前提更扎实、推理更严密、盲区更少。
 
 ## 三种模式
 
@@ -282,10 +282,3 @@ think 完成后，将结论摘要注入回写目标文档。这是 think 价值�
   /forge-define — 如果发现需求本身需要重新审视
 ```
 
-## Change Unit / Rebuild Control
-
-- 深度思考产物若产生决策，必须回写当前 CU 或正式 fact source。
-- 最终决策不得只留在 `docs/thinking/*.md`；thinking 文档只保留推理记录。
-- 本 skill 产生或改变工程事实时，创建/更新 `docs/change-units/CU-*.md`，模板见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`。
-- 完成前执行 `${CLAUDE_SKILL_DIR}/../shared/doc-sync-checklist.md`；Current Snapshot / Rebuild Control 模板见 shared 的 `current-state-template.md`、`rebuild-guide-template.md`、`code-map-template.md`。
-- `changelog.md` 和 `docs/timeline.md` 只做摘要和 CU 链接，不复制完整事件记录。
