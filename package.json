@@ -1,7 +1,7 @@
 {
   "name": "forge",
-  "version": "0.28.1",
-  "description": "文档是目标约束。目标是什么、边界在哪、怎么算完成。",
+  "version": "0.28.2",
+  "description": "\u6587\u6863\u662f\u76ee\u6807\u7ea6\u675f\u3002\u76ee\u6807\u662f\u4ec0\u4e48\u3001\u8fb9\u754c\u5728\u54ea\u3001\u600e\u4e48\u7b97\u5b8c\u6210\u3002",
   "scripts": {
     "eval:skills": "node scripts/evaluate-skills.mjs",
     "eval:skills:run": "node scripts/run-skills-benchmark.mjs",
