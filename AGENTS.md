@@ -138,7 +138,7 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 
 编排 skill：`init`、`design`、`detail`、`test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。`init` 是项目级引导（技术栈选型 + 设计语言基线），`design` 是 feature 级设计阶段（交互流程 + 组件增量），两者复用 `technical-design`、`fe-system` 等子 skill 但粒度不同。`think` 不是生命周期阶段，而是可在任意阶段调用的思考增强层。
 
-> 每个 skill 的完整方法论、AI 角色、边界声明和引导技巧见 `skills/*/SKILL.md`。
+> 每个 skill 的完整方法论、AI 角色、边界声明和引导技巧见 `plugins/forge/skills/*/SKILL.md`。
 
 ### 阶段间的产物传递
 
@@ -208,7 +208,7 @@ my-project/
 
 **Skill 里不写具体技术。** 具体技术由模型搜索最新方案后推荐，人类确认后写入产物文档。这样 skill 不会因为技术更替而过期。
 
-**决策点用结构化选择呈现。** 所有 skill 的决策点（`### XX: 主题`）在选项可枚举时，使用 `AskUserQuestion` 工具呈现 2-4 个选项让用户点选，而非自然语言提问。开放性问题（场景描述、发散探索）用自然语言。详见 `skills/shared/concepts/decision-presentation.md`。
+**决策点用结构化选择呈现。** 所有 skill 的决策点（`### XX: 主题`）在选项可枚举时，使用 `AskUserQuestion` 工具呈现 2-4 个选项让用户点选，而非自然语言提问。开放性问题（场景描述、发散探索）用自然语言。详见 `plugins/forge/skills/shared/concepts/decision-presentation.md`。
 
 ---
 
@@ -435,7 +435,7 @@ Feature B 的 detail 需要 Feature A 的 goal.md
 
 ### 模板
 
-使用 `skills/shared/status-template.md` 作为产出结构参考。
+使用 `plugins/forge/skills/shared/status-template.md` 作为产出结构参考。
 
 ---
 
@@ -494,36 +494,37 @@ init（编排器）          →  加载子 skill + 模板 → 生成项目文�
 forge/
 ├── AGENTS.md                        # 本文件
 ├── references/                      # 补充文档（使用示例、验证教训）
-├── skills/                          # 23 个决策协议（flat list）
-│   ├── brainstorm/            # ⓪ 探索
-│   ├── init/                  # 初始化编排（+ agents/claude 模板）
-│   ├── business-alignment/    # ① 业务对齐
-│   ├── define/                # ① 需求文档
-│   ├── research/              # ①.5 技术探索（算法猎手）
-│   ├── design/                # 设计编排
-│   ├── interaction-design/    # ② 交互设计
-│   ├── fe-system/             # ② 设计系统落地（含原 visual-design）
-│   ├── technical-design/      # ② 技术设计
-│   ├── detail/                # 详设编排
-│   ├── api-design/            # ③ API 详设
-│   ├── frontend-design/       # ③ 前端详设
-│   ├── db-design/             # ③ 数据库详设
-│   ├── plan/                  # ④ 任务分解
-│   ├── codegen/               # ⑤ 代码生成
-│   ├── fe-artifact/           # ⑤ 前端代码生成（codegen 子协议）
-│   ├── test/                  # 测试编排
-│   ├── test-strategy/         # ⑥ 测试策略
-│   ├── test-cases/            # ⑥ 测试用例
-│   ├── fe-accept/             # ⑥ 前端质量验收
-│   ├── review/                # ⑥.5 subagent 独立审查（文档审查+代码审查）
-│   ├── deploy/                # ⑦ 部署发布
-│   ├── think/                 # 思考增强
-│   └── shared/                      # 共享模板和概念
-├── .claude-plugin/plugin.json       # Claude Code 插件
-└── .codex-plugin/plugin.json        # Codex CLI 插件
+├── plugins/forge/                   # 插件目录（唯一源）
+│   ├── .claude-plugin/plugin.json   # Claude Code 插件
+│   ├── .codex-plugin/plugin.json    # Codex CLI 插件
+│   └── skills/                      # 23 个决策协议（flat list）
+│       ├── brainstorm/            # ⓪ 探索
+│       ├── init/                  # 初始化编排（+ agents/claude 模板）
+│       ├── business-alignment/    # ① 业务对齐
+│       ├── define/                # ① 需求文档
+│       ├── research/              # ①.5 技术探索（算法猎手）
+│       ├── design/                # 设计编排
+│       ├── interaction-design/    # ② 交互设计
+│       ├── fe-system/             # ② 设计系统落地（含原 visual-design）
+│       ├── technical-design/      # ② 技术设计
+│       ├── detail/                # 详设编排
+│       ├── api-design/            # ③ API 详设
+│       ├── frontend-design/       # ③ 前端详设
+│       ├── db-design/             # ③ 数据库详设
+│       ├── plan/                  # ④ 任务分解
+│       ├── codegen/               # ⑤ 代码生成
+│       ├── fe-artifact/           # ⑤ 前端代码生成（codegen 子协议）
+│       ├── test/                  # 测试编排
+│       ├── test-strategy/         # ⑥ 测试策略
+│       ├── test-cases/            # ⑥ 测试用例
+│       ├── fe-accept/             # ⑥ 前端质量验收
+│       ├── review/                # ⑥.5 subagent 独立审查（文档审查+代码审查）
+│       ├── deploy/                # ⑦ 部署发布
+│       ├── think/                 # 思考增强
+│       └── shared/                      # 共享模板和概念
 ```
 
-> **Flat list 纪律**：Claude Code 只发现 `skills/` 一级子目录的 SKILL.md，不支持嵌套。Skill 目录名全局唯一，用命名前缀区分阶段归属。
+> **Flat list 纪律**：Claude Code 只发现 `plugins/forge/skills/` 一级子目录的 SKILL.md，不支持嵌套。Skill 目录名全局唯一，用命名前缀区分阶段归属。
 
 ### 版本同步纪律
 
@@ -532,8 +533,8 @@ forge/
 | 文件 | 用途 |
 |------|------|
 | `package.json` | npm 包版本 |
-| `.claude-plugin/plugin.json` | Claude Code 插件版本（`/plugin` 命令显示） |
-| `.codex-plugin/plugin.json` | Codex CLI 插件版本 |
+| `plugins/forge/.claude-plugin/plugin.json` | Claude Code 插件版本（`/plugin` 命令显示） |
+| `plugins/forge/.codex-plugin/plugin.json` | Codex CLI 插件版本 |
 
 **规则**：更新版本号时，三个文件同步改，commit message 用 `vX.Y.Z:` 前缀。漏改任何一个 = 用户看到的版本号和实际不一致。
 

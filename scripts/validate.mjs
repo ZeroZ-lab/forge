@@ -65,8 +65,8 @@ function referencedMarkdownFiles(skillName, content) {
   const matches = content.matchAll(/(?:^|[\s`(])((?:forge-[\w-]+\/)?references\/[\w.-]+\.md)\b/gm);
   return [...matches].map((match) => {
     const referencePath = match[1];
-    if (referencePath.startsWith('forge-')) return `skills/${referencePath}`;
-    return `skills/${skillName}/${referencePath}`;
+    if (referencePath.startsWith('forge-')) return `plugins/forge/skills/${referencePath}`;
+    return `plugins/forge/skills/${skillName}/${referencePath}`;
   });
 }
 
@@ -79,9 +79,9 @@ function assertArrayOfStrings(value, label) {
 }
 
 const packageJson = json('package.json');
-const claudePlugin = json('.claude-plugin/plugin.json');
-const codexPlugin = json('.codex-plugin/plugin.json');
-const claudeMarketplace = json('.claude-plugin/marketplace.json');
+const claudePlugin = json('plugins/forge/.claude-plugin/plugin.json');
+const codexPlugin = json('plugins/forge/.codex-plugin/plugin.json');
+const claudeMarketplace = json('plugins/forge/.claude-plugin/marketplace.json');
 const codexMarketplace = json('.agents/plugins/marketplace.json');
 const runtimeRegistry = json('registry.yaml');
 
@@ -96,27 +96,14 @@ assert(packageJson.scripts?.test === 'node --test', 'package.json: missing scrip
 assert(packageJson.scripts?.['eval:skills'] === 'node scripts/evaluate-skills.mjs', 'package.json: missing scripts.eval:skills');
 assert(packageJson.scripts?.['eval:skills:run'] === 'node scripts/run-skills-benchmark.mjs', 'package.json: missing scripts.eval:skills:run');
 assert(packageJson.scripts?.['plugin:install:local'] === 'node scripts/install-local-codex-plugin.mjs', 'package.json: missing scripts.plugin:install:local');
-assert(packageJson.scripts?.['plugin:sync'] === 'node scripts/sync-packaged-plugin.mjs', 'package.json: missing scripts.plugin:sync');
-assert(codexPlugin.skills === './skills', '.codex-plugin/plugin.json: skills must point to ./skills');
-assert(exists('plugins/forge/.codex-plugin/plugin.json'), 'plugins/forge/.codex-plugin/plugin.json: missing');
-assert(exists('plugins/forge/.claude-plugin/plugin.json'), 'plugins/forge/.claude-plugin/plugin.json: missing');
+assert(codexPlugin.skills === './skills', 'plugins/forge/.codex-plugin/plugin.json: skills must point to ./skills');
 assert(exists('plugins/forge/skills'), 'plugins/forge/skills: missing');
-assert(exists('scripts/sync-packaged-plugin.mjs'), 'scripts/sync-packaged-plugin.mjs: missing');
 assert(exists('scripts/evaluate-skills/index.mjs'), 'scripts/evaluate-skills/index.mjs: missing');
 assert(
   codexMarketplace.plugins?.find((plugin) => plugin.name === 'forge')?.source?.path === './plugins/forge',
   '.agents/plugins/marketplace.json: forge source.path must point to ./plugins/forge',
 );
-const packagedCodexPlugin = json('plugins/forge/.codex-plugin/plugin.json');
-const packagedClaudePlugin = json('plugins/forge/.claude-plugin/plugin.json');
-assert(packagedCodexPlugin.skills === './skills', 'plugins/forge/.codex-plugin/plugin.json: skills must point to ./skills');
-const packagedClaudeSkills = Array.isArray(packagedClaudePlugin.skills) ? packagedClaudePlugin.skills : [];
-assert(
-  packagedClaudeSkills.every((skillPath) => typeof skillPath === 'string' && skillPath.startsWith('./skills/')),
-  'plugins/forge/.claude-plugin/plugin.json: skills must point to ./skills/*',
-);
-
-const skillsDir = path.join(root, 'skills');
+const skillsDir = path.join(root, 'plugins/forge/skills');
 const skillDirs = fs
   .readdirSync(skillsDir, { withFileTypes: true })
   .filter((entry) => entry.isDirectory() && entry.name !== 'shared')
@@ -131,10 +118,10 @@ const expectedSkillPaths = skillDirs.map((skillName) => `./skills/${skillName}`)
 const manifestSkillPaths = Array.isArray(claudePlugin.skills) ? [...claudePlugin.skills].sort() : [];
 const expectedRegistryNames = skillDirs.map((skillName) => `forge-${skillName}`).sort();
 
-assert(Array.isArray(claudePlugin.skills), '.claude-plugin/plugin.json: skills must explicitly enumerate installed skills');
+assert(Array.isArray(claudePlugin.skills), 'plugins/forge/.claude-plugin/plugin.json: skills must explicitly enumerate installed skills');
 assert(
   JSON.stringify(manifestSkillPaths) === JSON.stringify(expectedSkillPaths),
-  '.claude-plugin/plugin.json: skills list must match skills/* exactly',
+  'plugins/forge/.claude-plugin/plugin.json: skills list must match skills/* exactly',
 );
 
 assert(runtimeRegistry.version === 1, 'registry.yaml: version must be 1');
@@ -145,7 +132,7 @@ const registryNames = Array.isArray(runtimeRegistry.skills)
   : [];
 assert(
   JSON.stringify(registryNames) === JSON.stringify(expectedRegistryNames),
-  'registry.yaml: skills must cover skills/* exactly',
+  'registry.yaml: skills must cover plugins/forge/skills/* exactly',
 );
 
 const allowedRuntimeRoles = new Set([
@@ -160,10 +147,10 @@ const allowedRuntimeRoles = new Set([
 ]);
 
 const allowedRegistryPhases = new Set([
+  'init',
   'explore',
   'define',
   'design',
-  'orchestration',
   'detail',
   'plan',
   'planning',
@@ -171,6 +158,7 @@ const allowedRegistryPhases = new Set([
   'test',
   'review',
   'deploy',
+  'cross-cutting',
 ]);
 
 const allowedRegistryTypes = new Set(['domain', 'orchestrator', 'execution', 'governance']);
@@ -178,7 +166,7 @@ const allowedExternalTargets = new Set(['human decision', 'runtime release execu
 
 for (const skill of runtimeRegistry.skills ?? []) {
   assert(typeof skill.name === 'string' && skill.name.startsWith('forge-'), 'registry.yaml: each skill needs a forge-* name');
-  const expectedPath = `skills/${skill.name.replace(/^forge-/, '')}/SKILL.md`;
+  const expectedPath = `plugins/forge/skills/${skill.name.replace(/^forge-/, '')}/SKILL.md`;
   assert(skill.path === expectedPath, `registry.yaml: ${skill.name} path must point to ${expectedPath}`);
   assert(exists(skill.path), `registry.yaml: missing path for ${skill.name}: ${skill.path}`);
   assert(allowedRegistryPhases.has(skill.phase), `registry.yaml: ${skill.name} invalid phase "${skill.phase}"`);
@@ -258,7 +246,7 @@ for (const role of ['orchestrator', 'goal-refiner', 'executor', 'verifier', 'gov
 }
 
 for (const skillName of skillDirs) {
-  const skillPath = `skills/${skillName}/SKILL.md`;
+  const skillPath = `plugins/forge/skills/${skillName}/SKILL.md`;
   assert(exists(skillPath), `${skillPath}: missing`);
   if (!exists(skillPath)) continue;
 
@@ -312,17 +300,17 @@ for (const skillName of expectedRegistryNames) {
 }
 
 const sharedKnowledgeFiles = [
-  'skills/shared/concepts/control-loop.md',
-  'skills/shared/concepts/document-as-goal.md',
-  'skills/shared/concepts/execution-discipline.md',
-  'skills/shared/rubrics/skill-quality.md',
-  'skills/shared/rubrics/goal-quality.md',
-  'skills/shared/rubrics/implementation-quality.md',
-  'skills/shared/red-flags/goal-drift.md',
-  'skills/shared/red-flags/scope-creep.md',
-  'skills/shared/red-flags/unsafe-implementation.md',
-  'skills/shared/change-unit-template.md',
-  'skills/shared/goal-template.md',
+  'plugins/forge/skills/shared/concepts/control-loop.md',
+  'plugins/forge/skills/shared/concepts/document-as-goal.md',
+  'plugins/forge/skills/shared/concepts/execution-discipline.md',
+  'plugins/forge/skills/shared/rubrics/skill-quality.md',
+  'plugins/forge/skills/shared/rubrics/goal-quality.md',
+  'plugins/forge/skills/shared/rubrics/implementation-quality.md',
+  'plugins/forge/skills/shared/red-flags/goal-drift.md',
+  'plugins/forge/skills/shared/red-flags/scope-creep.md',
+  'plugins/forge/skills/shared/red-flags/unsafe-implementation.md',
+  'plugins/forge/skills/shared/change-unit-template.md',
+  'plugins/forge/skills/shared/goal-template.md',
 ];
 
 for (const file of sharedKnowledgeFiles) {
@@ -337,7 +325,6 @@ assert(exists('scripts/evaluate-skills.mjs'), 'scripts/evaluate-skills.mjs: miss
 assert(exists('scripts/evaluate-skills/index.mjs'), 'scripts/evaluate-skills/index.mjs: missing');
 assert(exists('scripts/run-skills-benchmark.mjs'), 'scripts/run-skills-benchmark.mjs: missing');
 assert(exists('scripts/install-local-codex-plugin.mjs'), 'scripts/install-local-codex-plugin.mjs: missing');
-assert(exists('scripts/sync-packaged-plugin.mjs'), 'scripts/sync-packaged-plugin.mjs: missing');
 assert(exists('evals/skills-suite/README.md'), 'evals/skills-suite/README.md: missing');
 assert(exists('evals/skills-suite/report.schema.json'), 'evals/skills-suite/report.schema.json: missing');
 assert(skillsEvalManifest.version === 2, 'evals/skills-suite/manifest.json: version must be 2');
@@ -400,7 +387,7 @@ for (const skillName of expectedRegistryNames) {
 }
 
 for (const orchestrator of ['forge-init', 'forge-design', 'forge-detail', 'forge-test']) {
-  const skillPath = registryByName[orchestrator]?.path ?? `skills/${orchestrator.replace(/^forge-/, '')}/SKILL.md`;
+  const skillPath = registryByName[orchestrator]?.path ?? `plugins/forge/skills/${orchestrator.replace(/^forge-/, '')}/SKILL.md`;
   assertIncludes(skillPath, ['## 运行时角色', '## 输入状态读取', '## 分支与恢复', '## 运行时信号']);
 }
 
@@ -415,41 +402,41 @@ assert(
 
 const requiredProtocols = {
   'forge-fe-system': {
-    path: 'skills/fe-system/references/fe-system-protocol.md',
+    path: 'plugins/forge/skills/fe-system/references/fe-system-protocol.md',
     markers: ['# Fe System Protocol', '## Token 结构', '### Primitive', '### Semantic', '### Component'],
   },
   'forge-fe-artifact': {
-    path: 'skills/fe-artifact/references/fe-artifact-protocol.md',
+    path: 'plugins/forge/skills/fe-artifact/references/fe-artifact-protocol.md',
     markers: ['# Fe Artifact Protocol', '## 五层翻译详解', '### 1. 意图层', '### 5. 适配层'],
   },
   'forge-fe-accept': {
-    path: 'skills/fe-accept/references/fe-accept-protocol.md',
+    path: 'plugins/forge/skills/fe-accept/references/fe-accept-protocol.md',
     markers: ['# Fe Accept Protocol', '## 四维验收', '## 报告格式', '## 执行证据'],
   },
   'forge-review': {
-    path: 'skills/review/references/review-protocol.md',
+    path: 'plugins/forge/skills/review/references/review-protocol.md',
     markers: ['# Review Protocol', '## 文档审查维度', '## 代码审查维度', '## 偏差归因维度', '## 报告格式'],
   },
 };
 
 for (const [skillName, protocol] of Object.entries(requiredProtocols)) {
-  const skillPath = registryByName[skillName]?.path ?? `skills/${skillName.replace(/^forge-/, '')}/SKILL.md`;
-  const referenceName = protocol.path.replace(`skills/${skillName.replace(/^forge-/, '')}/`, '');
+  const skillPath = registryByName[skillName]?.path ?? `plugins/forge/skills/${skillName.replace(/^forge-/, '')}/SKILL.md`;
+  const referenceName = protocol.path.replace(`plugins/forge/skills/${skillName.replace(/^forge-/, '')}/`, '');
   assert(read(skillPath).includes(referenceName), `${skillPath}: must reference ${referenceName}`);
   assert(exists(protocol.path), `${protocol.path}: missing`);
   if (exists(protocol.path)) assertIncludes(protocol.path, protocol.markers);
 }
 
-assertIncludes('skills/shared/module-template.md', ['## 入口', '## 公共接口', '## 内部函数', '## 依赖关系']);
+assertIncludes('plugins/forge/skills/shared/module-template.md', ['## 入口', '## 公共接口', '## 内部函数', '## 依赖关系']);
 assert(
-  lineCount(read('skills/shared/module-template.md')) <= 200,
-  'skills/shared/module-template.md: exceeds 200 lines',
+  lineCount(read('plugins/forge/skills/shared/module-template.md')) <= 200,
+  'plugins/forge/skills/shared/module-template.md: exceeds 200 lines',
 );
 assert(
-  lineCount(read('skills/shared/goal-template.md')) <= 200,
-  'skills/shared/goal-template.md: exceeds 200 lines',
+  lineCount(read('plugins/forge/skills/shared/goal-template.md')) <= 200,
+  'plugins/forge/skills/shared/goal-template.md: exceeds 200 lines',
 );
-assertIncludes('skills/shared/goal-template.md', [
+assertIncludes('plugins/forge/skills/shared/goal-template.md', [
   '## 目标',
   '## 边界',
   '## 完成标准',
@@ -459,7 +446,7 @@ assertIncludes('skills/shared/goal-template.md', [
 const marketplaceDescription = claudeMarketplace.plugins?.find((plugin) => plugin.name === 'forge')?.description ?? '';
 assert(
   marketplaceDescription.includes(`${skillCount} 个决策协议 skill`),
-  `.claude-plugin/marketplace.json: forge description must mention "${skillCount} 个决策协议 skill"`,
+  `plugins/forge/.claude-plugin/marketplace.json: forge description must mention "${skillCount} 个决策协议 skill"`,
 );
 assert(read('README.md').includes(`7 阶段 × ${skillCount} 个 Skill`), `README.md: must document 7 阶段 × ${skillCount} 个 Skill`);
 assert(read('README.md').includes('registry.yaml'), 'README.md: must document registry.yaml runtime control surface');
@@ -469,32 +456,13 @@ assert(read('AGENTS.md').includes('信号传递'), 'AGENTS.md: must document sig
 assert(read('AGENTS.md').includes('registry.yaml'), 'AGENTS.md: must document registry.yaml runtime control surface');
 assert(read('AGENTS.md').includes('docs/goal-verification.md'), 'AGENTS.md: must document runtime control loop doc');
 assertIncludes('AGENTS.md', ['### AI 执行纪律', '最小变更', '不引入未要求的抽象']);
-assertIncludes('skills/init/references/agents-template.md', ['## AI 执行纪律', '需要同步的目标文件', '执行可用验证']);
-assertIncludes('skills/shared/concepts/execution-discipline.md', [
+assertIncludes('plugins/forge/skills/init/references/agents-template.md', ['## AI 执行纪律', '需要同步的目标文件', '执行可用验证']);
+assertIncludes('plugins/forge/skills/shared/concepts/execution-discipline.md', [
   '# Execution discipline',
   '## Runtime meaning',
   '## Decision boundaries',
   '## Inheritance rule',
 ]);
-
-function assertSameFile(left, right) {
-  assert(exists(left), `${left}: missing`);
-  assert(exists(right), `${right}: missing`);
-  if (!exists(left) || !exists(right)) return;
-  assert(read(left) === read(right), `${right}: packaged plugin drift; run node scripts/sync-packaged-plugin.mjs`);
-}
-
-assertSameFile('.codex-plugin/plugin.json', 'plugins/forge/.codex-plugin/plugin.json');
-assertSameFile('.claude-plugin/plugin.json', 'plugins/forge/.claude-plugin/plugin.json');
-
-for (const file of filesUnder('skills')) {
-  assertSameFile(file, `plugins/forge/${file}`);
-}
-
-for (const file of filesUnder('plugins/forge/skills')) {
-  const rootSkillFile = file.replace(/^plugins\/forge\//, '');
-  assert(exists(rootSkillFile), `${file}: packaged skill has no root counterpart`);
-}
 
 const stalePatterns = [
   ['AGENTS.md', /BA1-BA5/],
@@ -525,32 +493,32 @@ for (const file of removedHookFiles) {
   assert(!exists(file), `${file}: hooks were removed; do not reintroduce hook config without a new maintenance plan`);
 }
 
-const detailSkillPath = registryByName['forge-detail']?.path ?? 'skills/detail/SKILL.md';
+const detailSkillPath = registryByName['forge-detail']?.path ?? 'plugins/forge/skills/detail/SKILL.md';
 const detailSkill = read(detailSkillPath);
 const apiPhase = indexOfOrFail(detailSkill, 'Phase 1: API 设计', detailSkillPath);
 const dbPhase = indexOfOrFail(detailSkill, 'Phase 2: 数据库设计', detailSkillPath);
 assert(apiPhase < dbPhase, `${detailSkillPath}: API phase must precede database phase`);
 
-const planSkillPath = registryByName['forge-plan']?.path ?? 'skills/plan/SKILL.md';
+const planSkillPath = registryByName['forge-plan']?.path ?? 'plugins/forge/skills/plan/SKILL.md';
 const planSkill = read(planSkillPath);
 for (const marker of ['### P1:', '### P2:', '### P3:', '### P4:', '### P5:']) {
   assert(planSkill.includes(marker), `${planSkillPath}: missing ${marker}`);
 }
 
-const testCasesSkillPath = registryByName['forge-test-cases']?.path ?? 'skills/test-cases/SKILL.md';
+const testCasesSkillPath = registryByName['forge-test-cases']?.path ?? 'plugins/forge/skills/test-cases/SKILL.md';
 const testCasesSkill = read(testCasesSkillPath);
 for (const marker of ['### TC1:', '### TC2:', '### TC3:', '### TC4:', '### TC5:']) {
   assert(testCasesSkill.includes(marker), `${testCasesSkillPath}: missing ${marker}`);
 }
 assert(testCasesSkill.includes('testing/test-cases.md'), `${testCasesSkillPath}: must use testing/test-cases.md`);
 
-const deploySkillPath = registryByName['forge-deploy']?.path ?? 'skills/deploy/SKILL.md';
+const deploySkillPath = registryByName['forge-deploy']?.path ?? 'plugins/forge/skills/deploy/SKILL.md';
 const deploySkill = read(deploySkillPath);
 for (const marker of ['### RL1:', '### RL2:', '### RL3:', '### RL4:', '### RL5:']) {
   assert(deploySkill.includes(marker), `${deploySkillPath}: missing ${marker}`);
 }
 
-const codegenSkillPath = registryByName['forge-codegen']?.path ?? 'skills/codegen/SKILL.md';
+const codegenSkillPath = registryByName['forge-codegen']?.path ?? 'plugins/forge/skills/codegen/SKILL.md';
 const codegenSkill = read(codegenSkillPath);
 for (const marker of ['读', '生', '验', '修', '运行验证']) {
   assert(codegenSkill.includes(marker), `${codegenSkillPath}: missing goal verification marker "${marker}"`);

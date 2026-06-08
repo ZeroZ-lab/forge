@@ -56,14 +56,14 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 
 - 缺 PRD/需求输入 → 不直接写 goal，先要求补需求或明确走最小 detail。
 - 前端存在性不确定 → 暂停询问，不默认加载 frontend-design。
-- 由同类 L1 偏差触发 → 先复查对应 goal/module 盲区，再决定是否改代码。
+- 由同类 repeat 偏差触发 → 先复查对应 goal/module 盲区，再决定是否改代码。
 - 发现目标定义不清 → 中止详设输出，列出需要人类决策的矛盾点。
 - 下游一致性问题影响范围不清 → 不自动级联修改，先输出一致性报告。
 
 ## 红旗清单
 - 前端存在性不确定 → 暂停询问（不默认加载 frontend-design）
 - PRD 缺失 → 不直接写 goal，先要求补需求或明确走最小 detail
-- 由同类 L1 偏差触发 → 先复查 goal 盲区，再决定是否改代码
+- 由同类 repeat 偏差触发 → 先复查 goal 盲区，再决定是否改代码
 - L2 目标定义不清 → 中止详设，列出矛盾点等用户决策
 - feature/goal.md 的 FD# 与 project.md 的 PD# 编号冲突 → 重新分配编号
 - 下游一致性问题影响范围不清 → 不自动级联修改，先输出一致性报告
@@ -143,7 +143,7 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 
 ## 运行时信号
 
-- 输入：repeated L1 from forge-codegen、consistency issue from forge-review
+- 输入：repeat_signal from forge-codegen、consistency issue from forge-review
 - 输出：goal updated、downstream consistency report、human decision needed
 - 路由：详见 `registry.yaml` 的 `forge-detail` 节点；本节只保留人类可读摘要。
 - 升级：goal ambiguity · downstream consistency needs decision · frontend presence unclear

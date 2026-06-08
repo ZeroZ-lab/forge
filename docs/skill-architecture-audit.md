@@ -8,15 +8,15 @@
 当前仓库基线：
 
 - `node scripts/validate.mjs` 通过：`Forge validation passed (24 skills, version 0.24.1).`
-- 当前 suite 暴露 24 个一级 `skills/*` skill，registry 使用 `forge-*` 作为对外协议 id。
-- `.claude-plugin/plugin.json` 显式枚举 `skills/*`，`scripts/validate.mjs` 校验 manifest 与目录一致。
+- 当前 suite 暴露 24 个一级 `plugins/forge/skills/*` skill，registry 使用 `forge-*` 作为对外协议 id。
+- `plugins/forge/.claude-plugin/plugin.json` 显式枚举 `skills/*`，`scripts/validate.mjs` 校验 manifest 与目录一致。
 - `registry.yaml` 已新增为运行时控制面，覆盖全部 24 个 skill。
-- `skills/shared/` 已从产物模板扩展出 concepts、rubrics、red-flags、output-contracts 四类 Knowledge 文件。
+- `plugins/forge/skills/shared/` 已从产物模板扩展出 concepts、rubrics、red-flags、output-contracts 四类 Knowledge 文件。
 - `docs/goal-verification.md` 定义目标验证闭环。
 
 不改 flat 结构的原因：
 
-- Claude Code 只发现 `skills/` 一级子目录的 `SKILL.md`，当前 flat list 是安装和发现边界。
+- Claude Code 只发现 `plugins/forge/skills/` 一级子目录的 `SKILL.md`，当前 flat list 是安装和发现边界。
 - Validator 已经把 24 个 skill、frontmatter 短名、manifest 枚举和行数上限作为稳定约束。
 - 嵌套分类目录会破坏现有 plugin discovery 和 validator 约束；分类应该进入 registry 元数据，不应进入物理目录。
 
@@ -56,7 +56,7 @@
 | Analyze | `forge-review`、`forge-learn`、`forge-codegen`、`forge-detail` 运行时步骤 | 差距分析、review -> learn 证据链已固化 |
 | Plan | `forge-plan`、`forge-detail`、`forge-deploy`、`forge-learn` 运行时步骤 | 任务计划、级联更新、发布计划存在；learn 已补建议排序和防膨胀规则 |
 | Execute | `forge-codegen`、`forge-fe-artifact`、`forge-deploy` 运行时步骤 | 执行层清晰 |
-| Knowledge | `skills/shared/`、各 skill `references/`、项目 `timeline`、feature `changelog`、产物文档 | shared 已扩展 concepts/rubrics/red-flags/output-contracts |
+| Knowledge | `plugins/forge/skills/shared/`、各 skill `references/`、项目 `timeline`、feature `changelog`、产物文档 | shared 已扩展 concepts/rubrics/red-flags/output-contracts |
 | Feedback | `validate.mjs`、真实测试、`forge-review`、`forge-fe-accept`、用户验收 | validator 与 `node --test` 已校验 registry、runtime docs 和 signal-flow |
 | Recovery | `codegen` 问题升级、`detail` 级联更新、`review` 阻塞项、`learn` 方法论进化、`deploy` 回滚 | 目标验证链已由 registry 和编排 skill 固化 |
 
@@ -125,7 +125,7 @@
 
 - 当前强项：D1-D7 覆盖资源、分页、错误、权限、幂等、并发和认证。
 - 缺口：文件 197 行，接近上限；通用 API 评分标准和反例还未抽到 shared。
-- 建议动作：先把通用 API rubrics / red flags 抽到 `skills/shared/`。
+- 建议动作：先把通用 API rubrics / red flags 抽到 `plugins/forge/skills/shared/`。
 - 优先级：P1。
 
 ### forge-db-design
@@ -255,12 +255,12 @@
 
 ### shared 已扩展为 Knowledge 层
 
-`skills/shared/` 保留产物模板，同时新增共享知识：
+`plugins/forge/skills/shared/` 保留产物模板，同时新增共享知识：
 
-- `skills/shared/concepts/`
-- `skills/shared/rubrics/`
-- `skills/shared/red-flags/`
-- `skills/shared/output-contracts/`
+- `plugins/forge/skills/shared/concepts/`
+- `plugins/forge/skills/shared/rubrics/`
+- `plugins/forge/skills/shared/red-flags/`
+- `plugins/forge/skills/shared/output-contracts/`
 
 ### validator 校验运行时闭环完整性
 
@@ -279,7 +279,7 @@
 1. 已落地本审计文件，保持 validate 通过。
 2. 已落地 `docs/goal-verification.md`，定义运行时闭环。
 3. 已新增 `registry.yaml`，只做运行时控制面和审计面，不改变 plugin discovery。
-4. 已扩展 `skills/shared/` 为 Knowledge 层。
+4. 已扩展 `plugins/forge/skills/shared/` 为 Knowledge 层。
 5. 已优先重构 4 个编排 skill：`forge-init`、`forge-design`、`forge-detail`、`forge-test`。
 6. 已以 `forge-codegen`、`forge-detail`、`forge-review`、`forge-learn` 固化目标验证链。
 
@@ -287,9 +287,9 @@
 
 本轮执行仍保持以下边界：
 
-- 保留 `skills/*` 一级 flat discovery，`registry.yaml` 使用 `forge-*` 作为协议 id。
+- 保留 `plugins/forge/skills/*` 一级 flat discovery，`registry.yaml` 使用 `forge-*` 作为协议 id。
 - 不触碰未跟踪 `.claude/`。
-- 不改变 `.claude-plugin/plugin.json` 和 `.codex-plugin/plugin.json` 的 skill 枚举方式。
+- 不改变 `plugins/forge/.claude-plugin/plugin.json` 和 `plugins/forge/.codex-plugin/plugin.json` 的 skill 枚举方式。
 - `registry.yaml` 保持 JSON-compatible YAML。
 
 后续如果继续深化，应按问题信号逐步修改领域 skill，而不是一次性套模板。

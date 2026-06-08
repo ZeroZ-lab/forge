@@ -33,15 +33,10 @@ repo/
 ├── .agents/
 │   └── plugins/
 │       └── marketplace.json
-├── .claude-plugin/
-│   ├── marketplace.json
-│   └── plugin.json
-├── .codex-plugin/
-│   └── plugin.json
-├── skills/                              # 开发态 source of truth
 └── plugins/
-    └── your-plugin/                     # 发布态自包含工件
+    └── your-plugin/                     # 唯一的 source of truth + 发布态
         ├── .claude-plugin/
+        │   ├── marketplace.json
         │   └── plugin.json
         ├── .codex-plugin/
         │   └── plugin.json
@@ -101,21 +96,9 @@ repo/
 
 ## Manifest 写法
 
-### 仓库根目录的 Codex manifest
+### Codex manifest
 
-根目录 manifest 用于仓库开发和本地校验，可以直接引用根目录 `skills/`：
-
-```json
-{
-  "name": "your-plugin",
-  "version": "0.1.0",
-  "skills": "./skills"
-}
-```
-
-### 发布包里的 Codex manifest
-
-发布包 manifest 必须引用发布包内部的 `skills/`：
+Codex manifest 引用发布包内部的 `skills/`：
 
 ```json
 {
@@ -125,24 +108,9 @@ repo/
 }
 ```
 
-### 仓库根目录的 Claude manifest
+### Claude manifest
 
 Claude manifest 需要显式列出每个 skill：
-
-```json
-{
-  "name": "your-plugin",
-  "version": "0.1.0",
-  "skills": [
-    "./skills/foo",
-    "./skills/bar"
-  ]
-}
-```
-
-### 发布包里的 Claude manifest
-
-发布包里的 Claude manifest 也必须只引用发布包内部路径：
 
 ```json
 {
@@ -163,69 +131,55 @@ Claude manifest 需要显式列出每个 skill：
 
 ## 发布规则
 
-每次发版前，至少同步这几类文件：
+每次发版前，确认以下文件版本一致：
 
-- `package.json`
-- `.claude-plugin/plugin.json`
-- `.codex-plugin/plugin.json`
-- `plugins/your-plugin/.claude-plugin/plugin.json`
-- `plugins/your-plugin/.codex-plugin/plugin.json`
+- `plugins/your-plugin/.claude-plugin/plugin.json`（version 字段）
+- `plugins/your-plugin/.codex-plugin/plugin.json`（version 字段）
+- `package.json`（version 字段）
 
-如果发布包里的 `skills/` 是从根目录复制出来的，还要同步：
-
-- `skills/` -> `plugins/your-plugin/skills/`
+三个文件的 `version` 字段必须同步更新。
 
 ## 推荐发布流程
 
-1. 在根目录维护 `skills/` 和根级 manifest
-2. 生成或同步发布包：
-   - 复制 `skills/` 到 `plugins/your-plugin/skills/`
-   - 更新 `plugins/your-plugin/.codex-plugin/plugin.json`
-   - 更新 `plugins/your-plugin/.claude-plugin/plugin.json`
-3. 确认 marketplace 指向 `./plugins/your-plugin`
-4. 跑校验
-5. bump version
-6. commit and push
+1. 在 `plugins/your-plugin/` 下直接维护 `skills/` 和 manifest
+2. 确认 marketplace 指向 `./plugins/your-plugin`
+3. 跑校验
+4. bump version（同步 `package.json` 和两个 `plugin.json`）
+5. commit and push
 
 ## 最小校验项
 
 建议把下面这些检查写进仓库自检：
 
-- 根目录 `.codex-plugin/plugin.json` 存在
-- 根目录 `.claude-plugin/plugin.json` 存在
-- 发布包 `.codex-plugin/plugin.json` 存在
-- 发布包 `.claude-plugin/plugin.json` 存在
+- `plugins/your-plugin/.codex-plugin/plugin.json` 存在
+- `plugins/your-plugin/.claude-plugin/plugin.json` 存在
 - `plugins/your-plugin/skills/` 存在
 - Codex marketplace 的 `source.path === "./plugins/your-plugin"`
-- 发布包 Codex manifest 的 `skills === "./skills"`
-- 发布包 Claude manifest 的每一项 skill 都以 `"./skills/"` 开头
+- Codex manifest 的 `skills === "./skills"`
+- Claude manifest 的每一项 skill 都以 `"./skills/"` 开头
 
 ## Forge 的当前实现
 
 当前仓库可直接作为参考实现：
 
 - Codex marketplace: `.agents/plugins/marketplace.json`
-- Claude marketplace: `.claude-plugin/marketplace.json`
-- 根目录 Codex manifest: `.codex-plugin/plugin.json`
-- 根目录 Claude manifest: `.claude-plugin/plugin.json`
-- 发布包目录: `plugins/forge/`
-- 发布包 Codex manifest: `plugins/forge/.codex-plugin/plugin.json`
-- 发布包 Claude manifest: `plugins/forge/.claude-plugin/plugin.json`
+- Claude marketplace: `plugins/forge/.claude-plugin/marketplace.json`
+- Codex manifest: `plugins/forge/.codex-plugin/plugin.json`
+- Claude manifest: `plugins/forge/.claude-plugin/plugin.json`
 - 自检逻辑: `scripts/validate.mjs`
 
 ## 迁移到其他项目
 
 迁移时按这个顺序最稳：
 
-1. 先在新项目根目录建立 `skills/`
-2. 再补根级 `.codex-plugin/plugin.json` 和 `.claude-plugin/plugin.json`
-3. 新建 `plugins/<name>/`
-4. 把 `skills/` 打包到 `plugins/<name>/skills/`
-5. marketplace 全部改指向 `./plugins/<name>`
-6. 最后再接入版本同步和自检
+1. 新建 `plugins/<name>/`
+2. 在 `plugins/<name>/` 下建立 `skills/`
+3. 补 `.codex-plugin/plugin.json` 和 `.claude-plugin/plugin.json`
+4. marketplace 全部指向 `./plugins/<name>`
+5. 接入版本同步和自检
 
 这样做的好处是：
 
-- 开发态和发布态职责分开
+- 单一 source of truth，不存在同步问题
 - Codex 和 Claude 的差异被限制在 manifest 层
 - 发布问题能在仓库自检阶段暴露，而不是等用户安装时报错

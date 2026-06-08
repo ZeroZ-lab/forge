@@ -66,8 +66,8 @@
 - **探索过程**：2 轮 brainstorm，评估 5 个方向（协议注入 / 独立 skill / 推理链文档 / 反馈回路 / 模型选择）
 - **推荐方向**：独立 think skill + docs/thinking/ 文档体系（方向 2+3），最小侵入，按需触发
 - **改动**：
-  - 新增 `skills/think/SKILL.md`：三模式方法论（L0 挑战 / L1 分析 / L2 攻击）
-  - 新增 `skills/think/references/thinking-template.md`：thinking 文档模板
+  - 新增 `plugins/forge/skills/think/SKILL.md`：三模式方法论（L0 挑战 / L1 分析 / L2 攻击）
+  - 新增 `plugins/forge/skills/think/references/thinking-template.md`：thinking 文档模板
   - 注册到 `plugin.json`
   - 产出 `docs/idea-brief.md`（方向地图 + MVP + 假设清单）
 - **验证计划**：2 周内试用 3 次，至少 1 次 thinking 产物被下游引用
@@ -78,7 +78,7 @@
 - **核心洞察**：Forge 靠"文件存在"推断阶段，但三个盲区——进行中vs未开始、跳过vs未到、依赖vs独立。本质是**协调**问题而非追踪问题
 - **L1 分析结论**（docs/thinking/feature-stage-tracking.md）：Forge 阶段本质是有限状态机（5 种状态），多 feature 状态机独立但通过产物依赖耦合
 - **改动**：
-  - 新增 `skills/shared/status-template.md`：状态看板模板（总览表 + 阶段矩阵 + 阻塞与依赖 + 已交付归档）
+  - 新增 `plugins/forge/skills/shared/status-template.md`：状态看板模板（总览表 + 阶段矩阵 + 阻塞与依赖 + 已交付归档）
   - AGENTS.md 新增「阶段追踪」段：状态机语义 + 多 feature 依赖 + 更新规则
   - AGENTS.md 项目级文件目录树和文件表新增 status.md
   - 3 个 skill 的「历史维护」段新增 status.md 更新步骤：brainstorm（创建+首次更新）、detail（中间阶段）、plan（出口阶段）
@@ -90,7 +90,7 @@
 - **触发**：用户希望把通用 CLAUDE.md 行为提示词内化到 Forge，而不是只作为当前会话提示。
 - **定位**：这不是新增阶段方法论，而是约束 AI 维护项目时的执行方式，防止未确认边界、过度抽象、顺手改无关文件和缺少验证闭环。
 - **改动**：
-  - 新增 `skills/shared/concepts/execution-discipline.md`，作为 shared Knowledge 层的执行纪律锚点。
+  - 新增 `plugins/forge/skills/shared/concepts/execution-discipline.md`，作为 shared Knowledge 层的执行纪律锚点。
   - AGENTS.md 新增「AI 执行纪律」，放在核心理念之后，约束 Forge 自身维护。
   - init 的 AGENTS 模板新增「AI 执行纪律」，让新项目继承压缩后的 clarify / minimize / scope / verify 约束。
   - validator 新增轻量锚点检查，保证 root、模板和 shared concept 不偏移。
@@ -104,8 +104,8 @@
 - **核心洞察**：人类擅长定义产品愿景（做什么），不擅长识别技术可能性（怎么做）。research 补这个缺口
 - **位置修正**：初版放在 ⓪.5（brainstorm 之后），但此时技术子问题尚未浮出。改为 ①.5（define 之后），因为 PRD 用户故事中隐含技术信号（"平滑爬墙"→脊柱算法），research 从 PRD 提取信号再搜索
 - **改动**：
-  - 新增 `skills/research/SKILL.md`：四阶段方法论（拆解→上下文→搜索→菜单）
-  - 新增 `skills/research/references/research-brief-template.md`：子问题地图 + 算法菜单 + 组合建议
+  - 新增 `plugins/forge/skills/research/SKILL.md`：四阶段方法论（拆解→上下文→搜索→菜单）
+  - 新增 `plugins/forge/skills/research/references/research-brief-template.md`：子问题地图 + 算法菜单 + 组合建议
   - AGENTS.md 阶段表新增 research 行（19 个领域 Skill）
   - AGENTS.md 产物传递图新增"算法菜单"环节
   - AGENTS.md 自然语言执行表新增"做一只壁虎"示例

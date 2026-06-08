@@ -78,8 +78,8 @@
 
 ### 核心功能（没有就不成立）
 
-1. `skills/think/SKILL.md` — think skill 完整方法论
-2. `skills/think/references/thinking-template.md` — thinking 文档模板
+1. `plugins/forge/skills/think/SKILL.md` — think skill 完整方法论
+2. `plugins/forge/skills/think/references/thinking-template.md` — thinking 文档模板
 3. 在一个真实项目中试用 3 次
 
 ### 边界声明（明确不做）
@@ -110,7 +110,7 @@
 
 | 步骤 | 做什么 | 产出 | 状态 |
 |------|--------|------|------|
-| 1 | 编写 SKILL.md + 模板 | skills/think/ | ✅ 本次完成 |
+| 1 | 编写 SKILL.md + 模板 | plugins/forge/skills/think/ | ✅ 本次完成 |
 | 2 | 注册到 plugin.json | plugin.json 更新 | ✅ 本次完成 |
 | 3 | 在真实项目中试用 `/forge:think` | 第一次 docs/thinking/*.md | 待执行 |
 | 4 | 2 周后回顾 | 继续/停止/调整决策 | 待定 |

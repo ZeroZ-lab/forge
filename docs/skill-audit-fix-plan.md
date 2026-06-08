@@ -149,8 +149,8 @@ signal_vocabulary:
     name: deviation summary
     produced_by: forge-codegen
     consumed_by: [forge-detail]
-  - id: codegen.l1_signal
-    name: repeated L1 deviation
+  - id: codegen.repeat_signal
+    name: repeated goal-not-met
     produced_by: forge-codegen
     consumed_by: [forge-detail]
 
@@ -851,7 +851,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 
 ```markdown
 - 输入：`detail.feature_contract` + `plan.task_sequence`
-- 输出：`codegen.generated_code` + `codegen.deviation_summary` + `codegen.l1_signal`
+- 输出：`codegen.generated_code` + `codegen.deviation_summary` + `codegen.repeat_signal`
 ```
 
 **预计行数变化**：+4 行 → 203 行（需压缩 3 行）

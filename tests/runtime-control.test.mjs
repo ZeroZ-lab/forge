@@ -4,7 +4,7 @@ import test from 'node:test';
 
 const registry = JSON.parse(fs.readFileSync('registry.yaml', 'utf8'));
 const skillNames = fs
-  .readdirSync('skills', { withFileTypes: true })
+  .readdirSync('plugins/forge/skills', { withFileTypes: true })
   .filter((entry) => entry.isDirectory() && entry.name !== 'shared')
   .map((entry) => `forge-${entry.name}`)
   .sort();
@@ -19,7 +19,7 @@ test('registry covers every forge skill exactly once', () => {
 
 test('runtime registry records static control-surface fields for every skill', () => {
   for (const skill of registry.skills) {
-    assert.equal(skill.path, `skills/${skill.name.replace(/^forge-/, '')}/SKILL.md`);
+    assert.equal(skill.path, `plugins/forge/skills/${skill.name.replace(/^forge-/, '')}/SKILL.md`);
     assert.ok(fs.existsSync(skill.path));
     for (const field of ['role', 'consumes', 'signals_in', 'signals_out', 'escalates_when', 'stage_next', 'feedback_to', 'quality_gates', 'signal_routes']) {
       assert.ok(skill[field], `${skill.name} missing ${field}`);
@@ -91,8 +91,8 @@ test('every skill declares Change Unit participation', () => {
 
 test('Change Unit protocol templates exist', () => {
   for (const file of [
-    'skills/shared/change-unit-template.md',
-    'skills/shared/goal-template.md',
+    'plugins/forge/skills/shared/change-unit-template.md',
+    'plugins/forge/skills/shared/goal-template.md',
   ]) {
     assert.ok(fs.existsSync(file), `${file} missing`);
   }

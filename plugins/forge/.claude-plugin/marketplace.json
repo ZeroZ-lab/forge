@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "forge",
-      "description": "24 个决策协议 skill，覆盖从 brainstorm 到 deploy 的全生命周期，并包含 think 思考增强层。文档是目标约束，代码是实现。",
+      "description": "23 个决策协议 skill，覆盖从 brainstorm 到 deploy 的全生命周期，并包含 think 思考增强层。文档是目标约束，代码是实现。",
       "source": "./plugins/forge"
     }
   ]

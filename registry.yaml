@@ -145,7 +145,7 @@
       ]
     },
     {
-      "id": "codegen.l1_signal",
+      "id": "codegen.repeat_signal",
       "name": "repeated goal-not-met",
       "produced_by": "forge-codegen",
       "consumed_by": [
@@ -261,7 +261,7 @@
   "skills": [
     {
       "name": "forge-brainstorm",
-      "path": "skills/brainstorm/SKILL.md",
+      "path": "plugins/forge/skills/brainstorm/SKILL.md",
       "phase": "explore",
       "type": "domain",
       "role": "goal-refiner",
@@ -326,7 +326,7 @@
     },
     {
       "name": "forge-business-alignment",
-      "path": "skills/business-alignment/SKILL.md",
+      "path": "plugins/forge/skills/business-alignment/SKILL.md",
       "phase": "define",
       "type": "domain",
       "role": "goal-refiner",
@@ -398,7 +398,7 @@
     },
     {
       "name": "forge-define",
-      "path": "skills/define/SKILL.md",
+      "path": "plugins/forge/skills/define/SKILL.md",
       "phase": "define",
       "type": "domain",
       "role": "goal-refiner",
@@ -472,7 +472,7 @@
     },
     {
       "name": "forge-research",
-      "path": "skills/research/SKILL.md",
+      "path": "plugins/forge/skills/research/SKILL.md",
       "phase": "define",
       "type": "domain",
       "role": "goal-refiner",
@@ -538,7 +538,7 @@
     },
     {
       "name": "forge-interaction-design",
-      "path": "skills/interaction-design/SKILL.md",
+      "path": "plugins/forge/skills/interaction-design/SKILL.md",
       "phase": "design",
       "type": "domain",
       "role": "goal-refiner",
@@ -605,7 +605,7 @@
     },
     {
       "name": "forge-fe-system",
-      "path": "skills/fe-system/SKILL.md",
+      "path": "plugins/forge/skills/fe-system/SKILL.md",
       "phase": "design",
       "type": "domain",
       "role": "knowledge",
@@ -676,7 +676,7 @@
     },
     {
       "name": "forge-technical-design",
-      "path": "skills/technical-design/SKILL.md",
+      "path": "plugins/forge/skills/technical-design/SKILL.md",
       "phase": "design",
       "type": "domain",
       "role": "goal-refiner",
@@ -742,8 +742,8 @@
     },
     {
       "name": "forge-init",
-      "path": "skills/init/SKILL.md",
-      "phase": "orchestration",
+      "path": "plugins/forge/skills/init/SKILL.md",
+      "phase": "init",
       "type": "orchestrator",
       "role": "orchestrator",
       "triggers": [
@@ -829,8 +829,8 @@
     },
     {
       "name": "forge-design",
-      "path": "skills/design/SKILL.md",
-      "phase": "orchestration",
+      "path": "plugins/forge/skills/design/SKILL.md",
+      "phase": "design",
       "type": "orchestrator",
       "role": "orchestrator",
       "triggers": [
@@ -898,8 +898,8 @@
     },
     {
       "name": "forge-detail",
-      "path": "skills/detail/SKILL.md",
-      "phase": "orchestration",
+      "path": "plugins/forge/skills/detail/SKILL.md",
+      "phase": "detail",
       "type": "orchestrator",
       "role": "goal-refiner",
       "triggers": [
@@ -930,7 +930,7 @@
         "frontend/contract.md"
       ],
       "signals_in": [
-        "repeated L1 from forge-codegen",
+        "repeat_signal from forge-codegen",
         "document drift from forge-review",
         "change_unit.created",
         "change_unit.updated"
@@ -997,7 +997,7 @@
     },
     {
       "name": "forge-api-design",
-      "path": "skills/api-design/SKILL.md",
+      "path": "plugins/forge/skills/api-design/SKILL.md",
       "phase": "detail",
       "type": "domain",
       "role": "goal-refiner",
@@ -1064,7 +1064,7 @@
     },
     {
       "name": "forge-db-design",
-      "path": "skills/db-design/SKILL.md",
+      "path": "plugins/forge/skills/db-design/SKILL.md",
       "phase": "detail",
       "type": "domain",
       "role": "goal-refiner",
@@ -1130,7 +1130,7 @@
     },
     {
       "name": "forge-frontend-design",
-      "path": "skills/frontend-design/SKILL.md",
+      "path": "plugins/forge/skills/frontend-design/SKILL.md",
       "phase": "detail",
       "type": "domain",
       "role": "goal-refiner",
@@ -1205,7 +1205,7 @@
     },
     {
       "name": "forge-plan",
-      "path": "skills/plan/SKILL.md",
+      "path": "plugins/forge/skills/plan/SKILL.md",
       "phase": "plan",
       "type": "domain",
       "role": "decision-protocol",
@@ -1281,7 +1281,7 @@
     },
     {
       "name": "forge-codegen",
-      "path": "skills/codegen/SKILL.md",
+      "path": "plugins/forge/skills/codegen/SKILL.md",
       "phase": "build",
       "type": "execution",
       "role": "executor",
@@ -1379,7 +1379,7 @@
     },
     {
       "name": "forge-fe-artifact",
-      "path": "skills/fe-artifact/SKILL.md",
+      "path": "plugins/forge/skills/fe-artifact/SKILL.md",
       "phase": "build",
       "type": "execution",
       "role": "executor",
@@ -1458,8 +1458,8 @@
     },
     {
       "name": "forge-test",
-      "path": "skills/test/SKILL.md",
-      "phase": "orchestration",
+      "path": "plugins/forge/skills/test/SKILL.md",
+      "phase": "test",
       "type": "orchestrator",
       "role": "orchestrator",
       "triggers": [
@@ -1545,7 +1545,7 @@
     },
     {
       "name": "forge-test-strategy",
-      "path": "skills/test-strategy/SKILL.md",
+      "path": "plugins/forge/skills/test-strategy/SKILL.md",
       "phase": "test",
       "type": "domain",
       "role": "decision-protocol",
@@ -1612,7 +1612,7 @@
     },
     {
       "name": "forge-test-cases",
-      "path": "skills/test-cases/SKILL.md",
+      "path": "plugins/forge/skills/test-cases/SKILL.md",
       "phase": "test",
       "type": "domain",
       "role": "goal-refiner",
@@ -1686,7 +1686,7 @@
     },
     {
       "name": "forge-fe-accept",
-      "path": "skills/fe-accept/SKILL.md",
+      "path": "plugins/forge/skills/fe-accept/SKILL.md",
       "phase": "test",
       "type": "domain",
       "role": "verifier",
@@ -1757,7 +1757,7 @@
     },
     {
       "name": "forge-review",
-      "path": "skills/review/SKILL.md",
+      "path": "plugins/forge/skills/review/SKILL.md",
       "phase": "review",
       "type": "governance",
       "role": "governance",
@@ -1849,7 +1849,7 @@
     },
     {
       "name": "forge-deploy",
-      "path": "skills/deploy/SKILL.md",
+      "path": "plugins/forge/skills/deploy/SKILL.md",
       "phase": "deploy",
       "type": "domain",
       "role": "decision-protocol",
@@ -1935,8 +1935,8 @@
     },
     {
       "name": "forge-think",
-      "path": "skills/think/SKILL.md",
-      "phase": "orchestration",
+      "path": "plugins/forge/skills/think/SKILL.md",
+      "phase": "cross-cutting",
       "type": "governance",
       "role": "knowledge",
       "triggers": [

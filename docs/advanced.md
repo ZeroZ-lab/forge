@@ -31,7 +31,7 @@
 
 - [Feature Stage Tracking Thinking](thinking/feature-stage-tracking.md)
   说明为什么 `status.md` 只应在多 feature 协调时启用。
-- `skills/test/`、`skills/deploy/`
+- `plugins/forge/skills/test/`、`plugins/forge/skills/deploy/`
   需要测试治理或发布治理时再展开。
 
 ## 默认与 Advanced 的边界
