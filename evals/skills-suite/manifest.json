@@ -2,7 +2,7 @@
   "version": 2,
   "name": "forge-skills-suite-benchmark",
   "description": "A deterministic v2 contract for checking whether Forge skills are triggered through complete, non-redundant chains; bounded, verified, traceable through Change Units, and goal-aware during representative agent runs.",
-  "minimum_cases": 10,
+  "minimum_cases": 14,
   "scoring_model": {
     "version": 1,
     "grade_thresholds": {
@@ -737,6 +737,300 @@
         {
           "type": "forbidden_behavior_absent",
           "behavior": "bugfix_without_regression"
+        },
+        {
+          "type": "goal_verified",
+          "target": "goal.md"
+        }
+      ]
+    },
+    {
+      "id": "init-skip-frontend",
+      "title": "纯后端项目初始化跳过前端 skill",
+      "level": "L2 stage",
+      "fixture": "evals/skills-suite/fixtures/init-skip-frontend.md",
+      "expected_skills": [
+        "init",
+        "technical-design"
+      ],
+      "expected_artifacts": [
+        "docs/project.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "docs/change-units/CU-*.md",
+        "goal.md"
+      ],
+      "required_evidence": [
+        "skip frontend decision recorded",
+        "project decisions",
+        "project agents projection",
+        "Change Unit",
+        "goal verification"
+      ],
+      "forbidden_behaviors": [
+        "triggered_fe_system",
+        "produced_DESIGN_md",
+        "frontend_sections_in_agents",
+        "hardcoded_unconfirmed_stack",
+        "current_docs_without_change_unit"
+      ],
+      "oracle_checks": [
+        {
+          "type": "skill_triggered",
+          "skill": "init"
+        },
+        {
+          "type": "skill_triggered",
+          "skill": "technical-design"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "fe-system_triggered_for_backend_project"
+        },
+        {
+          "type": "artifact_reported",
+          "path": "AGENTS.md"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "DESIGN.md_generated_for_backend_project"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "skip frontend"
+        },
+        {
+          "type": "change_unit_reported",
+          "path": "docs/change-units/CU-*.md"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "current_docs_without_change_unit"
+        },
+        {
+          "type": "goal_verified",
+          "target": "goal.md"
+        }
+      ]
+    },
+    {
+      "id": "detail-backend-only",
+      "title": "纯后端功能详设跳过前端合约",
+      "level": "L2 stage",
+      "fixture": "evals/skills-suite/fixtures/detail-backend-only.md",
+      "expected_skills": [
+        "detail",
+        "api-design",
+        "db-design"
+      ],
+      "expected_artifacts": [
+        "docs/features/billing/contract.md",
+        "docs/features/billing/api/contract.md",
+        "docs/features/billing/database/contract.md",
+        "docs/change-units/CU-*.md",
+        "goal.md"
+      ],
+      "required_evidence": [
+        "API contract with export endpoints",
+        "database query contract",
+        "skip frontend-design decision",
+        "downstream references",
+        "Change Unit",
+        "goal verification"
+      ],
+      "forbidden_behaviors": [
+        "triggered_frontend_design",
+        "produced_frontend_contract",
+        "current_docs_without_change_unit"
+      ],
+      "oracle_checks": [
+        {
+          "type": "skill_triggered",
+          "skill": "detail"
+        },
+        {
+          "type": "skill_triggered",
+          "skill": "api-design"
+        },
+        {
+          "type": "skill_triggered",
+          "skill": "db-design"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "frontend-design_triggered_for_backend_project"
+        },
+        {
+          "type": "artifact_reported",
+          "path": "docs/features/billing/api/contract.md"
+        },
+        {
+          "type": "artifact_reported",
+          "path": "docs/features/billing/database/contract.md"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "frontend_contract_generated_for_backend_project"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "no frontend"
+        },
+        {
+          "type": "change_unit_reported",
+          "path": "docs/change-units/CU-*.md"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "current_docs_without_change_unit"
+        },
+        {
+          "type": "goal_verified",
+          "target": "goal.md"
+        }
+      ]
+    },
+    {
+      "id": "detail-reentry-from-deviation",
+      "title": "偏差信号触发详设重入修正合约",
+      "level": "L1 patch",
+      "fixture": "evals/skills-suite/fixtures/detail-reentry-from-deviation.md",
+      "expected_skills": [
+        "detail",
+        "api-design",
+        "review"
+      ],
+      "expected_artifacts": [
+        "docs/features/billing/api/contract.md",
+        "docs/features/billing/database/contract.md",
+        "docs/features/billing/changelog.md",
+        "docs/change-units/CU-*.md",
+        "goal.md"
+      ],
+      "required_evidence": [
+        "deviation summary read",
+        "contract-goal inconsistency correction",
+        "downstream gap report",
+        "Change Unit",
+        "goal verification"
+      ],
+      "forbidden_behaviors": [
+        "ignored_deviation_signal",
+        "fresh_detail_without_context",
+        "contract_updated_without_changelog",
+        "current_docs_without_change_unit"
+      ],
+      "oracle_checks": [
+        {
+          "type": "skill_triggered",
+          "skill": "detail"
+        },
+        {
+          "type": "skill_triggered",
+          "skill": "api-design"
+        },
+        {
+          "type": "skill_triggered",
+          "skill": "review"
+        },
+        {
+          "type": "artifact_reported",
+          "path": "docs/features/billing/api/contract.md"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "偏差"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "downstream gap"
+        },
+        {
+          "type": "change_unit_reported",
+          "path": "docs/change-units/CU-*.md"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "ignored_deviation_signal"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "current_docs_without_change_unit"
+        },
+        {
+          "type": "goal_verified",
+          "target": "goal.md"
+        }
+      ]
+    },
+    {
+      "id": "design-skip-no-frontend",
+      "title": "纯后端功能跳过设计阶段直接进入详设",
+      "level": "L2 stage",
+      "fixture": "evals/skills-suite/fixtures/design-skip-no-frontend.md",
+      "expected_skills": [
+        "detail",
+        "api-design",
+        "db-design"
+      ],
+      "expected_artifacts": [
+        "docs/features/webhook/contract.md",
+        "docs/features/webhook/api/contract.md",
+        "docs/features/webhook/database/contract.md",
+        "docs/change-units/CU-*.md",
+        "goal.md"
+      ],
+      "required_evidence": [
+        "skip design decision recorded",
+        "no interaction-spec produced",
+        "no DESIGN.md update",
+        "routed directly to detail",
+        "Change Unit",
+        "goal verification"
+      ],
+      "forbidden_behaviors": [
+        "triggered_interaction_design",
+        "triggered_fe_system",
+        "produced_interaction_spec",
+        "updated_DESIGN_md",
+        "current_docs_without_change_unit"
+      ],
+      "oracle_checks": [
+        {
+          "type": "skill_triggered",
+          "skill": "detail"
+        },
+        {
+          "type": "skill_triggered",
+          "skill": "api-design"
+        },
+        {
+          "type": "skill_triggered",
+          "skill": "db-design"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "interaction-design_triggered_for_backend_project"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "fe-system_triggered_for_backend_project"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "interaction-spec_generated_for_backend_project"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "skip design"
+        },
+        {
+          "type": "change_unit_reported",
+          "path": "docs/change-units/CU-*.md"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "current_docs_without_change_unit"
         },
         {
           "type": "goal_verified",
