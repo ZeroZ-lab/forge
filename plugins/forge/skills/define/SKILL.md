@@ -2,59 +2,6 @@
 name: define
 description: Defines requirements, constraints, user stories, scope exclusions, and testable acceptance criteria. Use for lightweight requirement clarification or full define stage execution when a PRD or exact scope is needed.
 when_to_use: Use when the user asks to write or refine a PRD, define requirements, clarify what is in or out of scope, create user stories, write acceptance criteria, or make vague requirements executable.
-phase: define
-type: domain
-role: goal-refiner
-triggers:
-  - "写 PRD"
-  - "定义需求"
-  - "验收条件"
-avoid_when:
-  - "只是技术探索"
-  - "已有完整 PRD"
-  - "小功能迭代"
-consumes:
-  - "docs/project.md business goals"
-  - "user requirements"
-  - "docs/change-units/CU-*.md"
-produces:
-  - "PRD.md"
-  - "docs/change-units/CU-*.md"
-signals_in:
-  - "business constraints"
-  - "change_unit.created"
-  - "change_unit.updated"
-signals_out:
-  - "testable acceptance criteria"
-  - "scope exclusions"
-  - "change_unit.updated"
-escalates_when:
-  - "验收条件不可测试"
-  - "范围边界无法确认"
-output_contract:
-  - "用户故事"
-  - "验收条件"
-  - "非功能需求"
-  - "范围排除"
-  - "验收计划"
-maturity: stable
-stage_next:
-  - design
-  - detail
-  - test-cases
-feedback_to:
-  - business-alignment
-quality_gates: []
-signal_routes:
-  - signal: "testable acceptance criteria"
-    to: test-cases
-    when: "acceptance criteria can be mapped to cases"
-  - signal: "scope exclusions"
-    to: detail
-    when: "feature goal needs technical detailing"
-  - signal: "change_unit.created"
-    to: detail
-    when: "when requirements become feature goals"
 ---
 # Requirements — 定义阶段（需求层）
 ## 职责

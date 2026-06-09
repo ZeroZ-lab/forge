@@ -13,10 +13,8 @@
 
 ## 运行时治理
 
-- [Goal Verification](goal-verification.md)
-  说明 `detail -> codegen -> review` 的目标验证闭环、信号传递和升级路径。
 - [Skill Architecture Audit](skill-architecture-audit.md)
-  说明运行时控制面、typed edges 和协议角色的审计结论。
+  说明协议节点、阶段编排和协议角色的审计结论。
 
 ## 评测与验证
 
@@ -49,5 +47,5 @@ Advanced 入口关注：
 - `docs/change-units/` (Change Units)
 - `timeline.md` / `status.md`
 - 完整阶段矩阵
-- 目标验证和信号传递
+- 目标验证实践
 - 评测系统和方法论进化

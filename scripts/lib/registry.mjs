@@ -1,9 +1,9 @@
 /**
- * registry.mjs — Shared utilities for reading skill metadata from SKILL.md YAML frontmatter.
+ * registry.mjs — Shared utility for listing Forge skills from SKILL.md frontmatter.
  *
- * This module replaces the old registry.yaml file. Skills declare their metadata
- * in the YAML frontmatter block of each SKILL.md (between --- delimiters).
- * This module extracts and parses that frontmatter into JS objects.
+ * Each skill declares standard metadata (name, description, when_to_use) in the
+ * YAML frontmatter block of its SKILL.md (between --- delimiters). This module
+ * extracts that frontmatter so tooling can enumerate skills by name.
  *
  * Zero external dependencies. Pure Node.js built-ins (fs, path).
  */
@@ -230,49 +230,4 @@ export function loadRegistry(rootDir) {
   }
 
   return { skills };
-}
-
-// ---------------------------------------------------------------------------
-// 3. deriveSignalVocabulary(skills)
-// ---------------------------------------------------------------------------
-
-/**
- * Scan all skills' signals_in and signals_out to build a signal map.
- *
- * Each signal is identified by its string value. The resulting map records
- * which skills produce each signal and which skills consume it.
- *
- * @param {Array<object>} skills — Array of skill objects (as returned by
- *   loadRegistry). Each skill may have `signals_in` and/or `signals_out`
- *   fields (arrays of strings).
- * @returns {object} Map of signalId -> { producers: [...skillNames], consumers: [...skillNames] }
- */
-export function deriveSignalVocabulary(skills) {
-  const signalMap = {};
-
-  for (const skill of skills) {
-    const skillName = skill.name || skill._dir;
-
-    // Record producers from signals_out
-    if (Array.isArray(skill.signals_out)) {
-      for (const signal of skill.signals_out) {
-        if (!signalMap[signal]) {
-          signalMap[signal] = { producers: [], consumers: [] };
-        }
-        signalMap[signal].producers.push(skillName);
-      }
-    }
-
-    // Record consumers from signals_in
-    if (Array.isArray(skill.signals_in)) {
-      for (const signal of skill.signals_in) {
-        if (!signalMap[signal]) {
-          signalMap[signal] = { producers: [], consumers: [] };
-        }
-        signalMap[signal].consumers.push(skillName);
-      }
-    }
-  }
-
-  return signalMap;
 }

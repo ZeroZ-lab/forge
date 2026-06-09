@@ -2,54 +2,6 @@
 name: api-design
 description: Reviews and designs API contracts, endpoints, schemas, error formats, auth, pagination, idempotency, and API boundary decisions. Use for lightweight API review or patch tasks, and for full api-design stage execution when explicitly requested.
 when_to_use: Use when the user asks whether an API is reasonable, wants to add or change an endpoint, adjust request or response shape, review error codes, auth, pagination, idempotency, REST or GraphQL contracts, or explicitly asks for API design.
-phase: detail
-type: domain
-role: goal-refiner
-triggers:
-  - "API 设计"
-  - "设计端点"
-  - "API 合约"
-avoid_when:
-  - "纯前端项目"
-  - "已有完整 API 详设"
-consumes:
-  - "docs/project.md"
-  - "PRD.md"
-  - "docs/change-units/CU-*.md"
-produces:
-  - "notes/api.md"
-  - "modules/*.md"
-  - "docs/change-units/CU-*.md"
-signals_in:
-  - "requirements and technical constraints"
-  - "change_unit.created"
-  - "change_unit.updated"
-signals_out:
-  - "API goal"
-  - "shared data model"
-  - "change_unit.updated"
-escalates_when:
-  - "资源模型无法确认"
-  - "权限或幂等策略冲突"
-output_contract:
-  - "D1-D7"
-  - "接口合约"
-  - "共享数据模型"
-maturity: stable
-stage_next:
-  - db-design
-  - frontend-design
-  - plan
-feedback_to:
-  - detail
-quality_gates: []
-signal_routes:
-  - signal: "API goal"
-    to: db-design
-    when: "storage model depends on API data model"
-  - signal: "shared data model"
-    to: frontend-design
-    when: "frontend goals consume API shapes"
 ---
 # API Design — 详设阶段（API 层）
 ## 职责

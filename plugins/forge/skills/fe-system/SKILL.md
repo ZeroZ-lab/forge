@@ -2,58 +2,6 @@
 name: fe-system
 description: Designs or reviews project visual systems, DESIGN.md, tokens, color, typography, spacing, component states, and visual language. Use for lightweight design-system decisions or full fe-system execution.
 when_to_use: Use when the user asks about design system, DESIGN.md, colors, typography, spacing, CSS tokens, component visual states, brand feel, visual direction, or updating shared frontend design rules.
-phase: design
-type: domain
-role: knowledge
-triggers:
-  - "设计系统"
-  - "配色"
-  - "设计规范"
-avoid_when:
-  - "无前端界面"
-  - "只需要技术详设"
-consumes:
-  - "docs/project.md"
-  - "PRD.md"
-  - "interaction-spec.md"
-  - "brand references"
-  - "docs/change-units/CU-*.md"
-produces:
-  - "DESIGN.md"
-  - "docs/change-units/CU-*.md"
-signals_in:
-  - "product tone"
-  - "page archetype"
-  - "change_unit.created"
-  - "change_unit.updated"
-signals_out:
-  - "design tokens"
-  - "component patterns"
-  - "change_unit.updated"
-escalates_when:
-  - "视觉方向冲突"
-  - "已有 DESIGN.md 冲突"
-output_contract:
-  - "三层 token"
-  - "页面结构模式"
-  - "组件模式"
-  - "交互状态"
-maturity: stable
-stage_next:
-  - frontend-design
-  - fe-artifact
-  - fe-accept
-feedback_to:
-  - init
-  - interaction-design
-quality_gates: []
-signal_routes:
-  - signal: "design tokens"
-    to: frontend-design
-    when: "frontend goals need design constraints"
-  - signal: "component patterns"
-    to: fe-accept
-    when: "frontend acceptance needs visual goal"
 ---
 
 # Fe System — 设计系统落地

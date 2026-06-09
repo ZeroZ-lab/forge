@@ -2,59 +2,6 @@
 name: plan
 description: Converts goals and modules into executable vertical-slice task plans with dependencies, ordering, risks, and verification criteria. Use for lightweight task planning or full plan stage execution.
 when_to_use: Use when the user asks to split tasks, make an execution plan, plan implementation from goal.md, order work, identify dependencies, create vertical slices, or turn Forge goals into plan.md.
-phase: plan
-type: domain
-role: decision-protocol
-triggers:
-  - "拆任务"
-  - "任务分解"
-  - "执行计划"
-avoid_when:
-  - "只有一个模块"
-  - "已有明确任务清单"
-consumes:
-  - "goal.md"
-  - "modules/*.md"
-  - "docs/change-units/CU-*.md"
-own_produces:
-  - "plan.md"
-  - "docs/change-units/CU-*.md"
-orchestrated_produces: []
-signals_in:
-  - "domain goals"
-  - "change_unit.created"
-  - "change_unit.updated"
-signals_out:
-  - "task sequence"
-  - "checkpoints"
-  - "change_unit.updated"
-  - "goal_verification.completed"
-escalates_when:
-  - "任务无法垂直切片"
-  - "验收标准缺失"
-output_contract:
-  - "任务清单"
-  - "依赖图"
-  - "拓扑排序"
-  - "验证方式"
-maturity: stable
-stage_next:
-  - codegen
-  - test
-  - test-cases
-feedback_to:
-  - detail
-quality_gates: []
-signal_routes:
-  - signal: "task sequence"
-    to: codegen
-    when: "implementation can proceed by vertical slices"
-  - signal: "checkpoints"
-    to: test
-    when: "testing stage needs task-derived checkpoints"
-  - signal: "goal_verification.completed"
-    to: review
-    when: "when implementation needs goal verification"
 ---
 # Plan — 任务阶段
 

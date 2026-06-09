@@ -2,78 +2,6 @@
 name: detail
 description: Orchestrates the full detail stage across multiple domain documents to produce goal.md and modules. Use only when the user explicitly asks for detail stage or cross-domain documents must be coordinated.
 when_to_use: Use when the user says technical detail design, detail stage, full goal design, coordinate multiple domain documents, turn PRD or design docs into technical goals, or resolve cross-domain goal inconsistency.
-phase: detail
-type: orchestrator
-role: goal-refiner
-triggers:
-  - "技术详设"
-  - "详细设计"
-  - "设计 API"
-avoid_when:
-  - "没有需求或技术上下文"
-  - "只是代码修复"
-consumes:
-  - "docs/project.md"
-  - "PRD.md"
-  - "interaction-spec.md"
-  - "DESIGN.md"
-  - "codegen deviation summary"
-  - "docs/change-units/CU-*.md"
-  - "goal.md"
-own_produces:
-  - "feature goal.md"
-  - "docs/change-units/CU-*.md"
-orchestrated_produces:
-  - "notes/api.md"
-  - "notes/database.md"
-  - "notes/frontend.md"
-signals_in:
-  - "repeat_signal from forge-codegen"
-  - "document drift from forge-review"
-  - "change_unit.created"
-  - "change_unit.updated"
-signals_out:
-  - "goal updated"
-  - "downstream gap report"
-  - "human decision needed"
-  - "change_unit.updated"
-  - "goal_coverage.updated"
-  - "project_state.updated"
-  - "goal_verification.completed"
-escalates_when:
-  - "goal ambiguity"
-  - "downstream drift needs decision"
-  - "frontend presence unclear"
-output_contract:
-  - "feature goal"
-  - "domain goals"
-  - "drift report"
-maturity: needs-runtime-hardening
-stage_next:
-  - api-design
-  - plan
-  - test
-feedback_to:
-  - codegen
-  - review
-quality_gates:
-  - review
-signal_routes:
-  - signal: "goal updated"
-    to: plan
-    when: "goal is ready for task slicing"
-  - signal: "downstream gap report"
-    to: human decision
-    when: "cascade impact is unclear"
-  - signal: "human decision needed"
-    to: human decision
-    when: "L2 drift or domain boundary conflict exists"
-  - signal: "goal_verification.completed"
-    to: review
-    when: "when implementation needs goal verification"
-  - signal: "goal_coverage.updated"
-    to: codegen
-    when: "when goal coverage paths are ready"
 ---
 
 # Forge Detail — 详设阶段编排
@@ -84,7 +12,7 @@ signal_routes:
 
 `detail` 是目标细化器。它把上游 PRD、project、DESIGN 和问题信号转成可操作的目标，并在 codegen/review 发现一致性问题时负责 goal 复查和级联更新决策。
 
-运行时目标验证参考 `docs/goal-verification.md`；目标漂移红旗参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/goal-drift.md`；目标质量标准参考 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`；范围蔓延红旗参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`。
+目标验证参考 `${CLAUDE_SKILL_DIR}/../shared/concepts/control-loop.md`；目标漂移红旗参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/goal-drift.md`；目标质量标准参考 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`；范围蔓延红旗参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`。
 
 **Phase 0 例外**：`detail` 的 Phase 0（Feature 骨架创建）和 Phase 4（索引同步 + Module 结构校验）是编排器自己的 domain work——创建 feature/goal.md 作为跨领域共享骨架，维护 project.md 索引。没有单独的 skill 负责 feature 级共享决策和 project.md 索引维护。
 
@@ -151,11 +79,14 @@ signal_routes:
 2. 从 PRD.md 提取核心场景和验收条件摘要
 3. 从 project.md「核心算法」（如有）提取算法决策
 4. 按 `${CLAUDE_SKILL_DIR}/../shared/goal-template.md` 生成 feature/goal.md：
+   - 首屏合约：目标 / 边界 / 完成标准落在文件前 ~30 行，让 agent 单读窗即可拿到全部硬约束
+   - 完成标准优先 EARS 句式（`WHEN <事件>，系统 SHALL <可验收行为>`）
+   - 不确定的需求/实现写 `[NEEDS CLARIFICATION: ...]`，不默默假设（D6）
    - 共享决策（FD#）：跨领域的决策
    - 共享数据模型：跨模块的类型定义
    - 共享约束：性能/安全/兼容性
    - 编排：入口 + 启动序列 + 事件绑定
-   - 领域索引：列出后续 Phase 会创建的领域
+   - 领域索引：列出后续 Phase 会创建的领域，并在「需要细节时」用指针引向 modules/
 5. 向用户确认 feature/goal.md 后再进入领域设计
 
 **Phase 1: API 设计**（如有后端）

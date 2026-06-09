@@ -1,31 +1,28 @@
-# Forge Skills Suite Runtime 审计
+# Forge Skills Suite 架构审计
 
-> 审计日期：2026-05-25（更新于 2026-06-07）
-> 审计目标：判断 Forge 在运行时使用这套 skills 时，是否能形成目标验证闭环。审计对象不是 skill 文件本身是否长成控制系统，而是这些协议节点被调用、串联、反馈和修正时是否能验证目标达成。
+> 审计日期：2026-05-25（更新于 2026-06-09）
+> 审计目标：判断 Forge 这套 skills 作为决策协议是否覆盖完整生命周期、职责切分是否清晰、方法论是否稳定。审计对象是协议节点的方法论质量和阶段编排，不是 skill 文件是否长成运行时控制系统。
 
 ## 1. 基线
 
 当前仓库基线：
 
-- `node scripts/validate.mjs` 通过：`Forge validation passed (24 skills, version 0.24.1).`
-- 当前 suite 暴露 24 个一级 `plugins/forge/skills/*` skill，SKILL.md frontmatter 使用目录名作为 skill id。
+- `node scripts/validate.mjs` 通过：`Forge validation passed (23 skills, ...)`。
+- 当前 suite 暴露 23 个一级 `plugins/forge/skills/*` skill，SKILL.md frontmatter 只保留 `name` / `description` / `when_to_use` 标准头，目录名即 skill id。
 - `plugins/forge/.claude-plugin/plugin.json` 显式枚举 `skills/*`，`scripts/validate.mjs` 校验 manifest 与目录一致。
-- `SKILL.md` frontmatter 已新增为运行时控制面，覆盖全部 24 个 skill。
 - `plugins/forge/skills/shared/` 已从产物模板扩展出 concepts、rubrics、red-flags、output-contracts 四类 Knowledge 文件。
-- `docs/goal-verification.md` 定义目标验证闭环。
 
 不改 flat 结构的原因：
 
 - Claude Code 只发现 `plugins/forge/skills/` 一级子目录的 `SKILL.md`，当前 flat list 是安装和发现边界。
-- Validator 已经把 24 个 skill、frontmatter 短名、manifest 枚举和行数上限作为稳定约束。
-- 嵌套分类目录会破坏现有 plugin discovery 和 validator 约束；分类应该进入 registry 元数据，不应进入物理目录。
+- Validator 已经把 23 个 skill、frontmatter 短名、manifest 枚举和行数上限作为稳定约束。
+- 嵌套分类目录会破坏现有 plugin discovery 和 validator 约束；分类应留在文档说明里，不进入物理目录。
 
 审计标准来源：
 
-- 当前 Forge 的目标验证链：`codegen -> detail -> review`。
-- Forge 的 skill 是运行时协议节点；控制系统产生在"用户任务 -> skill 路由 -> 文档产物 -> 代码实现 -> 目标验证 -> 文档/方法论修正"的运行链路中。
-- 单个 skill 可以只是决策协议、执行器、验证器、治理门或知识锚点。
-- 本次审计先建立运行时口径，再把 frontmatter registry、Knowledge 层、编排 skill 和 validator/tests 纳入闭环校验。
+- Forge 的 skill 是决策协议节点：明确目标 -> AI 自主实现 -> 验证结果。
+- 单个 skill 可以是决策协议、执行器、验证器、治理门或知识锚点。
+- 本审计关注方法论覆盖度和职责切分，不要求 skill 文件内建运行时控制信号。
 
 ## 2. 审计标准
 
@@ -46,27 +43,26 @@
 | Red Flags | 哪些情况必须暂停、转向或升级？ |
 | Knowledge Anchors | 长解释、模板、评分卡、反例是否放到 references/shared？ |
 
-## 3. 运行时目标验证判定
+## 3. 生命周期覆盖判定
 
-当前 Forge 的运行时闭环已经具备雏形：
+当前 Forge 用决策协议覆盖完整生命周期：
 
-| 模块 | 运行时承担者 | 当前状态 |
+| 模块 | 承担者 | 当前状态 |
 |------|--------------|----------|
-| Monitor | 当前任务、项目文档、feature 文档、代码、测试、timeline/changelog、用户确认 | SKILL.md frontmatter 已记录 consumes/signals；编排 skill 已补输入状态读取 |
-| Analyze | `review`、`codegen`、`detail` 运行时步骤 | 差距分析已固化 |
-| Plan | `plan`、`detail`、`deploy` 运行时步骤 | 任务计划、级联更新、发布计划存在 |
-| Execute | `codegen`、`fe-artifact`、`deploy` 运行时步骤 | 执行层清晰 |
+| Monitor | 当前任务、项目文档、feature 文档、代码、测试、timeline/changelog、用户确认 | 各 skill 在正文说明执行前读取哪些输入 |
+| Analyze | `review`、`codegen`、`detail` | 差距分析已固化 |
+| Plan | `plan`、`detail`、`deploy` | 任务计划、级联更新、发布计划存在 |
+| Execute | `codegen`、`fe-artifact`、`deploy` | 执行层清晰 |
 | Knowledge | `plugins/forge/skills/shared/`、各 skill `references/`、项目 `timeline`、feature `changelog`、产物文档 | shared 已扩展 concepts/rubrics/red-flags/output-contracts |
-| Feedback | `validate.mjs`、真实测试、`review`、`fe-accept`、用户验收 | validator 与 `node --test` 已校验 SKILL.md frontmatter、runtime docs 和 signal-flow |
-| Recovery | `codegen` 问题升级、`detail` 级联更新、`review` 阻塞项、`deploy` 回滚 | 目标验证链已由 SKILL.md frontmatter 和编排 skill 固化 |
+| Feedback | `validate.mjs`、真实测试、`review`、`fe-accept`、用户验收 | validator 与 `node --test` 校验仓库静态完整性 |
+| Recovery | `codegen` 问题升级、`detail` 级联更新、`review` 阻塞项、`deploy` 回滚 | 升级路径写在各 skill 正文 |
 
 整体结论：
 
-- Forge 不需要把 24 个 skill 都改成统一模板。
-- 必须保证运行时闭环完整：状态读取、问题判断、计划选择、目标实现、反馈验收、恢复升级和知识沉淀能串起来。
-- 真正需要优先补的是运行时控制面、知识层、行为测试层，以及 4 个编排 skill 的中枢控制能力。
-- 领域型决策 skill 可以继续保持"方法论 + 决策点 + 文档约束"的形态，只需在必要处补输入状态、问题分类或恢复规则。
-- 运行时闭环定义见 `docs/goal-verification.md`。
+- Forge 不需要把 23 个 skill 都改成统一模板。
+- 必须保证方法论覆盖完整：状态读取、问题判断、计划选择、目标实现、反馈验收、恢复升级和知识沉淀能串起来。
+- 领域型决策 skill 保持"方法论 + 决策点 + 文档约束"的形态，只需在必要处补输入状态、问题分类或恢复规则。
+- 目标验证作为执行实践写在各 skill 正文，参考 `plugins/forge/skills/shared/concepts/control-loop.md`。
 
 ## 4. 逐项扫描结果
 
@@ -233,18 +229,17 @@
 - 建议动作：补分支和恢复规则。
 - 优先级：P1。
 
-## 5. Suite 层缺口
+## 5. Suite 层现状
 
-### SKILL.md frontmatter 已落地
+### SKILL.md frontmatter 只保留标准头
 
-`SKILL.md` frontmatter 是运行时控制面，不替代 plugin manifest。它记录：
+`SKILL.md` frontmatter 不是运行时控制面，只声明 Claude Code / Codex 发现 skill 所需的标准字段：
 
-- skill name / path / phase / type
-- triggers / avoid_when
-- consumes / produces
-- stop_conditions
-- output_contract
-- maturity
+- `name`
+- `description`
+- `when_to_use`
+
+skill 之间的衔接、目标验证和升级规则写在各 skill 正文，不再由 frontmatter 信号路由驱动。
 
 ### shared 已扩展为 Knowledge 层
 
@@ -255,34 +250,30 @@
 - `plugins/forge/skills/shared/red-flags/`
 - `plugins/forge/skills/shared/output-contracts/`
 
-### validator 校验运行时闭环完整性
+### validator 校验仓库静态完整性
 
 `scripts/validate.mjs` 校验：
 
 - `docs/skill-architecture-audit.md` 存在
-- `docs/goal-verification.md` 存在
-- 24 个 skill 均在审计表中出现
-- `SKILL.md` frontmatter 覆盖 24 个 skill
+- 23 个 skill 的 frontmatter 短名与目录名一致、描述存在、行数不超限
+- `plugins/forge/.claude-plugin/plugin.json` 的 skill 枚举与目录一致
 - shared Knowledge 层文件存在
-- 编排 skill 含输入状态、分支判断和恢复规则
-- `codegen -> detail -> review` 验证链存在
+- 关键编排顺序（如 detail 内 API 先于 DB）和测试用例路径
 
-## 6. 推荐重构顺序与当前状态
+## 6. 历史演进
 
 1. 已落地本审计文件，保持 validate 通过。
-2. 已落地 `docs/goal-verification.md`，定义运行时闭环。
-3. 已新增 `SKILL.md` frontmatter，只做运行时控制面和审计面，不改变 plugin discovery。
-4. 已扩展 `plugins/forge/skills/shared/` 为 Knowledge 层。
-5. 已优先重构 4 个编排 skill：`init`、`design`、`detail`、`test`。
-6. 已以 `codegen`、`detail`、`review` 固化目标验证链。
+2. 已扩展 `plugins/forge/skills/shared/` 为 Knowledge 层。
+3. 已重构 4 个编排 skill：`init`、`design`、`detail`、`test`。
+4. 已移除 SKILL.md frontmatter 的运行时控制面（信号路由 / 目标验证闭环），frontmatter 回到标准头。
 
 ## 7. 执行边界
 
 本轮执行仍保持以下边界：
 
-- 保留 `plugins/forge/skills/*` 一级 flat discovery，`SKILL.md` frontmatter 使用目录名作为 skill id。
+- 保留 `plugins/forge/skills/*` 一级 flat discovery，目录名作为 skill id。
 - 不触碰未跟踪 `.claude/`。
 - 不改变 `plugins/forge/.claude-plugin/plugin.json` 和 `plugins/forge/.codex-plugin/plugin.json` 的 skill 枚举方式。
-- `SKILL.md` frontmatter 保持 YAML 格式，由 `scripts/lib/registry.mjs` 统一解析。
+- `SKILL.md` frontmatter 保持 YAML 标准头（name/description/when_to_use），由 `scripts/lib/registry.mjs` 解析以枚举 skill。
 
 后续如果继续深化，应按问题信号逐步修改领域 skill，而不是一次性套模板。

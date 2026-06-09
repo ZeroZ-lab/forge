@@ -2,53 +2,6 @@
 name: brainstorm
 description: Explores ambiguous ideas through structured divergence-convergence to find the most promising direction. Use when brainstorming, comparing ideas, or clarifying vague concepts before requirements.
 when_to_use: Use when the user says they want to brainstorm, explore possibilities, compare ideas, clarify a vague idea, or figure out what is worth pursuing before requirements or design.
-phase: explore
-type: domain
-role: goal-refiner
-triggers:
-  - "想法模糊"
-  - "探索方向"
-  - "brainstorm"
-avoid_when:
-  - "方向已明确"
-  - "已有完整 PRD"
-  - "纯技术实现问题"
-consumes:
-  - "user intent"
-  - "problem context"
-  - "docs/change-units/CU-*.md"
-produces:
-  - "idea-brief.md"
-  - "docs/change-units/CU-*.md"
-signals_in:
-  - "user uncertainty"
-  - "change_unit.created"
-  - "change_unit.updated"
-signals_out:
-  - "validated direction"
-  - "assumption list"
-  - "change_unit.updated"
-escalates_when:
-  - "方向无法排序"
-  - "核心痛点无法具体化"
-output_contract:
-  - "方向地图"
-  - "MVP 定义"
-  - "假设清单"
-  - "验证计划"
-maturity: stable
-stage_next:
-  - business-alignment
-  - init
-feedback_to: []
-quality_gates: []
-signal_routes:
-  - signal: "validated direction"
-    to: business-alignment
-    when: "direction is concrete enough for business commitment"
-  - signal: "assumption list"
-    to: init
-    when: "new project initialization can proceed from explored direction"
 ---
 # Brainstorm — 探索阶段
 

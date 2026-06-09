@@ -96,15 +96,13 @@ node scripts/validate.mjs
 
 自检会校验版本同步、23 个 skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 目标回流。
 
-运行时控制面也会被校验：`SKILL.md` frontmatter 必须覆盖全部 23 个 skill，并声明每个协议节点的输入输出和升级条件；`docs/goal-verification.md` 和 `docs/skill-architecture-audit.md` 必须存在；编排 skill 的运行时恢复规则，`codegen -> detail -> review` 目标验证链必须完整。`SKILL.md` frontmatter 是 YAML 格式，由 `scripts/lib/registry.mjs` 统一解析。
-
 ### 行为测试
 
 ```bash
 node --test
 ```
 
-行为测试验证 suite 运行时控制面的静态完整性，不模拟真实 skill 执行。
+行为测试验证评测合约和工具脚本的静态完整性，不模拟真实 skill 执行。
 
 ### Skill Suite 评测
 
@@ -139,7 +137,6 @@ node scripts/evaluate-skills.mjs --skip-blocked --report .eval-runs/skills-suite
 默认入口收窄了，但完整框架没有删：
 
 - 全量 skill 和阶段说明：见 [AGENTS.md](AGENTS.md)
-- 目标验证闭环：见 [docs/goal-verification.md](docs/goal-verification.md)
 - 架构审计：见 [docs/skill-architecture-audit.md](docs/skill-architecture-audit.md)
 - Skills Suite 评测：见 [docs/skill-suite-evaluation.md](docs/skill-suite-evaluation.md)
 

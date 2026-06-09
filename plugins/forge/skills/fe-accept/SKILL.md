@@ -2,57 +2,6 @@
 name: fe-accept
 description: Reviews frontend implementation quality across behavior, visual fidelity, responsiveness, accessibility, and performance evidence. Use for lightweight page checks or full frontend acceptance review.
 when_to_use: Use when the user asks to accept frontend work, inspect a page, compare implementation with design, check visual quality, responsive behavior, accessibility, performance, or frontend release readiness.
-phase: test
-type: domain
-role: verifier
-triggers:
-  - "验收前端"
-  - "检查页面"
-  - "视觉验收"
-avoid_when:
-  - "无前端实现"
-  - "无可对照设计系统"
-consumes:
-  - "DESIGN.md"
-  - "interaction-spec.md"
-  - "notes/frontend.md"
-  - "modules/*.md"
-  - "frontend source files"
-  - "docs/change-units/CU-*.md"
-produces:
-  - "frontend acceptance report"
-  - "docs/change-units/CU-*.md"
-signals_in:
-  - "frontend artifact ready"
-  - "change_unit.created"
-  - "change_unit.updated"
-signals_out:
-  - "P0/P1/P2 frontend issues"
-  - "acceptance status"
-  - "change_unit.updated"
-escalates_when:
-  - "无法运行或预览却要求通过"
-  - "P0/P1 未修复"
-output_contract:
-  - "验收报告"
-  - "缺陷清单"
-  - "豁免记录"
-maturity: stable
-stage_next:
-  - review
-  - codegen
-feedback_to:
-  - fe-artifact
-  - fe-system
-quality_gates:
-  - review
-signal_routes:
-  - signal: "P0/P1/P2 frontend issues"
-    to: codegen
-    when: "frontend implementation needs fixes"
-  - signal: "acceptance status"
-    to: review
-    when: "review needs frontend acceptance evidence"
 ---
 
 # Fe Accept — 前端质量验收

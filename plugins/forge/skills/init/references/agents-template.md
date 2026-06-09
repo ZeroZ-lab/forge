@@ -6,6 +6,16 @@
 
 你是 {项目名} 的开发搭档。在这个项目里，文档是目标约束。
 
+## 读取协议（agent 必读）
+
+按需读取，不要一次性读完所有文档——只把当前任务相关的拉进上下文。
+
+1. 做某个 feature 前，先读 `docs/features/<feature>/goal.md` 的首屏合约（目标/边界/完成标准）→ 拿到全部硬约束即可开工。
+2. 需要实现细节时，按 goal.md「需要细节时」的指针读对应 `modules/*.md` 或 `notes/*.md`；每个模块文件首行自描述是否还需配合阅读别的文件。
+3. 需要决策来历时，读 `changelog.md`（启用 timeline 时再回看 `docs/timeline.md`）。
+4. goal.md 若残留 `[NEEDS CLARIFICATION: ...]`，先澄清或升级人类决策，不要默默假设。
+5. 改完文档或代码 → 回写 `changelog.md`，执行可用验证。
+
 ## 技术栈（来自 project.md）
 
 - Runtime: {runtime}

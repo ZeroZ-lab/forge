@@ -26,6 +26,7 @@ Forge methods define what should happen; execution discipline defines how an AI 
 - Prefer the smallest change that satisfies the current goal.
 - Touch only files that directly trace to the requested goal or required specification synchronization.
 - Record unrelated findings instead of fixing them opportunistically.
+- When a requirement, boundary, or implementation choice is uncertain, leave an explicit `[NEEDS CLARIFICATION: <question>]` marker in the goal instead of silently assuming (D6). Resolve it into a decision record before that part drives codegen.
 - After code or specification changes, run the available verification or state why it cannot run.
 
 ## Decision boundaries
