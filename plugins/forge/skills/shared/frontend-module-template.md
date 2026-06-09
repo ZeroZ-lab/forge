@@ -1,6 +1,6 @@
 # frontend-module-template.md — 前端模块模板
 
-> frontend-design 专用。产出 notes/frontend.md。
+> frontend-design 专用。前端合约部分写入 goal.md（与 frontend-goal-template 配合）。
 > 只放前端特有的决策（FE#）和组件索引。共享数据模型、编排、下游依赖在 goal.md。
 > 目标：~80 行，几乎不变。
 
@@ -108,7 +108,7 @@ interface SharedType {
 ## 代码映射
 
 ```
-notes/frontend.md ──→ src/types/ (前端类型)
+goal.md（前端合约） ──→ src/types/ (前端类型)
                           src/stores/ (状态管理)
 
 modules/<name>.md ────→ src/components/<Name>.tsx

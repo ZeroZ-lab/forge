@@ -29,19 +29,18 @@ Forge 的默认入口不是完整生命周期，而是**已有项目上的小功
 
 ## 默认最小文档集
 
-默认只要求 3 类文档：
+默认只要求 2 类文档：
 
-- `goal.md`：共享约束和跨领域骨架
-- `modules/*.md`：模块级接口、数据和行为
+- `goal.md`：目标、边界、完成标准、关键决策（首屏合约）
 - `changelog.md`：这个 feature 的决策历史
-- `docs/change-units/CU-*.md`：每次 feature / bugfix / refactor 的完整事件记录
 
 按需再补：
 
+- `modules/*.md`：需要模块级接口、数据和行为细节时（详设下钻的唯一路径）
+- `docs/change-units/CU-*.md`：每次 feature / bugfix / refactor 的完整事件记录
 - `PRD.md`：需求边界还不清时再写
 - `plan.md`：任务复杂、需要切片或并行时再写
 - `testing/`、`deploy/`：测试或发布要独立建模时再开
-- `docs/change-units/`：重大变更的可追溯记录
 - `docs/timeline.md`：项目级决策演进或跨 feature 影响时再开
 - `docs/status.md`：多 feature 并行协调时再开
 

@@ -40,7 +40,7 @@ when_to_use: Use by direct invocation or as a child protocol when the user expli
 
 **不变原则**：
 - 先读完再写——跳过读直接生成 = 和文档分歧（D7：验证而非假设）
-- 注意决策编号（PD1-PDn 来自 project.md，FD1-FDn 来自 goal.md，DB1-DBn 来自 notes/database.md）——生成时关键逻辑分支要注释对应编号（D1：决策留痕）
+- 注意决策编号（PD1-PDn 来自 project.md，FD1-FDn 来自 goal.md，DB1-DBn 来自 goal.md）——生成时关键逻辑分支要注释对应编号（D1：决策留痕）
 - 注意共享约束（多租户、权限、软删除）——所有生成代码必须遵守
 
 ### 第二步：生（Generate）
@@ -151,7 +151,7 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 | project.md 技术选型 | package.json + tsconfig | 框架 + 版本 → 依赖安装 |
 | goal.md 共享约束 | 所有文件 | 多租户 + 权限 + 软删除 → 注入每个服务 |
 
-**注释规则**：每个关键逻辑分支注释对应的决策编号——FD# 优先（feature 级，来自 goal.md），PD# 补充（项目级共享约束，来自 project.md），DB# 引用（数据库约束，来自 notes/database.md）。测试文件额外注释 AC 编号（来自 modules/*.md，如 `// Test for: AC-01-1`），形成 PRD → 测试追溯链。modules 可能使用 AC1/AC2 重新编号（追溯至 PRD AC-XX-X），测试注释使用 module 的编号即可。让人类审查代码时可直接跳转文档理解 WHY。
+**注释规则**：每个关键逻辑分支注释对应的决策编号——FD# 优先（feature 级，来自 goal.md），PD# 补充（项目级共享约束，来自 project.md），DB# 引用（数据库约束，来自 goal.md）。测试文件额外注释 AC 编号（来自 modules/*.md，如 `// Test for: AC-01-1`），形成 PRD → 测试追溯链。modules 可能使用 AC1/AC2 重新编号（追溯至 PRD AC-XX-X），测试注释使用 module 的编号即可。让人类审查代码时可直接跳转文档理解 WHY。
 
 ## 文档约束
 

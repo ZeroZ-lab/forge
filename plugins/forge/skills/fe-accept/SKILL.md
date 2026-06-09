@@ -20,7 +20,7 @@ when_to_use: Use when the user asks to accept frontend work, inspect a page, com
 
 ## 上下游边界
 
-**上游**：`DESIGN.md`、interaction-spec、notes/frontend.md、modules/*.md、实际前端代码和测试。
+**上游**：`DESIGN.md`、interaction-spec、goal.md（前端决策）、modules/*.md、实际前端代码和测试。
 
 **下游**：验收报告、缺陷清单、豁免记录，交给 codegen 修复或 review 审查。
 

@@ -38,7 +38,7 @@ Forge 的默认目标不是把每个用户都带进完整生命周期，而是�
 
 按需再补：
 
-- `notes/*.md`：需要领域补充说明时启用（API、前端、数据库等）
+- `modules/*.md`：需要模块级接口、数据或行为细节时启用（详设下钻的唯一路径）
 - `PRD.md`：需求边界还不清时启用
 - `plan.md`：任务切片、依赖图、并行矩阵有价值时启用
 - `testing/`、`deploy/`：需要独立测试或发布产物时启用
@@ -147,7 +147,7 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 
 ```
 ⓪ 探索         ① 定义         ①.5 研究       ② 设计                      ③ 详设
-方向简报  →  项目章程 → PRD  →  算法菜单  →    交互规格 + 设计系统 + 技术方案    →    goal.md + notes/
+方向简报  →  项目章程 → PRD  →  算法菜单  →    交互规格 + 设计系统 + 技术方案    →    goal.md + modules/
                                                                               │
                                                                               ↓
 ⑦ 交付          ⑥.5 审查        ⑥ 测试                     ⑤ 构建         ④ 任务
@@ -236,10 +236,9 @@ my-project/
 │       │   ├── changelog/            #   变更历史归档
 │       │   ├── PRD.md                #   可选：需求定义（define 阶段）
 │       │   ├── plan.md               #   可选：任务分解（plan 阶段）
-│       │   └── notes/                #   可选：领域补充说明
-│       │       ├── api.md            #     API 相关说明
-│       │       ├── frontend.md       #     前端相关说明
-│       │       └── database.md       #     数据库相关说明
+│       │   └── modules/              #   可选：模块详细规格（详设下钻的唯一路径）
+│       │       ├── tasks.md          #     一个模块 = 接口/数据/行为合约
+│       │       └── comments.md       #     另一个模块
 │       └── billing/                  # 另一个功能，同样结构
 │
 ├── DESIGN.md                         # Project 级（设计系统）
@@ -309,7 +308,7 @@ my-project/
 | goal.md | 100 行 | 分拆为多个 feature 或精简 |
 | timeline.md | 100 行 | 旧条目压缩成年度摘要，移到 timeline/年.md |
 | changelog.md | 100 行 | 旧版本移到 changelog/v*.md |
-| notes/*.md | 200 行 | 按子领域拆分 |
+| modules/*.md | 200 行 | 按子领域拆分 |
 
 ---
 
@@ -394,7 +393,7 @@ Claude Code 根据 skill 的 `description` / `when_to_use` 自动选择最小相
 | `docs/features/<feature>/changelog.md` | 一条 = 一个决策 | 触发 + 决策 + 影响 + 类型 |
 | `docs/timeline.md` | 一条 = 一次项目级演进（启用时） | 日期 + 变更摘要 + 触发原因 + 影响范围 |
 
-**默认触发规则**：goal.md / notes/*.md 变更 → 追加 changelog。
+**默认触发规则**：goal.md / modules/*.md 变更 → 追加 changelog。
 
 **timeline 启用后**：阶段完成、新增 feature、跨 feature 共享决策变更或项目级发布摘要 → 追加 timeline。
 
@@ -484,7 +483,7 @@ init（编排器）          →  加载子 skill + 模板 → 生成项目文�
 项目 AGENTS.md         →  告诉 AI 文件在哪、格式是什么
 ```
 
-引用关系只存在于项目文件中：项目 AGENTS.md → project.md + DESIGN.md · Feature goal.md → notes/*.md · 模块文件 → 互相引用。
+引用关系只存在于项目文件中：项目 AGENTS.md → project.md + DESIGN.md · Feature goal.md → modules/*.md · 模块文件 → 互相引用。
 
 ---
 

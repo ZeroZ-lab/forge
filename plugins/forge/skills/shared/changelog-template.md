@@ -32,7 +32,7 @@
 ### v{版本} — {日期} — {阶段名称}
 
 - **触发**：{用户说的一句话 / 触发原因}
-- **产出**：{文件列表，如 goal.md + notes/frontend.md + 8 个 modules}
+- **产出**：{文件列表，如 goal.md + 8 个 modules}
 - **关键决策**：{FD# 摘要，如 FD1=Next.js, FD2=Zustand 双 store}
 
 ---

@@ -18,14 +18,14 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 
 ## 上下游边界
 
-**上游**：`DESIGN.md`、interaction-spec、notes/frontend.md、modules/*.md、plan.md。
+**上游**：`DESIGN.md`、interaction-spec、goal.md（前端决策+组件索引）、modules/*.md、plan.md。
 
 **下游**：前端源码、样式、hooks、基础测试，交给 fe-accept 和 review。
 
 不重新做产品决策，不改 API 合约，不绕过 `DESIGN.md` 自行发明视觉语言。
 
 ## 何时不使用
-- 无前端规格（notes/frontend.md 不存在）
+- 无前端规格（goal.md 无前端决策且无 modules/）
 - 无 DESIGN.md（设计系统未建立）
 - 纯后端 API（无前端代码需要生成）
 - codegen 未处理前端任务时不单独调用
@@ -52,7 +52,7 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 生成前必须读取：
 
 - `DESIGN.md`：token、组件模式、页面结构。
-- notes/frontend.md：前端边界和模块索引。
+- goal.md：前端边界和组件索引。
 - modules/*.md：组件职责、props、状态、交互；API 模块含请求、响应、错误码。
 - plan.md：任务顺序和验证方式。
 
@@ -110,7 +110,7 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 - 视觉状态无法被 fe-accept 验收 → 补充证据（截图/预览链接）
 
 ## 验证清单
-- [ ] 是否读取了 DESIGN.md + notes/frontend.md + modules/*.md？
+- [ ] 是否读取了 DESIGN.md + goal.md + modules/*.md？
 - [ ] API 类型、错误和加载状态是否完整？
 - [ ] 组件 props 是否与 module 文档一致？
 - [ ] 视觉是否消费 DESIGN.md Token（不自行发明颜色/间距）？

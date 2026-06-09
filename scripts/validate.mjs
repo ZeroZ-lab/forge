@@ -386,9 +386,11 @@ for (const file of filesUnder('docs/features')) {
 }
 
 // Canonical artifact naming: frontmatter and bodies must use the real on-disk
-// layout (notes/<domain>.md, modules/*.md, testing/strategy.md, deploy/plan.md).
-// Legacy normalized names (api/goal.md, testing/goal.md, ...) caused frontmatter↔body
-// drift where runtime routing and the executing AI disagreed on filenames.
+// layout. Detail down-drill is a single layer: feature-level decisions live in
+// goal.md (API#/DB#/FE# + shared data models) and per-module contracts live in
+// modules/*.md. The legacy domain-summary layer (notes/<domain>.md) was collapsed
+// into goal.md + modules/ — see CU-20260609-collapse-notes-into-modules.
+// Other canonical names: testing/strategy.md, deploy/plan.md.
 const forbiddenArtifactNames = [
   'api/goal.md',
   'database/goal.md',
@@ -397,13 +399,55 @@ const forbiddenArtifactNames = [
   'deploy/goal.md',
   'api/modules',
   'frontend/modules',
+  'notes/api.md',
+  'notes/frontend.md',
+  'notes/database.md',
 ];
 for (const file of filesUnder('plugins/forge/skills')) {
   if (!file.endsWith('.md')) continue;
   const content = read(file);
   for (const name of forbiddenArtifactNames) {
     if (content.includes(name)) {
-      fail(`${file}: legacy artifact name "${name}" — use canonical layout (notes/<domain>.md, modules/*.md, testing/strategy.md, deploy/plan.md)`);
+      fail(`${file}: legacy artifact name "${name}" — use canonical layout (goal.md for decisions, modules/*.md for module contracts, testing/strategy.md, deploy/plan.md)`);
+    }
+  }
+}
+
+// Feature-level index integrity: when a feature uses the modules/ down-drill
+// layer, goal.md must act as a reliable index. Every modules/*.md file must be
+// referenced from goal.md (so a read-budget-limited agent can discover it), and
+// every modules/<x>.md pointer in goal.md must resolve to an existing file
+// (no dangling pointers). Only fires when docs/features/<f>/modules/ exists, so
+// it never breaks features that keep all detail inline in goal.md.
+const featuresRoot = 'docs/features';
+if (exists(featuresRoot)) {
+  for (const entry of fs.readdirSync(path.join(root, featuresRoot), { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const featureDir = path.join(featuresRoot, entry.name);
+    const goalPath = path.join(featureDir, 'goal.md');
+    const modulesDir = path.join(featureDir, 'modules');
+    if (!exists(goalPath) || !exists(modulesDir)) continue;
+
+    const goalContent = read(goalPath);
+    const moduleFiles = fs
+      .readdirSync(path.join(root, modulesDir), { withFileTypes: true })
+      .filter((m) => m.isFile() && m.name.endsWith('.md'))
+      .map((m) => m.name);
+
+    for (const moduleFile of moduleFiles) {
+      assert(
+        goalContent.includes(`modules/${moduleFile}`),
+        `${goalPath}: missing index pointer to modules/${moduleFile} (goal.md「需要细节时」must list every module)`,
+      );
+    }
+
+    const pointerMatches = goalContent.matchAll(/modules\/([\w.-]+\.md)/g);
+    for (const match of pointerMatches) {
+      const pointedFile = path.join(modulesDir, match[1]);
+      assert(
+        exists(pointedFile),
+        `${goalPath}: dangling pointer modules/${match[1]} — no such file under ${modulesDir}`,
+      );
     }
   }
 }

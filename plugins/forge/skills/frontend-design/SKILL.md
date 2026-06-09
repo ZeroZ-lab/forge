@@ -20,8 +20,8 @@ when_to_use: Use when the user asks how to split components, structure pages, ma
 3. **约束一致性** — 样式、交互、错误处理在整个产品中保持一致
 每个决策点都是这套方法论的一个切面。
 ## 与上下游的边界
-**上游**：读 interaction-spec（交互规格）+ notes/api.md（接口合约）+ DESIGN.md（设计系统）
-**下游**：notes/frontend.md + modules/*.md 交给 plan 阶段（任务分解）和代码生成
+**上游**：读 interaction-spec（交互规格）+ goal.md（API 决策）+ modules/*.md（接口合约）+ DESIGN.md（设计系统）
+**下游**：goal.md（FE1-FE5 决策 + 组件索引）+ modules/*.md 交给 plan 阶段（任务分解）和代码生成
 **和 api-design 的切法**：
 - api-design 定义**接口合约**（端点+请求+响应）
 - frontend-design 定义**怎么消费接口**（数据请求+缓存+状态管理）
@@ -110,22 +110,22 @@ src/
 ```
 ## 模板
 使用前端专用模板：
-- `${CLAUDE_SKILL_DIR}/../shared/frontend-goal-template.md` — notes/frontend.md 结构（FE1-FE5 决策 + 前端约束 + 组件索引）
+- `${CLAUDE_SKILL_DIR}/../shared/frontend-goal-template.md` — goal.md（前端）结构（FE1-FE5 决策 + 前端约束 + 组件索引）
 - `${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md` — modules/*.md 结构（组件结构 + 数据消费 + 依赖）
 - `${CLAUDE_SKILL_DIR}/../shared/changelog-template.md` — changelog.md 结构
 ## 与 project.md 的关系
-- project.md 已列出的技术选型 → notes/frontend.md 引用不重复
-- notes/frontend.md 只补充前端特有的依赖（如 @react-spring/three、Lucide React）
+- project.md 已列出的技术选型 → goal.md 引用不重复
+- goal.md 只补充前端特有的依赖（如 @react-spring/three、Lucide React）
 - 格式：`> 完整技术栈见 project.md，以下为前端补充`
 - FE1-FE5 的框架选型如果和 project.md 的前端框架一致，直接引用不重复
 ## 入口/出口条件
 **入口**：有 project.md + PRD.md + interaction-spec.md，或用户已有技术选型、需求和交互设计
-**出口**：notes/frontend.md（FE1-FE5 完整）+ modules/*.md + 技术选型表 + 共享约束
+**出口**：goal.md（FE1-FE5 决策 + 组件索引）+ modules/*.md + 技术选型表 + 共享约束
 
 **缺失处理**：
 - 无 interaction-spec.md → 从 PRD 推导最小交互路径，标注"无交互规格，组件行为需用户确认"
 - 无 DESIGN.md → 跳过 FE3 样式方案决策（使用框架默认样式），标注"无设计系统"
-- notes/api.md 缺失 → 要求先完成 API 详设，或标注"接口待定义"
+- goal.md 缺 API 决策 → 要求先完成 API 详设，或标注"接口待定义"
 
 ## 运行时信号
 - 输入：API contract、design tokens、interaction spec
@@ -141,7 +141,7 @@ src/
 - 表单数量多但没有表单方案 → 强制补充（"表单验证怎么做？"）
 - 没有数据请求策略 → 强制评估（"API 调用怎么缓存？怎么重试？"）
 - 和 fe-system 职责重叠 → 拉回（"这是外观还是行为？"）
-- 同一 Props / interface 在此（notes）与 module spec 各写一遍且签名不一致（如 `modelUrl: string` vs `modelUrl?: string`）→ 取单源（module spec 为权威），notes 只引用类型名（参见 `${CLAUDE_SKILL_DIR}/../shared/concepts/reference-not-repeat.md`）
+- 同一 Props / interface 在此（goal.md）与 module spec 各写一遍且签名不一致（如 `modelUrl: string` vs `modelUrl?: string`）→ 取单源（module spec 为权威），goal.md 只引用类型名（参见 `${CLAUDE_SKILL_DIR}/../shared/concepts/reference-not-repeat.md`）
 - 否决了 PRD 点名的具体技术（如 PRD 写 CountUp，本层改用 CSS transition）→ 禁止静默替换，必须 escalate 回 define 升级 PRD 后再改
 - 技术选型表列了依赖但无模块使用（如 Faker/Recharts 声明却无组件消费）→ 强制标注"被哪个模块使用"，未用则移除或标注"预留（未使用）"
 - module 文件缺少模板必需节（入口 / 公共接口 / 组件结构 / 数据消费 / 内部函数 / 依赖关系）→ 强制补充，参照 `${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md`
@@ -155,7 +155,7 @@ src/
 - [ ] 数据流是否明确（hooks / queries / mutations）？
 - [ ] 是否有性能约束（首屏加载、交互响应）？
 - [ ] 每个 module 文件是否包含模板必需节（入口 / 公共接口 / 组件结构 / 数据消费 / 内部函数 / 依赖关系）？
-- [ ] 同一 Props / interface 是否单源（只在 module spec 定义，notes 引用而非重写签名）？
+- [ ] 同一 Props / interface 是否单源（只在 module spec 定义，goal.md 引用而非重写签名）？
 - [ ] 是否未否决 PRD 点名的具体技术（若否决，是否已 escalate 回 define）？
 - [ ] 技术选型表每个依赖是否标注了使用方，且无声明未用的依赖？
 ## 历史维护（自动）
@@ -164,17 +164,17 @@ src/
    ```markdown
    ### v{版本} — {日期} — 前端详设
    - **触发**：{用户说的一句话}
-   - **产出**：notes/frontend.md（FE1-FE5）+ {N} 个页面/组件 modules
+   - **产出**：goal.md（FE1-FE5 决策）+ {N} 个页面/组件 modules
    ```
 2. **追加 docs/timeline.md**：
    ```markdown
    ### {日期} — {feature} 前端详设
-   - 新增：notes/frontend.md + modules/
+   - 新增：goal.md（前端决策）+ modules/
    ```
 3. **检查膨胀**：超 100 行时归档。
 ## 完成提示
 ```
-✅ 前端详设完成！notes/frontend.md + modules/ 已生成。
+✅ 前端详设完成！goal.md + modules/ 已生成。
 
 下一步你可以：
   plan 阶段  — 进入任务分解（垂直切片 + 依赖图 + 测试推导）

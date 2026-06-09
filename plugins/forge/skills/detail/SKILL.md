@@ -169,11 +169,7 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 
 ```
 docs/features/<feature>/
-├── goal.md                   # feature 级共享骨架（必选）
-├── notes/                    # 领域补充说明（按需）
-│   ├── api.md                # 有后端时
-│   ├── database.md           # 有后端时
-│   └── frontend.md           # 有前端时
+├── goal.md                   # feature 级共享骨架（必选）：目标/边界/完成标准/决策(API#/DB#/FE#)/共享数据模型
 └── modules/                  # 模块详细规格（按需）
     └── *.md
 ```
@@ -198,8 +194,8 @@ docs/features/<feature>/
 ## 出口条件
 
 完成后必须满足：
-- 所有加载的领域 skill 产出完整（notes/api.md API1-API7 / notes/frontend.md FE1-FE5 / notes/database.md DB1-DB5）
-- feature/goal.md（FD#）与各领域 notes（FE# / API# / DB#）无编号冲突
+- 所有加载的领域 skill 产出完整（goal.md 含 API1-API7 / FE1-FE5 / DB1-DB5 决策 + modules/*.md 合约）
+- feature/goal.md（FD#）与各领域决策（FE# / API# / DB#）无编号冲突
 - project.md Feature 索引已同步（Phase 4）
 - project.md 共享决策（PD#）与 feature goal（FD#）无编号冲突
 - 一致性检查已完成（如有下游依赖表）
