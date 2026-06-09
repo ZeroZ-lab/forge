@@ -97,10 +97,11 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 
 ### AI 执行纪律
 
-- 改动前确认目标、边界、假设和验证方式。
-- 优先满足当前目标的最小变更，不引入未要求的抽象、配置或兼容层。
-- 只编辑与目标直接相关的文件；发现无关问题只记录，不顺手修改。
-- 每次代码或文档变更后，执行可用验证，或明确说明无法验证的原因。
+以下为 D4/D5/D6/D7 在执行层面的展开。完整定义见「操作纪律（D1–D9）」。
+- D5+D6：改动前确认目标、边界、假设和验证方式。
+- D4：优先满足当前目标的最小变更，不引入未要求的抽象、配置或兼容层。
+- D5：只编辑与目标直接相关的文件；发现无关问题只记录，不顺手修改。
+- D7：每次代码或文档变更后，执行可用验证，或明确说明无法验证的原因。
 
 ---
 
@@ -112,13 +113,13 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 决策协议（skill）→ 明确目标 → AI 自主实现 → 验证结果
 ```
 
-### 7 阶段 × 18 个领域 Skill + 4 个编排 Skill + 1 个思考增强 Skill
+### 7 阶段（含 3 子阶段，共 10 个阶段标记） × 18 个领域 Skill + 4 个编排 Skill + 1 个思考增强 Skill
 
 | 阶段 | Skill | 方法论 | 角色 | 产出 |
 |------|-------|--------|------|------|
 | **⓪ 探索** | brainstorm | 可能性展开 | 产品 + 业务方 | 方向简报 |
 | **① 定义** | business-alignment | 需求验证 | 产品 + 业务方 | 项目章程 |
-| | requirements | 约束定义 | 产品 + 开发 | PRD |
+| | define | 约束定义 | 产品 + 开发 | PRD |
 | **①.5 研究** | research | 算法猎手 | 产品 + 技术研究员 | 算法菜单 |
 | **② 设计** | interaction-design | 流程优先 | 产品 + 设计师 | 交互规格 |
 | | fe-system | 三层 Token | 设计师 | 设计系统 |
@@ -136,7 +137,9 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 | **⑦ 交付** | deploy | 可逆发布 | DevOps + 开发 | 发布清单 |
 | **思考增强** | think | 结构化深度思考 | AI + 用户 | thinking 产物 + 决策依据回写 |
 
-编排 skill：`init`、`design`、`detail`、`test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。`init` 是项目级引导（技术栈选型 + 设计语言基线），`design` 是 feature 级设计阶段（交互流程 + 组件增量），两者复用 `technical-design`、`fe-system` 等子 skill 但粒度不同。`think` 不是生命周期阶段，而是可在任意阶段调用的思考增强层。
+> think 产出的推理记录可被 brainstorm、define、technical-design、review 等 skill 参考，但这些 skill 不显式声明消费 think 产出——AI 在需要时自行回读 `docs/thinking/` 目录。
+
+编排 skill：`init`、`design`、`detail`、`test`。不新增方法论，只负责按需加载领域 skill、合并产物和维护汇总历史。`init` 加载 business-alignment + technical-design + fe-system（项目级）。`design` 加载 interaction-design + fe-system（feature 级）。`test` 加载 test-strategy + test-cases。`detail` 加载 api-design + db-design + frontend-design。`technical-design`（非编排器加载）和 `fe-accept`（非编排器加载）为独立领域 skill，可由用户直接调用或由 AI 在需要时自动选择。`think` 不是生命周期阶段，而是可在任意阶段调用的思考增强层。
 
 > 每个 skill 的完整方法论、AI 角色、边界声明和引导技巧见 `plugins/forge/skills/*/SKILL.md`。
 
@@ -159,12 +162,12 @@ Forge 是闭环系统——文档定义目标，AI 自主实现，验证结果�
 
 | 环节 | 机制 | 信号 |
 |------|------|------|
-| **实现** | codegen 读取目标 → 生成代码 → 验证目标是否达成 | 同类失败 ≥ 2 → 触发目标审视 |
-| **审查** | review 检查实现是否满足目标 → 差距分析 | 目标冲突 → 需要人类决策 |
+| **实现** | codegen 读取目标 → 生成代码 → 验证目标是否达成 | 同类失败 ≥ 2（同类 = 同一 goal.md 完成标准项在单次 session 中连续验证不通过）→ 触发目标审视 |
+| **审查** | review 检查实现是否满足目标 → 差距分析 | 目标冲突 → 需要人类决策 · review 产出偏差归因（deviation_attribution）→ 路由到 detail 复查 goal · P0/P1 阻塞 → 路由到人类决策 |
 
 **前馈机制**：detail 阶段从历史失败中提取高频风险 → 写入目标文档「已知风险」→ codegen 读目标时自然获得，零额外成本。
 
-**累积升级规则**：如果你在本次 session 中反复修正同类问题（≥ 2 次），停下来建议用户重新审视目标定义。重复失败可能是目标本身的盲区。
+**累积升级规则**：如果你在本次 session 中反复修正同类问题（≥ 2 次，同类 = 同一完成标准项或同一文件的同区域反复修改），停下来建议用户重新审视目标定义。重复失败可能是目标本身的盲区。
 
 ### 两层文档体系
 
@@ -321,11 +324,13 @@ my-project/
 | **默认** | define → detail → codegen → review | 已有项目，新功能但边界还不够清楚 |
 | **快速** | detail → codegen → review | 已有项目，小功能迭代 |
 | **最小** | detail → codegen | 已有项目，加一个端点或模块 |
-| **完整** | brainstorm → init → define → design → detail → plan → codegen → test → review → deploy | 新项目从零开始，或需要完整治理链 |
+| **完整** | brainstorm → init（内含 business-alignment） → define → research → design → detail → plan → codegen → test → review → deploy | 新项目从零开始，或需要完整治理链 |
 
 **跳过原则**：已有 project.md + DESIGN.md → 跳过 init · 需求明确 → 跳过 define · 纯后端 → 跳过 design · 改动很小时 → 跳过 plan / test / deploy
 
-**research 自动触发**：只有走了 define 路径后，AI 才扫描 PRD 中的技术信号词并建议 research；小功能默认链路不主动展开 research。
+**跳过时的产物假设**：跳过上游阶段时，下游 skill 默认读取已有文件作为输入。如果被跳过阶段的产物不存在（如 goal.md 缺失），下游 skill 应先补建必要产物再继续，而非假设其存在。
+
+**research 自动触发**：走了 define 路径后，AI 扫描 PRD 中的技术信号词并建议 research。完整流程中 research 在 define 之后、design 之前。小功能默认链路（detail → codegen → review）不主动展开 research，但用户可通过 `/forge:research` 显式触发。
 
 技术信号词（出现任一即触发）：
 - 实时/同步/协作（CRDT vs OT vs 锁）
@@ -354,6 +359,10 @@ Claude Code 根据 skill 的 `description` / `when_to_use` 自动选择最小相
 | L1 patch | 局部目标 / code 修正 | 最小改动，执行可用验证 |
 | L2 stage | 完整阶段执行 | 产出或更新阶段文档 + 历史记录 |
 
+**Per-skill depth 默认**：domain skill（brainstorm, define, codegen, review 等）遵循上表通用规则。编排 skill（init, design, detail, test）默认 L2（编排器职责是产出阶段文档）。轻量调用只改目标语义时必须回写对应文档。
+
+**Depth 判断信号**：用户说"只看看"/"简单 review"/"检查一下" → L0 · 用户说"修一下"/"改个字段"/"加个端点" → L1 · 用户说"走一遍 design"/"完整测试"/显式点名阶段 → L2。
+
 **默认规则**：用户未显式点名阶段时，优先走 `detail → codegen → review` 的 L0/L1 轻量调用；用户显式点名阶段或 skill 时，默认 L2 阶段调用，除非用户说"只看看"、"简单 review"或等价限制。轻量调用如果改变目标语义，必须回写对应文档。
 
 ### 自然语言执行
@@ -363,10 +372,14 @@ Claude Code 根据 skill 的 `description` / `when_to_use` 自动选择最小相
 | "生成代码" | 读目标文档 → 自主实现 → 验证 |
 | "做一只壁虎" | brainstorm + research 的组合（产品探索 + 算法菜单） |
 | "创建任务报 500" | 读目标 + 代码 → 找问题 → 修代码 |
-| "给任务加标签" | detail + build 的组合（加模块） |
+| "给任务加标签" | detail + codegen 的组合（加模块） |
 | "分页换成 cursor" | 更新决策 → 实现 → 验证 |
 | "React 升级到 20" | 更新 project.md → 重新实现 → 验证 |
 | "整个重写" | 保留目标和决策 → 重新实现 |
+| "加个测试" | test 编排器（test-strategy + test-cases + 交叉验证） |
+| "重构这段代码" | detail + codegen 的组合（重新详设并实现） |
+| "这个 bug 怎么修" | 读目标 + 代码 → 定位问题 → 最小修补 → 验证（L1 patch） |
+| "设计一下" | design 编排器（interaction-design + fe-system） |
 
 > 完整对话示例和迭代模式详见 `references/usage-examples.md`。
 
@@ -430,6 +443,8 @@ Feature B 的 detail 需要 Feature A 的 goal.md
 2. 下一阶段状态 → `🔄`（如果有明确的下一步）
 3. 新 feature 首次出现 → 添加行
 4. 跳过阶段 → 标注 `⏭️` + 原因
+
+**注意**：status.md 是可选协调工具。单 feature 项目不需要启用——维护成本高于收益。只在 3+ feature 并行且存在跨 feature 依赖时建议启用。启用后由编排器在阶段完成时自动更新，非编排 skill 不负责更新 status.md。
 
 **膨胀控制**：status.md 是追加型（≤ 100 行）。已交付的 feature 移到"已交付归档"区域。超过 100 行时，归档早期 feature。
 

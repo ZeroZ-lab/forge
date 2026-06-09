@@ -225,6 +225,7 @@
       "produced_by": "forge-review",
       "consumed_by": [
         "forge-codegen",
+        "forge-review",
         "forge-deploy"
       ]
     },
@@ -245,16 +246,6 @@
       "consumed_by": [
         "forge-detail",
         "forge-review"
-      ]
-    },
-    {
-      "id": "goal_verification.completed",
-      "name": "Goal verification completed",
-      "produced_by": "forge-init",
-      "consumed_by": [
-        "forge-codegen",
-        "forge-review",
-        "forge-deploy"
       ]
     }
   ],
@@ -781,7 +772,7 @@
         "phase skipped",
         "change_unit.created",
         "project_state.updated",
-        "goal_verification.completed",
+        "goal_verification.init_completed",
         "goal_coverage.updated",
         "change_unit.updated"
       ],
@@ -821,7 +812,7 @@
           "when": "when initialization creates a project evolution record"
         },
         {
-          "signal": "goal_verification.completed",
+          "signal": "goal_verification.init_completed",
           "to": "forge-codegen",
           "when": "when generated project docs can drive implementation"
         }
@@ -1238,7 +1229,6 @@
         "task sequence",
         "checkpoints",
         "change_unit.updated",
-        "goal_verification.completed",
         "goal_verification.completed"
       ],
       "escalates_when": [
@@ -1322,7 +1312,6 @@
         "goal conflict",
         "change_unit.updated",
         "goal_coverage.updated",
-        "goal_verification.completed",
         "goal_verification.completed"
       ],
       "escalates_when": [
@@ -1893,7 +1882,6 @@
         "rollback plan",
         "release blocked",
         "change_unit.updated",
-        "goal_verification.completed",
         "goal_verification.completed"
       ],
       "escalates_when": [
