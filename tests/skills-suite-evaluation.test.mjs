@@ -5,8 +5,11 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-const manifest = JSON.parse(fs.readFileSync('evals/skills-suite/manifest.json', 'utf8'));
-const registry = JSON.parse(fs.readFileSync('registry.yaml', 'utf8'));
+import { loadRegistry } from '../scripts/lib/registry.mjs';
+
+const root = path.resolve(import.meta.dirname, '..');
+const manifest = JSON.parse(fs.readFileSync(path.join(root, 'evals/skills-suite/manifest.json'), 'utf8'));
+const registry = loadRegistry(root);
 
 function reportEvidenceFor(testCase) {
   const commands = new Set();

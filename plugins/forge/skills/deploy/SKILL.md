@@ -2,6 +2,68 @@
 name: deploy
 description: Plans reversible releases, deployment environments, CI or CD flow, rollout strategy, rollback steps, monitoring, and release checklists. Use for lightweight release review or full deploy stage execution.
 when_to_use: Use when the user asks about release, deploy, launch, production rollout, staging, CI or CD, containers, health checks, monitoring, alerts, gray release, rollback, or a deploy plan.
+phase: deploy
+type: domain
+role: decision-protocol
+triggers:
+  - "发布"
+  - "部署"
+  - "上线"
+  - "灰度"
+  - "回滚"
+avoid_when:
+  - "纯本地工具"
+  - "已有完整 CI/CD"
+  - "原型验证阶段"
+consumes:
+  - "src/"
+  - "tests/"
+  - "testing/test-cases.md"
+  - "contract.md"
+  - "review report"
+  - "docs/change-units/CU-*.md"
+  - "goal.md"
+produces:
+  - "deploy/contract.md"
+  - "release checklist"
+  - "docs/change-units/CU-*.md"
+signals_in:
+  - "code review passed"
+  - "test results"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "release plan"
+  - "rollback plan"
+  - "release blocked"
+  - "change_unit.updated"
+  - "goal_verification.completed"
+escalates_when:
+  - "无回滚方案"
+  - "无健康检查"
+  - "无监控告警"
+output_contract:
+  - "RL1-RL5"
+  - "部署流程"
+  - "回滚步骤"
+  - "监控告警"
+  - "发布清单"
+maturity: stable
+stage_next: []
+feedback_to:
+  - review
+  - test
+quality_gates: []
+signal_routes:
+  - signal: "release plan"
+    to: runtime release execution
+    when: "release checklist is complete and approved"
+  - signal: "release blocked"
+    to: human decision
+    when: "rollback, health check, or monitoring is missing"
+  - signal: "goal_verification.completed"
+    to: review
+    when: "when implementation needs goal verification"
 ---
 
 # Deploy — 交付阶段
@@ -146,7 +208,7 @@ docs/features/<feature>/deploy/
 
 - 输入：`codegen.generated_code` + `review.deviation_attribution`
 - 输出：`deploy.release_plan`
-- 路由：详见 `registry.yaml` 的 `forge-deploy` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - 升级：无回滚方案 · 无健康检查 · 无监控告警
 
 ## 何时不使用

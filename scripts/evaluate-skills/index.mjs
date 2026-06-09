@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { loadRegistry } from '../lib/registry.mjs';
+
 const root = process.cwd();
 const failures = [];
 const allowedCheckTypes = new Set([
@@ -524,7 +526,7 @@ function writeScoreReport(scoreOutPath, report, score, manifest) {
 }
 
 const args = parseArgs(process.argv.slice(2));
-const registry = readJson('registry.yaml');
+const registry = loadRegistry(root);
 const manifest = readJson('evals/skills-suite/manifest.json');
 const { coveredSkills } = validateManifest(registry, manifest);
 

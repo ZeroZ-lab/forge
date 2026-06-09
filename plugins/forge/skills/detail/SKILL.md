@@ -2,6 +2,78 @@
 name: detail
 description: Orchestrates the full detail stage across multiple domain documents to produce goal.md and modules. Use only when the user explicitly asks for detail stage or cross-domain documents must be coordinated.
 when_to_use: Use when the user says technical detail design, detail stage, full goal design, coordinate multiple domain documents, turn PRD or design docs into technical goals, or resolve cross-domain goal inconsistency.
+phase: detail
+type: orchestrator
+role: goal-refiner
+triggers:
+  - "技术详设"
+  - "详细设计"
+  - "设计 API"
+avoid_when:
+  - "没有需求或技术上下文"
+  - "只是代码修复"
+consumes:
+  - "docs/project.md"
+  - "PRD.md"
+  - "interaction-spec.md"
+  - "DESIGN.md"
+  - "codegen deviation summary"
+  - "docs/change-units/CU-*.md"
+  - "goal.md"
+own_produces:
+  - "feature contract.md"
+  - "docs/change-units/CU-*.md"
+orchestrated_produces:
+  - "api/contract.md"
+  - "database/contract.md"
+  - "frontend/contract.md"
+signals_in:
+  - "repeat_signal from forge-codegen"
+  - "document drift from forge-review"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "contract updated"
+  - "downstream gap report"
+  - "human decision needed"
+  - "change_unit.updated"
+  - "goal_coverage.updated"
+  - "project_state.updated"
+  - "goal_verification.completed"
+escalates_when:
+  - "contract ambiguity"
+  - "downstream drift needs decision"
+  - "frontend presence unclear"
+output_contract:
+  - "feature contract"
+  - "domain contracts"
+  - "drift report"
+maturity: needs-runtime-hardening
+stage_next:
+  - api-design
+  - plan
+  - test
+feedback_to:
+  - codegen
+  - review
+quality_gates:
+  - review
+signal_routes:
+  - signal: "contract updated"
+    to: plan
+    when: "goal is ready for task slicing"
+  - signal: "downstream gap report"
+    to: human decision
+    when: "cascade impact is unclear"
+  - signal: "human decision needed"
+    to: human decision
+    when: "L2 drift or domain boundary conflict exists"
+  - signal: "goal_verification.completed"
+    to: review
+    when: "when implementation needs goal verification"
+  - signal: "goal_coverage.updated"
+    to: codegen
+    when: "when goal coverage paths are ready"
 ---
 
 # Forge Detail — 详设阶段编排
@@ -145,7 +217,7 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 
 - 输入：repeat_signal from forge-codegen、consistency issue from forge-review
 - 输出：goal updated、downstream consistency report、human decision needed
-- 路由：详见 `registry.yaml` 的 `forge-detail` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - 升级：goal ambiguity · downstream consistency needs decision · frontend presence unclear
 
 ## 产出

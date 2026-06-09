@@ -2,6 +2,54 @@
 name: test-strategy
 description: Designs how to test a feature through test types, risk coverage, data strategy, mocking, isolation, CI gates, and quality thresholds. Use for lightweight testing strategy review or full test-strategy execution.
 when_to_use: Use when the user asks how to test, which test layers to use, coverage strategy, mock strategy, test data, CI integration, quality gate, automation scope, or testing/strategy.md planning.
+phase: test
+type: domain
+role: decision-protocol
+triggers:
+  - "测试策略"
+  - "测试覆盖"
+  - "Mock 策略"
+avoid_when:
+  - "纯文档项目"
+  - "已有完整测试策略"
+consumes:
+  - "contract.md"
+  - "modules/*.md"
+  - "plan.md"
+  - "docs/change-units/CU-*.md"
+produces:
+  - "testing/contract.md"
+  - "docs/change-units/CU-*.md"
+signals_in:
+  - "business risk"
+  - "test constraints"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "test strategy"
+  - "quality gate"
+  - "change_unit.updated"
+escalates_when:
+  - "关键路径无法覆盖"
+  - "CI 约束不清"
+output_contract:
+  - "T1-T5"
+  - "覆盖矩阵"
+  - "测试规范"
+maturity: stable
+stage_next:
+  - test-cases
+  - codegen
+feedback_to:
+  - test
+quality_gates: []
+signal_routes:
+  - signal: "test strategy"
+    to: test-cases
+    when: "test cases need coverage strategy"
+  - signal: "quality gate"
+    to: codegen
+    when: "implementation needs testing guardrails"
 ---
 
 # Test Strategy — 测试阶段
@@ -162,7 +210,7 @@ docs/features/<feature>/testing/
 
 - 输入：`define.acceptance_criteria` + `plan.task_sequence`
 - 输出：`test_strategy.test_strategy`
-- 路由：详见 `registry.yaml` 的 `forge-test-strategy` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - 升级：关键路径无法覆盖 · CI 约束不清
 
 ## 何时不使用

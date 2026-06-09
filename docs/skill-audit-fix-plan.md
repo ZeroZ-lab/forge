@@ -1,6 +1,6 @@
 # Forge Skill 套件修复方案
 
-> 基于 23 个 SKILL.md 逐文件精读 + registry.yaml 信号路由分析
+> 基于 23 个 SKILL.md 逐文件精读 + SKILL.md frontmatter 信号路由分析
 > 评审日期：2026-05-30
 
 ---
@@ -9,7 +9,7 @@
 
 1. **D4 最小变更**：每个修复只加必须加的内容，不重构已有结构
 2. **保持 flat list**：不新增 Skill，不合并 Skill，只修补现有文件
-3. **信号统一**：所有信号名称以 registry.yaml 为准，SKILL.md 引用不自由命名
+3. **信号统一**：所有信号名称以 SKILL.md frontmatter 为准，SKILL.md 引用不自由命名
 4. **编排器 vs 领域分离**：编排器不做 domain work，领域 Skill 不做编排
 
 ---
@@ -18,7 +18,7 @@
 
 ### 结论：全部 24 个修复项互相独立
 
-每个修复只改自己的 SKILL.md（或 registry.yaml），无跨文件写入冲突。信号名称对齐（S1）在 Skill 层面只是替换文本，不需要等 registry.yaml 先改。
+每个修复只改自己的 SKILL.md（或 SKILL.md frontmatter），无跨文件写入冲突。信号名称对齐（S1）在 Skill 层面只是替换文本，不需要等 frontmatter 先改。
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -33,9 +33,9 @@
 │         + test-cases                          (4 files)     │
 │  Agent E: fe-artifact + fe-accept + review                  │
 │         + deploy + learn                      (5 files)     │
-│  Agent F: registry.yaml                       (1 file)      │
+│  Agent F: SKILL.md frontmatter                 (1 file)      │
 │                                                             │
-│  总计: 23 SKILL.md + 1 registry.yaml = 24 files            │
+│  总计: 23 SKILL.md + 1 SKILL.md frontmatter = 24 files            │
 │  并行度: 6 agents                                          │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -48,8 +48,8 @@
 | 红旗格式修复 | fe-system/fe-artifact/fe-accept/review 各 SKILL.md | 替换自己文件中的红旗节 |
 | 补充 when_not_to_use | 11 个 SKILL.md | 各自追加，无共享位置 |
 | 信号名称对齐 | 10 个 SKILL.md | 各自替换文本，词汇表已在 S1 中定义 |
-| S1 信号词汇表 | registry.yaml | 新增节，不改已有内容 |
-| S2 产物拆分 | registry.yaml | 修改 produces 字段，与 S1 不冲突 |
+| S1 信号词汇表 | SKILL.md frontmatter | 新增节，不改已有内容 |
+| S2 产物拆分 | SKILL.md frontmatter | 修改 produces 字段，与 S1 不冲突 |
 
 ### 执行顺序
 
@@ -63,10 +63,10 @@
 
 **问题**：每个 Skill 的「运行时信号」节自由命名信号名称，导致 14 条路由中 6 条目标 Skill 不接收、14 个 signals_in 无人送达。
 
-**修复位置**：`registry.yaml` + 所有 SKILL.md 的「运行时信号」节
+**修复位置**：`SKILL.md` frontmatter + 所有 SKILL.md 的「运行时信号」节
 
 **修复方法**：
-1. 在 registry.yaml 顶部新增 `signal_vocabulary` 节，集中定义所有信号名称
+1. 在 SKILL.md frontmatter 顶部新增 `signal_vocabulary` 节，集中定义所有信号名称
 2. 每个 Skill 的「运行时信号」节改为引用词汇表 ID，不再自由命名
 3. 信号名称统一为 `{source_skill}.{artifact_name}` 格式
 
@@ -189,7 +189,7 @@ signal_vocabulary:
 ## 运行时信号
 - 输入：引用 `signal_vocabulary` 的 {id}
 - 输出：引用 `signal_vocabulary` 的 {id}
-- 路由：详见 `registry.yaml`
+- 路由：详见 `SKILL.md` frontmatter
 - 升级：{具体条件}
 ```
 
@@ -199,7 +199,7 @@ signal_vocabulary:
 
 **问题**：7 个产物有多个 Skill 声称拥有（`testing/test-cases.md` 有 3 个生产者）。
 
-**修复位置**：`registry.yaml` 的 `produces` 字段
+**修复位置**：`SKILL.md` frontmatter 的 `produces` 字段
 
 **修复方法**：
 - 引入 `own_produces`（自己生成的）vs `orchestrated_produces`（编排子 Skill 生成的）
@@ -1206,7 +1206,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 在 `## 运行时信号` 后追加：
 
 ```markdown
-**闭环路由**：learn 的方法论改进建议经人类确认后，需要回写到对应 SKILL.md。当前此步骤为手动执行。未来可通过 registry.yaml 的 signal_routes 实现自动注入——learn 输出 `{skill}_methodology_update` 信号，目标 skill 的 signals_in 声明接收。
+**闭环路由**：learn 的方法论改进建议经人类确认后，需要回写到对应 SKILL.md。当前此步骤为手动执行。未来可通过 SKILL.md frontmatter 的 signal_routes 实现自动注入——learn 输出 `{skill}_methodology_update` 信号，目标 skill 的 signals_in 声明接收。
 ```
 
 **预计行数变化**：+18 行 → 161 行（安全）
@@ -1240,8 +1240,8 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 | **P5** | brainstorm | 9 | 9.5 | 2 | +8 |
 | **P5** | api-design | 9 | 9.5 | 2 | +8 |
 | **P5** | deploy | 9 | 9.5 | 2 | +5 |
-| **S1** | registry.yaml | — | — | 1 | 新增信号词汇表 |
-| **S2** | registry.yaml | — | — | 1 | produces 拆分 |
+| **S1** | SKILL.md frontmatter | — | — | 1 | 新增信号词汇表 |
+| **S2** | SKILL.md frontmatter | — | — | 1 | produces 拆分 |
 
 ---
 

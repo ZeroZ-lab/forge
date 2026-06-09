@@ -2,6 +2,53 @@
 name: technical-design
 description: Reviews and makes architecture decisions, technical tradeoffs, stack choices, service boundaries, deployment shape, and shared engineering constraints. Use for lightweight architecture review or full technical-design execution.
 when_to_use: Use when the user asks about architecture, technical design, stack choice, service split, runtime, framework, deployment architecture, performance constraints, tradeoffs, or whether a technical approach fits.
+phase: design
+type: domain
+role: goal-refiner
+triggers:
+  - "技术设计"
+  - "架构"
+  - "技术选型"
+avoid_when:
+  - "纯前端项目"
+  - "已有完整技术架构"
+consumes:
+  - "docs/project.md business goals"
+  - "team constraints"
+  - "docs/change-units/CU-*.md"
+produces:
+  - "docs/project.md technical decisions"
+  - "docs/change-units/CU-*.md"
+signals_in:
+  - "business and resource constraints"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "technical constraints"
+  - "architecture decisions"
+  - "change_unit.updated"
+escalates_when:
+  - "团队经验、业务约束、运维能力缺失"
+output_contract:
+  - "架构模式"
+  - "技术选型"
+  - "服务划分"
+  - "数据架构"
+  - "部署架构"
+maturity: stable
+stage_next:
+  - detail
+  - codegen
+feedback_to:
+  - business-alignment
+quality_gates: []
+signal_routes:
+  - signal: "technical constraints"
+    to: detail
+    when: "domain contracts need architecture constraints"
+  - signal: "architecture decisions"
+    to: codegen
+    when: "code generation needs project-level decisions"
 ---
 # Technical Design — 设计阶段（技术层）
 ## 职责
@@ -186,7 +233,7 @@ when_to_use: Use when the user asks about architecture, technical design, stack 
 
 - 输入：business and resource constraints
 - 输出：technical constraints、architecture decisions
-- 路由：详见 `registry.yaml` 的 `forge-technical-design` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - 升级：团队经验、业务约束、运维能力缺失
 
 ## 何时不使用

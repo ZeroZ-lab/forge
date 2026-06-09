@@ -3,6 +3,77 @@ name: codegen
 description: Implements goals into src and tests, verifying results meet stated criteria.
 when_to_use: Use by direct invocation or as a child protocol when the user explicitly asks to generate implementation from Forge goals, run the build phase, or implement documented tasks into code and tests.
 disable-model-invocation: false
+phase: build
+type: execution
+role: executor
+triggers:
+  - "生成代码"
+  - "写代码"
+  - "build"
+avoid_when:
+  - "只有文档没有代码"
+  - "已有完整代码"
+  - "纯文档项目"
+consumes:
+  - "docs/project.md"
+  - "DESIGN.md"
+  - "contract.md"
+  - "modules/*.md"
+  - "plan.md"
+  - "docs/change-units/CU-*.md"
+  - "goal.md"
+produces:
+  - "src/"
+  - "tests/"
+  - "verification summary"
+  - "docs/change-units/CU-*.md"
+signals_in:
+  - "contract goal"
+  - "task sequence"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "minor variance"
+  - "goal not met"
+  - "goal conflict"
+  - "change_unit.updated"
+  - "goal_coverage.updated"
+  - "goal_verification.completed"
+escalates_when:
+  - "goal conflict"
+  - "3 corrections without convergence"
+output_contract:
+  - "implemented code"
+  - "generated tests"
+  - "verification summary"
+  - "repeated goal-not-met"
+maturity: stable
+stage_next:
+  - review
+  - test
+  - deploy
+feedback_to:
+  - detail
+quality_gates:
+  - review
+  - test
+  - fe-accept
+signal_routes:
+  - signal: "goal not met"
+    to: detail
+    when: "repeated goal-not-met >= 2"
+  - signal: "goal conflict"
+    to: human decision
+    when: "goal contradiction or unclear goal"
+  - signal: "implemented code"
+    to: review
+    when: "implementation ready for independent review"
+  - signal: "goal_verification.completed"
+    to: review
+    when: "when implementation needs goal verification"
+  - signal: "change_unit.updated"
+    to: review
+    when: "when generated code and evidence need independent review"
 ---
 # Codegen — 构建阶段
 ## 职责
@@ -171,7 +242,7 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 
 - 输入：`detail.feature_goal` + `plan.task_sequence`
 - 输出：`codegen.generated_code` + `codegen.verification_summary`
-- 路由：详见 `registry.yaml` 的 `forge-codegen` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - 升级：目标矛盾或需求歧义 · 修正 3 轮不收敛
 
 ## 何时不使用

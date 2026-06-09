@@ -2,6 +2,54 @@
 name: interaction-design
 description: Reviews and designs user flows, navigation, information architecture, wireframes, interaction patterns, feedback states, and recovery paths. Use for lightweight interaction review or full interaction-design execution.
 when_to_use: Use when the user asks about user flow, navigation, IA, wireframe, operation path, page behavior, feedback, empty or error states, interaction pattern choice, or whether a workflow is ergonomic.
+phase: design
+type: domain
+role: goal-refiner
+triggers:
+  - "交互设计"
+  - "用户流程"
+  - "信息架构"
+avoid_when:
+  - "纯后端 API"
+  - "已有完整交互设计"
+  - "小功能迭代"
+consumes:
+  - "PRD.md"
+  - "user flow constraints"
+  - "docs/change-units/CU-*.md"
+produces:
+  - "docs/features/<feature>/interaction-spec.md"
+  - "docs/change-units/CU-*.md"
+signals_in:
+  - "acceptance criteria"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "interaction paths"
+  - "component behavior"
+  - "change_unit.updated"
+escalates_when:
+  - "异常流程缺失"
+  - "核心路径无法三步内完成"
+output_contract:
+  - "用户流程图"
+  - "信息架构"
+  - "页面线框"
+  - "组件复用清单"
+maturity: stable
+stage_next:
+  - fe-system
+  - frontend-design
+feedback_to:
+  - define
+quality_gates: []
+signal_routes:
+  - signal: "interaction paths"
+    to: frontend-design
+    when: "frontend component behavior needs detailing"
+  - signal: "component behavior"
+    to: fe-system
+    when: "design system needs interaction states"
 ---
 # Interaction Design — 设计阶段（交互层）
 ## 职责
@@ -110,7 +158,7 @@ when_to_use: Use when the user asks about user flow, navigation, IA, wireframe, 
 ## 运行时信号
 - 输入：acceptance criteria
 - 输出：interaction paths、component behavior
-- 路由：详见 `registry.yaml` 的 `forge-interaction-design` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - 升级：异常流程缺失 · 核心路径无法三步内完成
 ## 何时不使用
 - 纯后端 API（没有用户界面）

@@ -2,6 +2,69 @@
 name: init
 description: Orchestrates full project initialization across business alignment, technical design, and design-system setup to generate project.md, DESIGN.md, AGENTS.md, and CLAUDE.md. Use only for explicit new-project initialization.
 when_to_use: Use when the user asks to initialize a project, start a new project, create Forge project files, run init, bootstrap project-level decisions, or generate project instructions from business and technical choices.
+phase: init
+type: orchestrator
+role: orchestrator
+triggers:
+  - "初始化项目"
+  - "新项目"
+  - "项目启动"
+avoid_when:
+  - "已有完整 project.md、DESIGN.md 和入口文件"
+consumes:
+  - "user project intent"
+  - "existing docs/project.md"
+  - "existing DESIGN.md"
+  - "goal.md"
+  - "docs/change-units/CU-*.md"
+own_produces:
+  - "goal.md"
+  - "docs/change-units/CU-*.md"
+orchestrated_produces:
+  - "docs/project.md"
+  - "DESIGN.md"
+  - "AGENTS.md"
+  - "CLAUDE.md"
+signals_in:
+  - "missing project files"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "project initialized"
+  - "phase skipped"
+  - "change_unit.created"
+  - "project_state.updated"
+  - "goal_verification.init_completed"
+  - "goal_coverage.updated"
+  - "change_unit.updated"
+escalates_when:
+  - "已有文件与新决策冲突"
+  - "无法判断是否有前端"
+output_contract:
+  - "项目级技术决策"
+  - "设计系统"
+  - "AI 行为入口"
+maturity: needs-runtime-hardening
+stage_next:
+  - define
+  - detail
+  - fe-system
+feedback_to:
+  - brainstorm
+quality_gates: []
+signal_routes:
+  - signal: "project initialized"
+    to: define
+    when: "requirements definition should start after project files exist"
+  - signal: "phase skipped"
+    to: detail
+    when: "existing project files allow direct detailing"
+  - signal: "change_unit.created"
+    to: define
+    when: "when initialization creates a project evolution record"
+  - signal: "goal_verification.init_completed"
+    to: codegen
+    when: "when generated project docs can drive implementation"
 ---
 
 # Forge Init — 项目初始化编排
@@ -162,7 +225,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 
 - 输入：missing project files
 - 输出：project initialized、phase skipped
-- 路由：详见 `registry.yaml` 的 `forge-init` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - 升级：已有文件与新决策冲突 · 无法判断是否有前端
 
 ## 完成提示

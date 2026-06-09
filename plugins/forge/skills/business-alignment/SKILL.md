@@ -2,6 +2,57 @@
 name: business-alignment
 description: Aligns a product direction into project commitment by defining users, success metrics, resource constraints, and Go or No-Go decisions. Use for lightweight business fit checks or full business-alignment stage execution.
 when_to_use: Use when the user asks about target users, project goals, success metrics, resource limits, demand validation, Go or No-Go decisions, or moving an explored direction into a committed project scope.
+phase: define
+type: domain
+role: goal-refiner
+triggers:
+  - "验证需求"
+  - "项目目标"
+  - "成功指标"
+avoid_when:
+  - "只是技术探索"
+  - "已有完整 PRD"
+  - "已有 project.md"
+consumes:
+  - "idea-brief.md"
+  - "user business context"
+  - "docs/change-units/CU-*.md"
+produces:
+  - "docs/project.md business goals"
+  - "docs/change-units/CU-*.md"
+signals_in:
+  - "direction decision"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "Go decision"
+  - "No-Go decision"
+  - "business constraints"
+  - "change_unit.updated"
+escalates_when:
+  - "用户画像、指标、资源不对齐"
+output_contract:
+  - "用户画像"
+  - "成功指标"
+  - "资源约束"
+  - "Go/No-Go 决策"
+maturity: stable
+stage_next:
+  - define
+  - technical-design
+feedback_to:
+  - brainstorm
+quality_gates: []
+signal_routes:
+  - signal: "Go decision"
+    to: define
+    when: "business commitment is accepted"
+  - signal: "No-Go decision"
+    to: brainstorm
+    when: "direction, user, metric, or resource assumptions need to be revisited"
+  - signal: "business constraints"
+    to: technical-design
+    when: "technical choices need business and resource context"
 ---
 # Business Alignment — 定义阶段（业务层）
 ## 职责
@@ -108,7 +159,7 @@ brainstorm 回答"这个方向值得探索吗"，business-alignment 回答"我�
 ## 运行时信号
 - 输入：direction decision
 - 输出：Go decision、No-Go decision、business constraints
-- 路由：详见 `registry.yaml` 的 `forge-business-alignment` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - Go 决策路由：→ define（进入需求定义）+ → technical-design（同步业务约束）
 - No-Go 决策路由：→ 终止当前流程，记录理由到 timeline
 - 升级：用户画像、指标、资源不对齐

@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { loadRegistry, deriveSignalVocabulary } from './lib/registry.mjs';
+
 const root = process.cwd();
 const failures = [];
 
@@ -83,7 +85,7 @@ const claudePlugin = json('plugins/forge/.claude-plugin/plugin.json');
 const codexPlugin = json('plugins/forge/.codex-plugin/plugin.json');
 const claudeMarketplace = json('plugins/forge/.claude-plugin/marketplace.json');
 const codexMarketplace = json('.agents/plugins/marketplace.json');
-const runtimeRegistry = json('registry.yaml');
+const runtimeRegistry = loadRegistry(root);
 
 assert(
   packageJson.version === claudePlugin.version &&
@@ -110,13 +112,13 @@ const skillDirs = fs
   .map((entry) => entry.name)
   .sort();
 const skillCount = skillDirs.length;
-const skillLineLimit = 300;
+const skillLineLimit = 350;
 
 assert(skillDirs.length > 0, 'expected at least one skill');
 
 const expectedSkillPaths = skillDirs.map((skillName) => `./skills/${skillName}`).sort();
 const manifestSkillPaths = Array.isArray(claudePlugin.skills) ? [...claudePlugin.skills].sort() : [];
-const expectedRegistryNames = skillDirs.map((skillName) => `forge-${skillName}`).sort();
+const expectedRegistryNames = skillDirs.map((skillName) => skillName).sort();
 
 assert(Array.isArray(claudePlugin.skills), 'plugins/forge/.claude-plugin/plugin.json: skills must explicitly enumerate installed skills');
 assert(
@@ -124,15 +126,14 @@ assert(
   'plugins/forge/.claude-plugin/plugin.json: skills list must match skills/* exactly',
 );
 
-assert(runtimeRegistry.version === 1, 'registry.yaml: version must be 1');
-assert(Array.isArray(runtimeRegistry.skills), 'registry.yaml: skills must be an array');
+assert(Array.isArray(runtimeRegistry.skills), 'SKILL.md frontmatter: skills must be an array');
 
 const registryNames = Array.isArray(runtimeRegistry.skills)
   ? runtimeRegistry.skills.map((skill) => skill.name).sort()
   : [];
 assert(
   JSON.stringify(registryNames) === JSON.stringify(expectedRegistryNames),
-  'registry.yaml: skills must cover plugins/forge/skills/* exactly',
+  'SKILL.md frontmatter: skill names must cover plugins/forge/skills/* exactly',
 );
 
 const allowedRuntimeRoles = new Set([
@@ -165,13 +166,32 @@ const allowedRegistryTypes = new Set(['domain', 'orchestrator', 'execution', 'go
 const allowedExternalTargets = new Set(['human decision', 'runtime release execution', 'skill maintenance']);
 
 for (const skill of runtimeRegistry.skills ?? []) {
-  assert(typeof skill.name === 'string' && skill.name.startsWith('forge-'), 'registry.yaml: each skill needs a forge-* name');
-  const expectedPath = `plugins/forge/skills/${skill.name.replace(/^forge-/, '')}/SKILL.md`;
-  assert(skill.path === expectedPath, `registry.yaml: ${skill.name} path must point to ${expectedPath}`);
-  assert(exists(skill.path), `registry.yaml: missing path for ${skill.name}: ${skill.path}`);
-  assert(allowedRegistryPhases.has(skill.phase), `registry.yaml: ${skill.name} invalid phase "${skill.phase}"`);
-  assert(allowedRegistryTypes.has(skill.type), `registry.yaml: ${skill.name} invalid type "${skill.type}"`);
-  assert(allowedRuntimeRoles.has(skill.role), `registry.yaml: ${skill.name} invalid runtime_role "${skill.role}"`);
+  assert(typeof skill.name === 'string' && skill.name.length > 0, 'SKILL.md frontmatter: each skill needs a name');
+  const skillDir = skill._dir ?? skill.name;
+  const expectedSkillPath = `plugins/forge/skills/${skillDir}/SKILL.md`;
+  assert(exists(expectedSkillPath), `SKILL.md frontmatter: missing SKILL.md for ${skill.name} at ${expectedSkillPath}`);
+  assert(allowedRegistryPhases.has(skill.phase), `SKILL.md frontmatter: ${skill.name} invalid phase "${skill.phase}"`);
+  assert(allowedRegistryTypes.has(skill.type), `SKILL.md frontmatter: ${skill.name} invalid type "${skill.type}"`);
+  assert(allowedRuntimeRoles.has(skill.role), `SKILL.md frontmatter: ${skill.name} invalid role "${skill.role}"`);
+  for (const field of [
+    'phase',
+    'type',
+    'role',
+    'triggers',
+    'avoid_when',
+    'consumes',
+    'signals_in',
+    'signals_out',
+    'escalates_when',
+    'output_contract',
+    'maturity',
+    'stage_next',
+    'feedback_to',
+    'quality_gates',
+    'signal_routes',
+  ]) {
+    assert(skill[field] !== undefined && skill[field] !== null, `SKILL.md frontmatter: ${skill.name}.${field} is required`);
+  }
   for (const field of [
     'triggers',
     'avoid_when',
@@ -184,39 +204,36 @@ for (const skill of runtimeRegistry.skills ?? []) {
     'feedback_to',
     'quality_gates',
   ]) {
-    assertArrayOfStrings(skill[field], `registry.yaml: ${skill.name}.${field}`);
+    assertArrayOfStrings(skill[field], `SKILL.md frontmatter: ${skill.name}.${field}`);
   }
   const hasDirectProduces = Array.isArray(skill.produces);
   const hasSplitProduces = Array.isArray(skill.own_produces) && Array.isArray(skill.orchestrated_produces);
   assert(
     hasDirectProduces || hasSplitProduces,
-    `registry.yaml: ${skill.name} must define produces or own_produces/orchestrated_produces`,
+    `SKILL.md frontmatter: ${skill.name} must define produces or own_produces/orchestrated_produces`,
   );
-  if (hasDirectProduces) assertArrayOfStrings(skill.produces, `registry.yaml: ${skill.name}.produces`);
+  if (hasDirectProduces) assertArrayOfStrings(skill.produces, `SKILL.md frontmatter: ${skill.name}.produces`);
   if (hasSplitProduces) {
-    assertArrayOfStrings(skill.own_produces, `registry.yaml: ${skill.name}.own_produces`);
-    assertArrayOfStrings(skill.orchestrated_produces, `registry.yaml: ${skill.name}.orchestrated_produces`);
+    assertArrayOfStrings(skill.own_produces, `SKILL.md frontmatter: ${skill.name}.own_produces`);
+    assertArrayOfStrings(skill.orchestrated_produces, `SKILL.md frontmatter: ${skill.name}.orchestrated_produces`);
   }
   const producedArtifacts = hasDirectProduces
     ? skill.produces
     : [...(skill.own_produces ?? []), ...(skill.orchestrated_produces ?? [])];
   assert(
     producedArtifacts.includes('docs/change-units/CU-*.md'),
-    `registry.yaml: ${skill.name} must declare docs/change-units/CU-*.md`,
+    `SKILL.md frontmatter: ${skill.name} must declare docs/change-units/CU-*.md`,
   );
-  if ('external_downstream' in skill) {
-    assertArrayOfStrings(skill.external_downstream, `registry.yaml: ${skill.name}.external_downstream`);
-  }
-  assert(Array.isArray(skill.signal_routes), `registry.yaml: ${skill.name}.signal_routes must be an array`);
+  assert(Array.isArray(skill.signal_routes), `SKILL.md frontmatter: ${skill.name}.signal_routes must be an array`);
   if (Array.isArray(skill.signal_routes)) {
     for (const route of skill.signal_routes) {
-      assert(route && typeof route === 'object' && !Array.isArray(route), `registry.yaml: ${skill.name}.signal_routes entries must be objects`);
-      assert(typeof route?.signal === 'string' && route.signal.length > 0, `registry.yaml: ${skill.name}.signal_routes.signal is required`);
-      assert(typeof route?.to === 'string' && route.to.length > 0, `registry.yaml: ${skill.name}.signal_routes.to is required`);
-      assert(typeof route?.when === 'string' && route.when.length > 0, `registry.yaml: ${skill.name}.signal_routes.when is required`);
+      assert(route && typeof route === 'object' && !Array.isArray(route), `SKILL.md frontmatter: ${skill.name}.signal_routes entries must be objects`);
+      assert(typeof route?.signal === 'string' && route.signal.length > 0, `SKILL.md frontmatter: ${skill.name}.signal_routes.signal is required`);
+      assert(typeof route?.to === 'string' && route.to.length > 0, `SKILL.md frontmatter: ${skill.name}.signal_routes.to is required`);
+      assert(typeof route?.when === 'string' && route.when.length > 0, `SKILL.md frontmatter: ${skill.name}.signal_routes.when is required`);
     }
   }
-  assert(typeof skill.maturity === 'string' && skill.maturity.length > 0, `registry.yaml: ${skill.name}.maturity is required`);
+  assert(typeof skill.maturity === 'string' && skill.maturity.length > 0, `SKILL.md frontmatter: ${skill.name}.maturity is required`);
 }
 
 const registryByName = Object.fromEntries((runtimeRegistry.skills ?? []).map((skill) => [skill.name, skill]));
@@ -224,15 +241,15 @@ const registryByName = Object.fromEntries((runtimeRegistry.skills ?? []).map((sk
 for (const skill of runtimeRegistry.skills ?? []) {
   for (const field of ['stage_next', 'feedback_to', 'quality_gates']) {
     for (const target of skill[field]) {
-      assert(registryByName[target], `registry.yaml: ${skill.name}.${field} references unknown skill "${target}"`);
-      assert(target !== skill.name, `registry.yaml: ${skill.name}.${field} must not reference itself`);
+      assert(registryByName[target], `SKILL.md frontmatter: ${skill.name}.${field} references unknown skill "${target}"`);
+      assert(target !== skill.name, `SKILL.md frontmatter: ${skill.name}.${field} must not reference itself`);
     }
   }
   for (const route of skill.signal_routes ?? []) {
     if (typeof route?.to === 'string') {
       assert(
         registryByName[route.to] || allowedExternalTargets.has(route.to),
-        `registry.yaml: ${skill.name}.signal_routes.to references unknown target "${route.to}"`,
+        `SKILL.md frontmatter: ${skill.name}.signal_routes.to references unknown target "${route.to}"`,
       );
     }
   }
@@ -241,7 +258,7 @@ for (const skill of runtimeRegistry.skills ?? []) {
 for (const role of ['orchestrator', 'goal-refiner', 'executor', 'verifier', 'governance', 'decision-protocol']) {
   assert(
     (runtimeRegistry.skills ?? []).some((skill) => skill.role === role),
-    `registry.yaml: missing runtime role "${role}"`,
+    `SKILL.md frontmatter: missing role "${role}"`,
   );
 }
 
@@ -253,10 +270,10 @@ for (const skillName of skillDirs) {
   const content = read(skillPath);
   const declaredName = content.match(/^name:\s*(.+)$/m)?.[1]?.trim();
   const description = content.match(/^description:\s*(.+)$/m)?.[1]?.trim();
-  const shortName = skillName.replace(/^forge-/, '');
+  const shortName = skillName;
   assert(
     declaredName === shortName,
-    `${skillPath}: frontmatter name "${declaredName}" must match short skill name "${shortName}"`,
+    `${skillPath}: frontmatter name "${declaredName}" must match directory name "${shortName}"`,
   );
   assert(Boolean(description), `${skillPath}: frontmatter description is required`);
   assert(lineCount(content) <= skillLineLimit, `${skillPath}: exceeds ${skillLineLimit} lines`);
@@ -282,7 +299,7 @@ assertIncludes('docs/goal-verification.md', [
 assertIncludes('docs/skill-architecture-audit.md', [
   '运行时目标验证判定',
   '运行时闭环',
-  'registry.yaml',
+  'SKILL.md',
   'docs/goal-verification.md',
 ]);
 assertIncludes('docs/skill-suite-evaluation.md', [
@@ -293,8 +310,9 @@ assertIncludes('docs/skill-suite-evaluation.md', [
 ]);
 
 for (const skillName of expectedRegistryNames) {
+  const auditContent = read('docs/skill-architecture-audit.md');
   assert(
-    read('docs/skill-architecture-audit.md').includes(`### ${skillName}`),
+    auditContent.includes(`### forge-${skillName}`) || auditContent.includes(`### ${skillName}`),
     `docs/skill-architecture-audit.md: missing audit entry for ${skillName}`,
   );
 }
@@ -386,42 +404,42 @@ for (const skillName of expectedRegistryNames) {
   assert(evalCoveredSkills.has(skillName), `evals/skills-suite/manifest.json: missing benchmark coverage for ${skillName}`);
 }
 
-for (const orchestrator of ['forge-init', 'forge-design', 'forge-detail', 'forge-test']) {
-  const skillPath = registryByName[orchestrator]?.path ?? `plugins/forge/skills/${orchestrator.replace(/^forge-/, '')}/SKILL.md`;
+for (const orchestrator of ['init', 'design', 'detail', 'test']) {
+  const skillPath = `plugins/forge/skills/${orchestrator}/SKILL.md`;
   assertIncludes(skillPath, ['## 运行时角色', '## 输入状态读取', '## 分支与恢复', '## 运行时信号']);
 }
 
 assert(
-  registryByName['forge-codegen']?.signal_routes?.some((route) => route.signal === 'goal not met' && route.to === 'forge-detail'),
-  'registry.yaml: fast-to-middle loop must route goal-not-met signal from forge-codegen to forge-detail',
+  registryByName['codegen']?.signal_routes?.some((route) => route.signal === 'goal not met' && route.to === 'detail'),
+  'SKILL.md frontmatter: fast-to-middle loop must route goal-not-met signal from codegen to detail',
 );
 assert(
-  registryByName['forge-deploy']?.escalates_when?.includes('无回滚方案'),
-  'registry.yaml: deploy must block when rollback is missing',
+  registryByName['deploy']?.escalates_when?.includes('无回滚方案'),
+  'SKILL.md frontmatter: deploy must block when rollback is missing',
 );
 
 const requiredProtocols = {
-  'forge-fe-system': {
+  'fe-system': {
     path: 'plugins/forge/skills/fe-system/references/fe-system-protocol.md',
     markers: ['# Fe System Protocol', '## Token 结构', '### Primitive', '### Semantic', '### Component'],
   },
-  'forge-fe-artifact': {
+  'fe-artifact': {
     path: 'plugins/forge/skills/fe-artifact/references/fe-artifact-protocol.md',
     markers: ['# Fe Artifact Protocol', '## 五层翻译详解', '### 1. 意图层', '### 5. 适配层'],
   },
-  'forge-fe-accept': {
+  'fe-accept': {
     path: 'plugins/forge/skills/fe-accept/references/fe-accept-protocol.md',
     markers: ['# Fe Accept Protocol', '## 四维验收', '## 报告格式', '## 执行证据'],
   },
-  'forge-review': {
+  'review': {
     path: 'plugins/forge/skills/review/references/review-protocol.md',
     markers: ['# Review Protocol', '## 文档审查维度', '## 代码审查维度', '## 偏差归因维度', '## 报告格式'],
   },
 };
 
 for (const [skillName, protocol] of Object.entries(requiredProtocols)) {
-  const skillPath = registryByName[skillName]?.path ?? `plugins/forge/skills/${skillName.replace(/^forge-/, '')}/SKILL.md`;
-  const referenceName = protocol.path.replace(`plugins/forge/skills/${skillName.replace(/^forge-/, '')}/`, '');
+  const skillPath = `plugins/forge/skills/${skillName}/SKILL.md`;
+  const referenceName = protocol.path.replace(`plugins/forge/skills/${skillName}/`, '');
   assert(read(skillPath).includes(referenceName), `${skillPath}: must reference ${referenceName}`);
   assert(exists(protocol.path), `${protocol.path}: missing`);
   if (exists(protocol.path)) assertIncludes(protocol.path, protocol.markers);
@@ -449,11 +467,14 @@ assert(
   `plugins/forge/.claude-plugin/marketplace.json: forge description must mention "${skillCount} 个决策协议 skill"`,
 );
 assert(read('README.md').includes(`7 阶段 × ${skillCount} 个 Skill`), `README.md: must document 7 阶段 × ${skillCount} 个 Skill`);
-assert(read('README.md').includes('registry.yaml'), 'README.md: must document registry.yaml runtime control surface');
+assert(
+  read('README.md').includes('SKILL.md') || read('README.md').includes('registry.yaml'),
+  'README.md: must document SKILL.md frontmatter runtime control surface',
+);
 assert(read('README.md').includes('docs/goal-verification.md'), 'README.md: must document runtime control loop doc');
 assert(read('AGENTS.md').includes(`${skillCount} 个决策协议`), `AGENTS.md: must document ${skillCount} 个决策协议`);
 assert(read('AGENTS.md').includes('信号传递'), 'AGENTS.md: must document signal passing between goal verification loops');
-assert(read('AGENTS.md').includes('registry.yaml'), 'AGENTS.md: must document registry.yaml runtime control surface');
+assert(read('AGENTS.md').includes('SKILL.md'), 'AGENTS.md: must document SKILL.md frontmatter');
 assert(read('AGENTS.md').includes('docs/goal-verification.md'), 'AGENTS.md: must document runtime control loop doc');
 assertIncludes('AGENTS.md', ['### AI 执行纪律', '最小变更', '不引入未要求的抽象']);
 assertIncludes('plugins/forge/skills/init/references/agents-template.md', ['## AI 执行纪律', '需要同步的目标文件', '执行可用验证']);
@@ -493,32 +514,32 @@ for (const file of removedHookFiles) {
   assert(!exists(file), `${file}: hooks were removed; do not reintroduce hook config without a new maintenance plan`);
 }
 
-const detailSkillPath = registryByName['forge-detail']?.path ?? 'plugins/forge/skills/detail/SKILL.md';
+const detailSkillPath = 'plugins/forge/skills/detail/SKILL.md';
 const detailSkill = read(detailSkillPath);
 const apiPhase = indexOfOrFail(detailSkill, 'Phase 1: API 设计', detailSkillPath);
 const dbPhase = indexOfOrFail(detailSkill, 'Phase 2: 数据库设计', detailSkillPath);
 assert(apiPhase < dbPhase, `${detailSkillPath}: API phase must precede database phase`);
 
-const planSkillPath = registryByName['forge-plan']?.path ?? 'plugins/forge/skills/plan/SKILL.md';
+const planSkillPath = 'plugins/forge/skills/plan/SKILL.md';
 const planSkill = read(planSkillPath);
 for (const marker of ['### P1:', '### P2:', '### P3:', '### P4:', '### P5:']) {
   assert(planSkill.includes(marker), `${planSkillPath}: missing ${marker}`);
 }
 
-const testCasesSkillPath = registryByName['forge-test-cases']?.path ?? 'plugins/forge/skills/test-cases/SKILL.md';
+const testCasesSkillPath = 'plugins/forge/skills/test-cases/SKILL.md';
 const testCasesSkill = read(testCasesSkillPath);
 for (const marker of ['### TC1:', '### TC2:', '### TC3:', '### TC4:', '### TC5:']) {
   assert(testCasesSkill.includes(marker), `${testCasesSkillPath}: missing ${marker}`);
 }
 assert(testCasesSkill.includes('testing/test-cases.md'), `${testCasesSkillPath}: must use testing/test-cases.md`);
 
-const deploySkillPath = registryByName['forge-deploy']?.path ?? 'plugins/forge/skills/deploy/SKILL.md';
+const deploySkillPath = 'plugins/forge/skills/deploy/SKILL.md';
 const deploySkill = read(deploySkillPath);
 for (const marker of ['### RL1:', '### RL2:', '### RL3:', '### RL4:', '### RL5:']) {
   assert(deploySkill.includes(marker), `${deploySkillPath}: missing ${marker}`);
 }
 
-const codegenSkillPath = registryByName['forge-codegen']?.path ?? 'plugins/forge/skills/codegen/SKILL.md';
+const codegenSkillPath = 'plugins/forge/skills/codegen/SKILL.md';
 const codegenSkill = read(codegenSkillPath);
 for (const marker of ['读', '生', '验', '修', '运行验证']) {
   assert(codegenSkill.includes(marker), `${codegenSkillPath}: missing goal verification marker "${marker}"`);

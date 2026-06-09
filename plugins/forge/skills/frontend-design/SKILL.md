@@ -2,6 +2,62 @@
 name: frontend-design
 description: Reviews and designs frontend component structure, page architecture, data flow, state boundaries, cache strategy, and API consumption. Use for lightweight frontend design review or full frontend-design stage execution.
 when_to_use: Use when the user asks how to split components, structure pages, manage UI state, consume APIs, cache or retry data requests, design frontend modules, or review whether frontend architecture is reasonable.
+phase: detail
+type: domain
+role: goal-refiner
+triggers:
+  - "前端设计"
+  - "组件设计"
+  - "页面结构"
+avoid_when:
+  - "纯后端 API"
+  - "已有完整前端详设"
+consumes:
+  - "interaction-spec.md"
+  - "DESIGN.md"
+  - "api/contract.md"
+  - "docs/change-units/CU-*.md"
+produces:
+  - "frontend/contract.md"
+  - "frontend/modules/*.md"
+  - "docs/change-units/CU-*.md"
+signals_in:
+  - "API goal"
+  - "design tokens"
+  - "interaction spec"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "frontend goal"
+  - "component modules"
+  - "change_unit.updated"
+escalates_when:
+  - "API 合约缺失"
+  - "DESIGN.md 缺失"
+  - "状态方案冲突"
+output_contract:
+  - "F1-F5"
+  - "组件树"
+  - "数据流"
+  - "状态管理"
+maturity: stable
+stage_next:
+  - plan
+  - codegen
+  - fe-artifact
+feedback_to:
+  - api-design
+  - design
+  - fe-system
+  - interaction-design
+quality_gates: []
+signal_routes:
+  - signal: "frontend goal"
+    to: fe-artifact
+    when: "frontend implementation is requested"
+  - signal: "component modules"
+    to: codegen
+    when: "general code generation includes frontend modules"
 ---
 # Frontend Design — 详设阶段（前端层）
 ## 职责
@@ -130,7 +186,7 @@ src/
 ## 运行时信号
 - 输入：API contract、design tokens、interaction spec
 - 输出：frontend specification、component modules
-- 路由：详见 `registry.yaml` 的 `forge-frontend-design` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - 升级：API 合约缺失 · DESIGN.md 缺失 · 状态方案冲突
 ## 何时不使用
 纯后端 API · 已有完整前端详设 · 简单管理后台（可简化决策流程）

@@ -2,6 +2,55 @@
 name: design
 description: Orchestrates the full design stage across interaction design and visual system decisions. Use only when the user explicitly asks for the design stage or when interaction and design-system outputs must be coordinated.
 when_to_use: Use when the user says to run the design stage, produce both interaction-spec and DESIGN.md, coordinate interaction-design with fe-system, or resolve conflicts between behavior and visual system decisions.
+phase: design
+type: orchestrator
+role: orchestrator
+triggers:
+  - "做设计"
+  - "交互设计"
+  - "设计阶段"
+avoid_when:
+  - "纯后端 API"
+  - "已有完整设计输入且只需详设"
+consumes:
+  - "PRD.md"
+  - "existing DESIGN.md"
+  - "feature context"
+  - "docs/change-units/CU-*.md"
+own_produces:
+  - "docs/change-units/CU-*.md"
+orchestrated_produces:
+  - "interaction-spec.md"
+  - "DESIGN.md updates"
+signals_in:
+  - "design needed"
+  - "frontend absent"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "interaction spec ready"
+  - "design tokens ready"
+  - "change_unit.updated"
+escalates_when:
+  - "用户不确认视觉方向"
+  - "交互和视觉职责冲突"
+output_contract:
+  - "交互规格"
+  - "设计系统变更"
+maturity: needs-runtime-hardening
+stage_next:
+  - detail
+  - frontend-design
+feedback_to:
+  - define
+quality_gates: []
+signal_routes:
+  - signal: "interaction spec ready"
+    to: detail
+    when: "technical detail needs design context"
+  - signal: "design tokens ready"
+    to: frontend-design
+    when: "frontend detail is required"
 ---
 
 # Forge Design — 设计阶段编排
@@ -89,7 +138,7 @@ DESIGN.md（更新）                               # 来自 Phase 2
 
 - 输入：design needed、frontend absent
 - 输出：interaction spec ready、design tokens ready
-- 路由：详见 `registry.yaml` 的 `forge-design` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - 升级：用户不确认视觉方向 · 交互和视觉职责冲突
 
 ## 完成提示

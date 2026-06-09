@@ -96,7 +96,7 @@ node scripts/validate.mjs
 
 自检会校验版本同步、23 个 skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 目标回流。
 
-运行时控制面也会被校验：`registry.yaml` 必须覆盖全部 23 个 skill，并声明每个协议节点的输入输出和升级条件；`docs/goal-verification.md` 和 `docs/skill-architecture-audit.md` 必须存在；编排 skill 的运行时恢复规则，`codegen -> detail -> review` 目标验证链必须完整。`registry.yaml` 是 JSON-compatible YAML，保持严格 JSON 语法以便无依赖校验。
+运行时控制面也会被校验：`SKILL.md` frontmatter 必须覆盖全部 23 个 skill，并声明每个协议节点的输入输出和升级条件；`docs/goal-verification.md` 和 `docs/skill-architecture-audit.md` 必须存在；编排 skill 的运行时恢复规则，`codegen -> detail -> review` 目标验证链必须完整。`SKILL.md` frontmatter 是 YAML 格式，由 `scripts/lib/registry.mjs` 统一解析。
 
 ### 行为测试
 

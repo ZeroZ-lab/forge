@@ -67,8 +67,8 @@
       "level": "L2 stage",
       "fixture": "evals/skills-suite/fixtures/ambiguous-idea-alignment.md",
       "expected_skills": [
-        "forge-brainstorm",
-        "forge-business-alignment"
+        "brainstorm",
+        "business-alignment"
       ],
       "expected_artifacts": [
         "docs/idea-brief.md",
@@ -90,11 +90,11 @@
       "oracle_checks": [
         {
           "type": "skill_triggered",
-          "skill": "forge-brainstorm"
+          "skill": "brainstorm"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-business-alignment"
+          "skill": "business-alignment"
         },
         {
           "type": "artifact_reported",
@@ -128,9 +128,9 @@
       "level": "L2 stage",
       "fixture": "evals/skills-suite/fixtures/project-bootstrap.md",
       "expected_skills": [
-        "forge-init",
-        "forge-technical-design",
-        "forge-fe-system"
+        "init",
+        "technical-design",
+        "fe-system"
       ],
       "expected_artifacts": [
         "docs/project.md",
@@ -155,15 +155,15 @@
       "oracle_checks": [
         {
           "type": "skill_triggered",
-          "skill": "forge-init"
+          "skill": "init"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-technical-design"
+          "skill": "technical-design"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-fe-system"
+          "skill": "fe-system"
         },
         {
           "type": "artifact_reported",
@@ -197,8 +197,8 @@
       "level": "L2 stage",
       "fixture": "evals/skills-suite/fixtures/requirements-research.md",
       "expected_skills": [
-        "forge-define",
-        "forge-research"
+        "define",
+        "research"
       ],
       "expected_artifacts": [
         "docs/features/realtime-search/PRD.md",
@@ -220,11 +220,11 @@
       "oracle_checks": [
         {
           "type": "skill_triggered",
-          "skill": "forge-define"
+          "skill": "define"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-research"
+          "skill": "research"
         },
         {
           "type": "artifact_reported",
@@ -258,11 +258,11 @@
       "level": "L2 chain",
       "fixture": "evals/skills-suite/fixtures/interaction-design-system.md",
       "expected_skills": [
-        "forge-design",
-        "forge-interaction-design",
-        "forge-fe-system",
-        "forge-fe-artifact",
-        "forge-fe-accept"
+        "design",
+        "interaction-design",
+        "fe-system",
+        "fe-artifact",
+        "fe-accept"
       ],
       "expected_artifacts": [
         "docs/features/onboarding/interaction-spec.md",
@@ -292,23 +292,23 @@
       "oracle_checks": [
         {
           "type": "skill_triggered",
-          "skill": "forge-design"
+          "skill": "design"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-interaction-design"
+          "skill": "interaction-design"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-fe-system"
+          "skill": "fe-system"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-fe-artifact"
+          "skill": "fe-artifact"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-fe-accept"
+          "skill": "fe-accept"
         },
         {
           "type": "artifact_reported",
@@ -354,10 +354,10 @@
       "level": "L2 stage",
       "fixture": "evals/skills-suite/fixtures/detail-api-db-frontend.md",
       "expected_skills": [
-        "forge-detail",
-        "forge-api-design",
-        "forge-db-design",
-        "forge-frontend-design"
+        "detail",
+        "api-design",
+        "db-design",
+        "frontend-design"
       ],
       "expected_artifacts": [
         "docs/features/tags/contract.md",
@@ -382,19 +382,19 @@
       "oracle_checks": [
         {
           "type": "skill_triggered",
-          "skill": "forge-detail"
+          "skill": "detail"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-api-design"
+          "skill": "api-design"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-db-design"
+          "skill": "db-design"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-frontend-design"
+          "skill": "frontend-design"
         },
         {
           "type": "evidence_contains",
@@ -424,9 +424,9 @@
       "level": "L1 chain",
       "fixture": "evals/skills-suite/fixtures/codegen-goal.md",
       "expected_skills": [
-        "forge-plan",
-        "forge-test-cases",
-        "forge-codegen"
+        "plan",
+        "test-cases",
+        "codegen"
       ],
       "expected_artifacts": [
         "docs/features/tags/plan.md",
@@ -457,15 +457,15 @@
       "oracle_checks": [
         {
           "type": "skill_triggered",
-          "skill": "forge-plan"
+          "skill": "plan"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-test-cases"
+          "skill": "test-cases"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-codegen"
+          "skill": "codegen"
         },
         {
           "type": "artifact_reported",
@@ -519,9 +519,9 @@
       "level": "L2 stage",
       "fixture": "evals/skills-suite/fixtures/test-strategy-suite.md",
       "expected_skills": [
-        "forge-test",
-        "forge-test-strategy",
-        "forge-test-cases"
+        "test",
+        "test-strategy",
+        "test-cases"
       ],
       "expected_artifacts": [
         "docs/features/billing/testing/contract.md",
@@ -543,15 +543,15 @@
       "oracle_checks": [
         {
           "type": "skill_triggered",
-          "skill": "forge-test"
+          "skill": "test"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-test-strategy"
+          "skill": "test-strategy"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-test-cases"
+          "skill": "test-cases"
         },
         {
           "type": "artifact_reported",
@@ -581,7 +581,7 @@
       "level": "L1 analysis",
       "fixture": "evals/skills-suite/fixtures/thinking-red-team.md",
       "expected_skills": [
-        "forge-think"
+        "think"
       ],
       "expected_artifacts": [
         "docs/thinking/*.md",
@@ -602,7 +602,7 @@
       "oracle_checks": [
         {
           "type": "skill_triggered",
-          "skill": "forge-think"
+          "skill": "think"
         },
         {
           "type": "artifact_reported",
@@ -640,7 +640,7 @@
       "level": "L1 patch",
       "fixture": "evals/skills-suite/fixtures/deploy-release.md",
       "expected_skills": [
-        "forge-deploy"
+        "deploy"
       ],
       "expected_artifacts": [
         "docs/features/tags/deploy/contract.md",
@@ -659,7 +659,7 @@
       "oracle_checks": [
         {
           "type": "skill_triggered",
-          "skill": "forge-deploy"
+          "skill": "deploy"
         },
         {
           "type": "change_unit_reported",
@@ -681,10 +681,10 @@
       "level": "L1 patch",
       "fixture": "evals/skills-suite/fixtures/bugfix-regression-change-unit.md",
       "expected_skills": [
-        "forge-detail",
-        "forge-codegen",
-        "forge-test-cases",
-        "forge-review"
+        "detail",
+        "codegen",
+        "test-cases",
+        "review"
       ],
       "expected_artifacts": [
         "docs/change-units/CU-*.md",
@@ -704,19 +704,19 @@
       "oracle_checks": [
         {
           "type": "skill_triggered",
-          "skill": "forge-detail"
+          "skill": "detail"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-codegen"
+          "skill": "codegen"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-test-cases"
+          "skill": "test-cases"
         },
         {
           "type": "skill_triggered",
-          "skill": "forge-review"
+          "skill": "review"
         },
         {
           "type": "change_unit_reported",

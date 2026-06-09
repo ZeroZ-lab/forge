@@ -1,12 +1,16 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
 
-const registry = JSON.parse(fs.readFileSync('registry.yaml', 'utf8'));
+import { loadRegistry, deriveSignalVocabulary } from '../scripts/lib/registry.mjs';
+
+const root = path.resolve(import.meta.dirname, '..');
+const registry = loadRegistry(root);
 const skillNames = fs
   .readdirSync('plugins/forge/skills', { withFileTypes: true })
   .filter((entry) => entry.isDirectory() && entry.name !== 'shared')
-  .map((entry) => `forge-${entry.name}`)
+  .map((entry) => entry.name)
   .sort();
 const allowedExternalTargets = new Set(['human decision', 'runtime release execution', 'skill maintenance']);
 
@@ -19,8 +23,9 @@ test('registry covers every forge skill exactly once', () => {
 
 test('runtime registry records static control-surface fields for every skill', () => {
   for (const skill of registry.skills) {
-    assert.equal(skill.path, `plugins/forge/skills/${skill.name.replace(/^forge-/, '')}/SKILL.md`);
-    assert.ok(fs.existsSync(skill.path));
+    const skillDir = skill._dir ?? skill.name;
+    const skillPath = `plugins/forge/skills/${skillDir}/SKILL.md`;
+    assert.ok(fs.existsSync(skillPath));
     for (const field of ['role', 'consumes', 'signals_in', 'signals_out', 'escalates_when', 'stage_next', 'feedback_to', 'quality_gates', 'signal_routes']) {
       assert.ok(skill[field], `${skill.name} missing ${field}`);
     }
@@ -56,19 +61,20 @@ test('typed registry edges only link known skills or allowed external targets', 
 
 test('typed signal routes cover goal verification loops', () => {
   const byName = Object.fromEntries(registry.skills.map((skill) => [skill.name, skill]));
-  assert.ok(byName['forge-codegen'].signal_routes.some((route) => route.signal === 'goal not met' && route.to === 'forge-detail'));
-  assert.ok(byName['forge-codegen'].signal_routes.some((route) => route.signal === 'goal conflict' && route.to === 'human decision'));
+  assert.ok(byName['codegen'].signal_routes.some((route) => route.signal === 'goal not met' && route.to === 'detail'));
+  assert.ok(byName['codegen'].signal_routes.some((route) => route.signal === 'goal conflict' && route.to === 'human decision'));
 });
 
 test('runtime recovery blockers are encoded as registry signals', () => {
   const byName = Object.fromEntries(registry.skills.map((skill) => [skill.name, skill]));
-  assert.ok(byName['forge-codegen'].escalates_when.includes('goal conflict'));
-  assert.ok(byName['forge-codegen'].escalates_when.includes('3 corrections without convergence'));
-  assert.ok(byName['forge-deploy'].escalates_when.includes('无回滚方案'));
+  assert.ok(byName['codegen'].escalates_when.includes('goal conflict'));
+  assert.ok(byName['codegen'].escalates_when.includes('3 corrections without convergence'));
+  assert.ok(byName['deploy'].escalates_when.includes('无回滚方案'));
 });
 
 test('runtime registry includes Change Unit and goal verification signals', () => {
-  const signalIds = new Set(registry.signal_vocabulary.map((signal) => signal.id));
+  const signalVocabulary = deriveSignalVocabulary(registry.skills);
+  const signalIds = new Set(Object.keys(signalVocabulary));
   for (const signalId of [
     'change_unit.created',
     'change_unit.updated',
@@ -78,7 +84,7 @@ test('runtime registry includes Change Unit and goal verification signals', () =
   }
 
   const byName = Object.fromEntries(registry.skills.map((skill) => [skill.name, skill]));
-  assert.ok(byName['forge-review'].signals_out.includes('goal_verification.completed'));
+  assert.ok(byName['review'].signals_out.includes('goal_verification.completed'));
 });
 
 test('every skill declares Change Unit participation', () => {

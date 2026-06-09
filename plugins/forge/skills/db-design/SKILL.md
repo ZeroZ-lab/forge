@@ -2,6 +2,53 @@
 name: db-design
 description: Reviews and designs data models, schemas, indexes, migrations, ID strategy, soft delete, query patterns, and storage constraints. Use for lightweight database review or patch tasks, and for full db-design stage execution when explicitly requested.
 when_to_use: Use when the user asks about table structure, data model, schema changes, indexes, migrations, rollback, IDs, storage choice, soft delete, query performance, or whether a database design is reasonable.
+phase: detail
+type: domain
+role: goal-refiner
+triggers:
+  - "数据库设计"
+  - "表结构"
+  - "数据模型"
+avoid_when:
+  - "纯前端项目"
+  - "已有完整数据库详设"
+consumes:
+  - "docs/project.md"
+  - "api/contract.md"
+  - "docs/change-units/CU-*.md"
+produces:
+  - "database/contract.md"
+  - "docs/change-units/CU-*.md"
+signals_in:
+  - "API data model"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "database goal"
+  - "migration rules"
+  - "change_unit.updated"
+escalates_when:
+  - "API 模型和存储模型冲突"
+  - "迁移不可回滚"
+output_contract:
+  - "DB1-DB5"
+  - "表清单"
+  - "索引规划表"
+  - "迁移规则"
+maturity: stable
+stage_next:
+  - plan
+  - codegen
+feedback_to:
+  - api-design
+quality_gates: []
+signal_routes:
+  - signal: "database goal"
+    to: plan
+    when: "task slicing needs persistence work"
+  - signal: "migration rules"
+    to: codegen
+    when: "code generation includes schema or migrations"
 ---
 
 # Database Design — 详设阶段（数据库层）
@@ -130,7 +177,7 @@ updated_at: timestamp, not null, default now()
 
 - 输入：`api_design.shared_data_model`
 - 输出：database spec、migration rules
-- 路由：详见 `registry.yaml` 的 `forge-db-design` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - 升级：API 模型和存储模型冲突 · 迁移不可回滚
 
 ## 何时不使用

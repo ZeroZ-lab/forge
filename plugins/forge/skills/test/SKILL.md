@@ -2,6 +2,68 @@
 name: test
 description: Orchestrates the full test stage across testing strategy and test-case derivation. Use only when the user explicitly asks for the test stage or when testing strategy and test cases must be coordinated.
 when_to_use: Use when the user says run the test stage, full testing plan, coordinate test-strategy and test-cases, produce both testing/strategy.md and testing/test-cases.md, or resolve conflicts between how to test and what to test.
+phase: test
+type: orchestrator
+role: orchestrator
+triggers:
+  - "做测试"
+  - "测试阶段"
+  - "测试规划"
+avoid_when:
+  - "纯文档项目"
+  - "已有完整测试策略和测试用例"
+consumes:
+  - "contract.md"
+  - "modules/*.md"
+  - "plan.md"
+  - "existing testing/contract.md"
+  - "existing testing/test-cases.md"
+  - "docs/change-units/CU-*.md"
+own_produces:
+  - "docs/change-units/CU-*.md"
+orchestrated_produces:
+  - "testing/contract.md"
+  - "testing/test-cases.md"
+signals_in:
+  - "test planning needed"
+  - "missing test cases"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "test strategy ready"
+  - "test cases ready"
+  - "change_unit.updated"
+  - "goal_verification.completed"
+escalates_when:
+  - "验收条件缺失"
+  - "测试策略和用例冲突"
+output_contract:
+  - "测试策略"
+  - "测试用例"
+maturity: needs-runtime-hardening
+stage_next:
+  - codegen
+  - deploy
+  - review
+  - test-strategy
+feedback_to:
+  - detail
+  - plan
+quality_gates:
+  - review
+signal_routes:
+  - signal: "test strategy ready"
+    to: codegen
+    when: "codegen needs testing constraints"
+  - signal: "test cases ready"
+    to: review
+    when: "review needs test coverage evidence"
+  - signal: "requirements not testable"
+    to: detail
+    when: "goal cannot produce reliable tests"
+  - signal: "goal_verification.completed"
+    to: review
+    when: "when implementation needs goal verification"
 ---
 
 # Forge Test — 测试阶段编排
@@ -100,7 +162,7 @@ docs/features/<feature>/
 
 - 输入：test planning needed、missing test cases
 - 输出：test strategy ready、test cases ready
-- 路由：详见 `registry.yaml` 的 `forge-test` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - 升级：验收条件缺失 · 测试策略和用例冲突
 
 ## 完成提示

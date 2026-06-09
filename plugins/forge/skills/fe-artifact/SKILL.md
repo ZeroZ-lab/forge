@@ -3,6 +3,65 @@ name: fe-artifact
 description: Implements DESIGN.md, interaction specs, frontend specifications, and modules into pages, components, hooks, and styles.
 when_to_use: Use by direct invocation or from codegen when documented frontend tasks need page, component, hook, style, or frontend test implementation from Forge specifications and design system goals.
 disable-model-invocation: false
+phase: build
+type: execution
+role: executor
+triggers:
+  - "生成前端"
+  - "做页面"
+  - "写组件"
+avoid_when:
+  - "无前端任务"
+  - "缺 DESIGN.md 且无法确认视觉规则"
+consumes:
+  - "DESIGN.md"
+  - "interaction-spec.md"
+  - "frontend/contract.md"
+  - "frontend/modules/*.md"
+  - "api/modules/*.md"
+  - "plan.md"
+  - "docs/change-units/CU-*.md"
+  - "goal.md"
+produces:
+  - "frontend source files"
+  - "frontend validation evidence"
+  - "docs/change-units/CU-*.md"
+signals_in:
+  - "frontend task"
+  - "design tokens"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "frontend artifact ready"
+  - "preview blocked"
+  - "change_unit.updated"
+  - "goal_coverage.updated"
+escalates_when:
+  - "无法运行或预览"
+  - "设计输入缺失"
+output_contract:
+  - "pages"
+  - "components"
+  - "hooks"
+  - "styles"
+  - "basic tests"
+maturity: stable
+stage_next:
+  - fe-accept
+  - review
+feedback_to:
+  - fe-system
+  - frontend-design
+quality_gates:
+  - fe-accept
+  - review
+signal_routes:
+  - signal: "frontend artifact ready"
+    to: fe-accept
+    when: "preview or acceptance can run"
+  - signal: "preview blocked"
+    to: human decision
+    when: "frontend cannot be run or inspected"
 ---
 
 # Fe Artifact — 前端实现
@@ -100,7 +159,7 @@ disable-model-invocation: false
 
 - 输入：frontend task、design tokens
 - 输出：frontend artifact ready、preview blocked
-- 路由：详见 `registry.yaml` 的 `forge-fe-artifact` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - 升级：无法运行或预览 · 设计输入缺失
 
 ## 红旗清单

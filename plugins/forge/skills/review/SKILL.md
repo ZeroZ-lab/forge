@@ -2,6 +2,74 @@
 name: review
 description: Performs independent review of diffs, documents, code, tests, and consistency before build or release. Use for lightweight review requests and for full quality-gate review when explicitly requested.
 when_to_use: Use when the user asks to review changes, inspect a diff, check code quality, audit documents, find goal inconsistency, run an adversarial review, verify implementation against docs, or assess release readiness.
+phase: review
+type: governance
+role: governance
+triggers:
+  - "审查文档"
+  - "审查代码"
+  - "review"
+avoid_when:
+  - "没有可审查产物"
+consumes:
+  - "PRD.md"
+  - "docs/project.md"
+  - "DESIGN.md"
+  - "contract.md"
+  - "modules/*.md"
+  - "plan.md"
+  - "src/"
+  - "tests/"
+  - "changelog"
+  - "timeline"
+  - "docs/change-units/CU-*.md"
+  - "goal.md"
+produces:
+  - "review report"
+  - "deviation attribution"
+  - "docs/change-units/CU-*.md"
+signals_in:
+  - "artifact ready"
+  - "health check trigger"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "P0/P1/P2 issues"
+  - "skill/document/code gap attribution"
+  - "change_unit.updated"
+  - "project_state.updated"
+  - "goal_verification.completed"
+escalates_when:
+  - "P0/P1 found"
+  - "WHY missing before codegen"
+  - "deviation has no attribution"
+output_contract:
+  - "findings"
+  - "evidence"
+  - "impact"
+  - "fix recommendations"
+  - "attribution"
+maturity: stable
+stage_next:
+  - deploy
+feedback_to:
+  - detail
+  - codegen
+quality_gates:
+  - deploy
+signal_routes:
+  - signal: "document inconsistency"
+    to: detail
+    when: "review attributes issue to document drift"
+  - signal: "P0/P1 issues"
+    to: human decision
+    when: "blocking issue needs prioritization or waiver"
+  - signal: "goal_verification.completed"
+    to: review
+    when: "when implementation needs goal verification"
+  - signal: "goal_verification.completed"
+    to: deploy
+    when: "when review clears release readiness docs"
 ---
 
 # Review — 独立审查
@@ -92,7 +160,7 @@ review 是目标验证器。它不只判断”有没有问题”，还必须把�
 
 - 输入：artifact ready、health check trigger
 - 输出：P0/P1/P2 issues、skill/document/code attribution
-- 路由：详见 `registry.yaml` 的 `forge-review` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - 升级：P0/P1 found · WHY missing before codegen · gap has no root cause
 
 ## 差距分析

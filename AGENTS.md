@@ -158,7 +158,7 @@ D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就
 
 ### 目标验证
 
-Forge 是闭环系统——文档定义目标，AI 自主实现，验证结果是否达标。信号传递在环节间完成，闭环控制由 `registry.yaml` 驱动，完整定义见 `docs/goal-verification.md`。
+Forge 是闭环系统——文档定义目标，AI 自主实现，验证结果是否达标。信号传递在环节间完成，闭环控制由 `SKILL.md` frontmatter 驱动，完整定义见 `docs/goal-verification.md`。
 
 | 环节 | 机制 | 信号 |
 |------|------|------|

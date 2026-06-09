@@ -2,6 +2,53 @@
 name: research
 description: Researches technical uncertainty by decomposing product goals into subproblems and comparing algorithm or implementation options. Use when a product idea contains non-CRUD technical choices or current research is needed.
 when_to_use: Use when the user mentions realtime collaboration, search, recommendation, animation, simulation, path planning, scheduling, optimization, encryption, auth, media processing, algorithms, or asks what technical options exist.
+phase: define
+type: domain
+role: goal-refiner
+triggers:
+  - "技术探索"
+  - "算法菜单"
+  - "research"
+avoid_when:
+  - "纯 CRUD 应用"
+  - "用户已有完整技术方案"
+  - "没有技术选择空间"
+consumes:
+  - "PRD.md"
+  - "technical signal words"
+  - "docs/change-units/CU-*.md"
+produces:
+  - "research-brief.md"
+  - "docs/change-units/CU-*.md"
+signals_in:
+  - "PRD technical signals"
+  - "change_unit.created"
+  - "change_unit.updated"
+signals_out:
+  - "algorithm menu"
+  - "technical recommendation"
+  - "change_unit.updated"
+escalates_when:
+  - "技术信号词存在但没有可行方案"
+  - "所有方案都有重大 trade-off"
+output_contract:
+  - "子问题地图"
+  - "算法菜单"
+  - "组合建议"
+maturity: stable
+stage_next:
+  - technical-design
+  - detail
+feedback_to:
+  - define
+quality_gates: []
+signal_routes:
+  - signal: "algorithm menu"
+    to: technical-design
+    when: "technical choices need algorithm options"
+  - signal: "technical recommendation"
+    to: detail
+    when: "domain contracts need research constraints"
 ---
 # Research — 技术探索阶段
 ## 职责
@@ -116,7 +163,7 @@ research-brief.md 的三个核心结构（详见模板）：
 ## 运行时信号
 - 输入：PRD technical signals
 - 输出：algorithm menu、technical recommendation
-- 路由：详见 `registry.yaml` 的 `forge-research` 节点；本节只保留人类可读摘要。
+- 路由：详见本文件 frontmatter.signal_routes
 - 升级：技术信号词存在但没有可行方案 · 所有方案都有重大 trade-off
 ## 何时不使用
 - 纯 CRUD 应用（表单→数据库→列表页，没有技术选择空间）

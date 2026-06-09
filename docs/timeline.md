@@ -40,7 +40,7 @@
 - **改动**：
   - 新增 shared 模板：Change Unit、doc sync checklist、goal_map、goal、goal_verification。
   - 24 个 skill 接入 `Change Unit / Rebuild Control` 协议引用。
-  - `registry.yaml` 新增 CU、doc sync、goal_map、Current Snapshot、Rebuild Control 信号。
+  - `SKILL.md` frontmatter 新增 CU、doc sync、goal_map、Current Snapshot、Rebuild Control 信号。
   - skills-suite benchmark 升级到 v2，report 新增 `change_units`、`goal_verification`、`code_map_entries`，并新增 bugfix regression case。
   - validator 新增 packaged plugin 偏移检查和 v2 oracle 校验。
 - **验证目标**：`node scripts/validate.mjs` + `node --test` + `node scripts/evaluate-skills.mjs`。
