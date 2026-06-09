@@ -1,0 +1,29 @@
+{
+  "name": "forge",
+  "description": "目标约束驱动的 AI 开发决策协议。文档定义目标和边界，AI 自主选择实现路径。",
+  "owner": {
+    "name": "ZeroZ-lab",
+    "url": "https://github.com/ZeroZ-lab"
+  },
+  "homepage": "https://github.com/ZeroZ-lab/forge",
+  "plugins": [
+    {
+      "name": "forge",
+      "source": "./plugins/forge",
+      "description": "文档是目标约束。目标是什么、边界在哪、怎么算完成。默认服务已有项目的小功能迭代。",
+      "author": {
+        "name": "ZeroZ-lab",
+        "url": "https://github.com/ZeroZ-lab"
+      },
+      "homepage": "https://github.com/ZeroZ-lab/forge",
+      "repository": "https://github.com/ZeroZ-lab/forge",
+      "license": "MIT",
+      "keywords": [
+        "documentation",
+        "decision-records",
+        "ai-agent",
+        "goal-first"
+      ]
+    }
+  ]
+}
