@@ -1,6 +1,6 @@
 # Tasks 模块
 
-> 依赖 api/contract.md 共享决策 D1-D7，遵循共享约束。
+> 依赖 api/goal.md 共享决策 D1-D7，遵循共享约束。
 
 ## 需求
 

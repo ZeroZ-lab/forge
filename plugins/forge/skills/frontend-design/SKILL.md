@@ -15,10 +15,10 @@ avoid_when:
 consumes:
   - "interaction-spec.md"
   - "DESIGN.md"
-  - "api/contract.md"
+  - "api/goal.md"
   - "docs/change-units/CU-*.md"
 produces:
-  - "frontend/contract.md"
+  - "frontend/goal.md"
   - "frontend/modules/*.md"
   - "docs/change-units/CU-*.md"
 signals_in:

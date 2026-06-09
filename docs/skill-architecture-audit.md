@@ -22,7 +22,7 @@
 
 审计标准来源：
 
-- 当前 Forge 的目标验证链：`codegen -> detail -> review -> learn`。
+- 当前 Forge 的目标验证链：`codegen -> detail -> review`。
 - Forge 的 skill 是运行时协议节点；控制系统产生在"用户任务 -> skill 路由 -> 文档产物 -> 代码实现 -> 目标验证 -> 文档/方法论修正"的运行链路中。
 - 单个 skill 可以只是决策协议、执行器、验证器、治理门或知识锚点。
 - 本次审计先建立运行时口径，再把 frontmatter registry、Knowledge 层、编排 skill 和 validator/tests 纳入闭环校验。
@@ -53,12 +53,12 @@
 | 模块 | 运行时承担者 | 当前状态 |
 |------|--------------|----------|
 | Monitor | 当前任务、项目文档、feature 文档、代码、测试、timeline/changelog、用户确认 | SKILL.md frontmatter 已记录 consumes/signals；编排 skill 已补输入状态读取 |
-| Analyze | `review`、`learn`、`codegen`、`detail` 运行时步骤 | 差距分析、review -> learn 证据链已固化 |
-| Plan | `plan`、`detail`、`deploy`、`learn` 运行时步骤 | 任务计划、级联更新、发布计划存在；learn 已补建议排序和防膨胀规则 |
+| Analyze | `review`、`codegen`、`detail` 运行时步骤 | 差距分析已固化 |
+| Plan | `plan`、`detail`、`deploy` 运行时步骤 | 任务计划、级联更新、发布计划存在 |
 | Execute | `codegen`、`fe-artifact`、`deploy` 运行时步骤 | 执行层清晰 |
 | Knowledge | `plugins/forge/skills/shared/`、各 skill `references/`、项目 `timeline`、feature `changelog`、产物文档 | shared 已扩展 concepts/rubrics/red-flags/output-contracts |
 | Feedback | `validate.mjs`、真实测试、`review`、`fe-accept`、用户验收 | validator 与 `node --test` 已校验 SKILL.md frontmatter、runtime docs 和 signal-flow |
-| Recovery | `codegen` 问题升级、`detail` 级联更新、`review` 阻塞项、`learn` 方法论进化、`deploy` 回滚 | 目标验证链已由 SKILL.md frontmatter 和编排 skill 固化 |
+| Recovery | `codegen` 问题升级、`detail` 级联更新、`review` 阻塞项、`deploy` 回滚 | 目标验证链已由 SKILL.md frontmatter 和编排 skill 固化 |
 
 整体结论：
 
@@ -198,13 +198,6 @@
 - 建议动作：补"发布前读取代码审查、测试结果、监控可用性"的状态清单。
 - 优先级：P2。
 
-### learn
-
-- 当前强项：能从 review、changelog、timeline 聚合问题信号并提出方法论改进。
-- 缺口：多个改进建议如何排序、如何避免 skill 膨胀还不够明确。
-- 建议动作：补"建议排序、证据强度、行数预算、抽 shared 优先"的计划规则。
-- 优先级：P1。
-
 ### think
 
 - 当前强项：把深度思考从对话中抽出为可追踪产物。
@@ -272,7 +265,7 @@
 - `SKILL.md` frontmatter 覆盖 24 个 skill
 - shared Knowledge 层文件存在
 - 编排 skill 含输入状态、分支判断和恢复规则
-- `codegen -> detail -> review -> learn` 验证链存在
+- `codegen -> detail -> review` 验证链存在
 
 ## 6. 推荐重构顺序与当前状态
 
@@ -281,7 +274,7 @@
 3. 已新增 `SKILL.md` frontmatter，只做运行时控制面和审计面，不改变 plugin discovery。
 4. 已扩展 `plugins/forge/skills/shared/` 为 Knowledge 层。
 5. 已优先重构 4 个编排 skill：`init`、`design`、`detail`、`test`。
-6. 已以 `codegen`、`detail`、`review`、`learn` 固化目标验证链。
+6. 已以 `codegen`、`detail`、`review` 固化目标验证链。
 
 ## 7. 执行边界
 

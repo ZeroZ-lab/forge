@@ -46,7 +46,7 @@
 
 ### 依赖
 
-- API 合约：`../api/contract.md`
+- API 合约：`../api/goal.md`
 - 共享类型：复用 api/ 中的 Task、Comment 类型定义
 
 ---

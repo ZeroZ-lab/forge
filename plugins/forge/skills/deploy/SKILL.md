@@ -19,12 +19,11 @@ consumes:
   - "src/"
   - "tests/"
   - "testing/test-cases.md"
-  - "contract.md"
+  - "goal.md"
   - "review report"
   - "docs/change-units/CU-*.md"
-  - "goal.md"
 produces:
-  - "deploy/contract.md"
+  - "deploy/goal.md"
   - "release checklist"
   - "docs/change-units/CU-*.md"
 signals_in:
@@ -222,6 +221,7 @@ docs/features/<feature>/deploy/
 - 手动部署 → 强制自动化（"手动步骤 = 人为事故"）
 - 只有一个环境 → 强制补充（"至少 staging + prod"）
 - 没有监控 → 强制补充（"出问题谁第一个知道？"）
+- 部署工作引入架构变更但无决策记录 → 范围蔓延红旗，参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`
 
 ## 验证清单
 

@@ -58,7 +58,7 @@ quality_gates: []
 signal_routes:
   - signal: "reasoning record"
     to: detail
-    when: "analysis changes or strengthens a feature contract decision"
+    when: "analysis changes or strengthens a feature goal decision"
   - signal: "needs research"
     to: research
     when: "analysis exposes unresolved technical uncertainty"
@@ -79,7 +79,7 @@ signal_routes:
 
 ## 执行纪律
 
-所有 think 调用自动遵守 D1–D9（见 AGENTS.md），不重复内容，只引用编号。
+所有 think 调用自动遵守 D1–D9（规范定义见 `${CLAUDE_SKILL_DIR}/../shared/concepts/execution-discipline.md`），不重复内容，只引用编号。
 
 - D1：思考产物写入 docs/thinking/*.md，不留在对话里蒸发
 - D5：思考范围锁定在当前问题，不发散到无关领域

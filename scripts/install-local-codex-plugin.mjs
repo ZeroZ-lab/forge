@@ -5,18 +5,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { findCodexBin } from './lib/codex-bin.mjs';
+
 const root = process.cwd();
 const marketplaceName = 'forge-local';
 const pluginName = 'forge';
-
-function findCodexBin() {
-  if (process.env.CODEX_BIN) return process.env.CODEX_BIN;
-  const candidates = [
-    '/Applications/Codex.app/Contents/Resources/codex',
-    spawnSync('zsh', ['-lc', 'command -v codex'], { encoding: 'utf8' }).stdout.trim(),
-  ].filter(Boolean);
-  return candidates.find((candidate) => fs.existsSync(candidate)) ?? null;
-}
 
 function run(codexBin, args, options = {}) {
   const result = spawnSync(codexBin, args, {

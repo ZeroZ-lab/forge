@@ -15,7 +15,7 @@ consumes:
   - "PRD.md"
   - "docs/project.md"
   - "DESIGN.md"
-  - "contract.md"
+  - "goal.md"
   - "modules/*.md"
   - "plan.md"
   - "src/"
@@ -23,7 +23,6 @@ consumes:
   - "changelog"
   - "timeline"
   - "docs/change-units/CU-*.md"
-  - "goal.md"
 produces:
   - "review report"
   - "deviation attribution"
@@ -84,8 +83,9 @@ review 的目标不是总结优点，而是发现会导致目标未达成、错�
 
 - **D1**：每个问题必须有证据、影响和修复建议
 - **D5**：不替代 codegen，不直接发布，不用同一轮自我确认代替独立检查
-- **D8**：发现偏差必须做差距分析（skill 方法论 / 文档未同步 / 代码实现），明确根因才能精准修复
+- **D8**：发现偏差必须做差距分析（skill 方法论 / 文档未同步 / 代码实现 / 范围蔓延），明确根因才能精准修复
 - 实现质量评价维度见 `${CLAUDE_SKILL_DIR}/../shared/rubrics/implementation-quality.md`
+- 目标质量评价维度见 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`
 
 ## 上下游边界
 
@@ -165,11 +165,12 @@ review 是目标验证器。它不只判断”有没有问题”，还必须把�
 
 ## 差距分析
 
-每个问题归因到三层之一，根因不同修法不同：
+每个问题归因到四层之一，根因不同修法不同：
 
 - **skill 方法论**：skill 的决策点或方法论缺陷导致遗漏 → 记录为已知风险，供后续迭代参考
 - **文档未同步**：文档间不一致（上游改了下游没跟） → 级联更新
 - **代码实现**：代码未满足声明的目标 → 修代码
+- **范围蔓延**：实现超出了 goal/PRD 定义的范围且无决策记录 → 路由到 define 或 detail 补充决策，参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`
 
 ## 红旗清单
 - 只做摘要不列问题 → 强制列出具体问题（证据+影响+修复建议）
@@ -178,7 +179,8 @@ review 是目标验证器。它不只判断”有没有问题”，还必须把�
 - 测试通过但代码和合约不一致 → 标记为 P1（测试覆盖 ≠ 目标对齐）
 - 文档缺 WHY 却直接允许 codegen → 阻塞，先补 WHY
 - 发现问题后没有重新审查 → 修复后必须复审
-- 发现偏差后没有归因 → 强制差距分析到三层之一（skill 方法论 / 文档未同步 / 代码实现）
+- 发现偏差后没有归因 → 强制差距分析到四层之一（skill 方法论 / 文档未同步 / 代码实现 / 范围蔓延）
+- 实现范围超出 goal/PRD 定义 → 范围蔓延红旗，参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`
 
 ## 验证清单
 

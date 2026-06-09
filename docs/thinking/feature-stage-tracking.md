@@ -48,7 +48,7 @@ Forge 的阶段本质上是一个**有限状态机**：
 - 转换触发：skill 完成（出口条件满足）
 - 转换动作：更新 status.md + 追加 timeline + 追加 changelog
 
-多 feature 的状态机**独立但有耦合**——耦合点不是阶段本身，而是产物依赖（B 的 detail 需要 A 的 api/contract.md）。
+多 feature 的状态机**独立但有耦合**——耦合点不是阶段本身，而是产物依赖（B 的 detail 需要 A 的 api/goal.md）。
 
 ### 因果链
 

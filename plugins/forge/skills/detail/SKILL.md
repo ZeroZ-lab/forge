@@ -21,19 +21,19 @@ consumes:
   - "docs/change-units/CU-*.md"
   - "goal.md"
 own_produces:
-  - "feature contract.md"
+  - "feature goal.md"
   - "docs/change-units/CU-*.md"
 orchestrated_produces:
-  - "api/contract.md"
-  - "database/contract.md"
-  - "frontend/contract.md"
+  - "api/goal.md"
+  - "database/goal.md"
+  - "frontend/goal.md"
 signals_in:
   - "repeat_signal from forge-codegen"
   - "document drift from forge-review"
   - "change_unit.created"
   - "change_unit.updated"
 signals_out:
-  - "contract updated"
+  - "goal updated"
   - "downstream gap report"
   - "human decision needed"
   - "change_unit.updated"
@@ -41,12 +41,12 @@ signals_out:
   - "project_state.updated"
   - "goal_verification.completed"
 escalates_when:
-  - "contract ambiguity"
+  - "goal ambiguity"
   - "downstream drift needs decision"
   - "frontend presence unclear"
 output_contract:
-  - "feature contract"
-  - "domain contracts"
+  - "feature goal"
+  - "domain goals"
   - "drift report"
 maturity: needs-runtime-hardening
 stage_next:
@@ -59,7 +59,7 @@ feedback_to:
 quality_gates:
   - review
 signal_routes:
-  - signal: "contract updated"
+  - signal: "goal updated"
     to: plan
     when: "goal is ready for task slicing"
   - signal: "downstream gap report"
@@ -84,7 +84,7 @@ signal_routes:
 
 `detail` 是目标细化器。它把上游 PRD、project、DESIGN 和问题信号转成可操作的目标，并在 codegen/review 发现一致性问题时负责 goal 复查和级联更新决策。
 
-运行时目标验证参考 `docs/goal-verification.md`；目标漂移红旗参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/goal-drift.md`。
+运行时目标验证参考 `docs/goal-verification.md`；目标漂移红旗参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/goal-drift.md`；目标质量标准参考 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`；范围蔓延红旗参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`。
 
 **Phase 0 例外**：`detail` 的 Phase 0（Feature 骨架创建）和 Phase 4（索引同步 + Module 结构校验）是编排器自己的 domain work——创建 feature/goal.md 作为跨领域共享骨架，维护 project.md 索引。没有单独的 skill 负责 feature 级共享决策和 project.md 索引维护。
 
@@ -139,6 +139,7 @@ signal_routes:
 - L2 目标定义不清 → 中止详设，列出矛盾点等用户决策
 - feature/goal.md 的 FD# 与 project.md 的 PD# 编号冲突 → 重新分配编号
 - 下游一致性问题影响范围不清 → 不自动级联修改，先输出一致性报告
+- goal 质量不足（无法驱动可靠实现）→ 参见 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`
 
 ## 流程
 
@@ -189,6 +190,8 @@ signal_routes:
       - 依赖关系（从编排调用链推导：该模块 import 了哪些其他模块）
    d. 模块数 ≥ 5 → **必须生成** module specs，不允许跳过
    e. 模块数 < 5 → 可选生成，但 goal.md 模块索引需包含完整接口签名（而非仅一行描述）
+
+9. **Goal 质量门**：Phase 4 完成前，按 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md` 检查 feature/goal.md。源完整性和可重构性不通过 → 不进入下一步，回到对应 Phase 补充。
 
 **goal.md 共享数据模型节制规则**：
 - 只放**跨模块共享**的核心类型（如 Point/Rect/CommandResult 等基础结构）

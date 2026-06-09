@@ -54,7 +54,7 @@ signal_routes:
     when: "feature goal needs technical detailing"
   - signal: "change_unit.created"
     to: detail
-    when: "when requirements become feature contracts"
+    when: "when requirements become feature goals"
 ---
 # Requirements — 定义阶段（需求层）
 ## 职责
@@ -67,6 +67,8 @@ signal_routes:
 - **D1**：范围排除必须写理由，排除是主动决策不是遗漏
 - **D7**：验收条件必须可测试（Given-When-Then），不可测试的需求不算定义完成
 - **D5**：只定义做什么不做什么，不涉及技术选型和交互设计
+- 目标质量评价维度见 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`；PRD 产出应满足 source completeness 和 decision traceability 维度，不满足则不进入 detail
+- **D5+scope-creep**：定义过程中发现需求范围超出当前 goal 边界时，停止并记录缺失决策，路由产品范围变更回到 define，不自行扩大 PRD 范围。参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`
 
 ## 方法论：约束→场景→验收
 ### 第一步：约束定义（Constraint）
@@ -93,6 +95,8 @@ signal_routes:
 {如果需要把 project.md 的通用约束精化到具体命令/模块，标注来源}
 ```
 - 错误码表、格式支持列表等枚举型信息 → 在 PRD 中完整列出（因为不同 feature 的错误码集不同），但与 project.md 冲突时必须标注"PRD 新增"
+
+**引用规则参考**：详见 `${CLAUDE_SKILL_DIR}/../shared/concepts/reference-not-repeat.md`——上游文档定义的信息，下游引用编号，不复述内容。精化标注来源，新增标注"PRD 新增"。
 ### 第二步：场景覆盖（Scenario）
 从用户视角描述每个使用场景，覆盖正常、边界、异常。
 **核心问题**：
@@ -241,8 +245,7 @@ Then suggestion.needs_overview = false
    ### {日期} — {feature} 需求定义
    - 新增：PRD.md（{N} 个用户故事）
    ```
-3. **更新 docs/status.md**：①定义 → `✅`，下一阶段 → `🔄`。
-4. **检查膨胀**：超 100 行时归档。
+3. **检查膨胀**：超 100 行时归档。
 ## 完成提示
 完成后向用户展示：
 ```

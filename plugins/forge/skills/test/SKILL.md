@@ -13,16 +13,16 @@ avoid_when:
   - "纯文档项目"
   - "已有完整测试策略和测试用例"
 consumes:
-  - "contract.md"
+  - "goal.md"
   - "modules/*.md"
   - "plan.md"
-  - "existing testing/contract.md"
+  - "existing testing/goal.md"
   - "existing testing/test-cases.md"
   - "docs/change-units/CU-*.md"
 own_produces:
   - "docs/change-units/CU-*.md"
 orchestrated_produces:
-  - "testing/contract.md"
+  - "testing/goal.md"
   - "testing/test-cases.md"
 signals_in:
   - "test planning needed"
@@ -134,6 +134,8 @@ docs/features/<feature>/
 ## 历史维护（自动）
 
 完成后追加 `docs/timeline.md` + feature `changelog.md`（一条汇总记录）。`test-strategy` 和 `test-cases` 作为子阶段时不单独追加历史。超 100 行时归档。
+
+**更新 docs/status.md**（如启用）：⑥测试 → `✅`，下一阶段 → `🔄`。如有跳过的子阶段，标注 `⏭️跳过（原因）`。
 
 ## 红旗清单
 - 缺 goal/modules → 不生成测试策略，先回到 detail 补详设

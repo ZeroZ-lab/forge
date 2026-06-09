@@ -17,7 +17,7 @@ consumes:
   - "PRD.md"
   - "docs/change-units/CU-*.md"
 produces:
-  - "api/contract.md"
+  - "api/goal.md"
   - "api/modules/*.md"
   - "docs/change-units/CU-*.md"
 signals_in:
@@ -49,7 +49,7 @@ signal_routes:
     when: "storage model depends on API data model"
   - signal: "shared data model"
     to: frontend-design
-    when: "frontend contracts consume API shapes"
+    when: "frontend goals consume API shapes"
 ---
 # API Design — 详设阶段（API 层）
 ## 职责

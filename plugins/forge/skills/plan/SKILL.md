@@ -13,16 +13,15 @@ avoid_when:
   - "只有一个模块"
   - "已有明确任务清单"
 consumes:
-  - "contract.md"
+  - "goal.md"
   - "modules/*.md"
   - "docs/change-units/CU-*.md"
-  - "goal.md"
 own_produces:
   - "plan.md"
   - "docs/change-units/CU-*.md"
 orchestrated_produces: []
 signals_in:
-  - "domain contracts"
+  - "domain goals"
   - "change_unit.created"
   - "change_unit.updated"
 signals_out:
@@ -95,6 +94,7 @@ signal_routes:
 - 先画全景再切片——模块依赖图是切片的基础
 - 共享基础设施（中间件、工具函数、数据库 schema）要单独识别，它们通常是第一批任务
 - 高风险/技术不确定的模块要标记——先验证最不确定的部分，降低后期返工
+- goal.md 质量不足时（源完整性或可重构性不通过）→ 标记风险，参考 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`
 
 **记录**：模块清单 + 依赖图 + 风险标记
 
@@ -259,8 +259,6 @@ signal_routes:
 ## 历史维护（自动）
 
 完成后追加 `docs/timeline.md`：`### {日期} — {feature} 任务分解 · plan.md（{N} 个任务）+ testing/test-cases.md`。追加 `changelog.md`。超 100 行时归档。自动推导测试用例时加载 `test-cases`，但历史由 `plan` 写一条汇总记录，避免重复。
-
-**更新 docs/status.md**：④任务 → `✅`，⑤构建 → `🔄`。如有跳过的阶段，标注 `⏭️跳过（原因）`。
 
 ## 完成提示
 

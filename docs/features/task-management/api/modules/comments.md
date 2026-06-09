@@ -1,6 +1,6 @@
 # Comments 模块
 
-> 依赖 api/contract.md 共享决策 D1-D7，遵循共享约束。
+> 依赖 api/goal.md 共享决策 D1-D7，遵循共享约束。
 > D1: Comment 是 Task 的父子资源，路由嵌套在 /tasks/:id 下。
 
 ## 需求

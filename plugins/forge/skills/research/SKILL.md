@@ -48,7 +48,7 @@ signal_routes:
     when: "technical choices need algorithm options"
   - signal: "technical recommendation"
     to: detail
-    when: "domain contracts need research constraints"
+    when: "domain goals need research constraints"
 ---
 # Research — 技术探索阶段
 ## 职责

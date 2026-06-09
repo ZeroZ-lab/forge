@@ -193,6 +193,7 @@ brainstorm 回答"这个方向值得探索吗"，business-alignment 回答"我�
 - [ ] 四个要素是否对齐（用户、指标、资源之间无冲突）？
 - [ ] 轻量模式触发条件是否满足（团队 ≤ 2 人 / 无外部利益方 / 无交付时间线）？
 - [ ] 轻量模式下产物是否仍包含核心四要素（简化版）？
+- [ ] 业务目标质量是否满足 goal-quality 标准？参考 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`
 ## 历史维护（自动）
 完成后自动执行：
 1. **追加 docs/timeline.md**：

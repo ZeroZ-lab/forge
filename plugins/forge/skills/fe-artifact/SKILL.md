@@ -16,7 +16,7 @@ avoid_when:
 consumes:
   - "DESIGN.md"
   - "interaction-spec.md"
-  - "frontend/contract.md"
+  - "frontend/goal.md"
   - "frontend/modules/*.md"
   - "api/modules/*.md"
   - "plan.md"

@@ -32,7 +32,7 @@
 │  Agent D: plan + codegen + test-strategy                    │
 │         + test-cases                          (4 files)     │
 │  Agent E: fe-artifact + fe-accept + review                  │
-│         + deploy + learn                      (5 files)     │
+│         + deploy                              (4 files)     │
 │  Agent F: SKILL.md frontmatter                 (1 file)      │
 │                                                             │
 │  总计: 23 SKILL.md + 1 SKILL.md frontmatter = 24 files            │
@@ -168,19 +168,13 @@ signal_vocabulary:
   - id: review.deviation_attribution
     name: deviation attribution
     produced_by: forge-review
-    consumed_by: [forge-learn, forge-detail]
+    consumed_by: [forge-detail]
 
   # 交付阶段
   - id: deploy.release_plan
     name: release plan
     produced_by: forge-deploy
     consumed_by: []  # 终端输出
-
-  # 进化阶段
-  - id: learn.methodology_proposal
-    name: methodology change proposal
-    produced_by: forge-learn
-    consumed_by: []  # 人类确认后执行
 ```
 
 每个 SKILL.md 的「运行时信号」节改为：
@@ -208,12 +202,12 @@ signal_vocabulary:
 ```yaml
 # 修复前
 forge-detail:
-  produces: ["feature contract.md", "api/contract.md", "database/contract.md", "frontend/contract.md"]
+  produces: ["feature goal.md", "api/goal.md", "database/goal.md", "frontend/goal.md"]
 
 # 修复后
 forge-detail:
-  own_produces: ["feature contract.md"]  # Phase 0 自己写的
-  orchestrated_produces: ["api/contract.md", "database/contract.md", "frontend/contract.md"]
+  own_produces: ["feature goal.md"]  # Phase 0 自己写的
+  orchestrated_produces: ["api/goal.md", "database/goal.md", "frontend/goal.md"]
 ```
 
 **具体修复**：
@@ -222,8 +216,8 @@ forge-detail:
 |-------|-------------|----------------------|
 | forge-init | (none — 纯编排) | project.md, DESIGN.md, AGENTS.md, CLAUDE.md |
 | forge-design | (none — 纯编排) | interaction-spec.md, DESIGN.md updates |
-| forge-detail | feature/contract.md (Phase 0) | api/contract.md, database/contract.md, frontend/contract.md |
-| forge-test | (none — 纯编排) | testing/contract.md, testing/test-cases.md |
+| forge-detail | feature/goal.md (Phase 0) | api/goal.md, database/goal.md, frontend/goal.md |
+| forge-test | (none — 纯编排) | testing/goal.md, testing/test-cases.md |
 | forge-plan | plan.md | ~~testing/test-cases.md~~（移除，见 P5） |
 
 ---
@@ -660,7 +654,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 ```markdown
 ## 何时不使用
 - 只有一个模块的简单功能（直接使用 api-design 或 frontend-design）
-- 已有完整的 contract.md + modules/（无需重新详设）
+- 已有完整的 goal.md + modules/（无需重新详设）
 - 用户只想改一个端点（L1 patch，直接用 api-design）
 ```
 
@@ -674,7 +668,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 - PRD 缺失 → 不直接写 contract，先要求补需求或明确走最小 detail
 - 由同类 L1 偏差触发 → 先复查 contract 盲区，再决定是否改代码
 - L2 goal 偏移 → 中止详设，列出矛盾点等用户决策
-- feature/contract.md 的 FD# 与 project.md 的 PD# 编号冲突 → 重新分配编号
+- feature/goal.md 的 FD# 与 project.md 的 PD# 编号冲突 → 重新分配编号
 - 下游偏移影响范围不清 → 不自动级联修改，先输出偏移报告
 ```
 
@@ -683,7 +677,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 在 `## 运行时角色` 后追加一段：
 
 ```markdown
-**Phase 0 例外**：`detail` 的 Phase 0（Feature 骨架创建）是编排器自己的 domain work——它创建 feature/contract.md 作为跨领域共享骨架。这不是子 skill 的职责，因为没有单独的 skill 负责 feature 级共享决策。Phase 4（索引同步 + Module 结构校验）同理。
+**Phase 0 例外**：`detail` 的 Phase 0（Feature 骨架创建）是编排器自己的 domain work——它创建 feature/goal.md 作为跨领域共享骨架。这不是子 skill 的职责，因为没有单独的 skill 负责 feature 级共享决策。Phase 4（索引同步 + Module 结构校验）同理。
 ```
 
 **修复 4：补充「验证清单」**
@@ -692,7 +686,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 
 ```markdown
 ## 验证清单
-- [ ] feature/contract.md（FD#）是否包含共享决策 + 共享数据模型 + 共享约束？
+- [ ] feature/goal.md（FD#）是否包含共享决策 + 共享数据模型 + 共享约束？
 - [ ] 所有加载的领域 skill 产出是否完整（API1-API7 / DB1-DB5 / FE1-FE5）？
 - [ ] FD# 与 PD# / API# / DB# / FE# 是否无编号冲突？
 - [ ] project.md Feature 索引是否已同步？
@@ -749,7 +743,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 **缺失处理**：
 - 无 interaction-spec.md → 从 PRD 推导最小交互路径，标注"无交互规格，组件行为需用户确认"
 - 无 DESIGN.md → 跳过 FE3 样式方案决策（使用框架默认样式），标注"无设计系统"
-- api/contract.md 缺失 → 要求先完成 API 详设，或标注"接口待定义"
+- api/goal.md 缺失 → 要求先完成 API 详设，或标注"接口待定义"
 ```
 
 **修复 2：红旗补充模板验证交叉项**
@@ -782,7 +776,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 
 ```markdown
 **缺失处理**：
-- api/contract.md 缺失 → 要求先完成 API 详设（数据库设计从 API 资源模型推导，不从零开始）
+- api/goal.md 缺失 → 要求先完成 API 详设（数据库设计从 API 资源模型推导，不从零开始）
 - 共享数据模型不完整 → 从 PRD 推导最小模型，标注"待 API 详设确认"
 ```
 
@@ -824,7 +818,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 在 `## 入口/出口条件` 的「入口」后追加：
 
 ```markdown
-**缺失处理**：contract.md 不完整 → 只切已有模块，标注"待补模块"；modules/ 为空 → 从 contract.md 推导最小切片。
+**缺失处理**：goal.md 不完整 → 只切已有模块，标注"待补模块"；modules/ 为空 → 从 goal.md 推导最小切片。
 ```
 
 **预计行数变化**：+8 行 → 209 行（超上限，需压缩 9 行）
@@ -842,7 +836,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 在 `## 入口/出口条件` 的「入口」后追加精简版：
 
 ```markdown
-**缺失处理**：缺 plan.md → 从 contract.md 推导最小任务序列（标注"无 plan，任务顺序为 AI 推导"）；缺 modules/ → 从 contract.md 推导，标注"模块文档缺失"。
+**缺失处理**：缺 plan.md → 从 goal.md 推导最小任务序列（标注"无 plan，任务顺序为 AI 推导"）；缺 modules/ → 从 goal.md 推导，标注"模块文档缺失"。
 ```
 
 **修复 2：信号名称对齐**
@@ -870,7 +864,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 
 ```markdown
 ## 何时不使用
-- 无前端合约（frontend/contract.md 不存在）
+- 无前端合约（frontend/goal.md 不存在）
 - 无 DESIGN.md（设计系统未建立）
 - 纯后端 API（无前端代码需要生成）
 - codegen 未处理前端任务时不单独调用
@@ -882,7 +876,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 
 ```markdown
 ## 验证清单
-- [ ] 是否读取了 DESIGN.md + frontend/contract.md + frontend/modules/*.md + api/modules/*.md？
+- [ ] 是否读取了 DESIGN.md + frontend/goal.md + frontend/modules/*.md + api/modules/*.md？
 - [ ] API 类型、错误和加载状态是否完整？
 - [ ] 组件 props 是否与 module 文档一致？
 - [ ] 视觉是否消费 DESIGN.md Token（不自行发明颜色/间距）？
@@ -931,7 +925,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 ```markdown
 ## 何时不使用
 - 只有文档没有代码（不需要测试阶段）
-- 已有完整的 testing/contract.md + testing/test-cases.md
+- 已有完整的 testing/goal.md + testing/test-cases.md
 - 用户只想做测试策略（直接使用 test-strategy）
 - 用户只想做测试用例（直接使用 test-cases）
 ```
@@ -955,7 +949,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 
 ```markdown
 ## 验证清单
-- [ ] testing/contract.md（T1-T5）是否完整？
+- [ ] testing/goal.md（T1-T5）是否完整？
 - [ ] testing/test-cases.md 是否覆盖所有验收条件？
 - [ ] 测试策略的覆盖矩阵与测试用例的范围矩阵是否一致（交叉验证）？
 - [ ] test-cases.md 是否 ≤ 200 行？超出是否按拆分策略处理？
@@ -968,12 +962,12 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 
 ```markdown
 ## 入口/出口条件
-**入口**：有 contract.md + modules/ + plan.md · 或用户明确要求补测试
-**出口**：testing/contract.md + testing/test-cases.md 已生成 · 交叉验证通过 · 用户确认
+**入口**：有 goal.md + modules/ + plan.md · 或用户明确要求补测试
+**出口**：testing/goal.md + testing/test-cases.md 已生成 · 交叉验证通过 · 用户确认
 
 **缺失处理**：
 - 缺 contract/modules → 不开始，要求先补详设
-- 已有 testing/contract.md → Phase 1 只更新缺口
+- 已有 testing/goal.md → Phase 1 只更新缺口
 - plan 已推导 test-cases.md → Phase 2 只补充遗漏场景
 ```
 
@@ -998,7 +992,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 在 `## 入口/出口条件` 的「入口」后追加一行：
 
 ```markdown
-**缺失处理**：缺 plan.md → 从 contract.md 推导最小任务序列；缺 modules/ → 从 contract.md 推导覆盖矩阵。
+**缺失处理**：缺 plan.md → 从 goal.md 推导最小任务序列；缺 modules/ → 从 goal.md 推导覆盖矩阵。
 ```
 
 **修复 2：信号名称对齐**
@@ -1038,7 +1032,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 ```markdown
 **缺失处理**：
 - 验收条件未编号 → 先补充 AC 编号（AC1, AC2, ...），不凭空写测试
-- contract.md 存在但 modules/ 为空 → 从 contract.md 推导，标注"模块文档缺失"
+- goal.md 存在但 modules/ 为空 → 从 goal.md 推导，标注"模块文档缺失"
 ```
 
 **修复 3：信号名称对齐**
@@ -1172,47 +1166,6 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 
 ---
 
-### 23. learn (143 行) — 当前 7/10
-
-**状态**：反向验证概念出色但红旗太少 + 缺 when_not_to_use。
-
-**修复 1：补充「何时不使用」**
-
-在 `## 触发条件` 后新增：
-
-```markdown
-## 何时不使用
-- 同类偏差 < 3 条（数据不足以构成模式）
-- 只做过一个项目（没有跨项目验证）
-- 用户只想修一个 bug（不是方法论问题，是代码问题）
-```
-
-**修复 2：红旗从 3 条扩充到 6 条**
-
-替换现有 `## 红旗` 全部内容：
-
-```markdown
-## 红旗清单
-- 没有证据就建议修改 → 强制补充证据链（"哪些偏差记录支撑了这个建议？"）
-- 单次偏差就认为有问题 → 强制要求 ≥ 3 条同类（"一条偏差不是模式"）
-- 建议和已有方法论冲突 → 强制检查兼容性（"新建议和已有不变原则矛盾吗？"）
-- 之前因同类偏差改过 skill 但仍出现 → 回滚修改并重新归因（"上次归因可能错了"）
-- 建议会导致 skill 超 200 行 → 考虑提取 protocol 文件（"加内容前先想怎么压缩"）
-- 偏差归因不一致（review 说是 skill 问题，实际是文档偏移）→ 交叉验证归因
-```
-
-**修复 3：补充闭环路由说明**
-
-在 `## 运行时信号` 后追加：
-
-```markdown
-**闭环路由**：learn 的方法论改进建议经人类确认后，需要回写到对应 SKILL.md。当前此步骤为手动执行。未来可通过 SKILL.md frontmatter 的 signal_routes 实现自动注入——learn 输出 `{skill}_methodology_update` 信号，目标 skill 的 signals_in 声明接收。
-```
-
-**预计行数变化**：+18 行 → 161 行（安全）
-
----
-
 ## 修复优先级总表
 
 | 优先级 | Skill | 当前分 | 修复后预期 | 修复项数 | 行数变化 |
@@ -1224,7 +1177,6 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 | **P2** | fe-artifact | 6 | 7.5 | 4 | +30 |
 | **P2** | fe-accept | 6.5 | 7.5 | 3 | +20 |
 | **P2** | fe-system | 7 | 8 | 3 | +20 |
-| **P3** | learn | 7 | 8 | 3 | +18 |
 | **P3** | review | 7.5 | 8 | 3 | +15 |
 | **P3** | business-alignment | 7.5 | 8 | 3 | +10 |
 | **P3** | test-cases | 7.5 | 8 | 3 | +8 |
@@ -1257,8 +1209,7 @@ init 的方法论是：**不替代子 skill 做决策，只负责状态判断和
 - fe-accept: 红旗改格式 + 补 when_not_to_use
 - fe-system: 红旗改格式 + 补 when_not_to_use
 
-**第三轮（加强中等 Skill）**：P3 的 4 个 Skill（learn/review/business-alignment/test-cases）
-- learn: 红旗扩充 + 补 when_not_to_use
+**第三轮（加强中等 Skill）**：P3 的 3 个 Skill（review/business-alignment/test-cases）
 - review: 补 when_not_to_use + 红旗微调
 - 信号完整性微调
 

@@ -10,7 +10,7 @@
 - F5: React Hook Form + Zod
 
 ### 文件
-- frontend/contract.md — 新建
+- frontend/goal.md — 新建
 - frontend/modules/task-list.md — 新建
 - frontend/modules/task-detail.md — 新建
 
