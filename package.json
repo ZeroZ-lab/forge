@@ -7,7 +7,9 @@
     "eval:skills:run": "node scripts/run-skills-benchmark.mjs",
     "plugin:install:local": "node scripts/install-local-codex-plugin.mjs",
     "validate": "node scripts/validate.mjs",
-    "test": "node --test"
+    "test": "node --test 'tests/*.test.mjs'",
+    "bump": "node scripts/bump-version.mjs",
+    "prepublishOnly": "node scripts/validate.mjs && node --test tests/"
   },
   "author": "ZeroZ-lab",
   "license": "MIT",

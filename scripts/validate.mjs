@@ -92,7 +92,7 @@ assert(
 );
 
 assert(packageJson.scripts?.validate === 'node scripts/validate.mjs', 'package.json: missing scripts.validate');
-assert(packageJson.scripts?.test === 'node --test', 'package.json: missing scripts.test');
+assert(packageJson.scripts?.test === "node --test 'tests/*.test.mjs'", 'package.json: missing scripts.test');
 assert(packageJson.scripts?.['eval:skills'] === 'node scripts/evaluate-skills.mjs', 'package.json: missing scripts.eval:skills');
 assert(packageJson.scripts?.['eval:skills:run'] === 'node scripts/run-skills-benchmark.mjs', 'package.json: missing scripts.eval:skills:run');
 assert(packageJson.scripts?.['plugin:install:local'] === 'node scripts/install-local-codex-plugin.mjs', 'package.json: missing scripts.plugin:install:local');
