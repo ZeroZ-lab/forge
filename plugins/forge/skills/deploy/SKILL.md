@@ -23,7 +23,7 @@ consumes:
   - "review report"
   - "docs/change-units/CU-*.md"
 produces:
-  - "deploy/goal.md"
+  - "deploy/plan.md"
   - "release checklist"
   - "docs/change-units/CU-*.md"
 signals_in:

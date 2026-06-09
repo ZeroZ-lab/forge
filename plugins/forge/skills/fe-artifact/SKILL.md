@@ -16,9 +16,8 @@ avoid_when:
 consumes:
   - "DESIGN.md"
   - "interaction-spec.md"
-  - "frontend/goal.md"
-  - "frontend/modules/*.md"
-  - "api/modules/*.md"
+  - "notes/frontend.md"
+  - "modules/*.md"
   - "plan.md"
   - "docs/change-units/CU-*.md"
   - "goal.md"
@@ -74,11 +73,11 @@ signal_routes:
 
 - **D5**：不重新做产品决策，不改 API 合约，不绕过 DESIGN.md 自行发明视觉语言
 - **D7**：前端可运行时必须启动本地预览并做真实验证，不凭猜测通过
-- **D1**：关键逻辑必须引用文档来源（From: frontend/modules/tasks.md AC3）
+- **D1**：关键逻辑必须引用文档来源（From: modules/tasks.md AC3）
 
 ## 上下游边界
 
-**上游**：`DESIGN.md`、interaction-spec、notes/frontend.md、frontend/modules/*.md、api/modules/*.md、plan.md。
+**上游**：`DESIGN.md`、interaction-spec、notes/frontend.md、modules/*.md、plan.md。
 
 **下游**：前端源码、样式、hooks、基础测试，交给 fe-accept 和 review。
 
@@ -113,8 +112,7 @@ signal_routes:
 
 - `DESIGN.md`：token、组件模式、页面结构。
 - notes/frontend.md：前端边界和模块索引。
-- frontend/modules/*.md：组件职责、props、状态、交互。
-- api/modules/*.md：请求、响应、错误码。
+- modules/*.md：组件职责、props、状态、交互；API 模块含请求、响应、错误码。
 - plan.md：任务顺序和验证方式。
 
 读完后先复述生成范围、输入文档、将写入的文件和不确定点。
@@ -129,7 +127,7 @@ signal_routes:
 4. 样式和响应式。
 5. 测试或可验收检查。
 
-关键逻辑必须引用文档来源，例如 `From: frontend/modules/tasks.md AC3`。
+关键逻辑必须引用文档来源，例如 `From: modules/tasks.md AC3`。
 
 ## 文件结构规则
 
@@ -171,13 +169,13 @@ signal_routes:
 - 视觉状态无法被 fe-accept 验收 → 补充证据（截图/预览链接）
 
 ## 验证清单
-- [ ] 是否读取了 DESIGN.md + notes/frontend.md + frontend/modules/*.md + api/modules/*.md？
+- [ ] 是否读取了 DESIGN.md + notes/frontend.md + modules/*.md？
 - [ ] API 类型、错误和加载状态是否完整？
 - [ ] 组件 props 是否与 module 文档一致？
 - [ ] 视觉是否消费 DESIGN.md Token（不自行发明颜色/间距）？
 - [ ] 所有交互状态是否覆盖（loading/error/empty/disabled/success）？
 - [ ] 移动端和桌面端是否无重叠、无横向溢出？
-- [ ] 关键逻辑是否引用文档来源（From: frontend/modules/xxx.md AC3）？
+- [ ] 关键逻辑是否引用文档来源（From: modules/xxx.md AC3）？
 
 ## 完成提示
 

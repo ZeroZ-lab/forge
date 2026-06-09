@@ -15,11 +15,11 @@ avoid_when:
 consumes:
   - "interaction-spec.md"
   - "DESIGN.md"
-  - "api/goal.md"
+  - "notes/api.md"
   - "docs/change-units/CU-*.md"
 produces:
-  - "frontend/goal.md"
-  - "frontend/modules/*.md"
+  - "notes/frontend.md"
+  - "modules/*.md"
   - "docs/change-units/CU-*.md"
 signals_in:
   - "API goal"
@@ -145,7 +145,7 @@ signal_routes:
 ## 文档约束
 **产出必须包含**：
 1. **FE1-FE5 决策**：每个选择 + 理由 + 被拒方案
-2. **技术选型表**：所有依赖 + 版本
+2. **技术选型表**：所有依赖 + 版本 + 使用方（被哪个模块/决策用），无声明未用的依赖
 3. **共享约束**：性能 + 可访问性
 4. **模块索引**：每个页面/组件一个 module 文件
 ### 模块文件格式
@@ -166,8 +166,8 @@ src/
 ```
 ## 模板
 使用前端专用模板：
-- `${CLAUDE_SKILL_DIR}/../shared/frontend-goal-template.md` — frontend/goal.md 结构（FE1-FE5 决策 + 前端约束 + 组件索引）
-- `${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md` — frontend/modules/*.md 结构（组件结构 + 数据消费 + 依赖）
+- `${CLAUDE_SKILL_DIR}/../shared/frontend-goal-template.md` — notes/frontend.md 结构（FE1-FE5 决策 + 前端约束 + 组件索引）
+- `${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md` — modules/*.md 结构（组件结构 + 数据消费 + 依赖）
 - `${CLAUDE_SKILL_DIR}/../shared/changelog-template.md` — changelog.md 结构
 ## 与 project.md 的关系
 - project.md 已列出的技术选型 → notes/frontend.md 引用不重复
@@ -197,8 +197,11 @@ src/
 - 表单数量多但没有表单方案 → 强制补充（"表单验证怎么做？"）
 - 没有数据请求策略 → 强制评估（"API 调用怎么缓存？怎么重试？"）
 - 和 fe-system 职责重叠 → 拉回（"这是外观还是行为？"）
+- 同一 Props / interface 在此（notes）与 module spec 各写一遍且签名不一致（如 `modelUrl: string` vs `modelUrl?: string`）→ 取单源（module spec 为权威），notes 只引用类型名（参见 `${CLAUDE_SKILL_DIR}/../shared/concepts/reference-not-repeat.md`）
+- 否决了 PRD 点名的具体技术（如 PRD 写 CountUp，本层改用 CSS transition）→ 禁止静默替换，必须 escalate 回 define 升级 PRD 后再改
+- 技术选型表列了依赖但无模块使用（如 Faker/Recharts 声明却无组件消费）→ 强制标注"被哪个模块使用"，未用则移除或标注"预留（未使用）"
 - module 文件缺少模板必需节（入口 / 公共接口 / 组件结构 / 数据消费 / 内部函数 / 依赖关系）→ 强制补充，参照 `${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md`
-- 模块索引中的页面/组件没有对应的 module 文件 → 强制补充或从索引移除
+- 模块索引中的页面/组件没有对应的 module 文件 → 强制补充或从索引移除（模块对称：要么都有 spec，要么都内联，禁止按优先级缺失）
 ## 验证清单
 - [ ] FE1-FE5 是否都有选择 + 理由 + 被拒方案？
 - [ ] 服务端状态和客户端状态是否分离？
@@ -208,6 +211,9 @@ src/
 - [ ] 数据流是否明确（hooks / queries / mutations）？
 - [ ] 是否有性能约束（首屏加载、交互响应）？
 - [ ] 每个 module 文件是否包含模板必需节（入口 / 公共接口 / 组件结构 / 数据消费 / 内部函数 / 依赖关系）？
+- [ ] 同一 Props / interface 是否单源（只在 module spec 定义，notes 引用而非重写签名）？
+- [ ] 是否未否决 PRD 点名的具体技术（若否决，是否已 escalate 回 define）？
+- [ ] 技术选型表每个依赖是否标注了使用方，且无声明未用的依赖？
 ## 历史维护（自动）
 完成后自动执行：
 1. **追加 feature changelog.md**：

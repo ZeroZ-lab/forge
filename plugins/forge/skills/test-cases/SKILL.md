@@ -17,7 +17,7 @@ consumes:
   - "goal.md"
   - "modules/*.md"
   - "plan.md"
-  - "testing/goal.md"
+  - "testing/strategy.md"
   - "docs/change-units/CU-*.md"
 produces:
   - "testing/test-cases.md"
@@ -179,7 +179,7 @@ signal_routes:
 ```
 docs/features/<feature>/
 └── testing/
-    ├── goal.md     # 测试策略（来自 test-strategy）
+    ├── strategy.md     # 测试策略（来自 test-strategy）
     └── test-cases.md   # 测试范围矩阵 + 测试用例清单 + 数据策略
 ```
 
@@ -208,7 +208,7 @@ docs/features/<feature>/
 - goal.md 存在但 modules/ 为空 → 从 goal.md 推导，标注"模块文档缺失"
 
 **交叉验证**：
-- 读 testing/goal.md 覆盖矩阵 → 提取"可自动化"的模块列表
+- 读 testing/strategy.md 覆盖矩阵 → 提取"可自动化"的模块列表
 - 读 test-cases.md 测试范围矩阵 → 提取覆盖的 AC 列表
 - 覆盖矩阵中有但 test-cases 无 → 补充或标注"手动验证"
 

@@ -17,8 +17,8 @@ consumes:
   - "PRD.md"
   - "docs/change-units/CU-*.md"
 produces:
-  - "api/goal.md"
-  - "api/modules/*.md"
+  - "notes/api.md"
+  - "modules/*.md"
   - "docs/change-units/CU-*.md"
 signals_in:
   - "requirements and technical constraints"

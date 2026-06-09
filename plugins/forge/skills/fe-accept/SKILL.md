@@ -15,8 +15,8 @@ avoid_when:
 consumes:
   - "DESIGN.md"
   - "interaction-spec.md"
-  - "frontend/goal.md"
-  - "frontend/modules/*.md"
+  - "notes/frontend.md"
+  - "modules/*.md"
   - "frontend source files"
   - "docs/change-units/CU-*.md"
 produces:
@@ -71,7 +71,7 @@ signal_routes:
 
 ## 上下游边界
 
-**上游**：`DESIGN.md`、interaction-spec、notes/frontend.md、frontend/modules/*.md、api/modules/*.md、实际前端代码和测试。
+**上游**：`DESIGN.md`、interaction-spec、notes/frontend.md、modules/*.md、实际前端代码和测试。
 
 **下游**：验收报告、缺陷清单、豁免记录，交给 codegen 修复或 review 审查。
 

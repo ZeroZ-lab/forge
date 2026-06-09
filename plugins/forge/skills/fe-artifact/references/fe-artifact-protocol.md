@@ -62,8 +62,7 @@
 |----------|----------|
 | DESIGN.md tokens | CSS variables、theme、component variants |
 | notes/frontend.md | 页面结构、路由、模块边界 |
-| frontend/modules/*.md | components、hooks、state、props |
-| api/modules/*.md | API client、types、error handling |
+| modules/*.md | components、hooks、state、props；API client、types、error handling |
 | testing/test-cases.md | component tests、interaction tests |
 
 ## 验收前自查

@@ -16,13 +16,13 @@ consumes:
   - "goal.md"
   - "modules/*.md"
   - "plan.md"
-  - "existing testing/goal.md"
+  - "existing testing/strategy.md"
   - "existing testing/test-cases.md"
   - "docs/change-units/CU-*.md"
 own_produces:
   - "docs/change-units/CU-*.md"
 orchestrated_produces:
-  - "testing/goal.md"
+  - "testing/strategy.md"
   - "testing/test-cases.md"
 signals_in:
   - "test planning needed"

@@ -556,6 +556,29 @@ for (const file of filesUnder('docs/features')) {
   }
 }
 
+// Canonical artifact naming: frontmatter and bodies must use the real on-disk
+// layout (notes/<domain>.md, modules/*.md, testing/strategy.md, deploy/plan.md).
+// Legacy normalized names (api/goal.md, testing/goal.md, ...) caused frontmatter↔body
+// drift where runtime routing and the executing AI disagreed on filenames.
+const forbiddenArtifactNames = [
+  'api/goal.md',
+  'database/goal.md',
+  'frontend/goal.md',
+  'testing/goal.md',
+  'deploy/goal.md',
+  'api/modules',
+  'frontend/modules',
+];
+for (const file of filesUnder('plugins/forge/skills')) {
+  if (!file.endsWith('.md')) continue;
+  const content = read(file);
+  for (const name of forbiddenArtifactNames) {
+    if (content.includes(name)) {
+      fail(`${file}: legacy artifact name "${name}" — use canonical layout (notes/<domain>.md, modules/*.md, testing/strategy.md, deploy/plan.md)`);
+    }
+  }
+}
+
 if (failures.length > 0) {
   console.error('Forge validation failed:\n');
   for (const failure of failures) {

@@ -18,7 +18,7 @@ consumes:
   - "plan.md"
   - "docs/change-units/CU-*.md"
 produces:
-  - "testing/goal.md"
+  - "testing/strategy.md"
   - "docs/change-units/CU-*.md"
 signals_in:
   - "business risk"

@@ -24,9 +24,9 @@ own_produces:
   - "feature goal.md"
   - "docs/change-units/CU-*.md"
 orchestrated_produces:
-  - "api/goal.md"
-  - "database/goal.md"
-  - "frontend/goal.md"
+  - "notes/api.md"
+  - "notes/database.md"
+  - "notes/frontend.md"
 signals_in:
   - "repeat_signal from forge-codegen"
   - "document drift from forge-review"
@@ -188,10 +188,21 @@ signal_routes:
       - 公共接口签名（从 goal 编排的调用链推导）
       - 验收条件（从 PRD 对应 US 的 AC 编号追溯，格式 `AC-{US编号}-{序号}`，如 AC-01-1）
       - 依赖关系（从编排调用链推导：该模块 import 了哪些其他模块）
-   d. 模块数 ≥ 5 → **必须生成** module specs，不允许跳过
-   e. 模块数 < 5 → 可选生成，但 goal.md 模块索引需包含完整接口签名（而非仅一行描述）
+   d. **模块对称性**：索引内所有模块同等对待——要么**全部**生成 module spec，要么**全部**内联进 goal.md（模块索引含完整接口签名而非一行描述）。禁止按优先级（P0/P1 有 spec、P2 没有）部分生成。
+   e. 默认规则：模块数 ≥ 5 → 全部生成 module specs；模块数 < 5 → 可全部内联到 goal.md 模块索引（含完整接口签名）。无论哪种，索引内不得出现"部分有 spec、部分没有"的不对称。
 
 9. **Goal 质量门**：Phase 4 完成前，按 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md` 检查 feature/goal.md。源完整性和可重构性不通过 → 不进入下一步，回到对应 Phase 补充。
+
+10. **跨文档一致性门**（按 `${CLAUDE_SKILL_DIR}/../shared/concepts/reference-not-repeat.md`「接口/行为的单一权威」）：对在 goal·notes·modules·PRD 间多处出现的同一对象逐项比对：
+   - 接口 / Props / interface 签名是否一致？不一致（如 `modelUrl: string` vs `modelUrl?: string`）→ 取单源（module spec 为权威），其余改为引用。
+   - module / notes 是否改写了某条 AC 的断言（如 PRD「无操作 5s 后自转」被 module 写成「交互结束即恢复」）？是 → 报矛盾，回到对应 Phase 对齐 AC 编号。
+   - 下游是否静默否决了 PRD 点名的具体技术（如 PRD「CountUp」被 notes 写成「用 CSS transition 替代」）？是 → 回流 define 升级 PRD，禁止静默替换。
+   - 冲突点呈现给用户决策，沿用「不自动级联」纪律。
+
+11. **依赖落地 + 路径一致性门**：
+   - 依赖落地：project.md / notes 技术选型表声明的每个依赖，必须能在某个 module/决策中找到使用方；未被任何模块引用 → 标注"预留（未使用）"或移除（如 Faker/Recharts 声明却无模块消费）。
+   - 目录落地：project.md「工程约束」声明的目录结构，每个目录须有模块/产物落地；声明却无内容（如 hooks/ 空声明）→ 移除或标注。
+   - 路径一致性：goal/modules/plan 中引用的文件路径与 project.md 目录结构一致（如 assets/ vs public/models/ 不能两处各说一套）。
 
 **goal.md 共享数据模型节制规则**：
 - 只放**跨模块共享**的核心类型（如 Point/Rect/CommandResult 等基础结构）
@@ -249,6 +260,9 @@ docs/features/<feature>/
 - [ ] project.md Feature 索引是否已同步？
 - [ ] 一致性检查是否已完成？
 - [ ] 所有 modules/*.md 是否包含模板必需节？
+- [ ] 模块索引是否对称（全部有 spec 或全部内联，无 P0/P1 有、P2 无的缺失）？
+- [ ] 跨文档一致性门是否通过（接口/AC/具名技术单源，无矛盾）？
+- [ ] 依赖落地 + 路径一致性门是否通过（无声明未用的依赖/目录，路径无两套说法）？
 
 ## 出口条件
 
