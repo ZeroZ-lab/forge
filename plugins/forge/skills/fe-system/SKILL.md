@@ -50,7 +50,7 @@ quality_gates: []
 signal_routes:
   - signal: "design tokens"
     to: frontend-design
-    when: "frontend contracts need design constraints"
+    when: "frontend goals need design constraints"
   - signal: "component patterns"
     to: fe-accept
     when: "frontend acceptance needs visual goal"

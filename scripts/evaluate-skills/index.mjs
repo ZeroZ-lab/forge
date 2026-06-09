@@ -5,6 +5,17 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { loadRegistry } from '../lib/registry.mjs';
+import {
+  artifactPaths,
+  changeUnitPaths,
+  checkRun,
+  decisionIds,
+  docSyncTargets,
+  evidenceText,
+  globMatch,
+  goalCoveragePaths,
+  isChangeUnitPath,
+} from '../lib/run-helpers.mjs';
 
 const root = process.cwd();
 const failures = [];
@@ -156,53 +167,6 @@ function validateManifest(registry, manifest) {
   return { caseIds, coveredSkills };
 }
 
-function artifactPaths(run) {
-  return new Set(
-    (run.artifacts ?? []).map((artifact) => (typeof artifact === 'string' ? artifact : artifact?.path)).filter(Boolean),
-  );
-}
-
-function changeUnitPaths(run) {
-  return new Set(
-    (run.change_units ?? [])
-      .map((changeUnit) => (typeof changeUnit === 'string' ? changeUnit : changeUnit?.path))
-      .filter(isChangeUnitPath),
-  );
-}
-
-function globMatch(pattern, value) {
-  if (!pattern.includes('*')) return value === pattern;
-  const escaped = pattern
-    .split('*')
-    .map((part) => part.replace(/[|\\{}()[\]^$+?.]/g, '\\$&'))
-    .join('.*');
-  return new RegExp(`^${escaped}$`).test(value);
-}
-
-function decisionIds(run) {
-  return new Set(
-    (run.decisions ?? []).map((decision) => (typeof decision === 'string' ? decision : decision?.id)).filter(Boolean),
-  );
-}
-
-function docSyncTargets(run) {
-  return new Set(
-    (run.goal_verification ?? [])
-      .filter((item) => item?.status === 'completed')
-      .map((item) => item?.target)
-      .filter(Boolean),
-  );
-}
-
-function goalCoveragePaths(run) {
-  const paths = new Set();
-  for (const entry of run.goal_coverage_entries ?? []) {
-    if (entry?.source) paths.add(entry.source);
-    for (const coveredPath of entry?.covers ?? []) paths.add(coveredPath);
-  }
-  return paths;
-}
-
 function validGoalCoverageEntry(entry) {
   return (
     entry &&
@@ -213,10 +177,6 @@ function validGoalCoverageEntry(entry) {
     Array.isArray(entry.covers) &&
     entry.covers.every((coveredPath) => typeof coveredPath === 'string' && coveredPath.length > 0)
   );
-}
-
-function isChangeUnitPath(value) {
-  return typeof value === 'string' && /^docs\/change-units\/CU-[^/]+\.md$/.test(value);
 }
 
 function validChangeUnitEntry(entry) {
@@ -239,10 +199,6 @@ function validMetrics(metrics) {
   if (!metrics || typeof metrics !== 'object' || Array.isArray(metrics)) return false;
   const allowedKeys = new Set(['user_interventions', 'turns', 'changed_files', 'elapsed_ms', 'tokens']);
   return Object.entries(metrics).every(([key, value]) => allowedKeys.has(key) && typeof value === 'number' && value >= 0);
-}
-
-function evidenceText(run) {
-  return [...(run.evidence ?? []), run.notes ?? ''].join('\n');
 }
 
 function clampScore(value) {
@@ -354,41 +310,6 @@ function aggregateScores(caseScores, scoringModel) {
     grade: overallScore === null ? null : gradeFor(overallScore, scoringModel.grade_thresholds),
     axes,
   };
-}
-
-function checkRun(testCase, run) {
-  const triggeredSkills = new Set(run.triggered_skills ?? []);
-  const artifacts = artifactPaths(run);
-  const changeUnits = changeUnitPaths(run);
-  const commands = new Set(run.commands_run ?? []);
-  const decisions = decisionIds(run);
-  const docSync = docSyncTargets(run);
-  const goalCoverage = goalCoveragePaths(run);
-  const forbiddenBehaviors = new Set(run.forbidden_behaviors ?? []);
-  const evidence = evidenceText(run);
-  const results = [];
-
-  for (const check of testCase.oracle_checks) {
-    let passed = false;
-    if (check.type === 'skill_triggered') passed = triggeredSkills.has(check.skill);
-    if (check.type === 'artifact_reported') {
-      passed = [...artifacts].some((artifactPath) => globMatch(check.path, artifactPath));
-    }
-    if (check.type === 'change_unit_reported') {
-      passed = [...changeUnits].some((changeUnitPath) => globMatch(check.path, changeUnitPath));
-    }
-    if (check.type === 'goal_covers') {
-      passed = [...goalCoverage].some((coveredPath) => globMatch(check.path, coveredPath));
-    }
-    if (check.type === 'command_reported') passed = commands.has(check.command);
-    if (check.type === 'decision_gate_reported') passed = decisions.has(check.decision);
-    if (check.type === 'goal_verified') passed = docSync.has(check.target);
-    if (check.type === 'evidence_contains') passed = evidence.includes(check.text);
-    if (check.type === 'forbidden_behavior_absent') passed = !forbiddenBehaviors.has(check.behavior);
-    results.push({ passed, check });
-  }
-
-  return results;
 }
 
 function validateReport(manifest, registry, report, options = {}) {

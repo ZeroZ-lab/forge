@@ -14,10 +14,10 @@ avoid_when:
   - "已有完整测试用例"
   - "纯文档项目"
 consumes:
-  - "contract.md"
+  - "goal.md"
   - "modules/*.md"
   - "plan.md"
-  - "testing/contract.md"
+  - "testing/goal.md"
   - "docs/change-units/CU-*.md"
 produces:
   - "testing/test-cases.md"
@@ -243,8 +243,6 @@ docs/features/<feature>/
 ## 历史维护（自动）
 
 完成后追加 `docs/timeline.md`：`### {日期} — {feature} 测试用例 · testing/test-cases.md（{N} 验收条件 → {M} 测试用例）`。追加 `changelog.md`。超 100 行时归档。作为 `test` 或 `plan` 子阶段运行时不单独追加历史，由编排 skill 写汇总记录。
-
-**更新 docs/status.md**（独立运行时）：⑥测试 → `✅`，下一阶段 → `🔄`。
 
 ## 完成提示
 

@@ -1,6 +1,6 @@
 # Task List 模块
 
-> 依赖 frontend/contract.md 共享决策 F1-F5，遵循共享约束。
+> 依赖 frontend/goal.md 共享决策 F1-F5，遵循共享约束。
 > 依赖 API：GET /tasks, POST /tasks（引用 api/modules/tasks.md）
 
 ## 需求

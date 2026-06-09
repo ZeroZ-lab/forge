@@ -10,8 +10,8 @@
 - DP5: Sentry + 结构化日志
 
 ### 文件
-- deploy/contract.md — 新建
+- deploy/goal.md — 新建
 
 ### 依赖
-- 引用 testing/contract.md（测试阶段配置）
-- 引用 database/contract.md（数据库连接）
+- 引用 testing/goal.md（测试阶段配置）
+- 引用 database/goal.md（数据库连接）

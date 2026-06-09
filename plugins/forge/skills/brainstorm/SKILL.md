@@ -162,6 +162,8 @@ signal_routes:
 
 ## 决策点
 
+> 决策呈现规则见 `${CLAUDE_SKILL_DIR}/../shared/concepts/decision-presentation.md`——选项可枚举时用 AskUserQuestion 结构化呈现，开放描述时用自然语言。
+
 > Brainstorm 使用 B# 前缀。B# 记录在 idea-brief.md 中。
 
 ### B1: 问题定义（阶段 1）
@@ -256,10 +258,7 @@ signal_routes:
    ### {日期} — {主题} 探索
    - 产出：idea-brief.md（{N} 个想法，{M} 轮探索，推荐：{方向名}）
    ```
-2. **更新 docs/status.md**（如不存在则从模板创建）：
-   - 新 feature → 添加行，⓪探索 → `✅`
-   - 已有 feature → 更新 ⓪探索 列为 `✅`
-3. **检查膨胀**：timeline.md 超过 100 行时归档到 `timeline/`。
+2. **检查膨胀**：timeline.md 超过 100 行时归档到 `timeline/`。
 
 ## 完成提示
 

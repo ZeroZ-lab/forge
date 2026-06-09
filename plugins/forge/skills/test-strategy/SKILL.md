@@ -13,12 +13,12 @@ avoid_when:
   - "纯文档项目"
   - "已有完整测试策略"
 consumes:
-  - "contract.md"
+  - "goal.md"
   - "modules/*.md"
   - "plan.md"
   - "docs/change-units/CU-*.md"
 produces:
-  - "testing/contract.md"
+  - "testing/goal.md"
   - "docs/change-units/CU-*.md"
 signals_in:
   - "business risk"
@@ -243,8 +243,6 @@ docs/features/<feature>/testing/
 ## 历史维护（自动）
 
 完成后追加 `docs/timeline.md`：`### {日期} — {feature} 测试策略 · testing/strategy.md（T1-T5）`。追加 `changelog.md`。
-
-**更新 docs/status.md**：⑥测试 → `🔄`（test-cases 完成后由 test 编排或 test-cases 标记 `✅`）。
 
 超 100 行时归档。
 

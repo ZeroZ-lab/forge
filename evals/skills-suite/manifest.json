@@ -360,10 +360,10 @@
         "frontend-design"
       ],
       "expected_artifacts": [
-        "docs/features/tags/contract.md",
-        "docs/features/tags/api/contract.md",
-        "docs/features/tags/database/contract.md",
-        "docs/features/tags/frontend/contract.md",
+        "docs/features/tags/goal.md",
+        "docs/features/tags/api/goal.md",
+        "docs/features/tags/database/goal.md",
+        "docs/features/tags/frontend/goal.md",
         "docs/change-units/CU-*.md",
         "goal.md"
       ],
@@ -410,7 +410,7 @@
         },
         {
           "type": "goal_covers",
-          "path": "docs/features/tags/contract.md"
+          "path": "docs/features/tags/goal.md"
         },
         {
           "type": "goal_verified",
@@ -524,7 +524,7 @@
         "test-cases"
       ],
       "expected_artifacts": [
-        "docs/features/billing/testing/contract.md",
+        "docs/features/billing/testing/goal.md",
         "docs/features/billing/testing/test-cases.md",
         "docs/change-units/CU-*.md",
         "goal.md"
@@ -555,7 +555,7 @@
         },
         {
           "type": "artifact_reported",
-          "path": "docs/features/billing/testing/contract.md"
+          "path": "docs/features/billing/testing/goal.md"
         },
         {
           "type": "evidence_contains",
@@ -643,7 +643,7 @@
         "deploy"
       ],
       "expected_artifacts": [
-        "docs/features/tags/deploy/contract.md",
+        "docs/features/tags/deploy/goal.md",
         "docs/change-units/CU-*.md",
         "goal.md"
       ],
@@ -724,7 +724,7 @@
         },
         {
           "type": "goal_covers",
-          "path": "docs/features/billing/contract.md"
+          "path": "docs/features/billing/goal.md"
         },
         {
           "type": "evidence_contains",
@@ -824,9 +824,9 @@
         "db-design"
       ],
       "expected_artifacts": [
-        "docs/features/billing/contract.md",
-        "docs/features/billing/api/contract.md",
-        "docs/features/billing/database/contract.md",
+        "docs/features/billing/goal.md",
+        "docs/features/billing/api/goal.md",
+        "docs/features/billing/database/goal.md",
         "docs/change-units/CU-*.md",
         "goal.md"
       ],
@@ -862,11 +862,11 @@
         },
         {
           "type": "artifact_reported",
-          "path": "docs/features/billing/api/contract.md"
+          "path": "docs/features/billing/api/goal.md"
         },
         {
           "type": "artifact_reported",
-          "path": "docs/features/billing/database/contract.md"
+          "path": "docs/features/billing/database/goal.md"
         },
         {
           "type": "forbidden_behavior_absent",
@@ -901,8 +901,8 @@
         "review"
       ],
       "expected_artifacts": [
-        "docs/features/billing/api/contract.md",
-        "docs/features/billing/database/contract.md",
+        "docs/features/billing/api/goal.md",
+        "docs/features/billing/database/goal.md",
         "docs/features/billing/changelog.md",
         "docs/change-units/CU-*.md",
         "goal.md"
@@ -935,7 +935,7 @@
         },
         {
           "type": "artifact_reported",
-          "path": "docs/features/billing/api/contract.md"
+          "path": "docs/features/billing/api/goal.md"
         },
         {
           "type": "evidence_contains",
@@ -974,9 +974,9 @@
         "db-design"
       ],
       "expected_artifacts": [
-        "docs/features/webhook/contract.md",
-        "docs/features/webhook/api/contract.md",
-        "docs/features/webhook/database/contract.md",
+        "docs/features/webhook/goal.md",
+        "docs/features/webhook/api/goal.md",
+        "docs/features/webhook/database/goal.md",
         "docs/change-units/CU-*.md",
         "goal.md"
       ],

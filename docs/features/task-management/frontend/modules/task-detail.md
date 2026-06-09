@@ -1,6 +1,6 @@
 # Task Detail 模块
 
-> 依赖 frontend/contract.md 共享决策 F1-F5，遵循共享约束。
+> 依赖 frontend/goal.md 共享决策 F1-F5，遵循共享约束。
 > 依赖 API：GET /tasks/:id, PATCH /tasks/:id, DELETE /tasks/:id,
 >           POST /tasks/:id/comments, GET /tasks/:id/comments
 >          （引用 api/modules/tasks.md + api/modules/comments.md）

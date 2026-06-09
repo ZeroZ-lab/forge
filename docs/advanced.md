@@ -38,7 +38,7 @@
 
 默认入口关注：
 
-- `contract.md`
+- `goal.md`
 - `modules/*.md`
 - `changelog.md`
 - `detail -> codegen -> review`

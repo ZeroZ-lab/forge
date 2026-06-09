@@ -40,7 +40,7 @@
           "artifacts",
           "change_units",
           "goal_verification",
-          "goal_verification_entries",
+          "goal_coverage_entries",
           "commands_run",
           "evidence"
         ],

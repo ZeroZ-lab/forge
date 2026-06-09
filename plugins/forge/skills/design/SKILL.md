@@ -111,6 +111,8 @@ DESIGN.md（更新）                               # 来自 Phase 2
 
 完成后追加 `docs/timeline.md` + feature `changelog.md`（一条汇总记录）。`interaction-design` 和 `fe-system` 作为子阶段时不单独追加历史。超 100 行时归档。
 
+**更新 docs/status.md**（如启用）：②设计 → `✅`，下一阶段 → `🔄`。如有跳过的子阶段，标注 `⏭️跳过（原因）`。
+
 ## 红旗清单
 - 用户不确认视觉方向 → 停止生成 DESIGN.md，保留 2-3 个方向和代价
 - 交互和视觉职责混淆 → 按"行为归 interaction，外观归 fe-system"拆分

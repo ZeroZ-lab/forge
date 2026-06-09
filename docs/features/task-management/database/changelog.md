@@ -10,7 +10,7 @@
 - DB5: deletedAt 软删除
 
 ### 文件
-- database/contract.md — 新建
+- database/goal.md — 新建
 
 ### 依赖
-- 复用 api/contract.md 共享数据模型（User, Task, Comment）
+- 复用 api/goal.md 共享数据模型（User, Task, Comment）

@@ -12,9 +12,9 @@
 - D7: Bearer JWT
 
 ### 文件
-- api/contract.md — 新建
+- api/goal.md — 新建
 - api/modules/tasks.md — 新建（5 个端点）
 - api/modules/comments.md — 新建（2 个端点）
 
 ### 说明
-- 从旧单体 contract.md 拆分而来
+- 从旧单体 goal.md 拆分而来

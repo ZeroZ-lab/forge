@@ -7,8 +7,8 @@ User prompt:
 Context files:
 
 - `docs/features/billing/goal.md` — existing goal with export format requirements
-- `docs/features/billing/api/contract.md` — current API contract (has deviation)
-- `docs/features/billing/database/contract.md` — current database contract
+- `docs/features/billing/api/goal.md` — current API contract (has deviation)
+- `docs/features/billing/database/goal.md` — current database contract
 - Deviation summary from codegen: API returns `createdAt` timestamp but goal requires ISO date string; missing `totalCount` header for pagination
 - Review findings: contract-goal inconsistency on export format and pagination metadata
 

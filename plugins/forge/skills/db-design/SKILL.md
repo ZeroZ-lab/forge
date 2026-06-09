@@ -14,10 +14,10 @@ avoid_when:
   - "已有完整数据库详设"
 consumes:
   - "docs/project.md"
-  - "api/contract.md"
+  - "api/goal.md"
   - "docs/change-units/CU-*.md"
 produces:
-  - "database/contract.md"
+  - "database/goal.md"
   - "docs/change-units/CU-*.md"
 signals_in:
   - "API data model"

@@ -10,9 +10,9 @@
 - T5: CI 全量跑
 
 ### 文件
-- testing/contract.md — 新建
+- testing/goal.md — 新建
 
 ### 依赖
 - 引用 api/modules/tasks.md 验收条件（AC1-AC6）
 - 引用 api/modules/comments.md 验收条件（AC7）
-- 引用 feature/contract.md 共享约束（多租户、权限）
+- 引用 feature/goal.md 共享约束（多租户、权限）

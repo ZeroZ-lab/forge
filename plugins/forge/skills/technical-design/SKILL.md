@@ -45,7 +45,7 @@ quality_gates: []
 signal_routes:
   - signal: "technical constraints"
     to: detail
-    when: "domain contracts need architecture constraints"
+    when: "domain goals need architecture constraints"
   - signal: "architecture decisions"
     to: codegen
     when: "code generation needs project-level decisions"

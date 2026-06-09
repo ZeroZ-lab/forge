@@ -13,7 +13,7 @@ Forge 是一个给 AI 开发协作用的决策协议框架。它把文档定义�
 Forge 的默认入口不是完整生命周期，而是**已有项目上的小功能迭代**：
 
 - 你已经知道大概要做什么，只差把决策补完整
-- 你希望 AI 先补 detail 合约，再生成实现，再做偏差 review
+- 你希望 AI 先补 detail 目标，再生成实现，再做偏差 review
 - 你不想一开始就展开完整能力地图和整套治理机制
 
 如果需求边界还不清，再往前补 `define`。如果只是一个很小的端点或模块改动，可以直接从 `detail` 起步。
@@ -25,13 +25,13 @@ Forge 的默认入口不是完整生命周期，而是**已有项目上的小功
 | 需求明确的小功能 | `detail -> codegen -> review` |
 | 边界还不清晰的功能 | `define -> detail -> codegen -> review` |
 
-这就是 Forge 的默认心智模型。`plan`、`test`、`deploy`、`research`、`think`、`learn` 都保留，但属于按需能力，不是首页必修课。
+这就是 Forge 的默认心智模型。`plan`、`test`、`deploy`、`research`、`think` 都保留，但属于按需能力，不是首页必修课。
 
 ## 默认最小文档集
 
 默认只要求 3 类文档：
 
-- `contract.md`：共享约束和跨领域骨架
+- `goal.md`：共享约束和跨领域骨架
 - `modules/*.md`：模块级接口、数据和行为
 - `changelog.md`：这个 feature 的决策历史
 - `docs/change-units/CU-*.md`：每次 feature / bugfix / refactor 的完整事件记录
@@ -61,9 +61,9 @@ Forge 的默认入口不是完整生命周期，而是**已有项目上的小功
 
 ### 默认 prompt
 
-- `用 Forge 为已有 feature 补 detail 合约`
-- `按 contract 生成这个 feature 的实现`
-- `review 当前修改是否偏离 contract`
+- `用 Forge 为已有 feature 补 detail 目标`
+- `按 goal 生成这个 feature 的实现`
+- `review 当前修改是否偏离 goal`
 
 插件发布到 Codex / Claude Code 的目录布局和 manifest 约束见 [docs/plugin-publishing.md](docs/plugin-publishing.md)。
 
@@ -78,7 +78,7 @@ Forge 不是只会 4 步主链，只是默认先从这里开始。下面这些�
 | `deploy` | 需要明确灰度、回滚、监控和发布清单 |
 | `research` | PRD 里出现实时、搜索、推荐、优化、媒体处理等技术信号 |
 | `think` | 需要 Socratic / First Principles / Red Team 深挖 |
-| `learn` | 同类偏差反复出现，要回到方法论层面修正 |
+| `review` | 同类偏差反复出现，要回到方法论层面修正 |
 | `timeline` | 需要项目级演化记录 |
 | `status` | 需要多 feature 全局协调视图 |
 
@@ -143,7 +143,7 @@ node scripts/evaluate-skills.mjs --skip-blocked --report .eval-runs/skills-suite
 - 架构审计：见 [docs/skill-architecture-audit.md](docs/skill-architecture-audit.md)
 - Skills Suite 评测：见 [docs/skill-suite-evaluation.md](docs/skill-suite-evaluation.md)
 
-## 7 阶段 × 23 个 Skill
+## 8 阶段 × 23 个 Skill
 
 这套完整地图仍然保留，只是不再作为默认入口。需要完整阶段矩阵、编排 skill 和治理能力时，直接读 [AGENTS.md](AGENTS.md) 或 [docs/advanced.md](docs/advanced.md)。
 

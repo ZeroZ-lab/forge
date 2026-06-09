@@ -466,7 +466,7 @@ assert(
   marketplaceDescription.includes(`${skillCount} 个决策协议 skill`),
   `plugins/forge/.claude-plugin/marketplace.json: forge description must mention "${skillCount} 个决策协议 skill"`,
 );
-assert(read('README.md').includes(`7 阶段 × ${skillCount} 个 Skill`), `README.md: must document 7 阶段 × ${skillCount} 个 Skill`);
+assert(read('README.md').includes(`8 阶段 × ${skillCount} 个 Skill`), `README.md: must document 8 阶段 × ${skillCount} 个 Skill`);
 assert(
   read('README.md').includes('SKILL.md') || read('README.md').includes('registry.yaml'),
   'README.md: must document SKILL.md frontmatter runtime control surface',

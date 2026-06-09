@@ -17,18 +17,17 @@ avoid_when:
 consumes:
   - "docs/project.md"
   - "DESIGN.md"
-  - "contract.md"
+  - "goal.md"
   - "modules/*.md"
   - "plan.md"
   - "docs/change-units/CU-*.md"
-  - "goal.md"
 produces:
   - "src/"
   - "tests/"
   - "verification summary"
   - "docs/change-units/CU-*.md"
 signals_in:
-  - "contract goal"
+  - "goal"
   - "task sequence"
   - "change_unit.created"
   - "change_unit.updated"
@@ -232,7 +231,7 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 
 ## 入口/出口条件
 
-**入口**：有 goal.md + modules/ + plan.md（或用户已有详设和任务分解）· review 文档审查通过（如有）
+**入口**：有 goal.md + modules/ + plan.md（或用户已有详设和任务分解）· review 文档审查通过（如有）· goal.md 通过 goal-quality 检查（源完整性和可重构性维度，参考 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`）
 
 **缺失处理**：缺 plan.md → 从 goal.md 推导最小任务序列（标注"无 plan，任务顺序为 AI 推导"）；缺 modules/ → 从 goal.md 推导，标注"模块文档缺失"。
 
@@ -253,6 +252,9 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 
 - 目标不清或验收标准缺失 → 参见 `${CLAUDE_SKILL_DIR}/../shared/red-flags/unsafe-implementation.md`
 - 目标漂移（添加未要求的功能） → 参见 `${CLAUDE_SKILL_DIR}/../shared/red-flags/goal-drift.md`
+- 范围蔓延（运行时超出 goal 边界） → 参见 `${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`；检测到时输出 `⚠️ 范围蔓延` 信号并停止
+- 目标质量不足（无法驱动可靠实现）→ 参见 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`
+- 变更记录模板 → 参见 `${CLAUDE_SKILL_DIR}/../shared/change-unit-template.md`
 
 - 运行验证未执行就声明完成 → 强制先跑运行验证（D9：运行实证）
 - 代码和 goal.md 不一致 → 强制对齐
@@ -280,8 +282,6 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 ## 历史维护（自动）
 
 完成后追加 `docs/timeline.md`：`### {日期} — {feature} 代码生成 · src/（{N} 文件）+ tests/（{M} 测试）`。追加 `changelog.md`。
-
-**更新 docs/status.md**：⑤构建 → `✅`，⑥测试 → `🔄`。
 
 超 100 行时归档。
 

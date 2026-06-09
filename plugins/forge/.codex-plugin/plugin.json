@@ -10,20 +10,20 @@
   "skills": "./skills",
   "interface": {
     "displayName": "Forge",
-    "shortDescription": "目标约束驱动的 AI 开发决策协议的 AI 开发决策协议。",
+    "shortDescription": "目标约束驱动的 AI 开发决策协议",
     "longDescription": "Forge 默认服务已有项目的小功能迭代：先明确目标和约束，再自主实现，最后验证结果是否达标。0.28 引入 Change Unit，使每次变更可追溯。",
     "developerName": "ZeroZ-lab",
     "category": "Engineering",
     "capabilities": [
+      "Interactive",
       "Read",
-      "Write",
-      "Review"
+      "Write"
     ],
     "websiteURL": "https://github.com/ZeroZ-lab/forge",
     "defaultPrompt": [
-      "用 Forge 为已有 feature 补 detail 合约",
-      "按 contract 生成这个 feature 的实现",
-      "review 当前修改是否偏离 contract"
+      "用 Forge 为已有 feature 补 detail 目标",
+      "按 goal 生成这个 feature 的实现",
+      "review 当前修改是否偏离 goal"
     ]
   }
 }

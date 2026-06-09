@@ -6,19 +6,24 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 
+import { findCodexBin } from './lib/codex-bin.mjs';
+import { truncateList, markdownTableCell } from './lib/benchmark-helpers.mjs';
+import {
+  artifactPaths,
+  changeUnitPaths,
+  checkRun,
+  decisionIds,
+  docSyncTargets,
+  evidenceText,
+  globMatch,
+  goalCoveragePaths,
+  isChangeUnitPath,
+} from './lib/run-helpers.mjs';
+
 const root = process.cwd();
 
 function readJson(relativePath) {
   return JSON.parse(fs.readFileSync(path.join(root, relativePath), 'utf8'));
-}
-
-function findCodexBin() {
-  if (process.env.CODEX_BIN) return process.env.CODEX_BIN;
-  const candidates = [
-    '/Applications/Codex.app/Contents/Resources/codex',
-    spawnSync('zsh', ['-lc', 'command -v codex'], { encoding: 'utf8' }).stdout.trim(),
-  ].filter(Boolean);
-  return candidates.find((candidate) => fs.existsSync(candidate)) ?? null;
 }
 
 function parseArgs(argv) {
@@ -79,104 +84,6 @@ function errorMessageFromEvents(eventsPath) {
     return null;
   }
   return null;
-}
-
-function artifactPaths(run) {
-  return new Set(
-    (run.artifacts ?? []).map((artifact) => (typeof artifact === 'string' ? artifact : artifact?.path)).filter(Boolean),
-  );
-}
-
-function changeUnitPaths(run) {
-  return new Set(
-    (run.change_units ?? [])
-      .map((changeUnit) => (typeof changeUnit === 'string' ? changeUnit : changeUnit?.path))
-      .filter(isChangeUnitPath),
-  );
-}
-
-function globMatch(pattern, value) {
-  if (!pattern.includes('*')) return value === pattern;
-  const escaped = pattern
-    .split('*')
-    .map((part) => part.replace(/[|\\{}()[\]^$+?.]/g, '\\$&'))
-    .join('.*');
-  return new RegExp(`^${escaped}$`).test(value);
-}
-
-function decisionIds(run) {
-  return new Set(
-    (run.decisions ?? []).map((decision) => (typeof decision === 'string' ? decision : decision?.id)).filter(Boolean),
-  );
-}
-
-function docSyncTargets(run) {
-  return new Set(
-    (run.goal_verification ?? [])
-      .filter((item) => item?.status === 'completed')
-      .map((item) => item?.target)
-      .filter(Boolean),
-  );
-}
-
-function goalCoveragePaths(run) {
-  const paths = new Set();
-  for (const entry of run.goal_coverage_entries ?? []) {
-    if (entry?.source) paths.add(entry.source);
-    for (const coveredPath of entry?.covers ?? []) paths.add(coveredPath);
-  }
-  return paths;
-}
-
-function isChangeUnitPath(value) {
-  return typeof value === 'string' && /^docs\/change-units\/CU-[^/]+\.md$/.test(value);
-}
-
-function evidenceText(run) {
-  return [...(run.evidence ?? []), run.notes ?? ''].join('\n');
-}
-
-function checkRun(testCase, run) {
-  const triggeredSkills = new Set(run.triggered_skills ?? []);
-  const artifacts = artifactPaths(run);
-  const changeUnits = changeUnitPaths(run);
-  const commands = new Set(run.commands_run ?? []);
-  const decisions = decisionIds(run);
-  const docSync = docSyncTargets(run);
-  const goalCoverage = goalCoveragePaths(run);
-  const forbiddenBehaviors = new Set(run.forbidden_behaviors ?? []);
-  const evidence = evidenceText(run);
-
-  return testCase.oracle_checks.map((check) => {
-    let passed = false;
-    if (check.type === 'skill_triggered') passed = triggeredSkills.has(check.skill);
-    if (check.type === 'artifact_reported') {
-      passed = [...artifacts].some((artifactPath) => globMatch(check.path, artifactPath));
-    }
-    if (check.type === 'change_unit_reported') {
-      passed = [...changeUnits].some((changeUnitPath) => globMatch(check.path, changeUnitPath));
-    }
-    if (check.type === 'goal_covers') {
-      passed = [...goalCoverage].some((coveredPath) => globMatch(check.path, coveredPath));
-    }
-    if (check.type === 'command_reported') passed = commands.has(check.command);
-    if (check.type === 'decision_gate_reported') passed = decisions.has(check.decision);
-    if (check.type === 'goal_verified') passed = docSync.has(check.target);
-    if (check.type === 'evidence_contains') passed = evidence.includes(check.text);
-    if (check.type === 'forbidden_behavior_absent') passed = !forbiddenBehaviors.has(check.behavior);
-    return { passed, check };
-  });
-}
-
-function truncateList(items, limit = 4) {
-  if (!items || items.length === 0) return '-';
-  const visible = items.slice(0, limit);
-  const suffix = items.length > limit ? `, +${items.length - limit} more` : '';
-  return `${visible.join(', ')}${suffix}`;
-}
-
-function markdownTableCell(value) {
-  return String(value).replaceAll('\n', '<br>').replaceAll('|', '\\|');
 }
 
 function generateSummary(report, manifest, reportPath) {

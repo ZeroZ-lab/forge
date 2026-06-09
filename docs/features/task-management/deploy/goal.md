@@ -36,7 +36,7 @@ PR 合并 → main
 GitHub Actions:
   1. 安装依赖 (npm ci)
   2. 类型检查 (tsc --noEmit)
-  3. 运行测试 (vitest run)         ← 依赖 testing/contract.md
+  3. 运行测试 (vitest run)         ← 依赖 testing/goal.md
   4. 构建 (tsc)
   5. Docker build
   6. Push to GHCR

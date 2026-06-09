@@ -13,7 +13,7 @@
     "documentation",
     "decision-records",
     "ai-agent",
-    "contract-first"
+    "goal-first"
   ],
   "skills": [
     "./skills/brainstorm",
@@ -53,9 +53,9 @@
     ],
     "websiteURL": "https://github.com/ZeroZ-lab/forge",
     "defaultPrompt": [
-      "用 Forge 为已有 feature 补 detail 合约",
-      "按 contract 生成这个 feature 的实现",
-      "review 当前修改是否偏离 contract"
+      "用 Forge 为已有 feature 补 detail 目标",
+      "按 goal 生成这个 feature 的实现",
+      "review 当前修改是否偏离 goal"
     ]
   }
 }

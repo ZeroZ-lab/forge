@@ -39,14 +39,14 @@ AI：（加载 forge-design，编排交互和设计系统子 skill）
 你：做任务管理的技术详设
 
 AI：（加载 forge-detail，按需编排 API、DB、Frontend 子 skill）
-  → API: D1-D7 → contract.md + modules/tasks.md
-  → 数据库: DB1-DB5 → contract.md
-  → 前端: F1-F5 → contract.md + modules/*.md
+  → API: D1-D7 → goal.md + modules/tasks.md
+  → 数据库: DB1-DB5 → goal.md
+  → 前端: F1-F5 → goal.md + modules/*.md
 
 你：把任务管理拆成开发计划
 
 AI：（加载 forge-plan + forge-test-cases）
-  → contract.md 有哪些模块？依赖关系？
+  → goal.md 有哪些模块？依赖关系？
   → 垂直切片：每个任务 = 一个完整用户路径
   → 生成：plan.md（任务清单 + 执行顺序）+ testing/test-cases.md
 
@@ -62,14 +62,14 @@ AI：（加载 forge-codegen）
 AI：（加载 forge-test，编排 test-strategy + test-cases）
   → 测试策略：测试类型？覆盖范围？Mock 策略？
   → 测试用例：正常路径？边界情况？错误处理？
-  → 生成：testing/contract.md + testing/test-cases.md
+  → 生成：testing/goal.md + testing/test-cases.md
 
 你：规划发布
 
 AI：（加载 forge-deploy）
   → 运行环境？容器化？CI/CD？灰度策略？
   → 回滚方案？监控告警？
-  → 生成：deploy/contract.md
+  → 生成：deploy/goal.md
 ```
 
 ## 迭代模式
@@ -88,7 +88,7 @@ AI：（加载 forge-deploy）
 "分页从 page 换成 cursor"：
   AI：
     → 加载受影响的 skill
-    → 改 api/contract.md D2
+    → 改 api/goal.md D2
     → 改所有 api/modules（分页参数）
     → 改 frontend/modules（分页组件）
     → 追加各 changelog.md
@@ -96,7 +96,7 @@ AI：（加载 forge-deploy）
 
 "整个重写"：
   AI：
-    → 重写各领域 contract.md
+    → 重写各领域 goal.md
     → 删 src/ + tests/ + infra/
     → 重新生成全部
 ```
@@ -111,7 +111,7 @@ AI 的行为：
   2. 读项目的 AGENTS.md → 知道工作流程
   3. 读 docs/project.md → 知道技术栈
   4. 读 docs/timeline.md → 知道项目近期演进（避免重复决策）
-  5. 读 docs/features/task-management/contract.md → 知道已有结构
+  5. 读 docs/features/task-management/goal.md → 知道已有结构
   6. 读 docs/features/task-management/changelog.md → 知道这个功能的变更历史
   7. 参考 api/modules/tasks.md → 知道模块格式
   8. 写 api/modules/labels.md + 生成代码
@@ -133,9 +133,9 @@ AI 的行为：
 - 测试: Vitest + testcontainers
 
 ## 工作流程（来自 Forge 方法论）
-- 新功能 → 先写 contract.md，再生成代码
+- 新功能 → 先写 goal.md，再生成代码
 - 加模块 → 参考已有模块模式，追加 modules/*.md
-- 改决策 → 更新 contract.md，重新生成受影响文件
+- 改决策 → 更新 goal.md，重新生成受影响文件
 - 每个关键逻辑分支注释决策编号（D1-D7, AC1-AC8）
 
 ## 历史维护（自动，每次文档变更后执行）
@@ -152,5 +152,5 @@ AI 的行为：
 ## 文档引用
 - 技术决策 → docs/project.md
 - 设计系统 → DESIGN.md
-- 功能合约 → docs/features/<feature>/contract.md
+- 功能合约 → docs/features/<feature>/goal.md
 ```
