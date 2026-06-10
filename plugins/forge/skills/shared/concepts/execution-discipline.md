@@ -17,6 +17,7 @@ Forge methods define what should happen; execution discipline defines how an AI 
 | D7 | 验证而非假设 | 每次变更后执行可用验证，或明确说明无法验证的原因 |
 | D8 | 累积升级 | 同类问题修正 ≥ 2 次，建议重新审视目标定义。重复失败可能是目标本身的盲区 |
 | D9 | 运行实证 | 代码变更声明"完成"前必须提供运行证据（编译/启动/测试至少一项） |
+| D10 | 复杂度分级 | 任务进入 skill 链前判断重量：L0 直接 patch（单文件 <20 行）→ L1 轻量链路（1-3 文件有 goal.md）→ L2 标准链路（多模块需 notes/）→ L3 完整链路（新 Feature/架构决策）。L0 不跳过 D7/D9 |
 
 **精化示例**：test-cases 的 D7 = "D7（验证）：测试数据必须可重复，测试间必须隔离"——这是 D7 在测试场景的具体化，不是重新定义。
 
@@ -28,6 +29,7 @@ Forge methods define what should happen; execution discipline defines how an AI 
 - Record unrelated findings instead of fixing them opportunistically.
 - When a requirement, boundary, or implementation choice is uncertain, leave an explicit `[NEEDS CLARIFICATION: <question>]` marker in the goal instead of silently assuming (D6). Resolve it into a decision record before that part drives codegen.
 - After code or specification changes, run the available verification or state why it cannot run.
+- Classify task complexity before entering a skill chain; use the lightest path that satisfies the goal (D10).
 
 ## Decision boundaries
 

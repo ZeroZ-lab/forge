@@ -207,12 +207,15 @@ codegen 的核心方法论——从文档的什么部分推导出什么代码。
 - [ ] 共享约束是否在所有相关文件中遵守？
 - [ ] 修正循环是否收敛（无无限修正循环）？
 - [ ] 同类问题是否被识别和上报（D8）？
+- [ ] Trace Report 已生成（docs/features/<feature>/trace-<date>.md），与 CU 完成证据对齐？
 
 ## 历史维护（自动）
 
 完成后追加 `docs/timeline.md`：`### {日期} — {feature} 代码生成 · src/（{N} 文件）+ tests/（{M} 测试）`。追加 `changelog.md`。
 
 超 100 行时归档。
+
+Trace Report 存放在 `docs/features/<feature>/trace-<date>.md`，内容从验证摘要和 CU 抽取，不新增信息采集。模板见 `${CLAUDE_SKILL_DIR}/../shared/trace-template.md`。
 
 ## 完成提示
 

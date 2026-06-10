@@ -64,3 +64,4 @@
 - Test evidence:
 - Doc sync result:
 - Residual risk:
+- Trace Report: docs/features/<feature>/trace-<date>.md
