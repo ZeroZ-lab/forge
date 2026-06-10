@@ -9,4 +9,4 @@ Expected behavior:
 - Trigger plan, test-cases, and codegen as one implementation chain.
 - Produce vertical slices and test cases linked to acceptance criteria.
 - Generate src and tests from documented goals.
-- Run a verification command and classify any L0/L1/L2 deviation.
+- Run a verification command and report any deviation with attribution (skill 方法论 / 文档未同步 / 代码实现).

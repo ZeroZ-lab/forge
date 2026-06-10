@@ -94,7 +94,7 @@ AI 呈现选项 + 代价，人类做选择，AI 记录决策 + 生成实现。�
 **D9：运行实证（Evidence over claims）**
 任何代码变更声明"完成"之前，必须提供运行证据。编译通过、服务启动、测试绿灯——至少一项，视项目类型而定。无法提供运行证据时，必须说明原因并标记"⚠️ 未验证"。不跑就说完了 = 猜。
 D7 管所有变更，D9 加码代码变更——代码不能只"说明原因"就跳过运行验证。
-D10 在任务入口判断走多重的流程——L0 直接 patch / L1 轻量链路 / L2 标准链路 / L3 完整链路。L0 不跳过 D7/D9，只跳过 detail 阶段。
+D10 在任务入口判断走多重的流程——L0 直接 patch / L1 轻量链路 / L2 标准链路 / L3 完整链路。分级可双向调整：同类问题反复出现时升级（见 D8），中途发现任务比预期小时降级到更低链路。L0 不跳过 D7/D9，只跳过 detail 阶段——验证地板不随降级缩小。
 
 ### AI 执行纪律
 
@@ -356,15 +356,17 @@ Claude Code 根据 skill 的 `description` / `when_to_use` 自动选择最小相
 
 | 深度 | 用途 | 行为 |
 |------|------|------|
-| L0 lens | 判断、分析、review 一个点 | 只读必要上下文，不改文件 |
-| L1 patch | 局部目标 / code 修正 | 最小改动，执行可用验证 |
-| L2 stage | 完整阶段执行 | 产出或更新阶段文档 + 历史记录 |
+| lens | 判断、分析、review 一个点 | 只读必要上下文，不改文件 |
+| patch | 局部目标 / code 修正 | 最小改动，执行可用验证 |
+| stage | 完整阶段执行 | 产出或更新阶段文档 + 历史记录 |
 
-**Per-skill depth 默认**：domain skill（brainstorm, define, codegen, review 等）遵循上表通用规则。编排 skill（init, design, detail, test）默认 L2（编排器职责是产出阶段文档）。轻量调用只改目标语义时必须回写对应文档。
+> 调用深度（lens / patch / stage）与 D10 复杂度分级（L0–L3）是两个正交轴：D10 判断任务多大、走哪条链；调用深度判断**这一次** skill 调用动多深。不要混用编号——L# 只属于 D10。
 
-**Depth 判断信号**：用户说"只看看"/"简单 review"/"检查一下" → L0 · 用户说"修一下"/"改个字段"/"加个端点" → L1 · 用户说"走一遍 design"/"完整测试"/显式点名阶段 → L2。
+**Per-skill depth 默认**：domain skill（brainstorm, define, codegen, review 等）遵循上表通用规则。编排 skill（init, design, detail, test）默认 stage（编排器职责是产出阶段文档）。轻量调用只改目标语义时必须回写对应文档。
 
-**默认规则**：用户未显式点名阶段时，优先走 `detail → codegen → review` 的 L0/L1 轻量调用；用户显式点名阶段或 skill 时，默认 L2 阶段调用，除非用户说"只看看"、"简单 review"或等价限制。轻量调用如果改变目标语义，必须回写对应文档。
+**Depth 判断信号**：用户说"只看看"/"简单 review"/"检查一下" → lens · 用户说"修一下"/"改个字段"/"加个端点" → patch · 用户说"走一遍 design"/"完整测试"/显式点名阶段 → stage。
+
+**默认规则**：用户未显式点名阶段时，优先走 `detail → codegen → review` 的 lens/patch 轻量调用；用户显式点名阶段或 skill 时，默认 stage 阶段调用，除非用户说"只看看"、"简单 review"或等价限制。轻量调用如果改变目标语义，必须回写对应文档。
 
 ### 自然语言执行
 
@@ -379,7 +381,7 @@ Claude Code 根据 skill 的 `description` / `when_to_use` 自动选择最小相
 | "整个重写" | 保留目标和决策 → 重新实现 |
 | "加个测试" | test 编排器（test-strategy + test-cases + 交叉验证） |
 | "重构这段代码" | detail + codegen 的组合（重新详设并实现） |
-| "这个 bug 怎么修" | 读目标 + 代码 → 定位问题 → 最小修补 → 验证（L1 patch） |
+| "这个 bug 怎么修" | 读目标 + 代码 → 定位问题 → 最小修补 → 验证（L1 轻量链路） |
 | "设计一下" | design 编排器（interaction-design + fe-system） |
 
 > 完整对话示例和迭代模式详见 `references/usage-examples.md`。
@@ -513,7 +515,7 @@ forge/
 ├── plugins/forge/                   # 插件目录（唯一源）
 │   ├── .claude-plugin/plugin.json   # Claude Code 插件
 │   ├── .codex-plugin/plugin.json    # Codex CLI 插件
-│   └── skills/                      # 23 个决策协议（flat list）
+│   └── skills/                      # 24 个决策协议（flat list）
 │       ├── brainstorm/            # ⓪ 探索
 │       ├── init/                  # 初始化编排（+ agents/claude 模板）
 │       ├── business-alignment/    # ① 业务对齐

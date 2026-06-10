@@ -67,7 +67,7 @@ when_to_use: Use when the user says they want to brainstorm, explore possibiliti
 
 **不变原则**：反驳不是为了否定，是为了找到真正站得住脚的部分。经不起反驳的想法不值得投入。
 
-**边界**：这是轻量级可行性筛选，不是深度对抗攻击。战略级决策需要深度攻击时，用 think L2。
+**边界**：这是轻量级可行性筛选，不是深度对抗攻击。战略级决策需要深度攻击时，用 think 攻击模式。
 
 ### 阶段 4：评分筛选
 

@@ -26,7 +26,7 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 ## 何时不使用
 - 只有一个模块的简单功能（直接使用 api-design 或 frontend-design）
 - 已有完整的 goal.md + modules/（无需重新详设）
-- 用户只想改一个端点（L1 patch，直接用 api-design）
+- 用户只想改一个端点（patch，直接用 api-design）
 
 ## 加载判断
 
@@ -64,7 +64,7 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 - 前端存在性不确定 → 暂停询问（不默认加载 frontend-design）
 - PRD 缺失 → 不直接写 goal，先要求补需求或明确走最小 detail
 - 由同类 repeat 偏差触发 → 先复查 goal 盲区，再决定是否改代码
-- L2 目标定义不清 → 中止详设，列出矛盾点等用户决策
+- 目标定义不清 → 中止详设，列出矛盾点等用户决策
 - feature/goal.md 的 FD# 与 project.md 的 PD# 编号冲突 → 重新分配编号
 - 下游一致性问题影响范围不清 → 不自动级联修改，先输出一致性报告
 - goal 质量不足（无法驱动可靠实现）→ 参见 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`

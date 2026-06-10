@@ -64,7 +64,7 @@
     {
       "id": "ambiguous-idea-alignment",
       "title": "模糊想法收敛到业务方向",
-      "level": "L2 stage",
+      "level": "stage",
       "fixture": "evals/skills-suite/fixtures/ambiguous-idea-alignment.md",
       "expected_skills": [
         "brainstorm",
@@ -125,7 +125,7 @@
     {
       "id": "project-bootstrap",
       "title": "新项目初始化",
-      "level": "L2 stage",
+      "level": "stage",
       "fixture": "evals/skills-suite/fixtures/project-bootstrap.md",
       "expected_skills": [
         "init",
@@ -194,7 +194,7 @@
     {
       "id": "requirements-research",
       "title": "需求定义触发技术研究",
-      "level": "L2 stage",
+      "level": "stage",
       "fixture": "evals/skills-suite/fixtures/requirements-research.md",
       "expected_skills": [
         "define",
@@ -255,7 +255,7 @@
     {
       "id": "interaction-design-system",
       "title": "前端设计到实现验收闭环",
-      "level": "L2 chain",
+      "level": "chain",
       "fixture": "evals/skills-suite/fixtures/interaction-design-system.md",
       "expected_skills": [
         "design",
@@ -351,7 +351,7 @@
     {
       "id": "detail-api-db-frontend",
       "title": "详设生成跨领域 contract",
-      "level": "L2 stage",
+      "level": "stage",
       "fixture": "evals/skills-suite/fixtures/detail-api-db-frontend.md",
       "expected_skills": [
         "detail",
@@ -421,7 +421,7 @@
     {
       "id": "codegen-implementation",
       "title": "计划到代码实现和验证闭环",
-      "level": "L1 chain",
+      "level": "chain",
       "fixture": "evals/skills-suite/fixtures/codegen-goal.md",
       "expected_skills": [
         "plan",
@@ -443,7 +443,7 @@
         "contract read set",
         "generated files",
         "verification command",
-        "deviation classification",
+        "deviation attribution",
         "Change Unit",
         "goal verification"
       ],
@@ -493,7 +493,7 @@
         },
         {
           "type": "evidence_contains",
-          "text": "L0/L1/L2"
+          "text": "归因"
         },
         {
           "type": "change_unit_reported",
@@ -516,7 +516,7 @@
     {
       "id": "test-strategy-suite",
       "title": "风险分层测试策略和用例生成",
-      "level": "L2 stage",
+      "level": "stage",
       "fixture": "evals/skills-suite/fixtures/test-strategy-suite.md",
       "expected_skills": [
         "test",
@@ -578,7 +578,7 @@
     {
       "id": "thinking-red-team",
       "title": "深度思考产物和回写闭环",
-      "level": "L1 analysis",
+      "level": "analysis",
       "fixture": "evals/skills-suite/fixtures/thinking-red-team.md",
       "expected_skills": [
         "think"
@@ -637,7 +637,7 @@
     {
       "id": "deploy-release",
       "title": "可逆发布计划",
-      "level": "L1 patch",
+      "level": "patch",
       "fixture": "evals/skills-suite/fixtures/deploy-release.md",
       "expected_skills": [
         "deploy"
@@ -678,7 +678,7 @@
     {
       "id": "bugfix-regression-change-unit",
       "title": "Bugfix 通过 Change Unit 沉淀回归测试",
-      "level": "L1 patch",
+      "level": "patch",
       "fixture": "evals/skills-suite/fixtures/bugfix-regression-change-unit.md",
       "expected_skills": [
         "detail",
@@ -747,7 +747,7 @@
     {
       "id": "init-skip-frontend",
       "title": "纯后端项目初始化跳过前端 skill",
-      "level": "L2 stage",
+      "level": "stage",
       "fixture": "evals/skills-suite/fixtures/init-skip-frontend.md",
       "expected_skills": [
         "init",
@@ -816,7 +816,7 @@
     {
       "id": "detail-backend-only",
       "title": "纯后端功能详设跳过前端合约",
-      "level": "L2 stage",
+      "level": "stage",
       "fixture": "evals/skills-suite/fixtures/detail-backend-only.md",
       "expected_skills": [
         "detail",
@@ -893,7 +893,7 @@
     {
       "id": "detail-reentry-from-deviation",
       "title": "偏差信号触发详设重入修正合约",
-      "level": "L1 patch",
+      "level": "patch",
       "fixture": "evals/skills-suite/fixtures/detail-reentry-from-deviation.md",
       "expected_skills": [
         "detail",
@@ -966,7 +966,7 @@
     {
       "id": "design-skip-no-frontend",
       "title": "纯后端功能跳过设计阶段直接进入详设",
-      "level": "L2 stage",
+      "level": "stage",
       "fixture": "evals/skills-suite/fixtures/design-skip-no-frontend.md",
       "expected_skills": [
         "detail",
@@ -1035,6 +1035,56 @@
         {
           "type": "goal_verified",
           "target": "goal.md"
+        }
+      ]
+    },
+    {
+      "id": "learn-archive-methodology",
+      "title": "review 方法论归因沉淀为长期知识",
+      "level": "patch",
+      "fixture": "evals/skills-suite/fixtures/learn-archive.md",
+      "expected_skills": [
+        "learn"
+      ],
+      "expected_artifacts": [
+        "docs/project.md",
+        "docs/change-units/CU-*.md"
+      ],
+      "required_evidence": [
+        "skill-methodology attribution",
+        "archive decision",
+        "discarded items with reasons",
+        "Change Unit"
+      ],
+      "forbidden_behaviors": [
+        "auto_archive_without_confirmation",
+        "archive_beyond_methodology_layer",
+        "current_docs_without_change_unit"
+      ],
+      "oracle_checks": [
+        {
+          "type": "skill_triggered",
+          "skill": "learn"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "Archive Decision Report"
+        },
+        {
+          "type": "decision_gate_reported",
+          "decision": "archive_target_confirmation"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "auto_archive_without_confirmation"
+        },
+        {
+          "type": "change_unit_reported",
+          "path": "docs/change-units/CU-*.md"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "current_docs_without_change_unit"
         }
       ]
     }

@@ -93,7 +93,7 @@ Advanced 入口见 [docs/advanced.md](docs/advanced.md)。
 node scripts/validate.mjs
 ```
 
-自检会校验版本同步、23 个 skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 目标回流。
+自检会校验版本同步、24 个 skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 目标回流。
 
 ### 行为测试
 
@@ -109,7 +109,7 @@ node --test
 node scripts/evaluate-skills.mjs
 ```
 
-评测自检会校验 `evals/skills-suite/manifest.json`：至少 10 个固定任务、覆盖全部 23 个 skill、fixtures 存在、v2 oracle check 可机器读取，并要求 Change Unit 和目标验证证据。这只证明评测合约完整，不证明某次 agent 行为有效。
+评测自检会校验 `evals/skills-suite/manifest.json`：至少 10 个固定任务、覆盖全部 24 个 skill、fixtures 存在、v2 oracle check 可机器读取，并要求 Change Unit 和目标验证证据。这只证明评测合约完整，不证明某次 agent 行为有效。
 
 要评价真实运行，把 agent 执行记录整理成 `evals/skills-suite/report.schema.json` 格式，然后运行：
 
@@ -139,7 +139,7 @@ node scripts/evaluate-skills.mjs --skip-blocked --report .eval-runs/skills-suite
 - 架构审计：见 [docs/skill-architecture-audit.md](docs/skill-architecture-audit.md)
 - Skills Suite 评测：见 [docs/skill-suite-evaluation.md](docs/skill-suite-evaluation.md)
 
-## 8 阶段 × 23 个 Skill
+## 8 阶段 × 24 个 Skill
 
 这套完整地图仍然保留，只是不再作为默认入口。需要完整阶段矩阵、编排 skill 和治理能力时，直接读 [AGENTS.md](AGENTS.md) 或 [docs/advanced.md](docs/advanced.md)。
 
