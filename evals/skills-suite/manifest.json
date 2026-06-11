@@ -640,7 +640,9 @@
       "level": "patch",
       "fixture": "evals/skills-suite/fixtures/deploy-release.md",
       "expected_skills": [
-        "deploy"
+        "review",
+        "deploy",
+        "learn"
       ],
       "expected_artifacts": [
         "docs/features/tags/deploy/goal.md",
@@ -659,7 +661,15 @@
       "oracle_checks": [
         {
           "type": "skill_triggered",
+          "skill": "review"
+        },
+        {
+          "type": "skill_triggered",
           "skill": "deploy"
+        },
+        {
+          "type": "skill_triggered",
+          "skill": "learn"
         },
         {
           "type": "change_unit_reported",

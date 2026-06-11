@@ -1,5 +1,16 @@
 # Timeline — Forge 方法论进化记录
 
+### 2026-06-11 — Learn skill 发布面同步
+
+- **触发**：静态评审发现 `learn` skill 已存在，但 Claude plugin manifest、skills-suite 覆盖和公开文案仍停在 23 个 skill。
+- **核心判断**：以 `plugins/forge/skills/*` 为当前真源，补齐发布面和评测合约，不改历史 Change Unit 的旧验证事实。
+- **改动**：
+  - Claude plugin manifest 增加 `./skills/learn`。
+  - `deploy-release` benchmark case 补齐 review → deploy → learn 覆盖。
+  - README、AGENTS、Claude marketplace 当前说明更新为 24 个 skill。
+  - 新增 Change Unit：`docs/change-units/CU-20260611-learn-skill-sync.md`。
+- **验证目标**：`node scripts/validate.mjs` + `node scripts/evaluate-skills.mjs` + `node --test 'tests/*.test.mjs'`。
+
 ### 2026-06-07 — Skills Suite 链路压缩
 
 - **触发**：用户希望压缩当前项目的 skills suite，保证链路完整并删除冗余。
