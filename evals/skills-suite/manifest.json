@@ -2,7 +2,7 @@
   "version": 2,
   "name": "forge-skills-suite-benchmark",
   "description": "A deterministic v2 contract for checking whether Forge skills are triggered through complete, non-redundant chains; bounded, verified, traceable through Change Units, and goal-aware during representative agent runs.",
-  "minimum_cases": 14,
+  "minimum_cases": 16,
   "scoring_model": {
     "version": 1,
     "grade_thresholds": {
@@ -514,6 +514,115 @@
       ]
     },
     {
+      "id": "default-chain-small-feature",
+      "title": "默认主链小功能迭代",
+      "level": "chain",
+      "fixture": "evals/skills-suite/fixtures/default-chain-small-feature.md",
+      "expected_skills": [
+        "detail",
+        "codegen",
+        "review"
+      ],
+      "expected_artifacts": [
+        "docs/features/task-archive/goal.md",
+        "src/",
+        "tests/",
+        "docs/change-units/CU-*.md",
+        "goal.md"
+      ],
+      "required_evidence": [
+        "default chain",
+        "feature goal",
+        "contract read set",
+        "generated files",
+        "verification command",
+        "review findings",
+        "Change Unit",
+        "goal verification"
+      ],
+      "forbidden_behaviors": [
+        "escalated_clear_feature_to_define",
+        "generated_plan_for_small_feature",
+        "modified_project_docs_for_local_feature",
+        "claimed_complete_without_runtime_evidence",
+        "current_docs_without_change_unit"
+      ],
+      "oracle_checks": [
+        {
+          "type": "skill_triggered",
+          "skill": "detail"
+        },
+        {
+          "type": "skill_triggered",
+          "skill": "codegen"
+        },
+        {
+          "type": "skill_triggered",
+          "skill": "review"
+        },
+        {
+          "type": "artifact_reported",
+          "path": "docs/features/task-archive/goal.md"
+        },
+        {
+          "type": "artifact_reported",
+          "path": "src/"
+        },
+        {
+          "type": "artifact_reported",
+          "path": "tests/"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "detail -> codegen -> review"
+        },
+        {
+          "type": "command_reported",
+          "command": "node --test"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "运行验证"
+        },
+        {
+          "type": "change_unit_reported",
+          "path": "docs/change-units/CU-*.md"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "escalated_clear_feature_to_define"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "generated_plan_for_small_feature"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "claimed_complete_without_runtime_evidence"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "current_docs_without_change_unit"
+        },
+        {
+          "type": "artifact_absent",
+          "path": "docs/project.md"
+        },
+        {
+          "type": "goal_covers",
+          "path": "src/"
+        },
+        {
+          "type": "goal_covers",
+          "path": "tests/"
+        },
+        {
+          "type": "goal_verified",
+          "target": "goal.md"
+        }
+      ]
+    },
+    {
       "id": "test-strategy-suite",
       "title": "风险分层测试策略和用例生成",
       "level": "stage",
@@ -705,10 +814,13 @@
         "Change Unit",
         "Missing Invariant",
         "regression test",
+        "verification command",
+        "运行验证",
         "goal verification"
       ],
       "forbidden_behaviors": [
         "bugfix_without_regression",
+        "bugfix_modified_project_docs",
         "current_docs_without_change_unit"
       ],
       "oracle_checks": [
@@ -745,8 +857,20 @@
           "text": "regression test"
         },
         {
+          "type": "command_reported",
+          "command": "node --test"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "运行验证"
+        },
+        {
           "type": "forbidden_behavior_absent",
           "behavior": "bugfix_without_regression"
+        },
+        {
+          "type": "artifact_absent",
+          "path": "docs/project.md"
         },
         {
           "type": "goal_verified",

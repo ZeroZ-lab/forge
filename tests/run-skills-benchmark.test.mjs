@@ -10,7 +10,7 @@
  *   - decisionIds (run-helpers)
  *   - docSyncTargets (run-helpers)
  *   - evidenceText (run-helpers)
- *   - checkRun — all 9 oracle check types (run-helpers)
+ *   - checkRun — all 10 oracle check types (run-helpers)
  *   - truncateList (benchmark-helpers)
  *   - markdownTableCell (benchmark-helpers)
  */
@@ -29,6 +29,8 @@ import {
   docSyncTargets,
   evidenceText,
   checkRun,
+  normalizeSkillName,
+  pathMatch,
 } from '../scripts/lib/run-helpers.mjs';
 
 // ---------------------------------------------------------------------------
@@ -72,6 +74,19 @@ test('globMatch: regex special characters are escaped', () => {
 
 test('globMatch: wildcard matches deeply nested path', () => {
   assert.ok(globMatch('src/**/*.ts', 'src/foo/bar/baz.ts'));
+});
+
+test('normalizeSkillName: strips forge prefix', () => {
+  assert.equal(normalizeSkillName('forge-detail'), 'detail');
+  assert.equal(normalizeSkillName('detail'), 'detail');
+});
+
+test('pathMatch: supports exact, directory, basename, and glob expectations', () => {
+  assert.ok(pathMatch('docs/goal.md', 'docs/goal.md'));
+  assert.ok(pathMatch('src/', 'src/billing/webhook.js'));
+  assert.ok(pathMatch('goal.md', 'docs/features/billing/goal.md'));
+  assert.ok(pathMatch('docs/change-units/CU-*.md', 'docs/change-units/CU-20260612-x.md'));
+  assert.ok(!pathMatch('tests/', 'src/billing/webhook.js'));
 });
 
 // ---------------------------------------------------------------------------
@@ -298,7 +313,7 @@ test('evidenceText: missing fields produce empty string', () => {
 // ---------------------------------------------------------------------------
 
 test('checkRun: skill_triggered passes when skill present', () => {
-  const testCase = { oracle_checks: [{ type: 'skill_triggered', skill: 'forge-codegen' }] };
+  const testCase = { oracle_checks: [{ type: 'skill_triggered', skill: 'codegen' }] };
   const run = { triggered_skills: ['forge-codegen', 'forge-review'] };
   const results = checkRun(testCase, run);
   assert.equal(results.length, 1);
@@ -306,7 +321,7 @@ test('checkRun: skill_triggered passes when skill present', () => {
 });
 
 test('checkRun: skill_triggered fails when skill absent', () => {
-  const testCase = { oracle_checks: [{ type: 'skill_triggered', skill: 'forge-codegen' }] };
+  const testCase = { oracle_checks: [{ type: 'skill_triggered', skill: 'codegen' }] };
   const run = { triggered_skills: ['forge-review'] };
   const results = checkRun(testCase, run);
   assert.ok(!results[0].passed);
@@ -330,9 +345,30 @@ test('checkRun: artifact_reported with glob pattern', () => {
   assert.ok(results[0].passed);
 });
 
+test('checkRun: artifact_reported matches directory expectation', () => {
+  const testCase = { oracle_checks: [{ type: 'artifact_reported', path: 'src/' }] };
+  const run = { artifacts: ['src/index.ts'] };
+  const results = checkRun(testCase, run);
+  assert.ok(results[0].passed);
+});
+
 test('checkRun: artifact_reported fails when no artifact matches', () => {
   const testCase = { oracle_checks: [{ type: 'artifact_reported', path: 'src/*.ts' }] };
   const run = { artifacts: ['lib/index.ts'] };
+  const results = checkRun(testCase, run);
+  assert.ok(!results[0].passed);
+});
+
+test('checkRun: artifact_absent passes when artifact is absent', () => {
+  const testCase = { oracle_checks: [{ type: 'artifact_absent', path: 'docs/project.md' }] };
+  const run = { artifacts: ['docs/features/billing/goal.md'] };
+  const results = checkRun(testCase, run);
+  assert.ok(results[0].passed);
+});
+
+test('checkRun: artifact_absent fails when artifact is present', () => {
+  const testCase = { oracle_checks: [{ type: 'artifact_absent', path: 'docs/project.md' }] };
+  const run = { artifacts: ['docs/project.md'] };
   const results = checkRun(testCase, run);
   assert.ok(!results[0].passed);
 });
@@ -427,6 +463,13 @@ test('checkRun: goal_verified passes when target completed', () => {
   assert.ok(results[0].passed);
 });
 
+test('checkRun: goal_verified accepts basename target', () => {
+  const testCase = { oracle_checks: [{ type: 'goal_verified', target: 'goal.md' }] };
+  const run = { goal_verification: [{ target: 'docs/features/billing/goal.md', status: 'completed' }] };
+  const results = checkRun(testCase, run);
+  assert.ok(results[0].passed);
+});
+
 test('checkRun: goal_verified fails when target not completed', () => {
   const testCase = { oracle_checks: [{ type: 'goal_verified', target: 'docs/goal.md' }] };
   const run = { goal_verification: [{ target: 'docs/goal.md', status: 'partial' }] };
@@ -484,7 +527,7 @@ test('checkRun: forbidden_behavior_absent fails when behavior present', () => {
 test('checkRun: multiple oracle checks on one run', () => {
   const testCase = {
     oracle_checks: [
-      { type: 'skill_triggered', skill: 'forge-codegen' },
+      { type: 'skill_triggered', skill: 'codegen' },
       { type: 'artifact_reported', path: 'src/*.ts' },
       { type: 'command_reported', command: 'npm test' },
       { type: 'forbidden_behavior_absent', behavior: 'skip_tests' },
@@ -505,7 +548,7 @@ test('checkRun: multiple oracle checks on one run', () => {
 });
 
 test('checkRun: returns check object alongside passed flag', () => {
-  const check = { type: 'skill_triggered', skill: 'forge-codegen' };
+  const check = { type: 'skill_triggered', skill: 'codegen' };
   const testCase = { oracle_checks: [check] };
   const run = { triggered_skills: ['forge-codegen'] };
   const results = checkRun(testCase, run);

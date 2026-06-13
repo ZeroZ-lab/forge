@@ -42,7 +42,7 @@ try {
 } catch (error) {
   if (error.code !== 'ENOENT') throw error;
 }
-fs.symlinkSync(root, pluginLink, 'dir');
+fs.symlinkSync(path.join(root, 'plugins/forge'), pluginLink, 'dir');
 
 const marketplace = {
   name: marketplaceName,

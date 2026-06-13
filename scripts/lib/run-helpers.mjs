@@ -52,6 +52,36 @@ export function globMatch(pattern, value) {
 }
 
 /**
+ * Normalize skill names reported by different prompt generations.
+ * Manifests use bare ids (detail); some runner prompts produce forge-detail.
+ *
+ * @param {string} value - Reported skill name.
+ * @returns {string} Normalized skill name.
+ */
+export function normalizeSkillName(value) {
+  return typeof value === 'string' && value.startsWith('forge-') ? value.slice('forge-'.length) : value;
+}
+
+/**
+ * Match expected artifact or goal paths against concrete reported paths.
+ *
+ * Supports exact/glob patterns, directory expectations (`src/` matches
+ * `src/foo.ts`), and basename expectations (`goal.md` matches
+ * `docs/features/x/goal.md`).
+ *
+ * @param {string} expected - Expected path or glob.
+ * @param {string} actual - Actual reported path.
+ * @returns {boolean} Whether the actual path satisfies the expectation.
+ */
+export function pathMatch(expected, actual) {
+  if (typeof expected !== 'string' || typeof actual !== 'string') return false;
+  if (globMatch(expected, actual)) return true;
+  if (expected.endsWith('/')) return actual.startsWith(expected);
+  if (!expected.includes('/')) return actual.split('/').at(-1) === expected;
+  return false;
+}
+
+/**
  * Extract decision IDs from a run object.
  * @param {object} run - A benchmark case run.
  * @returns {Set<string>} Decision IDs.
@@ -121,7 +151,7 @@ export function evidenceText(run) {
  * @returns {Array<{passed: boolean, check: object}>} Check results.
  */
 export function checkRun(testCase, run) {
-  const triggeredSkills = new Set(run.triggered_skills ?? []);
+  const triggeredSkills = new Set((run.triggered_skills ?? []).map(normalizeSkillName));
   const artifacts = artifactPaths(run);
   const changeUnits = changeUnitPaths(run);
   const commands = new Set(run.commands_run ?? []);
@@ -134,18 +164,17 @@ export function checkRun(testCase, run) {
   return testCase.oracle_checks.map((check) => {
     let passed = false;
     if (check.type === 'skill_triggered') passed = triggeredSkills.has(check.skill);
-    if (check.type === 'artifact_reported') {
-      passed = [...artifacts].some((artifactPath) => globMatch(check.path, artifactPath));
-    }
+    if (check.type === 'artifact_reported') passed = [...artifacts].some((artifactPath) => pathMatch(check.path, artifactPath));
+    if (check.type === 'artifact_absent') passed = ![...artifacts].some((artifactPath) => pathMatch(check.path, artifactPath));
     if (check.type === 'change_unit_reported') {
       passed = [...changeUnits].some((changeUnitPath) => globMatch(check.path, changeUnitPath));
     }
     if (check.type === 'goal_covers') {
-      passed = [...goalCoverage].some((coveredPath) => globMatch(check.path, coveredPath));
+      passed = [...goalCoverage].some((coveredPath) => pathMatch(check.path, coveredPath));
     }
     if (check.type === 'command_reported') passed = commands.has(check.command);
     if (check.type === 'decision_gate_reported') passed = decisions.has(check.decision);
-    if (check.type === 'goal_verified') passed = docSync.has(check.target);
+    if (check.type === 'goal_verified') passed = [...docSync].some((target) => pathMatch(check.target, target));
     if (check.type === 'evidence_contains') passed = evidence.includes(check.text);
     if (check.type === 'forbidden_behavior_absent') passed = !forbiddenBehaviors.has(check.behavior);
     return { passed, check };

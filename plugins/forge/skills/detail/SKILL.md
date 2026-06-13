@@ -6,209 +6,109 @@ when_to_use: Use when the user says technical detail design, detail stage, full 
 
 # Forge Detail — 详设阶段编排
 
-根据项目上下文按需加载领域 skill，产出技术详设文档。
-
 ## 运行时角色
 
-`detail` 是目标细化器。它把上游 PRD、project、DESIGN 和问题信号转成可操作的目标，并在 codegen/review 发现一致性问题时负责 goal 复查和级联更新决策。
+`detail` 是目标细化器：把 PRD、project、DESIGN、历史偏差信号转成可实现的 `goal.md` + `modules/*.md`，并在 codegen/review 发现目标盲区时负责复查目标而不是直接改代码。
 
-目标验证参考 `${CLAUDE_SKILL_DIR}/../shared/concepts/control-loop.md`；目标漂移红旗参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/goal-drift.md`；目标质量标准参考 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`；范围蔓延红旗参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`。
-
-**Phase 0 例外**：`detail` 的 Phase 0（Feature 骨架创建）和 Phase 4（索引同步 + Module 结构校验）是编排器自己的 domain work——创建 feature/goal.md 作为跨领域共享骨架，维护 project.md 索引。没有单独的 skill 负责 feature 级共享决策和 project.md 索引维护。
+读取共享标准：目标验证 `${CLAUDE_SKILL_DIR}/../shared/concepts/control-loop.md`；目标文档 `${CLAUDE_SKILL_DIR}/../shared/concepts/document-as-goal.md`；目标质量 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`；目标漂移/范围蔓延 `${CLAUDE_SKILL_DIR}/../shared/red-flags/goal-drift.md`、`${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`。
 
 ## 执行纪律
 
-- **D3**：前端存在性不确定 → 暂停询问；目标定义不清 → 中止详设，列矛盾点等人类决策
-- **D5**：只加载项目需要的领域 skill（有前端→3 个，纯后端→2 个）
-- **D2**：一致性检查以文档为源头，不一致点呈现给用户决策，AI 不自动修改下游文档
-- 文档角色定义见 `${CLAUDE_SKILL_DIR}/../shared/concepts/document-as-goal.md`
+- D3：前端存在性、目标矛盾、跨文档冲突不确定时停下给用户决策。
+- D5：只加载需要的领域 skill；纯后端不加载 frontend-design。
+- D2：文档是源头；一致性问题先报告，不静默级联。
+- D6：不确定需求写 `[NEEDS CLARIFICATION: ...]`。
 
 ## 何时不使用
-- 只有一个模块的简单功能（直接使用 api-design 或 frontend-design）
-- 已有完整的 goal.md + modules/（无需重新详设）
-- 用户只想改一个端点（patch，直接用 api-design）
 
-## 加载判断
-
-先确定加载哪些 skill：
-
-1. 读 project.md 技术选型 → 有没有前端框架？
-2. 读已有文档 → 有没有 frontend/ 目录？
-3. 如果不确定 → 问用户："这个项目有前端吗？"
-
-**加载组合**：
-- **有前端** → `api-design` + `db-design` + `frontend-design`
-- **纯后端** → `api-design` + `db-design`
-- **纯前端** → `frontend-design`
+只有单模块小改、已有完整 `goal.md + modules/`、用户只想改一个端点时，不走完整 detail；直接进入对应 domain skill 或 patch。
 
 ## 输入状态读取
 
-开始前读取：
+- `docs/project.md`：技术选型、共享约束、目录结构、测试策略。
+- `PRD.md` 或等价需求：场景、AC 编号、范围排除。
+- `DESIGN.md`、interaction spec：仅前端存在时读取。
+- 既有 feature `goal.md`、`modules/*.md`、changelog/timeline。
+- `codegen` 验证摘要或 `review` 一致性报告：由偏差触发时先读。
 
-- `docs/project.md` 的技术选型、共享约束和核心算法（如有）
-- `PRD.md` 或等价需求说明（检查是否有 AC 编号，有则 goal 验收条件可追溯）
-- `DESIGN.md` 和 interaction-spec（如有前端）
-- 已有 feature `goal.md`、领域 notes 和 modules
-- `codegen` 偏差摘要或 `review` 一致性报告（如本次由偏差触发）
-- **交叉验证**：读 project.md 工程约束中的测试策略 → 确认即将生成的 goal.md 不与之矛盾（如 project.md 写了 "≥80% 覆盖率"，goal 不能暗示不需要测试）
+## 加载判断
 
-## 分支与恢复
+先判断项目形态：
 
-- 缺 PRD/需求输入 → 不直接写 goal，先要求补需求或明确走最小 detail。
-- 前端存在性不确定 → 暂停询问，不默认加载 frontend-design。
-- 由同类 repeat 偏差触发 → 先复查对应 goal/module 盲区，再决定是否改代码。
-- 发现目标定义不清 → 中止详设输出，列出需要人类决策的矛盾点。
-- 下游一致性问题影响范围不清 → 不自动级联修改，先输出一致性报告。
-
-## 红旗清单
-- 前端存在性不确定 → 暂停询问（不默认加载 frontend-design）
-- PRD 缺失 → 不直接写 goal，先要求补需求或明确走最小 detail
-- 由同类 repeat 偏差触发 → 先复查 goal 盲区，再决定是否改代码
-- 目标定义不清 → 中止详设，列出矛盾点等用户决策
-- feature/goal.md 的 FD# 与 project.md 的 PD# 编号冲突 → 重新分配编号
-- 下游一致性问题影响范围不清 → 不自动级联修改，先输出一致性报告
-- goal 质量不足（无法驱动可靠实现）→ 参见 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`
+- 有后端 + 前端：`api-design` → `db-design` → `frontend-design`
+- 纯后端：`api-design` → `db-design`
+- 纯前端：`frontend-design`
+- 前端是否存在不确定：暂停询问，不默认加载。
 
 ## 流程
 
-按以下顺序依次执行，每个 phase 完成后向用户确认再进入下一个：
-
 **Phase 0: Feature 骨架创建**（必选）
-创建 feature/goal.md 作为跨领域共享骨架。
-1. 从 project.md 提取共享约束和技术选型（含 TD6 工程约束：模块边界规则、public API 约定 → 指导 module 结构）
-2. 从 PRD.md 提取核心场景和验收条件摘要
-3. 从 project.md「核心算法」（如有）提取算法决策
-4. 按 `${CLAUDE_SKILL_DIR}/../shared/goal-template.md` 生成 feature/goal.md：
-   - 首屏合约：目标 / 边界 / 完成标准落在文件前 ~30 行，让 agent 单读窗即可拿到全部硬约束
-   - 完成标准优先 EARS 句式（`WHEN <事件>，系统 SHALL <可验收行为>`）
-   - 不确定的需求/实现写 `[NEEDS CLARIFICATION: ...]`，不默默假设（D6）
-   - 共享决策（FD#）：跨领域的决策
-   - 共享数据模型：跨模块的类型定义
-   - 共享约束：性能/安全/兼容性
-   - 编排：入口 + 启动序列 + 事件绑定
-   - 领域索引：列出后续 Phase 会创建的领域，并在「需要细节时」用指针引向 modules/
-5. 向用户确认 feature/goal.md 后再进入领域设计
+
+创建 `docs/features/<feature>/goal.md`。首屏必须包含目标、边界、完成标准；用 FD# 记录跨领域决策；只放跨模块共享数据模型；需要细节时索引到 `modules/*.md`。模板：`${CLAUDE_SKILL_DIR}/../shared/goal-template.md`。
 
 **Phase 1: API 设计**（如有后端）
-加载 `api-design` skill，走完 API1-API7 方法论步骤。先确定资源模型、端点、错误、权限、幂等、并发和认证。
+
+加载 `api-design`，完成 API1-API7：资源、分页、错误、权限、幂等、并发、认证。API 合约先于数据库表设计。
 
 **Phase 2: 数据库设计**（如有后端）
-加载 `db-design` skill，走完 DB1-DB5 方法论步骤。数据库设计消费 Phase 1 的资源模型和查询模式，不在缺少 API 合约时先行表设计。
+
+加载 `db-design`，完成 DB1-DB5：数据库、ID、索引、迁移、软删除。数据库设计消费 Phase 1 的资源模型和查询模式。
 
 **Phase 3: 前端设计**（如有前端）
-加载 `frontend-design` skill，走完 FE1-FE5 方法论步骤。
 
-**Phase 4: 索引同步**（必选）
-1. 读 project.md Feature 索引
-2. 对比本次生成的 feature 目录
-3. 如索引缺失该 feature → 追加条目（Feature 名 + 目录路径 + 状态 + 说明）
-4. 如索引有已删除的 feature → 标注提醒用户确认删除
-5. 如索引的 feature 名称/路径与实际不符 → 修正
-6. 检查 project.md 共享决策（PD#）与本次 feature goal（FD#）无编号冲突
-7. **Module 结构校验**：扫描所有 modules/*.md 文件，检查是否包含共享模板的必需节：
-   - 后端模块（`${CLAUDE_SKILL_DIR}/../shared/module-template.md`）：入口 · 公共接口 · 内部函数 · 依赖关系 · 接口合约
-   - 前端模块（`${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md`）：入口 · 公共接口 · 组件结构 · 数据消费 · 内部函数 · 依赖关系
-   - 缺失必需节 → 列出缺失文件和缺失节，要求补充后再进入下一步
+加载 `frontend-design`，完成 FE1-FE5 或创意编码替代决策点。前端只设计行为、数据流和组件模块，不重做视觉系统。
 
-8. **Module Spec 生成**（如 modules/*.md 不存在）：
-   对 feature/goal.md 模块索引中的每个模块：
-   a. 检查 `modules/<name>.md` 是否存在
-   b. 不存在 → 按领域对应模板生成骨架（后端用 `${CLAUDE_SKILL_DIR}/../shared/module-template.md`，前端用 `${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md`）
-   c. 骨架内容从 goal.md 共享数据模型推导：
-      - 模块专属的数据模型子集（输入/输出类型）
-      - 公共接口签名（从 goal 编排的调用链推导）
-      - 验收条件（从 PRD 对应 US 的 AC 编号追溯，格式 `AC-{US编号}-{序号}`，如 AC-01-1）
-      - 依赖关系（从编排调用链推导：该模块 import 了哪些其他模块）
-   d. **模块对称性**：索引内所有模块同等对待——要么**全部**生成 module spec，要么**全部**内联进 goal.md（模块索引含完整接口签名而非一行描述）。禁止按优先级（P0/P1 有 spec、P2 没有）部分生成。
-   e. 默认规则：模块数 ≥ 5 → 全部生成 module specs；模块数 < 5 → 可全部内联到 goal.md 模块索引（含完整接口签名）。无论哪种，索引内不得出现"部分有 spec、部分没有"的不对称。
+**Phase 4: 索引同步 + 质量门**（必选）
 
-9. **Goal 质量门**：Phase 4 完成前，按 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md` 检查 feature/goal.md。源完整性和可重构性不通过 → 不进入下一步，回到对应 Phase 补充。
+1. 同步 project.md Feature 索引；检查 PD#/FD#/API#/DB#/FE# 无冲突。
+2. 生成或校验 `modules/*.md`：后端用 `${CLAUDE_SKILL_DIR}/../shared/module-template.md`，前端用 `${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md`。
+3. 模块索引必须对称：要么全部有 spec，要么全部内联完整接口；禁止 P0/P1 有 spec、P2 缺失。
+4. 运行 goal-quality 门：源完整性和可重构性不通过时回到对应 Phase。
+5. 做跨文档一致性门：接口签名、AC、具名技术、路径和依赖只保留单一权威；冲突交给用户决策。
 
-10. **跨文档一致性门**（按 `${CLAUDE_SKILL_DIR}/../shared/concepts/reference-not-repeat.md`「接口/行为的单一权威」）：对在 goal·notes·modules·PRD 间多处出现的同一对象逐项比对：
-   - 接口 / Props / interface 签名是否一致？不一致（如 `modelUrl: string` vs `modelUrl?: string`）→ 取单源（module spec 为权威），其余改为引用。
-   - module / notes 是否改写了某条 AC 的断言（如 PRD「无操作 5s 后自转」被 module 写成「交互结束即恢复」）？是 → 报矛盾，回到对应 Phase 对齐 AC 编号。
-   - 下游是否静默否决了 PRD 点名的具体技术（如 PRD「CountUp」被 notes 写成「用 CSS transition 替代」）？是 → 回流 define 升级 PRD，禁止静默替换。
-   - 冲突点呈现给用户决策，沿用「不自动级联」纪律。
+## 分支与恢复
 
-11. **依赖落地 + 路径一致性门**：
-   - 依赖落地：project.md / notes 技术选型表声明的每个依赖，必须能在某个 module/决策中找到使用方；未被任何模块引用 → 标注"预留（未使用）"或移除（如 Faker/Recharts 声明却无模块消费）。
-   - 目录落地：project.md「工程约束」声明的目录结构，每个目录须有模块/产物落地；声明却无内容（如 hooks/ 空声明）→ 移除或标注。
-   - 路径一致性：goal/modules/plan 中引用的文件路径与 project.md 目录结构一致（如 assets/ vs public/models/ 不能两处各说一套）。
+- 缺 PRD/需求输入：不直接写 goal；要求补需求或明确最小 detail。
+- 同类 repeat 偏差触发：先复查 goal/module 盲区，再决定是否改代码。
+- 下游一致性问题影响范围不清：输出一致性报告，不自动级联。
+- 依赖声明无使用方、目录声明无落地、路径有两套说法：移除/标注预留前先报告。
 
-**goal.md 共享数据模型节制规则**：
-- 只放**跨模块共享**的核心类型（如 Point/Rect/CommandResult 等基础结构）
-- 模块专属的输入/输出类型 → 放 `modules/<name>.md` 数据模型段
-- 如果模块有独立 module spec → goal.md 只列类型名 + 一行说明，不展开字段
-- goal.md 目标 ~100 行，含完整数据模型时 ≤ 200 行
+## 红旗清单
 
-## 一致性检查
-
-所有 Phase 完成后，检查跨文档一致性：
-
-1. 读每个领域 notes 文件的「下游依赖」表（如有）
-2. 逐一检查下游文档的依赖内容是否仍与当前 notes 一致
-3. 汇总：
-   - **一致**：记录"下游已同步"
-   - **不一致**：列出偏移点和位置，提示用户确认级联更新
-
-**不变原则**：
-- 下游依赖表为空或不存在 → 跳过，不报错
-- 不一致 ≠ 错误——上游改了下游没跟，可能需要更新也可能不需要
-- 不一致点呈现给用户决策，AI 不自动修改下游文档
-
-**问题信号接收**：如果 codegen 验证摘要中同类问题连续 ≥ 2 个任务出现，建议复查 goal 对应部分——问题可能是 goal 盲区而非代码问题。
+- PRD 缺失却直接生成完整 goal。
+- 前端存在性不确定却默认加载 frontend-design。
+- module 文件缺模板必需节。
+- 同一接口/Props 在 goal 与 module 重复定义且不一致。
+- 静默否决 PRD 点名技术。
+- goal 质量不足仍进入 codegen。
 
 ## 运行时信号
 
-- 输入：repeat_signal from forge-codegen、consistency issue from forge-review
-- 输出：goal updated、downstream consistency report、human decision needed
-- 路由：详见本文件 frontmatter.signal_routes
-- 升级：goal ambiguity · downstream consistency needs decision · frontend presence unclear
+- 输入：repeat signal from codegen；consistency issue from review。
+- 输出：feature goal updated；module specs updated；human decision needed。
+- 升级：goal ambiguity；downstream consistency conflict；frontend presence unclear。
 
 ## 产出
 
-```
+```txt
 docs/features/<feature>/
-├── goal.md                   # feature 级共享骨架（必选）：目标/边界/完成标准/决策(API#/DB#/FE#)/共享数据模型
-└── modules/                  # 模块详细规格（按需）
-    └── *.md
+├── goal.md       # 目标/边界/完成标准/FD#/共享模型/模块索引
+├── changelog.md
+└── modules/*.md # 模块接口、数据、行为、依赖、验收
 ```
+
+## 验证清单
+
+- [ ] `goal.md` 首屏是否包含目标、边界、完成标准？
+- [ ] API1-API7 / DB1-DB5 / FE1-FE5 是否按加载组合完成？
+- [ ] 编号是否无冲突，project.md Feature 索引是否同步？
+- [ ] `modules/*.md` 是否完整且索引对称？
+- [ ] 跨文档一致性门、依赖落地、路径一致性是否通过？
 
 ## 历史维护（自动）
 
-完成后追加 `docs/timeline.md` + feature `changelog.md`（一条汇总记录）。`api-design`、`db-design`、`frontend-design` 作为子阶段时不单独追加历史。超 100 行时归档。
-
-**更新 docs/status.md**：③详设 → `✅`，下一阶段（④任务）→ `🔄`。如有跳过的阶段（如 ②设计），标注 `⏭️跳过（原因）`。如有依赖的 feature，更新依赖列。
-
-## 验证清单
-- [ ] feature/goal.md（FD#）是否包含共享决策 + 共享数据模型 + 共享约束？
-- [ ] 所有加载的领域 skill 产出是否完整（API1-API7 / DB1-DB5 / FE1-FE5）？
-- [ ] FD# 与 PD# / API# / DB# / FE# 是否无编号冲突？
-- [ ] project.md Feature 索引是否已同步？
-- [ ] 一致性检查是否已完成？
-- [ ] 所有 modules/*.md 是否包含模板必需节？
-- [ ] 模块索引是否对称（全部有 spec 或全部内联，无 P0/P1 有、P2 无的缺失）？
-- [ ] 跨文档一致性门是否通过（接口/AC/具名技术单源，无矛盾）？
-- [ ] 依赖落地 + 路径一致性门是否通过（无声明未用的依赖/目录，路径无两套说法）？
+完成后追加 `docs/timeline.md` + feature `changelog.md`。子阶段不单独追加历史。若启用 `docs/status.md`，标记 ③详设 `✅`，下一阶段 ④任务 `🔄`，跳过阶段写明原因。超 100 行时归档。
 
 ## 出口条件
 
-完成后必须满足：
-- 所有加载的领域 skill 产出完整（goal.md 含 API1-API7 / FE1-FE5 / DB1-DB5 决策 + modules/*.md 合约）
-- feature/goal.md（FD#）与各领域决策（FE# / API# / DB#）无编号冲突
-- project.md Feature 索引已同步（Phase 4）
-- project.md 共享决策（PD#）与 feature goal（FD#）无编号冲突
-- 一致性检查已完成（如有下游依赖表）
-- 所有 modules/*.md 包含模板必需节（Phase 4 第 7 步校验）
-
-## 完成提示
-
-完成后向用户展示：
-
-```
-✅ 详设完成！goal.md + modules/ 已生成。
-
-下一步你可以：
-  plan 阶段    — 把详设拆成可执行任务
-  自然语言       — 直接说"生成代码"跳过任务分解
-```
+`goal.md + modules/*.md` 完整；加载的领域决策齐全；编号、索引、一致性、依赖和路径检查通过；未解决冲突已交给用户决策。

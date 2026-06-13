@@ -15,12 +15,15 @@ import {
   globMatch,
   goalCoveragePaths,
   isChangeUnitPath,
+  normalizeSkillName,
+  pathMatch,
 } from '../lib/run-helpers.mjs';
 
 const root = process.cwd();
 const failures = [];
 const allowedCheckTypes = new Set([
   'artifact_reported',
+  'artifact_absent',
   'change_unit_reported',
   'goal_covers',
   'command_reported',
@@ -32,6 +35,7 @@ const allowedCheckTypes = new Set([
 ]);
 const checkAxis = {
   artifact_reported: 'artifacts',
+  artifact_absent: 'scope_control',
   change_unit_reported: 'traceability',
   goal_covers: 'traceability',
   command_reported: 'verification',
@@ -150,6 +154,7 @@ function validateManifest(registry, manifest) {
       assert(allowedCheckTypes.has(check.type), `${testCase.id}: unknown oracle check type ${check.type}`);
       if (check.type === 'skill_triggered') assert(registrySkills.has(check.skill), `${testCase.id}: unknown oracle skill ${check.skill}`);
       if (check.type === 'artifact_reported') assert(typeof check.path === 'string' && check.path.length > 0, `${testCase.id}: artifact_reported.path is required`);
+      if (check.type === 'artifact_absent') assert(typeof check.path === 'string' && check.path.length > 0, `${testCase.id}: artifact_absent.path is required`);
       if (check.type === 'change_unit_reported') assert(typeof check.path === 'string' && check.path.length > 0, `${testCase.id}: change_unit_reported.path is required`);
       if (check.type === 'goal_covers') assert(typeof check.path === 'string' && check.path.length > 0, `${testCase.id}: goal_covers.path is required`);
       if (check.type === 'command_reported') assert(typeof check.command === 'string' && check.command.length > 0, `${testCase.id}: command_reported.command is required`);
@@ -229,12 +234,12 @@ function expectedArtifactReported(expectedArtifact, run) {
   const changeUnits = changeUnitPaths(run);
   return expectedArtifact.startsWith('docs/change-units/')
     ? [...changeUnits].some((changeUnitPath) => globMatch(expectedArtifact, changeUnitPath))
-    : [...artifacts].some((artifactPath) => globMatch(expectedArtifact, artifactPath));
+    : [...artifacts].some((artifactPath) => pathMatch(expectedArtifact, artifactPath));
 }
 
 function routingScore(testCase, run) {
   const expected = new Set(testCase.expected_skills ?? []);
-  const triggered = new Set(run.triggered_skills ?? []);
+  const triggered = new Set((run.triggered_skills ?? []).map(normalizeSkillName));
   if (expected.size === 0) return null;
 
   let hits = 0;
@@ -349,7 +354,7 @@ function validateReport(manifest, registry, report, options = {}) {
       assert(validMetrics(run.metrics), `${run.case_id}: metrics must contain only non-negative numeric runtime metrics`);
     }
 
-    for (const skillName of run.triggered_skills ?? []) {
+    for (const skillName of (run.triggered_skills ?? []).map(normalizeSkillName)) {
       assert(registrySkills.has(skillName), `${run.case_id}: unknown triggered skill ${skillName}`);
     }
 
@@ -359,7 +364,7 @@ function validateReport(manifest, registry, report, options = {}) {
       for (const expectedArtifact of manifestById.get(run.case_id)?.expected_artifacts ?? []) {
         const reported = expectedArtifact.startsWith('docs/change-units/')
           ? [...changeUnits].some((changeUnitPath) => globMatch(expectedArtifact, changeUnitPath))
-          : [...artifacts].some((artifactPath) => globMatch(expectedArtifact, artifactPath));
+          : [...artifacts].some((artifactPath) => pathMatch(expectedArtifact, artifactPath));
         if (!reported) fail(`${run.case_id}: expected artifact not reported ${expectedArtifact}`);
       }
 

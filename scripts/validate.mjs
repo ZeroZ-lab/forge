@@ -97,6 +97,7 @@ assert(packageJson.scripts?.validate === 'node scripts/validate.mjs', 'package.j
 assert(packageJson.scripts?.test === "node --test 'tests/*.test.mjs'", 'package.json: missing scripts.test');
 assert(packageJson.scripts?.['eval:skills'] === 'node scripts/evaluate-skills.mjs', 'package.json: missing scripts.eval:skills');
 assert(packageJson.scripts?.['eval:skills:run'] === 'node scripts/run-skills-benchmark.mjs', 'package.json: missing scripts.eval:skills:run');
+assert(packageJson.scripts?.['metrics:tokens'] === 'node scripts/measure-token-footprint.mjs', 'package.json: missing scripts.metrics:tokens');
 assert(packageJson.scripts?.['plugin:install:local'] === 'node scripts/install-local-codex-plugin.mjs', 'package.json: missing scripts.plugin:install:local');
 assert(codexPlugin.skills === './skills', 'plugins/forge/.codex-plugin/plugin.json: skills must point to ./skills');
 assert(exists('plugins/forge/skills'), 'plugins/forge/skills: missing');
@@ -159,6 +160,22 @@ for (const skillName of skillDirs) {
   }
 }
 
+const defaultRuntimeChain = ['detail', 'codegen', 'review'];
+const defaultRuntimeChainChars = defaultRuntimeChain.reduce((sum, skillName) => {
+  return sum + read(`plugins/forge/skills/${skillName}/SKILL.md`).length;
+}, 0);
+const totalSkillChars = skillDirs.reduce((sum, skillName) => {
+  return sum + read(`plugins/forge/skills/${skillName}/SKILL.md`).length;
+}, read('plugins/forge/skills/shared/SKILL.md').length);
+assert(
+  defaultRuntimeChainChars <= 9000,
+  `default runtime chain token budget exceeded: ${defaultRuntimeChainChars} chars > 9000 chars`,
+);
+assert(
+  totalSkillChars <= 56000,
+  `total SKILL.md token budget exceeded: ${totalSkillChars} chars > 56000 chars`,
+);
+
 assert(exists('docs/skill-architecture-audit.md'), 'docs/skill-architecture-audit.md: missing');
 assert(exists('docs/skill-suite-evaluation.md'), 'docs/skill-suite-evaluation.md: missing');
 assertIncludes('docs/skill-suite-evaluation.md', [
@@ -208,6 +225,7 @@ const evalCoveredSkills = new Set();
 const evalCaseIds = new Set();
 const allowedEvalCheckTypes = new Set([
   'artifact_reported',
+  'artifact_absent',
   'change_unit_reported',
   'goal_covers',
   'command_reported',

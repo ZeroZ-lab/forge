@@ -8,134 +8,85 @@ when_to_use: Use when the user asks to review changes, inspect a diff, check cod
 
 ## 职责
 
-在关键阶段前做独立审查，找出文档、代码、测试和决策之间的不一致。
-
-review 的目标不是总结优点，而是发现会导致目标未达成、错误发布或未来验证失败的问题。
+发现会导致目标未达成、错误发布、未来验证失败的问题。review 不是总结优点，也不替代 codegen；它把文档、代码、测试和历史决策放到同一张证据表里审。
 
 ## 执行纪律
 
-- **D1**：每个问题必须有证据、影响和修复建议
-- **D5**：不替代 codegen，不直接发布，不用同一轮自我确认代替独立检查
-- **D8**：发现偏差必须做差距分析（skill 方法论 / 文档未同步 / 代码实现 / 范围蔓延），明确根因才能精准修复
-- 实现质量评价维度见 `${CLAUDE_SKILL_DIR}/../shared/rubrics/implementation-quality.md`
-- 目标质量评价维度见 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`
+- D1：每个问题必须有证据、影响和修复建议。
+- D5：不直接改实现、不发布、不用同一轮自审替代独立检查。
+- D8：偏差必须归因到 skill 方法论、文档未同步、代码实现或范围蔓延。
+- 质量标准：`${CLAUDE_SKILL_DIR}/../shared/rubrics/implementation-quality.md`、`${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`。
 
 ## 上下游边界
 
-**上游**：PRD、project.md、DESIGN.md、goal.md、modules、plan、src、tests、changelog、timeline。
-
-**下游**：审查报告、阻塞项、文档补全清单、豁免记录。
-
-不替代 codegen，不直接发布，不用同一轮自我确认代替独立检查。
+上游：PRD、project、DESIGN、goal、modules、plan、src、tests、changelog、timeline。下游：审查报告、阻塞项、文档补全清单、豁免记录。详细维度和报告模板见 `references/review-protocol.md`。
 
 ## 何时不使用
-- 无可审查的文档或代码
-- 用户只想做格式检查（用 linter 而不是 review）
-- 同一轮修改后立即自审（需要独立上下文消除自审偏见）
 
-## 核心机制
-
-主 agent 负责编排范围和呈现结论；独立审查者负责从失败模式出发检查。可使用 subagent 时，优先用 subagent 隔离上下文和自审偏见。
-
-详细审查维度、prompt 和报告模板见 `references/review-protocol.md`。
-
-## 运行时角色
-
-review 是目标验证器。它不只判断”有没有问题”，还必须把差距分析成可传递信号：代码实现偏差回到 codegen，文档不一致回到 detail。
+没有可审查产物、用户只要格式检查、或同一轮修改后立即让原实现上下文自证正确时，不走完整 review。
 
 ## 审查模式
 
-### 文档审查
+**文档审查**（codegen 前）：查 WHAT/WHY/HOW/CONSTRAINTS 是否足够；`[NEEDS CLARIFICATION]` 是否残留；project/DESIGN/goal/modules/plan 是否一致；模块边界、公共接口、依赖和验收是否可验证；人类决策是否留痕。
 
-在 codegen 前执行。检查：
-
-- 是否有足够的 WHAT / WHY / HOW / CONSTRAINTS。
-- 是否残留未解决的 `[NEEDS CLARIFICATION: ...]` 标记 → 阻塞，路由到人类决策（P0/P1）。
-- project、DESIGN、goal、modules、plan 是否一致。
-- 模块边界、入口、公共接口、依赖关系是否可验证。
-- 是否有未记录的人类决策。
-
-### 代码审查
-
-在 deploy 前执行。检查：
-
-- 代码是否满足声明的目标。
-- API、数据模型、错误码、权限、测试是否和目标一致。
-- 关键逻辑是否引用决策编号（FD# / PD# / DB#）。
-- 测试是否覆盖验收条件和风险边界。
-
+**代码审查**（deploy 前）：查实现是否满足 goal/modules；API、数据模型、错误码、权限、测试是否对齐；关键逻辑是否引用 FD#/PD#/DB#/AC#；测试是否覆盖验收条件和风险边界。
 
 ## 审查流程
 
-1. 确定模式：文档或代码。
-2. 收集范围：列出读取文件和不读取文件。
-3. 建立检查表：按模式选择维度。
-4. 执行审查：优先找 P0/P1，保留证据。
-5. 输出报告：问题优先，摘要靠后。
-6. 循环修复：阻塞项修复后重新审查。
+1. 声明模式和范围：读哪些文件、不读哪些文件。
+2. 建立目标基线：目标、边界、完成标准、关键决策。
+3. 优先找 P0/P1，再看 P2。
+4. 每个问题给文件位置、证据、影响、修复建议和归因。
+5. Findings 先行，摘要靠后；阻塞项修复后复审。
+
+可用 subagent 且用户明确允许并行 agent 时，优先用独立上下文审查；否则主控必须保留最终裁决。
 
 ## 问题优先级
 
-- **P0**：会导致错误实现、数据损坏、安全漏洞、无法发布。
-- **P1**：会导致重要行为偏离、测试失真、未来验证失败。
-- **P2**：清晰度、可维护性或局部一致性问题。
-
-## 入口/出口条件
-
-**入口**：已有可审查的文档或代码；用户要求 review；或 codegen 或 deploy 前需要质量门。
-
-**缺失处理**：
-- 文档不完整 → 做有限审查，标注"基于不完整文档，结论可能变化"
-- 无 changelog/timeline → 标注"无历史上下文，可能误判决策"
-
-**出口**：审查报告已输出，P0/P1 有文件位置、证据和修复建议。
-
-## 运行时信号
-
-- 输入：artifact ready、health check trigger
-- 输出：P0/P1/P2 issues、skill/document/code attribution
-- 路由：详见本文件 frontmatter.signal_routes
-- 升级：P0/P1 found · WHY missing before codegen · gap has no root cause
+- P0：错误实现、数据损坏、安全漏洞、无法发布。
+- P1：重要行为偏离、测试失真、未来验证失败。
+- P2：清晰度、可维护性、局部一致性。
 
 ## 差距分析
 
-每个问题归因到四层之一，根因不同修法不同：
+- skill 方法论：记录为方法论风险，必要时进入 learn。
+- 文档未同步：回到 detail 做级联更新。
+- 代码实现：回到 codegen 修代码。
+- 范围蔓延：回到 define/detail 补决策；参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`。
 
-- **skill 方法论**：skill 的决策点或方法论缺陷导致遗漏 → 记录为已知风险，供后续迭代参考
-- **文档未同步**：文档间不一致（上游改了下游没跟） → 级联更新
-- **代码实现**：代码未满足声明的目标 → 修代码
-- **范围蔓延**：实现超出了 goal/PRD 定义的范围且无决策记录 → 路由到 define 或 detail 补充决策，参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`
+## 入口/出口条件
+
+入口：已有可审查文档或代码；用户要求 review；或 codegen/deploy 前质量门。文档不完整时只做有限审查并声明风险；无历史时声明可能误判决策。
+
+出口：报告列出 P0/P1/P2；P0/P1 必须有文件位置、证据、影响和修复建议；无问题时说明测试缺口和残余风险。
+
+## 运行时信号
+
+- 输入：artifact ready；health check trigger。
+- 输出：issues；skill/document/code/scope attribution。
+- 升级：P0/P1、WHY 缺失、偏差无根因、范围蔓延。
 
 ## 红旗清单
-- 只做摘要不列问题 → 强制列出具体问题（证据+影响+修复建议）
-- 只检查格式不检查跨文档一致性 → 强制检查 goal vs code
-- 没读 changelog/timeline 就评价当前决策 → 先读历史再评价
-- 测试通过但代码和合约不一致 → 标记为 P1（测试覆盖 ≠ 目标对齐）
-- 文档缺 WHY 却直接允许 codegen → 阻塞，先补 WHY
-- 发现问题后没有重新审查 → 修复后必须复审
-- 发现偏差后没有归因 → 强制差距分析到四层之一（skill 方法论 / 文档未同步 / 代码实现 / 范围蔓延）
-- 实现范围超出 goal/PRD 定义 → 范围蔓延红旗，参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`
+
+- 只总结不列问题。
+- 只看格式不做目标对照。
+- 不读 changelog/timeline 就否定既有决策。
+- 测试通过但代码和合约不一致。
+- 文档缺 WHY 却放行 codegen。
+- 发现问题后不复审或不归因。
 
 ## 验证清单
 
-- [ ] 是否声明审查模式和范围？
-- [ ] 是否列出读取的关键文件？
+- [ ] 是否声明模式、范围和读取文件？
 - [ ] 是否按严重度输出问题？
-- [ ] 是否每个问题都有证据、影响和修复建议？
-- [ ] 是否区分阻塞项、建议项和豁免项？
+- [ ] 每个问题是否有证据、影响、修复建议和归因？
+- [ ] 是否区分阻塞项、建议项、豁免项？
+- [ ] 是否说明测试缺口和残余风险？
 
 ## 历史维护
 
-审查结果影响文档或发布状态时，追加 feature `changelog.md` 和 `docs/timeline.md`。
+审查结果影响文档、发布状态或方法论时，追加 feature `changelog.md`、`docs/timeline.md`，并在需要时进入 `learn`。
 
 ## 完成提示
 
-```
-审查完成：问题、证据、影响和修复建议已列出。
-
-下一步：
-  - 修复阻塞项并复审
-  - 进入代码生成
-  - 规划发布
-  - 归档发现（/forge:learn）
-```
+输出 findings、open questions、验证缺口、残余风险和下一步修复/复审/learn 建议。

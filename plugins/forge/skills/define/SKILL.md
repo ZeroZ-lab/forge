@@ -1,213 +1,85 @@
 ---
 name: define
-description: Defines requirements, constraints, user stories, scope exclusions, and testable acceptance criteria. Use for lightweight requirement clarification or full define stage execution when a PRD or exact scope is needed.
-when_to_use: Use when the user asks to write or refine a PRD, define requirements, clarify what is in or out of scope, create user stories, write acceptance criteria, or make vague requirements executable.
+description: Defines requirements, constraints, user stories, scope exclusions, and testable acceptance criteria. Use for lightweight requirement clarification or full PRD creation before detail/codegen.
+when_to_use: Use when the user describes a feature with unclear scope, asks to define requirements, write a PRD, clarify acceptance criteria, decide in/out of scope, or turn a rough idea into testable product constraints.
 ---
-# Requirements — 定义阶段（需求层）
+
+# Define — 需求定义
+
 ## 职责
-把验证过的方向变成精确的约束和场景，让 AI 可以无歧义地执行。
-**核心洞察**：需求不是说"要什么"，是说"不要什么"。边界比功能更重要，验收条件比功能描述更重要。
-**方法论**：约束→场景→验收。
+
+把方向变成可执行 PRD：做什么、不做什么、谁用、如何验收。define 不做技术选型、不设计交互、不写代码。
 
 ## 执行纪律
 
-- **D1**：范围排除必须写理由，排除是主动决策不是遗漏
-- **D7**：验收条件必须可测试（Given-When-Then），不可测试的需求不算定义完成
-- **D5**：只定义做什么不做什么，不涉及技术选型和交互设计
-- 目标质量评价维度见 `${CLAUDE_SKILL_DIR}/../shared/rubrics/goal-quality.md`；PRD 产出应满足 source completeness 和 decision traceability 维度，不满足则不进入 detail
-- **D5+scope-creep**：定义过程中发现需求范围超出当前 goal 边界时，停止并记录缺失决策，路由产品范围变更回到 define，不自行扩大 PRD 范围。参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`
+- D1：范围排除要写理由，排除是主动决策。
+- D5：只定义目标和边界；范围超出当前 goal 时停下记录缺失决策，参考 `${CLAUDE_SKILL_DIR}/../shared/red-flags/scope-creep.md`。
+- D7：验收条件必须可测试；不可测试需求不算完成。
 
 ## 方法论：约束→场景→验收
+
 ### 第一步：约束定义（Constraint）
-先画框，再填内容。约束决定什么不做，比功能列表更有价值。
-**核心问题**：
-- 这个版本明确不做什么？
-- 非功能约束是什么？（性能、安全、兼容性、合规）
-- 有哪些技术或业务上的硬约束？
-**不变原则**：
-- 范围排除要写清楚，每个排除的功能都要有理由
-- 非功能需求要量化（不是"快"，是"< 200ms"）
-- 约束是项目的围墙——没有围墙的项目会无限膨胀
 
-**引用而非重复**：PRD 的约束节引用 project.md 共享约束，不复制内容。格式：
-```markdown
-## 约束
+明确用户、目标、边界、非目标、资源、风险、合规和已有 project 约束。产出“包含/不包含/假设/依赖”。
 
-> 引用 project.md 共享约束（PD3 安全、PD4 错误处理、PD# 性能…）。
-
-### 本 PRD 新增约束
-{仅写 project.md 中没有的新增约束，无新增则写"无"}
-
-### 精化约束
-{如果需要把 project.md 的通用约束精化到具体命令/模块，标注来源}
-```
-- 错误码表、格式支持列表等枚举型信息 → 在 PRD 中完整列出（因为不同 feature 的错误码集不同），但与 project.md 冲突时必须标注"PRD 新增"
-
-**引用规则参考**：详见 `${CLAUDE_SKILL_DIR}/../shared/concepts/reference-not-repeat.md`——上游文档定义的信息，下游引用编号，不复述内容。精化标注来源，新增标注"PRD 新增"。
 ### 第二步：场景覆盖（Scenario）
-从用户视角描述每个使用场景，覆盖正常、边界、异常。
-**核心问题**：
-- 作为 [角色]，我想要 [功能]，以便 [价值]
-- 正常流程是什么？边界情况呢？异常情况呢？
-- 怎么知道这个场景做对了？
-**不变原则**：
-- 每个用户故事必须包含角色、功能、价值
-- 每个场景至少 3 个验收条件（正常、边界、错误）
-- 验收条件要可测试（不是"体验好"，是"3 步内完成"）
-- **每个验收条件必须编号**，格式：`AC-{US编号}-{序号}`
 
-**AC 编号示例**：
-```markdown
-### US-01: inspect — 查看图片元数据
-**作为** Agent，**我想要** ...
+用用户故事覆盖正常、边界、错误和权限路径。每条故事只表达一个可观察行为。
 
-#### AC-01-1: 正常读取元数据
-Given 一张 6000×4000 的 PNG 文件
-When 运行 image-viewport inspect screenshot.png --json
-Then 返回 JSON 包含 width: 6000, height: 4000
-
-#### AC-01-2: 文件不存在
-Given 一个不存在的文件路径
-When 运行 image-viewport inspect missing.png --json
-Then 返回 error.code = "FILE_NOT_FOUND"
-
-#### AC-01-3: 小图不需要 overview
-Given 一张 200×150 的小图片
-When 运行 image-viewport inspect small.png --json
-Then suggestion.needs_overview = false
-```
-
-**编号用途**：下游 plan、test-cases 引用 AC 编号形成追溯链（PRD US-XX → AC-XX-X → test TC-XXX）。codegen 通过读 modules/*.md 间接获得追溯（modules 中的 AC 编号 → 测试注释）。
 ### 第三步：验收确认（Verify）
-验收条件是需求文档的灵魂——不验收的需求 = 不存在的需求。
-**核心问题**：
-- 谁来验收？怎么验收？
-- 验收不通过怎么办？
-- 优先级怎么排？（不是"都很重要"）
-**不变原则**：
-- 验收条件用 Given-When-Then 格式
-- 验收人要提前确定
-- 优先级要排序 + 有依赖关系图
-## AI 的角色
-| 阶段 | AI 角色 | 行为 |
-|------|---------|------|
-| 约束 | 约束提醒者 | 搜索同类项目的常见约束（安全、合规、性能基线），提醒容易遗漏的 |
-| 场景 | 边界生成者 | 从用户故事推导边界情况和异常场景，生成验收条件草案 |
-| 验收 | 一致性检查者 | 检查验收条件是否覆盖所有场景；**发现不一致时列出差异等用户决策，不自行修正** |
+
+把场景转成 Given-When-Then 或 EARS。验收必须能被测试、手动验证或明确标注不可自动化。
+
 ## 决策点
+
 ### R1: 用户故事（场景阶段）
-**问**：作为 [角色]，想要 [功能]，以便 [价值]？优先级？依赖关系？
-**不变原则**：角色+功能+价值缺一不可 · 优先级要排序 · 依赖要画清楚
-**记录**：用户故事列表 + 优先级 + 依赖图
+
+记录角色、目标、触发条件和成功结果。
+
 ### R2: 验收条件（验收阶段）
-**问**：怎么知道做对了？具体标准？边界情况？
-**不变原则**：验收条件要可测试（"3 步内完成"而非"体验好"）· 每个故事至少 3 个 · 用 Given-When-Then 格式
-**记录**：验收条件清单
+
+每条 AC 必须有输入、动作、预期输出和失败边界。
+
 ### R3: 非功能需求（约束阶段）
-**问**：性能？安全？可用性？
-**不变原则**：要量化（"< 200ms"不是"快"）· 安全提前考虑 · 可用性符合业务需求
-**记录**：性能指标 + 安全要求 + 可用性目标
+
+性能、安全、可访问性、兼容性、数据保留和可观测性；只写目标指标，不写实现。
+
 ### R4: 范围排除（约束阶段）
-**问**：这个版本不做什么？哪些是"以后再说"？
-**不变原则**：排除要写清楚 · 每个排除要有理由 · 排除是主动决策不是遗漏
-**记录**：排除清单 + 排除理由
+
+记录不做什么、为什么不做、未来触发条件。
+
 ### R5: 验收测试（验收阶段）
-**问**：谁来验收？流程是什么？不通过怎么办？
-**不变原则**：验收人提前确定 · 流程可执行 · 不通过有回退方案
-**记录**：验收人 + 验收流程 + 回退方案
-## 引导技巧
-**约束挖掘**："如果竞争对手也做这个，他们不会做什么？"
-**边界展开**：每个用户故事 → 追问"如果输入为空？如果并发？如果权限不足？"
-**优先级强制排序**："如果只能做一半，砍哪些？"
-**验收推导**：从场景反推 → "做完后用户会做什么来验证？"
+
+列出用户如何确认完成；给 test-cases 和 codegen 提供 AC 编号。
+
 ## 文档约束
-**PRD.md 必须包含**：用户故事（排序）· 验收条件（Given-When-Then）· 非功能需求（量化）· 范围排除 · 验收计划 · 依赖图 · 风险评估
-**PRD.md 不应包含**：交互设计（design 阶段）· 技术选型（init 阶段）· 具体实现（detail 阶段）
-**PRD.md 路径**：`docs/features/<feature>/PRD.md`
-## 模板
-使用 `${CLAUDE_SKILL_DIR}/references/prd-template.md` 作为产出结构参考。核心结构：
-1. **用户故事卡** — 角色 × 功能 × 价值 × 优先级 × 验收条件
-2. **非功能需求表** — 维度 × 指标 × 目标值
-3. **范围排除表** — 功能 × 排除理由 × 后续计划
+
+产出 `PRD.md`，使用 `${CLAUDE_SKILL_DIR}/references/prd-template.md`。PRD 必须包含：目标、用户、场景、范围、AC、非功能需求、风险、开放问题、被拒范围。引用 project.md 共享约束，不复制技术方案。
+
 ## 入口/出口条件
-**入口**：project.md「业务目标」已填写（来自 business-alignment）或用户已有明确需求
-**出口**：PRD.md 已生成 · 用户故事已排序 · 验收条件已定义（含 AC 编号） · 范围排除已确认
 
-**入口读取**：
-- 读 project.md「业务目标」+ 共享约束 + 共享决策（PD#）
-- 读 project.md 共享约束 → 检查是否有与即将定义的 PRD 约束可能冲突的项（如 project.md 声明了性能目标，PRD 需要精化而非矛盾）
-- 冲突 → 列出差异让用户确认，不自行修正
+入口：需求边界不清或用户要求 PRD。出口：PRD 可被 detail 读取，且没有阻塞性 `[NEEDS CLARIFICATION]`。若出现实时、搜索、推荐、优化、媒体、加密等技术信号，建议 research。
 
-**缺失处理**：
-- project.md「业务目标」不完整 → 补齐关键缺失字段（用户/指标），不重写已有内容
-- 无 project.md → 要求先完成 init，或降级为无业务约束的需求定义（标注风险）
-- 用户要求跳过需求直接做详设 → 执行最小 define（≤ 5 个用户故事 + 验收条件），标注"跳过完整需求定义"
-## 运行时信号
-- 输入：business constraints
-- 输出：testable acceptance criteria、scope exclusions
-- 路由：详见本文件 frontmatter.signal_routes
-  - PRD 无技术信号词 → 建议进入 design 或 detail
-  - PRD 含技术信号词（实时/同步/协作/搜索/推荐/动画/物理/仿真/路径/调度/加密/音频/视频/流式/ASR/TTS）→ 建议进入 research
-- 升级：验收条件不可测试 · 范围边界无法确认
-## 何时不使用
-- 只是技术探索（不需要需求定义）
-- 已有完整 PRD（直接进入 design 阶段）
-- 小功能迭代（简化需求流程）
 ## 轻量模式
-**触发条件**：用户故事 ≤ 10 个 / 1 人项目 / 无外部验收人
-**简化规则**：
-- 依赖图：可选（≤10 个故事时用优先级排序代替）
-- 验收计划（R5）：简化为"自验收 checklist"（不需要指定验收人和流程）
-- 风险评估：简化为 1-2 条核心风险（不需要完整风险矩阵）
+
+小改只补：目标、边界、3-5 条 AC、非目标、开放问题；不扩写完整 PRD。
+
 ## 红旗清单
-- 用户故事没有验收条件 → 强制补充（"怎么知道做对了？"）
-- 所有需求都是 P0 → 强制排序（"如果只能做一个呢？"）
-- 范围排除清单为空 → 强制思考（"有什么是明确不做的？"）
-- 验收条件不可测试 → 重写（"具体怎么验证？"）
-- 没有验收人 → 补充（"谁来验收？"）
-- 非功能需求不量化 → 追问（"具体数字？"）
-- AI 推导的边界场景被全部忽略 → 提醒可能遗漏风险
-- 下游详设回流：某个 AC 点名了具体技术（如 CountUp），但详设阶段认为不合适 → 在 PRD 中调整该 AC 的技术措辞（改为意图描述或换技术），让 PRD 重新成为单源，避免下游静默替换造成矛盾
+
+- 需求不可测试。
+- 只有功能列表，没有用户场景。
+- 范围排除没有理由。
+- 把技术方案写成需求。
+- 出现强技术信号却跳过 research。
+
 ## 验证清单
-- [ ] 用户故事是否按优先级排序？
-- [ ] 每个用户故事是否有验收条件（至少 3 个）？
-- [ ] 验收条件是否可测试（Given-When-Then）？
-- [ ] 每个验收条件是否有 AC 编号（AC-XX-X 格式）？
-- [ ] 非功能需求是否量化？
-- [ ] 范围排除是否明确？
-- [ ] 是否有验收计划？
-- [ ] 依赖关系是否清晰？
-- [ ] **内部一致性**：验收条件中出现的每个错误码/参数名/格式名是否都在约束定义或枚举表中定义？
-- [ ] **跨文档一致性**：PRD 约束是否与 project.md 共享约束矛盾？（精化允许，矛盾不允许）
-## 历史维护（自动）
-完成后自动执行：
-1. **追加 feature changelog.md**（如不存在则创建）：
-   ```markdown
-   ### v{版本} — {日期} — 需求定义
-   - **触发**：{用户说的一句话}
-   - **产出**：PRD.md（{N} 个用户故事，{M} 个验收条件）
-   - **范围排除**：{排除的功能}
-   ```
-2. **追加 docs/timeline.md**：
-   ```markdown
-   ### {日期} — {feature} 需求定义
-   - 新增：PRD.md（{N} 个用户故事）
-   ```
-3. **检查膨胀**：超 100 行时归档。
-## 完成提示
-完成后向用户展示：
-```
-✅ 需求定义完成！PRD.md 已生成。
 
-下一步你可以：
-research 阶段  — 技术探索（PRD 含技术信号词时推荐）
-design 阶段  — 做交互设计 + 视觉设计
-detail 阶段  — 跳过设计，直接做技术详设
-自然语言       — 直接说"做 API 设计"进入某个领域
-```
-**条件引导规则**：扫描刚生成的 PRD.md，如果出现任一技术信号词（实时、同步、协作、搜索、推荐、动画、物理、仿真、路径、调度、加密、音频、视频、流式、ASR、TTS），将 research 标记为 `(Recommended)` 并附一句话理由：
-```
-  research 阶段  — 技术探索（Recommended — PRD 含技术信号词：{检测到的关键词}）
-```
-如果未检测到技术信号词，research 仍列出但不标记推荐。
+- [ ] 用户、目标、边界和非目标是否明确？
+- [ ] AC 是否可测试且有编号？
+- [ ] 正常、边界、错误、权限路径是否覆盖？
+- [ ] 假设和开放问题是否暴露？
+- [ ] 技术信号是否路由到 research？
 
+## 历史维护
+
+完成后追加 feature changelog 和必要的 `docs/timeline.md`；超 100 行归档。

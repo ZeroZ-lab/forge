@@ -63,11 +63,49 @@ test('skills-suite goal verification targets are visible as expected artifacts',
   }
 });
 
+test('skills-suite includes a default-chain small feature value scenario', () => {
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'default-chain-small-feature');
+
+  assert.ok(testCase, 'default-chain-small-feature case is required');
+  assert.deepEqual(testCase.expected_skills, ['detail', 'codegen', 'review']);
+  assert.equal(testCase.fixture, 'evals/skills-suite/fixtures/default-chain-small-feature.md');
+  assert.ok(testCase.expected_artifacts.includes('docs/features/task-archive/goal.md'));
+  assert.ok(testCase.expected_artifacts.includes('src/'));
+  assert.ok(testCase.expected_artifacts.includes('tests/'));
+  assert.ok(
+    testCase.oracle_checks.some((check) => check.type === 'command_reported' && check.command === 'node --test'),
+  );
+  assert.ok(
+    testCase.oracle_checks.some((check) => check.type === 'artifact_absent' && check.path === 'docs/project.md'),
+  );
+  assert.ok(
+    testCase.oracle_checks.some(
+      (check) => check.type === 'evidence_contains' && check.text === 'detail -> codegen -> review',
+    ),
+  );
+});
+
 test('skills-suite evaluator runs without external dependencies', () => {
   const output = execFileSync(process.execPath, ['scripts/evaluate-skills.mjs'], { encoding: 'utf8' });
 
   assert.match(output, /benchmark contract passed/);
   assert.match(output, /behavioral effectiveness is not claimed/);
+});
+
+test('token footprint metric enforces the default runtime chain budget', () => {
+  const output = execFileSync(
+    process.execPath,
+    ['scripts/measure-token-footprint.mjs', '--max-default-chain-chars=9000', '--max-total-chars=56000'],
+    { encoding: 'utf8' },
+  );
+  const json = JSON.parse(
+    execFileSync(process.execPath, ['scripts/measure-token-footprint.mjs', '--json'], { encoding: 'utf8' }),
+  );
+
+  assert.match(output, /Default chain \(detail -> codegen -> review\)/);
+  assert.ok(json.default_chain_total.chars <= 9000);
+  assert.ok(json.total.chars <= 56000);
+  assert.deepEqual(json.default_chain, ['detail', 'codegen', 'review']);
 });
 
 test('skills-suite evaluator scores a complete report', () => {

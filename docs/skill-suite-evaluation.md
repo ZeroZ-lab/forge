@@ -8,6 +8,7 @@ The repository now separates two claims:
 
 1. **Benchmark contract is valid**: cases exist, cover every skill, fixtures exist, and oracle checks are machine-readable.
 2. **A run proves skill effectiveness**: an actual agent run produced a report that passes the benchmark oracle.
+3. **Runtime token footprint is bounded**: high-frequency skill chains stay under an explicit `SKILL.md` loading budget.
 
 The first claim is checked locally by `node scripts/evaluate-skills.mjs`. The second claim requires a report from a real run:
 
@@ -16,6 +17,28 @@ node scripts/evaluate-skills.mjs --report path/to/report.json
 ```
 
 No-report mode must not be used as evidence that the skills are effective. It only proves the evaluation harness is intact.
+
+## Token Footprint Gate
+
+Runtime token cost is measured on loaded `SKILL.md` files, not on every packaged reference file. The default high-frequency chain is:
+
+```text
+detail -> codegen -> review
+```
+
+Run:
+
+```bash
+npm run metrics:tokens
+npm run metrics:tokens -- --max-default-chain-chars=9000 --max-total-chars=56000
+```
+
+`node scripts/validate.mjs` enforces two budgets:
+
+- default chain `detail -> codegen -> review` <= 9,000 characters
+- all `SKILL.md` runtime files <= 56,000 characters
+
+This gate proves token footprint control, not behavior effectiveness. Behavior still requires a real run report.
 
 ## V2 Traceability Contract
 
@@ -67,9 +90,20 @@ V2 oracle checks include:
 - `change_unit_reported`
 - `goal_verified`
 
-The baseline suite contains 10 non-redundant chain cases and covers all registered Forge skills.
+The suite keeps a minimum representative case count in the manifest and covers all registered Forge skills.
 
 Cases should prefer complete adjacent chains over isolated single-stage prompts when the chain has a natural runtime handoff. For example, frontend design should continue through implementation acceptance, and implementation planning should continue through test cases and codegen. Keep standalone cases only when the skill is intentionally a sidecar, such as red-team thinking.
+
+## Value Scenario Coverage
+
+The suite now makes the main product-value claims measurable instead of relying on prose:
+
+| Value Scenario | Benchmark Case | What It Proves |
+|----------------|----------------|----------------|
+| Clear small feature iteration | `default-chain-small-feature` | The high-frequency `detail -> codegen -> review` path can create a feature goal, implement code, run `node --test`, review the result, and avoid project-doc scope creep. |
+| Ambiguous requirement convergence | `requirements-research` | A vague feature with technical signal words is narrowed into PRD plus research options before implementation. |
+| Frontend experience delivery | `interaction-design-system` | Design, visual system, frontend artifact, and acceptance evidence stay connected through one chain. |
+| Regression bugfix | `bugfix-regression-change-unit` | A local bugfix produces a regression test, runtime verification, Change Unit, and no unrelated project-doc changes. |
 
 ## Report Contract
 
