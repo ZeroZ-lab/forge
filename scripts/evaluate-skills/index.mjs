@@ -53,7 +53,7 @@ function readJson(relativeOrAbsolutePath) {
 }
 
 function parseArgs(argv) {
-  const parsed = { allowPartial: false, reportPath: null, scoreOutPath: null, skipBlocked: false };
+  const parsed = { allowPartial: false, reportPath: null, scoreOutPath: null, skipBlocked: false, verifyDisk: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--report') {
@@ -68,6 +68,8 @@ function parseArgs(argv) {
       if (!parsed.scoreOutPath) fail('--score-out requires a file path');
     } else if (arg === '--skip-blocked') {
       parsed.skipBlocked = true;
+    } else if (arg === '--verify-disk') {
+      parsed.verifyDisk = true;
     } else {
       fail(`unknown argument: ${arg}`);
     }
@@ -266,6 +268,17 @@ const inspection = inspectRunReport(report, {
   skipBlocked: args.skipBlocked,
 });
 failures.push(...inspection.issues);
+if (args.verifyDisk && Array.isArray(report?.cases)) {
+  for (const run of report.cases) {
+    for (const entry of run?.change_units ?? []) {
+      const cuPath = typeof entry === 'string' ? entry : entry?.path;
+      if (typeof cuPath !== 'string' || !cuPath.startsWith('docs/change-units/')) continue;
+      if (!fs.existsSync(path.join(root, cuPath))) {
+        failures.push(`${run.case_id}: change unit not found on disk: ${cuPath}`);
+      }
+    }
+  }
+}
 const score = scoreReport(manifest, inspection);
 writeScoreReport(args.scoreOutPath, report, score, manifest);
 
@@ -279,6 +292,7 @@ if (failures.length > 0) {
 }
 
 const blockedSuffix = score.blockedSkipped > 0 ? `, ${score.blockedSkipped} blocked skipped` : '';
-console.log(`Forge skills-suite report passed (${score.scoredCases} cases${blockedSuffix}, ${score.passedChecks}/${score.totalChecks} oracle checks).`);
+const diskSuffix = args.verifyDisk ? ', on-disk verified' : '';
+console.log(`Forge skills-suite report passed (${score.scoredCases} cases${blockedSuffix}, ${score.passedChecks}/${score.totalChecks} oracle checks${diskSuffix}).`);
 console.log(`Score: ${score.score}/100 (${score.grade}); axes: ${printableAxisScores(score)}`);
 if (args.scoreOutPath) console.log(`Score report written to ${args.scoreOutPath}`);

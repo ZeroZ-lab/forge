@@ -114,6 +114,8 @@ node scripts/evaluate-skills.mjs
 node scripts/evaluate-skills.mjs --report path/to/report.json
 ```
 
+加 `--verify-disk` 可让评测额外校验报告里声称的 Change Unit 确实落盘（把"自报来源"升级为"磁盘可验"），但仍不等同于完整的行为有效性。
+
 也可以直接用 Codex CLI 跑真实 fixtures：
 
 ```bash

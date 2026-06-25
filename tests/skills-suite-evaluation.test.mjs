@@ -149,6 +149,57 @@ test('token footprint metric enforces the default runtime chain budget', () => {
   assert.deepEqual(json.default_chain, ['detail', 'codegen', 'review']);
 });
 
+test('skills-suite evaluator verifies change units on disk with --verify-disk', () => {
+  const reportPath = path.join(os.tmpdir(), `forge-skills-verify-disk-${process.pid}.json`);
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'default-chain-small-feature');
+  const baseRun = (cuPath) => ({
+    case_id: testCase.id,
+    status: 'pass',
+    triggered_skills: testCase.expected_skills,
+    artifacts: testCase.expected_artifacts,
+    ...reportEvidenceFor(testCase),
+    change_units: [cuPath],
+    forbidden_behaviors: [],
+  });
+
+  // rejects a change unit that is reported but not on disk
+  fs.writeFileSync(
+    reportPath,
+    JSON.stringify(
+      { version: 2, suite: 'forge', run_id: 'verify-disk-missing', cases: [baseRun('docs/change-units/CU-does-not-exist-99999.md')] },
+      null,
+      2,
+    ),
+  );
+  const missing = spawnSync(
+    process.execPath,
+    ['scripts/evaluate-skills.mjs', '--allow-partial', '--verify-disk', '--report', reportPath],
+    { encoding: 'utf8' },
+  );
+  assert.notEqual(missing.status, 0);
+  assert.match(missing.stderr, /change unit not found on disk/);
+
+  // accepts a change unit that actually exists on disk
+  const realCu = fs.readdirSync(path.join(root, 'docs/change-units')).find((file) => file.endsWith('.md'));
+  fs.writeFileSync(
+    reportPath,
+    JSON.stringify(
+      { version: 2, suite: 'forge', run_id: 'verify-disk-present', cases: [baseRun(`docs/change-units/${realCu}`)] },
+      null,
+      2,
+    ),
+  );
+  const present = spawnSync(
+    process.execPath,
+    ['scripts/evaluate-skills.mjs', '--allow-partial', '--verify-disk', '--report', reportPath],
+    { encoding: 'utf8' },
+  );
+  assert.equal(present.status, 0);
+  assert.match(present.stdout, /on-disk verified/);
+
+  fs.unlinkSync(reportPath);
+});
+
 test('skills-suite evaluator scores a complete report', () => {
   const reportPath = path.join(os.tmpdir(), `forge-skills-report-${process.pid}.json`);
   const cases = manifest.cases.map((testCase) => {
