@@ -25,6 +25,9 @@
 ## Affected Surface
 
 - `plugins/forge/skills/guide/SKILL.md`（输出格式 +1 行）
+- `package.json`（版本号 bump 至 0.41.0）
+- `plugins/forge/.claude-plugin/plugin.json`（version 同步 0.41.0）
+- `plugins/forge/.codex-plugin/plugin.json`（version 同步 0.41.0）
 - 新增本 CU
 
 ## Risks
@@ -37,7 +40,7 @@
 
 ## Verification
 
-- `npm run validate` → `Forge validation passed (25 skills, version 0.40.0).`
+- `npm run validate` → `Forge validation passed (25 skills, version 0.41.0).`
 - `git diff --stat` → 仅 `plugins/forge/skills/guide/SKILL.md` +1 行。
 - 未跑 `npm test` / `npm run eval:skills`：本次为 skill 文档文案增量，无代码/路由逻辑变更，validate 已覆盖 char budget 与 skill 计数。
 

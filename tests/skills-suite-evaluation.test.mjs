@@ -150,41 +150,70 @@ test('token footprint metric enforces the default runtime chain budget', () => {
 });
 
 test('skills-suite evaluator verifies change units on disk with --verify-disk', () => {
-  const reportPath = path.join(os.tmpdir(), `forge-skills-verify-disk-${process.pid}.json`);
-  const testCase = manifest.cases.find((candidate) => candidate.id === 'default-chain-small-feature');
-  const baseRun = (cuPath) => ({
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'bugfix-unreproducible-blocked');
+  const runDir = fs.mkdtempSync(path.join(os.tmpdir(), 'forge-verify-disk-'));
+  const reportPath = path.join(runDir, 'report.json');
+  const workspaceDir = path.join(runDir, 'workspaces', testCase.id);
+  const cuPath = 'docs/change-units/CU-verify-disk-workspace.md';
+  fs.mkdirSync(path.join(workspaceDir, 'docs/change-units'), { recursive: true });
+  fs.writeFileSync(
+    path.join(workspaceDir, cuPath),
+    [
+      '# CU-verify-disk-workspace',
+      '',
+      '## Type',
+      '',
+      '- bugfix',
+      '',
+      '## Verification',
+      '',
+      '```sh',
+      'node --test',
+      '```',
+      '',
+      'Ran the red-capable loop; command unavailable, so stopped safely.',
+      '',
+      '## Rollback',
+      '',
+      'n/a',
+      '',
+    ].join('\n'),
+  );
+  fs.writeFileSync(path.join(workspaceDir, 'goal.md'), '# Goal\n');
+
+  const buildRun = (changeUnitPath) => ({
     case_id: testCase.id,
     status: 'pass',
     triggered_skills: testCase.expected_skills,
     artifacts: testCase.expected_artifacts,
     ...reportEvidenceFor(testCase),
-    change_units: [cuPath],
+    change_units: [changeUnitPath],
     forbidden_behaviors: [],
   });
 
-  // rejects a change unit that is reported but not on disk
+  // rejects a change unit that is reported but not on disk (no workspace, CU absent at repo root)
+  const missingReportPath = path.join(os.tmpdir(), `forge-skills-verify-disk-missing-${process.pid}.json`);
   fs.writeFileSync(
-    reportPath,
+    missingReportPath,
     JSON.stringify(
-      { version: 2, suite: 'forge', run_id: 'verify-disk-missing', cases: [baseRun('docs/change-units/CU-does-not-exist-99999.md')] },
+      { version: 2, suite: 'forge', run_id: 'verify-disk-missing', cases: [buildRun('docs/change-units/CU-does-not-exist-99999.md')] },
       null,
       2,
     ),
   );
   const missing = spawnSync(
     process.execPath,
-    ['scripts/evaluate-skills.mjs', '--allow-partial', '--verify-disk', '--report', reportPath],
+    ['scripts/evaluate-skills.mjs', '--allow-partial', '--verify-disk', '--report', missingReportPath],
     { encoding: 'utf8' },
   );
   assert.notEqual(missing.status, 0);
   assert.match(missing.stderr, /change unit not found on disk/);
 
-  // accepts a change unit that actually exists on disk
-  const realCu = fs.readdirSync(path.join(root, 'docs/change-units')).find((file) => file.endsWith('.md'));
+  // accepts a change unit that exists in the run's workspace directory (regression for workspace resolution)
   fs.writeFileSync(
     reportPath,
     JSON.stringify(
-      { version: 2, suite: 'forge', run_id: 'verify-disk-present', cases: [baseRun(`docs/change-units/${realCu}`)] },
+      { version: 2, suite: 'forge', run_id: 'verify-disk-workspace', cases: [buildRun(cuPath)] },
       null,
       2,
     ),
@@ -194,10 +223,11 @@ test('skills-suite evaluator verifies change units on disk with --verify-disk', 
     ['scripts/evaluate-skills.mjs', '--allow-partial', '--verify-disk', '--report', reportPath],
     { encoding: 'utf8' },
   );
-  assert.equal(present.status, 0);
+  assert.equal(present.status, 0, present.stderr);
   assert.match(present.stdout, /on-disk verified/);
 
-  fs.unlinkSync(reportPath);
+  fs.rmSync(runDir, { recursive: true, force: true });
+  fs.unlinkSync(missingReportPath);
 });
 
 test('skills-suite evaluator --verify-disk requires a Verification section with command evidence', () => {

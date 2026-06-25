@@ -238,6 +238,9 @@ function writeScoreReport(scoreOutPath, report, score, manifest) {
 }
 
 const args = parseArgs(process.argv.slice(2));
+const reportAbsPath = args.reportPath
+  ? (path.isAbsolute(args.reportPath) ? args.reportPath : path.join(root, args.reportPath))
+  : null;
 const registry = loadRegistry(root);
 let manifest = {};
 let coveredSkills = new Set();
@@ -269,11 +272,18 @@ const inspection = inspectRunReport(report, {
 });
 failures.push(...inspection.issues);
 if (args.verifyDisk && Array.isArray(report?.cases)) {
+  const reportDir = reportAbsPath ? path.dirname(reportAbsPath) : root;
   for (const run of report.cases) {
+    const workspaceDir = path.join(reportDir, 'workspaces', run.case_id);
+    const resolveDiskPath = (relativePath) => {
+      const inWorkspace = path.join(workspaceDir, relativePath);
+      if (fs.existsSync(inWorkspace)) return inWorkspace;
+      return path.join(root, relativePath);
+    };
     for (const entry of run?.change_units ?? []) {
       const cuPath = typeof entry === 'string' ? entry : entry?.path;
       if (typeof cuPath !== 'string' || !cuPath.startsWith('docs/change-units/')) continue;
-      const absolute = path.join(root, cuPath);
+      const absolute = resolveDiskPath(cuPath);
       if (!fs.existsSync(absolute)) {
         failures.push(`${run.case_id}: change unit not found on disk: ${cuPath}`);
         continue;
@@ -291,6 +301,15 @@ if (args.verifyDisk && Array.isArray(report?.cases)) {
         section.includes('```') || /\b(node|npm|npx|git|yarn|pnpm|deno|bash|sh|python|pip)\s+\S/.test(section);
       if (!hasCommandEvidence) {
         failures.push(`${run.case_id}: change unit Verification section lacks command evidence: ${cuPath}`);
+      }
+    }
+    for (const entry of run?.artifacts ?? []) {
+      const artifactPath = typeof entry === 'string' ? entry : entry?.path;
+      if (typeof artifactPath !== 'string' || artifactPath.length === 0) continue;
+      if (artifactPath.startsWith('docs/change-units/')) continue;
+      const absolute = resolveDiskPath(artifactPath);
+      if (!fs.existsSync(absolute)) {
+        failures.push(`${run.case_id}: artifact not found on disk: ${artifactPath}`);
       }
     }
   }

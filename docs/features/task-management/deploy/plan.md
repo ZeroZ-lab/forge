@@ -1,6 +1,10 @@
+---
+demo: true
+---
+
 # Task Management — Deploy
 
-> 独立产物理由：包含 staging→production 交接、镜像回滚、密钥和监控责任，需要独立运维维护周期。依赖 `goal.md`、`modules/*.md` 和 `testing/strategy.md`。
+> 示例 feature 的 deploy 产物（demo 豁免）：实际独立运维 owner 锚定未配置，仅作 layout 演示。依赖 `goal.md`、`modules/*.md` 和 `testing/strategy.md`。
 
 ## 决策
 

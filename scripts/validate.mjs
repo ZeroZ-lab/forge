@@ -533,6 +533,52 @@ if (exists('docs/features')) {
   }
 }
 
+// Independent-artifact gate: gated artifacts must not self-attest their own
+// admission. The「独立产物门」in AGENTS.md requires an external anchor — a
+// different owner, update cycle, or review responsibility. Previously the
+// validator only checked naming/structure, so the writing agent could self-
+// certify the gate (e.g. deploy/plan.md:「需要独立运维维护周期」). Enforce the
+// gate substance mechanically: a gated artifact under docs/features
+// (PRD.md, testing/strategy.md, deploy/plan.md, interaction-spec.md,
+// research-brief.md) or docs/adr/*.md must carry either an externally
+// resolvable `gate_owner:` (issue URL, CODEOWNERS path, or named owner) or an
+// explicit `demo: true` / `exempt: demo` exemption for example features.
+const gatedFeatureArtifactRe =
+  /(?:^|\/)(?:PRD\.md|testing\/strategy\.md|deploy\/plan\.md|interaction-spec\.md|research-brief\.md)$/;
+const gateOwnerRe = /^gate_owner:\s*\S[^\r\n]*$/m;
+const demoExemptRe = /^demo:\s*true\b/m;
+const exemptDemoRe = /^exempt:\s*demo\b/m;
+
+function hasGateAnchor(content) {
+  if (gateOwnerRe.test(content)) return true;
+  if (demoExemptRe.test(content)) return true;
+  if (exemptDemoRe.test(content)) return true;
+  return false;
+}
+
+function assertGatedArtifactGate(file) {
+  const content = read(file);
+  if (!hasGateAnchor(content)) {
+    fail(
+      `${file}: gated artifact 缺少独立 owner 锚定或 demo 豁免 — add frontmatter \`gate_owner: <issue URL | CODEOWNERS path | named owner>\` or \`demo: true\` (AGENTS.md 独立产物门)`,
+    );
+  }
+}
+
+if (exists('docs/features')) {
+  for (const file of filesUnder('docs/features')) {
+    if (!gatedFeatureArtifactRe.test(file)) continue;
+    assertGatedArtifactGate(file);
+  }
+}
+
+if (exists('docs/adr')) {
+  for (const file of filesUnder('docs/adr')) {
+    if (!file.endsWith('.md')) continue;
+    assertGatedArtifactGate(file);
+  }
+}
+
 for (const legacyActiveFile of ['docs/timeline.md', 'docs/status.md', 'docs/idea-brief.md']) {
   assert(!exists(legacyActiveFile), `${legacyActiveFile}: active derived/process document is not allowed`);
 }

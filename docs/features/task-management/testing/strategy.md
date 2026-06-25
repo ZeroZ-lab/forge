@@ -1,6 +1,10 @@
+---
+demo: true
+---
+
 # Task Management — Testing
 
-> 独立产物理由：跨 Task/Comment/Storage 多模块，使用真实 PostgreSQL、CI 阻断和隔离数据，需要独立 QA 维护周期。依赖 `goal.md` 和 `modules/*.md`，不复制完成标准。
+> 示例 feature 的 testing 产物（demo 豁免）：实际独立 QA owner 锚定未配置，仅作 layout 演示。依赖 `goal.md` 和 `modules/*.md`，不复制完成标准。
 
 ## 决策
 
