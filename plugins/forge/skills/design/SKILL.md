@@ -1,6 +1,6 @@
 ---
 name: design
-description: Orchestrates interaction and visual decisions, persisting separate design artifacts only when independently justified.
+description: Orchestrates the design stage — coordinates interaction-design, fe-system, and frontend-design, and resolves conflicts between behavior, interaction, and visual-system constraints; persists separate design artifacts only when independently justified.
 when_to_use: Use when the user asks for the design stage, coordinated interaction and visual decisions, or resolution of conflicts between behavior and visual-system constraints.
 ---
 

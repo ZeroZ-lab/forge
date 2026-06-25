@@ -1,6 +1,6 @@
 ---
 name: test
-description: Orchestrates testing strategy and concrete scenario derivation, writing durable test governance only when independently justified.
+description: Coordinates test-strategy and test-cases — resolves conflicts between acceptance criteria, risk coverage, and implementation; persists test governance only when independently justified.
 when_to_use: Use when the user asks for the full test stage, coordinated risk coverage and scenarios, or resolution of conflicts between acceptance criteria, test strategy, and implementation.
 ---
 

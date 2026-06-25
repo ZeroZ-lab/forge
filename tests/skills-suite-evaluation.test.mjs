@@ -200,6 +200,42 @@ test('skills-suite evaluator verifies change units on disk with --verify-disk', 
   fs.unlinkSync(reportPath);
 });
 
+test('skills-suite evaluator --verify-disk requires a Verification section with command evidence', () => {
+  const reportPath = path.join(os.tmpdir(), `forge-skills-verify-content-${process.pid}.json`);
+  const tempCuAbs = path.join(root, 'docs/change-units', 'CU-zzz-verify-disk-no-evidence.md');
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'default-chain-small-feature');
+  const buildRun = (cuPath) => ({
+    case_id: testCase.id,
+    status: 'pass',
+    triggered_skills: testCase.expected_skills,
+    artifacts: testCase.expected_artifacts,
+    ...reportEvidenceFor(testCase),
+    change_units: [cuPath],
+    forbidden_behaviors: [],
+  });
+  fs.writeFileSync(tempCuAbs, '# CU-zzz-verify-disk-no-evidence\n\n## Type\n\n- Test fixture: exists but has no Verification section\n');
+  try {
+    fs.writeFileSync(
+      reportPath,
+      JSON.stringify(
+        { version: 2, suite: 'forge', run_id: 'verify-content-missing', cases: [buildRun('docs/change-units/CU-zzz-verify-disk-no-evidence.md')] },
+        null,
+        2,
+      ),
+    );
+    const missing = spawnSync(
+      process.execPath,
+      ['scripts/evaluate-skills.mjs', '--allow-partial', '--verify-disk', '--report', reportPath],
+      { encoding: 'utf8' },
+    );
+    assert.notEqual(missing.status, 0);
+    assert.match(missing.stderr, /Verification section/);
+  } finally {
+    fs.unlinkSync(tempCuAbs);
+    if (fs.existsSync(reportPath)) fs.unlinkSync(reportPath);
+  }
+});
+
 test('skills-suite evaluator scores a complete report', () => {
   const reportPath = path.join(os.tmpdir(), `forge-skills-report-${process.pid}.json`);
   const cases = manifest.cases.map((testCase) => {

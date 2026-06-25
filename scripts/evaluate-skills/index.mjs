@@ -273,8 +273,24 @@ if (args.verifyDisk && Array.isArray(report?.cases)) {
     for (const entry of run?.change_units ?? []) {
       const cuPath = typeof entry === 'string' ? entry : entry?.path;
       if (typeof cuPath !== 'string' || !cuPath.startsWith('docs/change-units/')) continue;
-      if (!fs.existsSync(path.join(root, cuPath))) {
+      const absolute = path.join(root, cuPath);
+      if (!fs.existsSync(absolute)) {
         failures.push(`${run.case_id}: change unit not found on disk: ${cuPath}`);
+        continue;
+      }
+      const body = fs.readFileSync(absolute, 'utf8');
+      const verifyIndex = body.search(/^##\s*Verification\b/im);
+      if (verifyIndex === -1) {
+        failures.push(`${run.case_id}: change unit lacks a Verification section: ${cuPath}`);
+        continue;
+      }
+      const afterVerify = body.slice(verifyIndex);
+      const nextHeading = afterVerify.slice(1).search(/^##\s/m);
+      const section = nextHeading === -1 ? afterVerify : afterVerify.slice(0, nextHeading + 1);
+      const hasCommandEvidence =
+        section.includes('```') || /\b(node|npm|npx|git|yarn|pnpm|deno|bash|sh|python|pip)\s+\S/.test(section);
+      if (!hasCommandEvidence) {
+        failures.push(`${run.case_id}: change unit Verification section lacks command evidence: ${cuPath}`);
       }
     }
   }
