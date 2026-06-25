@@ -51,7 +51,7 @@ when_to_use: Use when choosing or reviewing architecture, tech stack, service bo
 
 ## 文档约束
 
-产出或更新 `docs/project.md`，模板 `${CLAUDE_SKILL_DIR}/../shared/project-template.md`。只写项目级共享决策；feature 特有选择留给 detail。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。产出或更新 `docs/project.md`，模板 `${CLAUDE_SKILL_DIR}/../shared/project-template.md`。只写项目级共享决策；feature 特有选择留给 detail。只有难以逆转、出乎直觉且需要独立复核的项目决策才创建 `docs/adr/*.md`。
 
 ## 入口/出口条件
 
@@ -74,4 +74,4 @@ when_to_use: Use when choosing or reviewing architecture, tech stack, service bo
 
 ## 历史维护
 
-完成后追加 `docs/timeline.md` 和 Change Unit；已有 project 只追加变更摘要。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。只有 project 级共享决策发生持久变更时写历史。

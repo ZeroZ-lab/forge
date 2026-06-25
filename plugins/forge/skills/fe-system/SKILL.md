@@ -8,7 +8,7 @@ when_to_use: Use when the user asks about design system, DESIGN.md, colors, typo
 
 ## 职责
 
-从业务目标、交互规格和产品气质推导项目级设计系统，产出 `DESIGN.md`。这是决策 skill，不直接写组件代码。
+从业务目标、交互约束和产品气质推导视觉规则。这是决策 skill，不直接写组件代码。
 
 ## 执行纪律
 
@@ -20,7 +20,7 @@ when_to_use: Use when the user asks about design system, DESIGN.md, colors, typo
 
 **上游**：`docs/project.md`、PRD、interaction-spec、用户提供的品牌或参考产品。
 
-**下游**：`DESIGN.md` 交给 frontend-design、fe-artifact、fe-accept 和后续代码生成。
+**下游**：跨 feature 设计系统写入 `DESIGN.md`；局部视觉约束写入 feature goal/module，交给 frontend-design、fe-artifact、fe-accept 和后续代码生成。
 
 不写具体页面实现，不生成前端源码，不把当前流行组件库写成永久原则。
 
@@ -57,7 +57,7 @@ when_to_use: Use when the user asks about design system, DESIGN.md, colors, typo
 
 ## 产出
 
-`DESIGN.md` 必须包含：
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。只有跨 feature 视觉系统具有独立维护周期时创建 `DESIGN.md`；否则把必要约束写入 feature goal/module。`DESIGN.md` 包含：
 
 - 产品气质和设计原则
 - 三层 token
@@ -73,7 +73,7 @@ when_to_use: Use when the user asks about design system, DESIGN.md, colors, typo
 
 **入口**：有项目目标、目标用户和至少一个页面类型；或已有 `DESIGN.md` 需要更新。
 
-**出口**：`DESIGN.md` 已生成或更新，人类确认关键视觉方向，后续 skill 可直接消费 token。
+**出口**：权威视觉约束已生成或更新，人类确认关键视觉方向，后续 skill 可直接消费。
 
 ## 运行时信号
 
@@ -108,7 +108,7 @@ when_to_use: Use when the user asks about design system, DESIGN.md, colors, typo
 
 ## 历史维护
 
-完成后追加 `docs/timeline.md`；若是 feature 级设计变更，也追加对应 feature 的 `changelog.md`。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。作为 `design` 或 `init` 子阶段时不单独写；standalone 变更按实际 project/feature scope 持久化。
 
 ## 完成提示
 
@@ -120,4 +120,3 @@ when_to_use: Use when the user asks about design system, DESIGN.md, colors, typo
   - 生成前端代码
   - 做前端验收
 ```
-

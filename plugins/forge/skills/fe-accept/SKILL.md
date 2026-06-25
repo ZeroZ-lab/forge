@@ -22,7 +22,7 @@ when_to_use: Use when the user asks to accept frontend work, inspect a page, com
 
 **上游**：`DESIGN.md`、interaction-spec、goal.md（前端决策）、modules/*.md、实际前端代码和测试。
 
-**下游**：验收报告、缺陷清单、豁免记录，交给 codegen 修复或 review 审查。
+**下游**：对话中的验收结论、缺陷清单、证据和豁免记录，交给 codegen 修复或 review 审查。
 
 ## 何时不使用
 - 无前端实现（没有代码可验收）
@@ -69,7 +69,7 @@ when_to_use: Use when the user asks to accept frontend work, inspect a page, com
 
 **入口**：已有前端实现或可预览 artifact；有可对照的设计系统和模块文档。
 
-**出口**：验收报告已生成，P0/P1 问题明确，豁免项有理由和责任人。
+**出口**：验收结论已给出，P0/P1 问题明确，豁免项有理由和责任人。
 
 ## 运行时信号
 
@@ -96,17 +96,17 @@ when_to_use: Use when the user asks to accept frontend work, inspect a page, com
 
 ## 历史维护
 
-完成后追加 feature `changelog.md`；若验收导致发布状态变化，也追加 `docs/timeline.md`。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。只有验收结果改变持久文档、豁免或发布状态时写历史。
+
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`：默认不创建独立验收报告；运行证据、结论和剩余风险写入 Change Unit，缺陷留在当前对话或 issue tracker。
 
 ## 完成提示
 
 ```
-前端验收完成：报告已生成，阻塞项和豁免项已列出。
+前端验收完成：结论、证据、阻塞项和豁免项已列出。
 
 下一步：
   - 修复阻塞项
   - 做独立审查
   - 规划发布
 ```
-
-

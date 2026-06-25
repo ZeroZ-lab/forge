@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { loadBenchmarkContract } from './lib/benchmark-contract.mjs';
 import { loadRegistry } from './lib/registry.mjs';
 
 const root = process.cwd();
@@ -72,14 +73,6 @@ function referencedMarkdownFiles(skillName, content) {
   });
 }
 
-function assertArrayOfStrings(value, label) {
-  assert(Array.isArray(value), `${label} must be an array`);
-  if (!Array.isArray(value)) return;
-  for (const item of value) {
-    assert(typeof item === 'string' && item.length > 0, `${label} must contain only non-empty strings`);
-  }
-}
-
 const packageJson = json('package.json');
 const claudePlugin = json('plugins/forge/.claude-plugin/plugin.json');
 const codexPlugin = json('plugins/forge/.codex-plugin/plugin.json');
@@ -113,6 +106,8 @@ const skillDirs = fs
   .map((entry) => entry.name)
   .sort();
 const skillCount = skillDirs.length;
+const guideCount = skillDirs.includes('guide') ? 1 : 0;
+const protocolSkillCount = skillCount - guideCount;
 const skillLineLimit = 350;
 
 assert(skillDirs.length > 0, 'expected at least one skill');
@@ -137,8 +132,6 @@ assert(
   'SKILL.md frontmatter: skill names must cover plugins/forge/skills/* exactly',
 );
 
-const registryByName = Object.fromEntries((runtimeRegistry.skills ?? []).map((skill) => [skill.name, skill]));
-
 for (const skillName of skillDirs) {
   const skillPath = `plugins/forge/skills/${skillName}/SKILL.md`;
   assert(exists(skillPath), `${skillPath}: missing`);
@@ -160,6 +153,27 @@ for (const skillName of skillDirs) {
   }
 }
 
+assertIncludes('plugins/forge/skills/guide/SKILL.md', [
+  'disable-model-invocation: true',
+  '只推荐，不调用其他 skill',
+]);
+assertIncludes('plugins/forge/skills/guide/agents/openai.yaml', [
+  'allow_implicit_invocation: false',
+]);
+assertIncludes('plugins/forge/skills/shared/SKILL.md', [
+  'disable-model-invocation: true',
+  '不进入 registry',
+]);
+assertIncludes('plugins/forge/skills/shared/agents/openai.yaml', [
+  'allow_implicit_invocation: false',
+]);
+assert(exists('docs/skill-invocation-policy.md'), 'docs/skill-invocation-policy.md: missing');
+assertIncludes('docs/skill-invocation-policy.md', [
+  'disable-model-invocation: true',
+  'allow_implicit_invocation: false',
+  '保留生命周期 Skill 的隐式触发',
+]);
+
 const defaultRuntimeChain = ['detail', 'codegen', 'review'];
 const defaultRuntimeChainChars = defaultRuntimeChain.reduce((sum, skillName) => {
   return sum + read(`plugins/forge/skills/${skillName}/SKILL.md`).length;
@@ -169,15 +183,31 @@ const totalSkillChars = skillDirs.reduce((sum, skillName) => {
 }, read('plugins/forge/skills/shared/SKILL.md').length);
 assert(
   defaultRuntimeChainChars <= 9000,
-  `default runtime chain token budget exceeded: ${defaultRuntimeChainChars} chars > 9000 chars`,
+  `default runtime chain char budget exceeded: ${defaultRuntimeChainChars} chars > 9000 chars`,
 );
 assert(
   totalSkillChars <= 56000,
-  `total SKILL.md token budget exceeded: ${totalSkillChars} chars > 56000 chars`,
+  `total SKILL.md char budget exceeded: ${totalSkillChars} chars > 56000 chars`,
 );
 
 assert(exists('docs/skill-architecture-audit.md'), 'docs/skill-architecture-audit.md: missing');
 assert(exists('docs/skill-suite-evaluation.md'), 'docs/skill-suite-evaluation.md: missing');
+assertIncludes('plugins/forge/skills/shared/rubrics/skill-quality.md', [
+  'Completion criterion',
+  'No-op control',
+  'Single source',
+  'Progressive disclosure',
+  'Premature-completion resistance',
+  'Invocation cost',
+]);
+assertIncludes('experiments/skills/README.md', [
+  'must not appear in either plugin manifest',
+  'runtime benchmark evidence',
+]);
+assertIncludes('archive/skills/README.md', [
+  'must not appear in Claude or Codex plugin manifests',
+  'experiments/skills/',
+]);
 assertIncludes('docs/skill-suite-evaluation.md', [
   'Benchmark contract is valid',
   'A run proves skill effectiveness',
@@ -189,6 +219,8 @@ const sharedKnowledgeFiles = [
   'plugins/forge/skills/shared/concepts/control-loop.md',
   'plugins/forge/skills/shared/concepts/document-as-goal.md',
   'plugins/forge/skills/shared/concepts/execution-discipline.md',
+  'plugins/forge/skills/shared/concepts/artifact-policy.md',
+  'plugins/forge/skills/shared/concepts/history-maintenance.md',
   'plugins/forge/skills/shared/rubrics/skill-quality.md',
   'plugins/forge/skills/shared/rubrics/goal-quality.md',
   'plugins/forge/skills/shared/rubrics/implementation-quality.md',
@@ -206,74 +238,89 @@ for (const file of sharedKnowledgeFiles) {
   }
 }
 
-const skillsEvalManifest = json('evals/skills-suite/manifest.json');
+const historyAwareSkills = [
+  'api-design',
+  'brainstorm',
+  'business-alignment',
+  'codegen',
+  'db-design',
+  'define',
+  'deploy',
+  'design',
+  'detail',
+  'fe-accept',
+  'fe-system',
+  'frontend-design',
+  'interaction-design',
+  'init',
+  'learn',
+  'plan',
+  'research',
+  'review',
+  'technical-design',
+  'test',
+  'test-cases',
+  'test-strategy',
+  'think',
+];
+for (const skillName of historyAwareSkills) {
+  assert(
+    read(`plugins/forge/skills/${skillName}/SKILL.md`).includes('shared/concepts/history-maintenance.md'),
+    `plugins/forge/skills/${skillName}/SKILL.md: history persistence must use the shared module`,
+  );
+}
+
+const artifactAwareSkills = [
+  'api-design',
+  'brainstorm',
+  'business-alignment',
+  'codegen',
+  'db-design',
+  'define',
+  'deploy',
+  'design',
+  'detail',
+  'fe-accept',
+  'fe-system',
+  'frontend-design',
+  'init',
+  'interaction-design',
+  'learn',
+  'plan',
+  'research',
+  'review',
+  'technical-design',
+  'test',
+  'test-cases',
+  'test-strategy',
+  'think',
+];
+for (const skillName of artifactAwareSkills) {
+  assert(
+    read(`plugins/forge/skills/${skillName}/SKILL.md`).includes('shared/concepts/artifact-policy.md'),
+    `plugins/forge/skills/${skillName}/SKILL.md: artifact creation must use the shared policy`,
+  );
+}
+
 assert(exists('scripts/evaluate-skills.mjs'), 'scripts/evaluate-skills.mjs: missing');
 assert(exists('scripts/evaluate-skills/index.mjs'), 'scripts/evaluate-skills/index.mjs: missing');
 assert(exists('scripts/run-skills-benchmark.mjs'), 'scripts/run-skills-benchmark.mjs: missing');
+assert(exists('scripts/lib/benchmark-contract.mjs'), 'scripts/lib/benchmark-contract.mjs: missing');
+assert(exists('scripts/lib/run-report.mjs'), 'scripts/lib/run-report.mjs: missing');
 assert(exists('scripts/install-local-codex-plugin.mjs'), 'scripts/install-local-codex-plugin.mjs: missing');
 assert(exists('evals/skills-suite/README.md'), 'evals/skills-suite/README.md: missing');
 assert(exists('evals/skills-suite/report.schema.json'), 'evals/skills-suite/report.schema.json: missing');
-assert(skillsEvalManifest.version === 2, 'evals/skills-suite/manifest.json: version must be 2');
-assert(skillsEvalManifest.name === 'forge-skills-suite-benchmark', 'evals/skills-suite/manifest.json: unexpected benchmark name');
-assert(Array.isArray(skillsEvalManifest.cases), 'evals/skills-suite/manifest.json: cases must be an array');
-assert(
-  skillsEvalManifest.cases?.length >= 10,
-  'evals/skills-suite/manifest.json: must define at least 10 benchmark cases',
-);
-
-const evalCoveredSkills = new Set();
-const evalCaseIds = new Set();
-const allowedEvalCheckTypes = new Set([
-  'artifact_reported',
-  'artifact_absent',
-  'change_unit_reported',
-  'goal_covers',
-  'command_reported',
-  'decision_gate_reported',
-  'goal_verified',
-  'evidence_contains',
-  'forbidden_behavior_absent',
-  'skill_triggered',
-]);
-
-for (const testCase of skillsEvalManifest.cases ?? []) {
-  assert(
-    typeof testCase.id === 'string' && /^[a-z0-9-]+$/.test(testCase.id),
-    'evals/skills-suite/manifest.json: case id must be kebab-case',
-  );
-  assert(!evalCaseIds.has(testCase.id), `evals/skills-suite/manifest.json: duplicate case id ${testCase.id}`);
-  evalCaseIds.add(testCase.id);
-  assert(typeof testCase.fixture === 'string' && exists(testCase.fixture), `${testCase.id}: fixture is missing`);
-  assertArrayOfStrings(testCase.expected_skills, `${testCase.id}.expected_skills`);
-  assertArrayOfStrings(testCase.expected_artifacts, `${testCase.id}.expected_artifacts`);
-  assertArrayOfStrings(testCase.required_evidence, `${testCase.id}.required_evidence`);
-  assertArrayOfStrings(testCase.forbidden_behaviors, `${testCase.id}.forbidden_behaviors`);
-  assert(Array.isArray(testCase.oracle_checks) && testCase.oracle_checks.length > 0, `${testCase.id}: oracle_checks are required`);
-  assert(
-    testCase.oracle_checks.some((check) => check.type === 'change_unit_reported'),
-    `${testCase.id}: must check Change Unit reporting`,
-  );
-
-  for (const skillName of testCase.expected_skills ?? []) {
-    assert(registryByName[skillName], `${testCase.id}: unknown expected skill ${skillName}`);
-    evalCoveredSkills.add(skillName);
-  }
-  for (const check of testCase.oracle_checks ?? []) {
-    assert(allowedEvalCheckTypes.has(check.type), `${testCase.id}: unknown oracle check type ${check.type}`);
-    if (check.type === 'goal_verified') {
-      assert(
-        testCase.expected_artifacts.includes(check.target),
-        `${testCase.id}: goal_verification target ${check.target} must be listed in expected_artifacts`,
-      );
-    }
-  }
-}
-
-for (const skillName of expectedRegistryNames) {
-  assert(evalCoveredSkills.has(skillName), `evals/skills-suite/manifest.json: missing benchmark coverage for ${skillName}`);
+try {
+  loadBenchmarkContract(root, runtimeRegistry);
+} catch (error) {
+  for (const issue of error.issues ?? [error.message]) fail(`evals/skills-suite/manifest.json: ${issue}`);
 }
 
 const requiredProtocols = {
+  'codegen': {
+    path: 'plugins/forge/skills/codegen/references/bugfix-protocol.md',
+    markers: ['# Bugfix Protocol', '## Phase 1', 'Red-capable', '## Phase 6', '## 输出证据'],
+  },
   'fe-system': {
     path: 'plugins/forge/skills/fe-system/references/fe-system-protocol.md',
     markers: ['# Fe System Protocol', '## Token 结构', '### Primitive', '### Semantic', '### Component'],
@@ -300,7 +347,7 @@ for (const [skillName, protocol] of Object.entries(requiredProtocols)) {
   if (exists(protocol.path)) assertIncludes(protocol.path, protocol.markers);
 }
 
-assertIncludes('plugins/forge/skills/shared/module-template.md', ['## 入口', '## 公共接口', '## 内部函数', '## 依赖关系']);
+assertIncludes('plugins/forge/skills/shared/module-template.md', ['## 入口', '## 责任与不变量', '## 公共接口', '## 依赖关系']);
 assert(
   lineCount(read('plugins/forge/skills/shared/module-template.md')) <= 200,
   'plugins/forge/skills/shared/module-template.md: exceeds 200 lines',
@@ -318,13 +365,20 @@ assertIncludes('plugins/forge/skills/shared/goal-template.md', [
 
 const marketplaceDescription = claudeMarketplace.plugins?.find((plugin) => plugin.name === 'forge')?.description ?? '';
 assert(
-  marketplaceDescription.includes(`${skillCount} 个决策协议 skill`),
-  `plugins/forge/.claude-plugin/marketplace.json: forge description must mention "${skillCount} 个决策协议 skill"`,
+  marketplaceDescription.includes(`${skillCount} 个已发布 skill`) &&
+    marketplaceDescription.includes(`${protocolSkillCount} 个决策协议`),
+  `plugins/forge/.claude-plugin/marketplace.json: forge description must mention ${skillCount} published skills and ${protocolSkillCount} protocol skills`,
 );
-assert(read('README.md').includes(`8 阶段 × ${skillCount} 个 Skill`), `README.md: must document 8 阶段 × ${skillCount} 个 Skill`);
-assert(read('AGENTS.md').includes(`${skillCount} 个决策协议`), `AGENTS.md: must document ${skillCount} 个决策协议`);
-assertIncludes('AGENTS.md', ['### AI 执行纪律', '最小变更', '不引入未要求的抽象']);
-assertIncludes('plugins/forge/skills/init/references/agents-template.md', ['## AI 执行纪律', '需要同步的目标文件', '执行可用验证']);
+assert(
+  read('README.md').includes(`8 阶段 × ${protocolSkillCount} 个协议 Skill + ${guideCount} 个 Guide`),
+  `README.md: must document ${protocolSkillCount} protocol skills + ${guideCount} guide`,
+);
+assert(
+  read('AGENTS.md').includes(`${protocolSkillCount} 个决策协议 + ${guideCount} 个显式 guide`),
+  `AGENTS.md: must document ${protocolSkillCount} protocol skills + ${guideCount} guide`,
+);
+assertIncludes('AGENTS.md', ['## 执行协议', '最小变更', '不引入未要求的抽象']);
+assertIncludes('plugins/forge/skills/init/references/agents-template.md', ['## 执行纪律', '权威文档', '最窄有效验证']);
 assertIncludes('plugins/forge/skills/shared/concepts/execution-discipline.md', [
   '# Execution discipline',
   '## Runtime meaning',
@@ -367,18 +421,33 @@ const apiPhase = indexOfOrFail(detailSkill, 'Phase 1: API 设计', detailSkillPa
 const dbPhase = indexOfOrFail(detailSkill, 'Phase 2: 数据库设计', detailSkillPath);
 assert(apiPhase < dbPhase, `${detailSkillPath}: API phase must precede database phase`);
 
-const planSkillPath = 'plugins/forge/skills/plan/SKILL.md';
-const planSkill = read(planSkillPath);
-for (const marker of ['### P1:', '### P2:', '### P3:', '### P4:', '### P5:']) {
-  assert(planSkill.includes(marker), `${planSkillPath}: missing ${marker}`);
+const orchestratorInternalStepPatterns = [
+  ['plugins/forge/skills/design/SKILL.md', /\b(?:I|S)[1-5]\b/],
+  ['plugins/forge/skills/detail/SKILL.md', /\b(?:API[1-7]|DB[1-5]|FE[1-5])\b/],
+  ['plugins/forge/skills/test/SKILL.md', /\b(?:T|TC)[1-5]\b/],
+];
+for (const [skillPath, pattern] of orchestratorInternalStepPatterns) {
+  assert(
+    !pattern.test(read(skillPath)),
+    `${skillPath}: orchestrator interface must use child outputs and exit conditions, not internal step ids`,
+  );
 }
 
-const testCasesSkillPath = 'plugins/forge/skills/test-cases/SKILL.md';
-const testCasesSkill = read(testCasesSkillPath);
-for (const marker of ['### TC1:', '### TC2:', '### TC3:', '### TC4:', '### TC5:']) {
-  assert(testCasesSkill.includes(marker), `${testCasesSkillPath}: missing ${marker}`);
-}
-assert(testCasesSkill.includes('testing/test-cases.md'), `${testCasesSkillPath}: must use testing/test-cases.md`);
+assertIncludes('plugins/forge/skills/plan/SKILL.md', [
+  '垂直切片',
+  '对话或 issue tracker',
+  '不创建 `plan.md`',
+]);
+assertIncludes('plugins/forge/skills/test-cases/SKILL.md', [
+  '场景矩阵',
+  '测试代码',
+  '不创建 `testing/test-cases.md`',
+]);
+assertIncludes('plugins/forge/skills/shared/concepts/artifact-policy.md', [
+  '## Default durable sources',
+  '## Independent-artifact gate',
+  '## Non-artifacts by default',
+]);
 
 const deploySkillPath = 'plugins/forge/skills/deploy/SKILL.md';
 const deploySkill = read(deploySkillPath);
@@ -408,7 +477,7 @@ for (const file of filesUnder('docs/features')) {
 // goal.md (API#/DB#/FE# + shared data models) and per-module contracts live in
 // modules/*.md. The legacy domain-summary layer (notes/<domain>.md) was collapsed
 // into goal.md + modules/ — see CU-20260609-collapse-notes-into-modules.
-// Other canonical names: testing/strategy.md, deploy/plan.md.
+// Optional gated names include testing/strategy.md and deploy/plan.md.
 const forbiddenArtifactNames = [
   'api/goal.md',
   'database/goal.md',
@@ -429,6 +498,43 @@ for (const file of filesUnder('plugins/forge/skills')) {
       fail(`${file}: legacy artifact name "${name}" — use canonical layout (goal.md for decisions, modules/*.md for module contracts, testing/strategy.md, deploy/plan.md)`);
     }
   }
+}
+
+// The live docs/features examples must follow the same canonical layout as the
+// skills. Historical references may remain in archives, Change Units, or fixtures,
+// but active feature directories should not reintroduce per-domain goal files.
+if (exists('docs/features')) {
+  const forbiddenFeatureArtifacts = [
+    'api/goal.md',
+    'database/goal.md',
+    'frontend/goal.md',
+    'testing/goal.md',
+    'deploy/goal.md',
+    'api/modules',
+    'frontend/modules',
+    'changelog.md',
+    'plan.md',
+    'testing/test-cases.md',
+  ];
+
+  for (const feature of fs.readdirSync(path.join(root, 'docs/features'), { withFileTypes: true })) {
+    if (!feature.isDirectory()) continue;
+    const featureDir = path.join('docs/features', feature.name);
+    for (const name of forbiddenFeatureArtifacts) {
+      assert(
+        !exists(path.join(featureDir, name)),
+        `${featureDir}/${name}: legacy docs layout — use goal.md + modules/*.md, testing/strategy.md, deploy/plan.md`,
+      );
+    }
+  }
+
+  for (const file of filesUnder('docs/features')) {
+    assert(!/\/trace-[^/]+\.md$/.test(file), `${file}: Trace is superseded by the Change Unit`);
+  }
+}
+
+for (const legacyActiveFile of ['docs/timeline.md', 'docs/status.md', 'docs/idea-brief.md']) {
+  assert(!exists(legacyActiveFile), `${legacyActiveFile}: active derived/process document is not allowed`);
 }
 
 // Feature-level index integrity: when a feature uses the modules/ down-drill

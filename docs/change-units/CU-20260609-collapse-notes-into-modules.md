@@ -47,7 +47,7 @@
 ## Follow-ups
 
 - frontend-goal-template.md 与 frontend-module-template.md 内容重叠，应合并或明确分工。
-- docs/features/task-management 示例迁移到单层 goal.md + modules/ 布局。
+- [x] docs/features/task-management 示例迁移到单层 goal.md + modules/ 布局（见 CU-20260616-docs-directory-compression）。
 
 ## Verification
 

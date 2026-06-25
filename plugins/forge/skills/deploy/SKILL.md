@@ -40,7 +40,7 @@ CI/CD 步骤、阻断命令、审批、产物和版本号。
 
 ## 产出结构
 
-产出 `deploy/plan.md`，模板 `${CLAUDE_SKILL_DIR}/references/release-template.md`。包含 release checklist、环境、pipeline、灰度、监控、回滚、风险和验收。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。默认在对话中给出 release checklist、环境、pipeline、灰度、监控、回滚、风险和验收。只有生产发布、数据迁移、回滚操作或独立运维交接需要长期维护时，才用 `${CLAUDE_SKILL_DIR}/references/release-template.md` 创建 `deploy/plan.md`；否则把持久发布约束写入 goal/CU。
 
 ## 入口/出口条件
 
@@ -68,4 +68,4 @@ CI/CD 步骤、阻断命令、审批、产物和版本号。
 
 ## 历史维护（自动）
 
-完成后追加 feature changelog 和 `docs/timeline.md`；发布结果可交 learn 归档。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。发布计划或发布状态发生持久变更时写一次；发布结果可交 `learn` 归档。

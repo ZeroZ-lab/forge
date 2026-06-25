@@ -1,9 +1,9 @@
 # module-template.md — 模块模板
 
-> 每个模块用此模板。自包含：需求 + 验收条件 + 数据模型 + 接口/结构 + 约束。
+> 只在 goal.md 不足以表达模块边界时创建。模块文档定义公共接口、不变量、依赖和模块特有约束，不复制 feature 目标与验收条件。
 > 目标：100-200 行。
 > 后端模块侧重接口合约，前端模块侧重组件结构和数据消费。按模块类型选择对应段落。
-> 验收条件追溯：标注来源 PRD US-XX / AC-XX-X。
+> 完成标准追溯：引用 goal.md AC/FD，不在本文件重写。
 > 约束引用：共享约束引用 goal.md FD#，不重复内容。
 
 ---
@@ -19,17 +19,12 @@
 - 是否项目入口？哪个文件 boot？
 - 被哪些模块 import？
 
-## 需求
+## 责任与不变量
 
-- F1:
-- F2:
-
-## 验收条件
-
-> 优先 EARS 句式：`WHEN <事件/前置>，系统 SHALL <可验收行为>`，让每条可独立测试。
-
-- AC1 (→ US-XX/AC-XX-X): WHEN <事件/前置>，系统 SHALL <可验收行为>
-- AC2 (→ US-XX/AC-XX-X): WHEN <事件/前置>，系统 SHALL <可验收行为>
+- 负责：
+- 不负责：
+- 必须始终成立：
+- 来源：goal.md FD#/AC#
 
 ---
 
@@ -92,17 +87,6 @@ ParentComponent
 from store: fieldA, fieldB, actionC()
 from hook: useSomething() → { data, loading, error }
 from API: GET /path → ResponseType
-```
-
----
-
-## 内部函数
-
-> 模块内部使用，不需要导出。
-
-```
-helperFunction(param: Type): void
-  → 内部实现细节
 ```
 
 ---

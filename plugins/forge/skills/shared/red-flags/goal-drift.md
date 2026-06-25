@@ -13,4 +13,4 @@ Goal drift occurs when implementation diverges from the stated goal without expl
 
 1. Check: is this still within the stated goal?
 2. If not, either update the goal or stop the drift
-3. Record the decision in changelog
+3. Record the decision in the authoritative goal/project document and Change Unit

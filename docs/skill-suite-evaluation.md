@@ -42,7 +42,7 @@ This gate proves token footprint control, not behavior effectiveness. Behavior s
 
 ## V2 Traceability Contract
 
-The benchmark contract is now version 2. Every scored case must prove that the run is traceable through a Change Unit.
+The benchmark contract is now version 2. Every mutating scored case must prove that the run is traceable through a Change Unit. Non-mutating advisory or blocked-diagnosis cases must instead prove that no current artifact was changed.
 
 Each case report includes:
 
@@ -76,6 +76,8 @@ Skipped blocked cases are not evidence of skill effectiveness.
 
 The source of truth is `evals/skills-suite/manifest.json`.
 
+`scripts/lib/benchmark-contract.mjs` is the single in-process interface that loads and validates that source. The repository validator, evaluator, benchmark runner, and contract tests consume it instead of reinterpreting manifest rules independently.
+
 Each case defines:
 
 - fixture prompt
@@ -103,11 +105,18 @@ The suite now makes the main product-value claims measurable instead of relying 
 | Clear small feature iteration | `default-chain-small-feature` | The high-frequency `detail -> codegen -> review` path can create a feature goal, implement code, run `node --test`, review the result, and avoid project-doc scope creep. |
 | Ambiguous requirement convergence | `requirements-research` | A vague feature with technical signal words is narrowed into PRD plus research options before implementation. |
 | Frontend experience delivery | `interaction-design-system` | Design, visual system, frontend artifact, and acceptance evidence stay connected through one chain. |
-| Regression bugfix | `bugfix-regression-change-unit` | A local bugfix produces a regression test, runtime verification, Change Unit, and no unrelated project-doc changes. |
+| Deterministic regression bugfix | `bugfix-regression-change-unit` | The exact symptom goes red before the fix, is minimized, becomes a regression test, and is rechecked through the original scenario. |
+| Intermittent bugfix | `bugfix-flaky-reproduction-rate` | A low-rate failure is amplified into a measurable harness before root-cause work starts. |
+| Unreproducible production bug | `bugfix-unreproducible-blocked` | The agent stops instead of guessing when no red-capable signal can be built and requests the minimum missing evidence. |
+| Correct regression seam | `bugfix-correct-test-seam` | A shallow test that cannot reproduce the real multi-caller failure is rejected. |
+| Minimal routing advice | `guide-shortest-chain` | The explicit Router recommends L0 `codegen(patch)` and does not execute stages or create artifacts. |
+| Routing matrix | `guide-routing-matrix` | The Router distinguishes L3 project initialization, L1 production bug diagnosis, and L2 cross-module delivery without copying child methods. |
 
 ## Report Contract
 
 A run report follows `evals/skills-suite/report.schema.json`.
+
+`scripts/lib/run-report.mjs` owns report construction, schema-aligned runtime validation, field-shape normalization, and oracle evaluation. Callers consume its interface; they do not parse string/object variants or rebuild blocked/fail result shapes themselves.
 
 Each case report records:
 
@@ -161,3 +170,4 @@ node scripts/evaluate-skills.mjs \
 - Mark interrupted runs as incomplete instead of failed skill behavior.
 - Compare suites by pass rate, scope control, verification evidence, and user intervention count.
 - Treat score deltas as diagnostic signals, not as release approval when any hard oracle fails.
+- Evaluate skill prose with `plugins/forge/skills/shared/rubrics/skill-quality.md`; runtime evidence remains the release gate.

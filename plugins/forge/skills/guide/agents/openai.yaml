@@ -1,0 +1,6 @@
+interface:
+  display_name: "Forge Guide"
+  short_description: "推荐最短 Forge skill 链、复杂度与调用深度"
+  default_prompt: "Use $guide to recommend the shortest Forge skill chain for this task."
+policy:
+  allow_implicit_invocation: false

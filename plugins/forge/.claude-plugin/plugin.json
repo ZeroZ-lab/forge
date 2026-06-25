@@ -1,6 +1,6 @@
 {
   "name": "forge",
-  "version": "0.36.2",
+  "version": "0.39.0",
   "description": "文档是目标约束。目标是什么、边界在哪、怎么算完成。",
   "author": {
     "name": "ZeroZ-lab",
@@ -16,6 +16,7 @@
     "goal-first"
   ],
   "skills": [
+    "./skills/guide",
     "./skills/brainstorm",
     "./skills/research",
     "./skills/init",

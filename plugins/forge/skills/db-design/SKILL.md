@@ -40,7 +40,7 @@ schema 版本、up/down、回填、兼容窗口、回滚和验证。
 
 ## 文档约束
 
-写入 feature `goal.md` 或 `modules/*.md` 的数据模型和迁移约束。命名、通用列和模块结构参考 `${CLAUDE_SKILL_DIR}/../shared/module-template.md`。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。共享存储决策写入 feature `goal.md`；只有数据接口、不变量或迁移约束复杂到 goal 不足时才创建 `modules/*.md`。结构参考 `${CLAUDE_SKILL_DIR}/../shared/module-template.md`。
 
 ## 入口/出口条件
 
@@ -64,4 +64,4 @@ schema 版本、up/down、回填、兼容窗口、回滚和验证。
 
 ## 历史维护（自动）
 
-完成后追加 feature changelog；作为 detail 子阶段时由 detail 汇总。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。standalone 且产生变更时持久化；作为 `detail` 子阶段时不单独写，由 orchestrator 汇总一次。

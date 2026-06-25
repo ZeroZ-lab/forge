@@ -2,7 +2,7 @@
 name: shared
 description: Internal Forge knowledge package containing templates, rubrics, red flags, concepts, and output specifications. Do not invoke as a lifecycle protocol.
 when_to_use: Never as a user-facing protocol. Read specific files here only when another Forge skill references a shared template, rubric, concept, red flag, or output specification.
-disable-model-invocation: false
+disable-model-invocation: true
 ---
 
 # Shared — 内部知识包
@@ -18,4 +18,4 @@ disable-model-invocation: false
 
 - 不直接响应用户任务。
 - 不替代 `forge-detail`、`forge-codegen`、`forge-review` 等正式协议。
-- 不产生自己的 timeline/changelog 记录。
+- 不产生自己的项目产物或 Change Unit。

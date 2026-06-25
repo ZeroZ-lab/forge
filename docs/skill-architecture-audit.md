@@ -8,14 +8,14 @@
 当前仓库基线：
 
 - `node scripts/validate.mjs` 通过：`Forge validation passed (23 skills, ...)`。
-- 当前 suite 暴露 23 个一级 `plugins/forge/skills/*` skill，SKILL.md frontmatter 只保留 `name` / `description` / `when_to_use` 标准头，目录名即 skill id。
+- 当前 suite 发布 25 个一级 `plugins/forge/skills/*` skill：24 个生命周期协议 + 1 个显式 `guide`；`shared` 是不进入 registry 的内部知识包。
 - `plugins/forge/.claude-plugin/plugin.json` 显式枚举 `skills/*`，`scripts/validate.mjs` 校验 manifest 与目录一致。
 - `plugins/forge/skills/shared/` 已从产物模板扩展出 concepts、rubrics、red-flags、output-contracts 四类 Knowledge 文件。
 
 不改 flat 结构的原因：
 
 - Claude Code 只发现 `plugins/forge/skills/` 一级子目录的 `SKILL.md`，当前 flat list 是安装和发现边界。
-- Validator 已经把 23 个 skill、frontmatter 短名、manifest 枚举和行数上限作为稳定约束。
+- Validator 已经把 25 个发布 skill、frontmatter 短名、manifest 枚举、调用策略和行数上限作为稳定约束。
 - 嵌套分类目录会破坏现有 plugin discovery 和 validator 约束；分类应留在文档说明里，不进入物理目录。
 
 审计标准来源：
@@ -49,17 +49,17 @@
 
 | 模块 | 承担者 | 当前状态 |
 |------|--------------|----------|
-| Monitor | 当前任务、项目文档、feature 文档、代码、测试、timeline/changelog、用户确认 | 各 skill 在正文说明执行前读取哪些输入 |
+| Monitor | 当前任务、project/goal/modules、Change Units、代码、测试、用户确认 | 各 skill 在正文说明执行前读取哪些输入 |
 | Analyze | `review`、`codegen`、`detail` | 差距分析已固化 |
 | Plan | `plan`、`detail`、`deploy` | 任务计划、级联更新、发布计划存在 |
 | Execute | `codegen`、`fe-artifact`、`deploy` | 执行层清晰 |
-| Knowledge | `plugins/forge/skills/shared/`、各 skill `references/`、项目 `timeline`、feature `changelog`、产物文档 | shared 已扩展 concepts/rubrics/red-flags/output-contracts |
+| Knowledge | `plugins/forge/skills/shared/`、各 skill `references/`、project/goal/modules、Change Units、gated artifacts | shared 已扩展 concepts/rubrics/red-flags/output-contracts |
 | Feedback | `validate.mjs`、真实测试、`review`、`fe-accept`、用户验收 | validator 与 `node --test` 校验仓库静态完整性 |
 | Recovery | `codegen` 问题升级、`detail` 级联更新、`review` 阻塞项、`deploy` 回滚 | 升级路径写在各 skill 正文 |
 
 整体结论：
 
-- Forge 不需要把 23 个 skill 都改成统一模板。
+- Forge 不需要把所有 skill 都改成统一模板。
 - 必须保证方法论覆盖完整：状态读取、问题判断、计划选择、目标实现、反馈验收、恢复升级和知识沉淀能串起来。
 - 领域型决策 skill 保持"方法论 + 决策点 + 文档约束"的形态，只需在必要处补输入状态、问题分类或恢复规则。
 - 目标验证作为执行实践写在各 skill 正文，参考 `plugins/forge/skills/shared/concepts/control-loop.md`。
@@ -250,15 +250,31 @@ skill 之间的衔接、目标验证和升级规则写在各 skill 正文，不�
 - `plugins/forge/skills/shared/red-flags/`
 - `plugins/forge/skills/shared/output-contracts/`
 
+额外产物门由 `shared/concepts/artifact-policy.md` 解释；变更证据由 `shared/concepts/history-maintenance.md` 集中解释。生命周期 skill 只声明 authoritative writeback 和局部例外。
+
+### 编排 seam 只依赖子 skill interface
+
+`design`、`detail`、`test` 保留跨产物质量门，但只依赖子 skill 的产物和出口条件，不再绑定 I#/S#/API#/DB#/FE#/T#/TC# 等内部方法步骤。
+
+### 评测 harness 使用两个 deep modules
+
+- `scripts/lib/benchmark-contract.mjs`：加载并验证 manifest、fixture、registry coverage 和 oracle 定义。
+- `scripts/lib/run-report.mjs`：构造、归一化、验证 run report 并计算 oracle。
+
+`evals/skills-suite/manifest.json` 与 `report.schema.json` 继续是事实源；module 集中解释，不替代文档合约。
+
 ### validator 校验仓库静态完整性
 
 `scripts/validate.mjs` 校验：
 
 - `docs/skill-architecture-audit.md` 存在
-- 23 个 skill 的 frontmatter 短名与目录名一致、描述存在、行数不超限
+- 25 个发布 skill 的 frontmatter 短名与目录名一致、描述存在、行数不超限
 - `plugins/forge/.claude-plugin/plugin.json` 的 skill 枚举与目录一致
 - shared Knowledge 层文件存在
 - 关键编排顺序（如 detail 内 API 先于 DB）和测试用例路径
+- 编排器不依赖子 skill 内部步骤编号
+- 所有 history-aware skill 使用 shared persistence module
+- benchmark contract 由 validator/evaluator/runner 共用
 
 ## 6. 历史演进
 

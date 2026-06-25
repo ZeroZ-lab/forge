@@ -7,8 +7,7 @@ User prompt:
 Context files:
 
 - `docs/features/billing/goal.md` — existing goal with export format requirements
-- `docs/features/billing/api/goal.md` — current API contract (has deviation)
-- `docs/features/billing/database/goal.md` — current database contract
+- `docs/features/billing/modules/billing.md` — current API and persistence contract (has deviation)
 - Deviation summary from codegen: API returns `createdAt` timestamp but goal requires ISO date string; missing `totalCount` header for pagination
 - Review findings: contract-goal inconsistency on export format and pagination metadata
 
@@ -17,7 +16,6 @@ Expected behavior:
 - Re-enter detail orchestration from deviation signal (not a fresh detail run).
 - Read deviation summary and review findings as primary input.
 - Update API contract with corrected constraints: ISO date string format, `totalCount` in response header.
-- Update database contract if query changes are needed.
+- Update the module contract if query changes are needed.
 - Record a downstream gap report documenting what changed and why.
-- Update changelog with the deviation-triggered correction.
 - Produce Change Unit for the reentry correction.

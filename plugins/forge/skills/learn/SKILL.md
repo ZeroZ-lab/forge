@@ -70,7 +70,7 @@ learn 不产生新代码、不做架构决策、不修改 skill 方法论本身�
 | 内容类型 | 归档目标 | 示例 |
 |---------|---------|------|
 | 长期有效的业务规则 | goal.md 或 project.md | "所有金额字段使用分存储" |
-| 架构决策 | docs/change-units/ 或 ADR | "读分离写走主库" |
+| 架构决策 | project.md 或 gated ADR | "读分离写走主库" |
 | 测试命令 | AGENTS.md | "集成测试: `pnpm test tests/integration/`" |
 | 关键风险 | goal.md 已知风险段 | "并发上传可能导致超限" |
 | 约定俗成的实现模式 | project.md 或 shared/concepts/ | "所有 API 响应统一 envelope 格式" |
@@ -134,7 +134,7 @@ learn 不产生新代码、不做架构决策、不修改 skill 方法论本身�
 
 ## 历史维护
 
-归档决策影响长期文档时，追加 feature `changelog.md` 和 `docs/timeline.md`。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md` 与 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。只有用户确认归档且权威文档实际变更后才写 Change Unit。
 
 ## 完成提示
 

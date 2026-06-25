@@ -1,6 +1,6 @@
 # change-unit-template.md — Change Unit
 
-> 每次 feature、bugfix、refactor、release 或 methodology update 使用一个 Change Unit。CU 是演化事实源；changelog 和 timeline 只摘要并链接它。
+> 每次 feature、bugfix、refactor、release 或 methodology update 使用一个 Change Unit。CU 是变更历史、风险和**验证证据**的唯一事实源——证据指命令 + 真实输出，不是「测试通过」这类结论（见 `${CLAUDE_SKILL_DIR}/../shared/concepts/evidence-policy.md`）。
 
 ---
 
@@ -40,10 +40,11 @@
 
 ## Verification
 
-- Commands:
-- Manual checks:
-- Evidence:
-- Not verified:
+> 证据形态见 `${CLAUDE_SKILL_DIR}/../shared/concepts/evidence-policy.md`。证据 = 命令 + 真实输出,不是结论字符串。
+
+- Commands (with exit codes): `<cmd>` → exit 0 / `<output excerpt>`
+- Red-capable evidence (bugfix only): before=`<cmd + failure output>`, after=`<cmd + pass output>`
+- Not verified (with blocking reason): `<为什么无法执行>`
 
 ## Rollback
 
@@ -54,14 +55,14 @@
 ## Docs To Sync
 
 - [ ] feature goal.md
+- [ ] project.md / ADR
+- [ ] modules
 - [ ] testing docs
 - [ ] deploy docs
-- [ ] changelog / timeline summary
 
 ## Completion Evidence
 
 - Code diff:
-- Test evidence:
+- Test evidence (command + output, not conclusion):
 - Doc sync result:
 - Residual risk:
-- Trace Report: docs/features/<feature>/trace-<date>.md

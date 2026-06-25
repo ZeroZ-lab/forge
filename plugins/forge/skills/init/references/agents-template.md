@@ -1,126 +1,75 @@
 # {项目名} — AI 行为指令
 
-> 从 project.md + DESIGN.md 生成，不要手写。
+> 从 `docs/project.md`、feature goals 和可选 `DESIGN.md` 投影。不要在这里复制业务事实。
 
 ## 角色
 
-你是 {项目名} 的开发搭档。在这个项目里，文档是目标约束。
+你是 {项目名} 的工程协作者。交付满足目标的最小已验证变更。
 
-## 读取协议（agent 必读）
+## 读取协议
 
-按需读取，不要一次性读完所有文档——只把当前任务相关的拉进上下文。
-
-1. 做某个 feature 前，先读 `docs/features/<feature>/goal.md` 的首屏合约（目标/边界/完成标准）→ 拿到全部硬约束即可开工。
-2. 需要实现细节时，按 goal.md「需要细节时」的指针读对应 `modules/*.md`；每个模块文件首行自描述是否还需配合阅读别的文件。
-3. 需要决策来历时，读 `changelog.md`（启用 timeline 时再回看 `docs/timeline.md`）。
-4. goal.md 若残留 `[NEEDS CLARIFICATION: ...]`，先澄清或升级人类决策，不要默默假设。
-5. 改完文档或代码 → 回写 `changelog.md`，执行可用验证。
-
-## 技术栈（来自 project.md）
-
-- Runtime: {runtime}
-- 后端: {backend_framework}
-- 前端: {frontend_framework}
-- 数据库: {database}
-- ORM: {orm}
-- 测试: {test_framework}
-- 部署: {deploy_target}
-
-## 命令
-
-```bash
-# 开发
-{dev_command}
-
-# 构建
-{build_command}
-
-# 测试（全量）
-{test_command}
-
-# 测试（单文件）
-{test_single_command}
-
-# 类型检查
-{typecheck_command}
-```
-
-## 项目结构
-
-> 从 project.md「工程约束 → 模块边界」生成。必须与实际目录一致。不使用默认结构假设。
-
-```
-{project_directory_tree — 从 project.md 工程约束提取，对照实际目录}
-```
+1. 先读相关 `docs/features/<feature>/goal.md` 的目标、边界和完成标准。
+2. 只有需要模块接口或不变量时，按 goal 指针读 `modules/*.md`。
+3. 需要共享技术约束时读 `docs/project.md`；需要变更来历和验证证据时读相关 `docs/change-units/CU-*.md`。
+4. `PRD.md`、`interaction-spec.md`、`research-brief.md`、`testing/strategy.md`、`deploy/plan.md` 和 `DESIGN.md` 都是按需产物，只在存在且与任务相关时读取。
+5. `[NEEDS CLARIFICATION]` 未解决时，不默默假设。
 
 ## 工作流
 
-- 新功能 → 先写 goal.md，再生成代码
-- 加模块 → 参考已有模块模式，追加 modules/*.md
-- 改决策 → 更新 goal.md，重新生成受影响文件
-- 每个关键逻辑分支注释决策编号（FD# feature 级 / PD# 项目级 / DB# 数据库级）
-- 测试失败 → 读目标文档找分歧，修代码对齐
+- 新功能：创建或更新 goal；只有 goal 不够时创建 module。
+- 实现：按当前对话/issue 的任务序列执行；没有时从 goal 推导最小序列。
+- 测试：自动化场景写入测试代码；不维护独立 test-cases 文档。
+- 变更完成：运行最窄有效验证，写一个 Change Unit；不维护 changelog、timeline、status 或 Trace。
+- 决策：项目级写 project/ADR，feature 级写 goal/module。
 
-## AI 执行纪律
+## 技术栈与命令
 
-- 改动前先确认目标、边界、假设和需要同步的目标文件。
-- 优先做满足当前目标的最小变更，不引入未要求的抽象、配置或兼容层。
-- 只编辑与目标直接相关的文件；发现无关问题只记录，不顺手修改。
-- 每次代码或目标文档变更后，说明验证方式并执行可用验证。
+> 从 `docs/project.md` 和仓库脚本投影，必须与实际项目一致。
 
-## Skill 调用深度
+- Runtime: {runtime}
+- Backend: {backend_framework}
+- Frontend: {frontend_framework}
+- Database: {database}
+- Test: {test_framework}
 
-- lens：只分析、判断或 review 一个点，不改文件。
-- patch：局部修改 goal 或代码，必须执行可用验证。
-- stage：完整阶段执行，必须产出或更新阶段文档和历史记录。
-- 用户未显式点名阶段时，默认选择最小相关 skill 做 lens/patch 轻量调用。
-- 用户显式点名阶段或 skill 时，默认 stage 阶段调用，除非用户说"只看看"、"简单 review"或等价限制。
-- 轻量调用如果改变目标语义，必须回写对应文档。
+```bash
+{dev_command}
+{test_command}
+{typecheck_command}
+{build_command}
+```
 
-## 代码标准
+## 执行纪律
 
-- {coding_standard_1}
-- {coding_standard_2}
-- {coding_standard_3}
+- 改动前确认目标、边界、假设、验证方式和权威文档。
+- 优先最小完整变更，不引入未要求的抽象、依赖或兼容层。
+- 只编辑与目标直接相关的文件。
+- 代码完成必须有运行证据；无法运行时明确标记未验证风险。
 
-## 设计约束（来自 DESIGN.md）
-
-- 主色: {primary_color}
-- 间距: {spacing_system}
-- 组件模式: {component_pattern}
-
-## 边界
+## Always / Ask First / Never
 
 ### Always
-- 注释决策编号（FD# / PD# / DB#）
-- 测试通过再提交
-- 读目标文档确认接口定义
+
+- 对照 goal 完成标准。
+- 复用现有项目模式。
+- 报告验证证据和剩余风险。
 
 ### Ask First
-- Schema 变更（影响数据库迁移）
-- 添加新依赖
-- 修改 CI/CD 配置
-- 删除或重命名公开 API
+
+- 数据迁移、公开 API breaking change、新依赖、权限/认证、CI/CD 或不可逆操作。
 
 ### Never
-- 提交密钥或凭证
-- 删除失败的测试（应该修代码）
-- 绕过类型检查（用 any / @ts-ignore）
-- 手动修改生成的代码（改目标文档重新生成）
 
-## 历史维护（自动，每次文档变更后执行）
+- 提交密钥。
+- 删除失败测试来换取绿灯。
+- 把临时计划、推理或审查报告当作新的事实源。
 
-- 改完文档 → 追加 docs/features/<feature>/changelog.md（触发 + 产出 + 决策）
-- 完成阶段 → 追加 docs/timeline.md（一条 = 一次发布）
-- 每次开发前 → 读 timeline.md + changelog.md 了解上下文
-- timeline.md 或 changelog.md 超 100 行 → 旧记录归档到 timeline/ 或 changelog/
-
-## 文档引用
+## 文档入口
 
 | 文件 | 用途 |
 |------|------|
-| docs/project.md | 技术决策 + 共享约束 |
-| docs/timeline.md | 项目演进时间线 |
-| DESIGN.md | 设计系统 |
-| docs/features/<feature>/goal.md | 功能目标 |
-| docs/features/<feature>/changelog.md | 功能变更历史 |
+| `docs/project.md` | 共享项目决策与约束 |
+| `docs/features/<feature>/goal.md` | feature 核心合约 |
+| `docs/features/<feature>/modules/*.md` | 可选模块接口与不变量 |
+| `docs/change-units/CU-*.md` | 变更历史、风险与验证证据 |
+| `DESIGN.md` | 可选跨 feature 设计系统 |

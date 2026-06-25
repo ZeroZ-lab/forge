@@ -5,11 +5,12 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
+import { loadBenchmarkContract } from '../scripts/lib/benchmark-contract.mjs';
 import { loadRegistry } from '../scripts/lib/registry.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const manifest = JSON.parse(fs.readFileSync(path.join(root, 'evals/skills-suite/manifest.json'), 'utf8'));
 const registry = loadRegistry(root);
+const { manifest } = loadBenchmarkContract(root, registry);
 
 function reportEvidenceFor(testCase) {
   const commands = new Set();
@@ -43,26 +44,6 @@ function reportEvidenceFor(testCase) {
   };
 }
 
-test('skills-suite benchmark covers every registered skill', () => {
-  const expected = new Set(registry.skills.map((skill) => skill.name));
-  const covered = new Set(manifest.cases.flatMap((testCase) => testCase.expected_skills));
-
-  assert.deepEqual([...covered].sort(), [...expected].sort());
-});
-
-test('skills-suite goal verification targets are visible as expected artifacts', () => {
-  for (const testCase of manifest.cases) {
-    for (const check of testCase.oracle_checks) {
-      if (check.type === 'goal_verified') {
-        assert.ok(
-          testCase.expected_artifacts.includes(check.target),
-          `${testCase.id} syncs ${check.target} but does not list it as an expected artifact`,
-        );
-      }
-    }
-  }
-});
-
 test('skills-suite includes a default-chain small feature value scenario', () => {
   const testCase = manifest.cases.find((candidate) => candidate.id === 'default-chain-small-feature');
 
@@ -83,6 +64,66 @@ test('skills-suite includes a default-chain small feature value scenario', () =>
       (check) => check.type === 'evidence_contains' && check.text === 'detail -> codegen -> review',
     ),
   );
+});
+
+test('skills-suite covers all bugfix feedback-loop failure modes', () => {
+  const expectedCases = [
+    'bugfix-regression-change-unit',
+    'bugfix-flaky-reproduction-rate',
+    'bugfix-unreproducible-blocked',
+    'bugfix-correct-test-seam',
+  ];
+
+  for (const caseId of expectedCases) {
+    const testCase = manifest.cases.find((candidate) => candidate.id === caseId);
+    assert.ok(testCase, `${caseId} case is required`);
+    assert.ok(testCase.expected_skills.includes('codegen'));
+    assert.ok(
+      testCase.oracle_checks.some(
+        (check) =>
+          check.type === 'evidence_contains' &&
+          ['red-capable', 'red-capable command unavailable'].includes(check.text),
+      ),
+      `${caseId} must prove a red-capable loop or its explicit absence`,
+    );
+  }
+});
+
+test('guide benchmark is advisory and non-mutating', () => {
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'guide-shortest-chain');
+
+  assert.ok(testCase, 'guide-shortest-chain case is required');
+  assert.deepEqual(testCase.expected_skills, ['guide']);
+  assert.deepEqual(testCase.expected_artifacts, []);
+  assert.ok(
+    testCase.oracle_checks.some(
+      (check) => check.type === 'artifact_absent' && check.path === 'docs/change-units/CU-*.md',
+    ),
+  );
+  assert.ok(
+    !testCase.oracle_checks.some((check) => check.type === 'change_unit_reported'),
+    'advisory guide must not require a Change Unit',
+  );
+});
+
+test('guide routing matrix covers project, bugfix, and cross-module paths', () => {
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'guide-routing-matrix');
+
+  assert.ok(testCase, 'guide-routing-matrix case is required');
+  for (const text of [
+    'L3',
+    'init',
+    'bugfix protocol',
+    'L2',
+    'detail(stage) -> plan(stage) -> codegen(stage) -> review(stage)',
+  ]) {
+    assert.ok(
+      testCase.oracle_checks.some(
+        (check) => check.type === 'evidence_contains' && check.text === text,
+      ),
+      `guide-routing-matrix must require ${text}`,
+    );
+  }
 });
 
 test('skills-suite evaluator runs without external dependencies', () => {
@@ -323,7 +364,7 @@ test('skills-suite evaluator rejects missing expected artifacts', () => {
         case_id: testCase.id,
         status: 'pass',
         triggered_skills: testCase.expected_skills,
-        artifacts: ['docs/idea-brief.md'],
+        artifacts: ['goal.md'],
         ...reportEvidenceFor(testCase),
         change_units: ['docs/change-units/CU-synthetic.md'],
         forbidden_behaviors: [],
@@ -410,7 +451,7 @@ test('skills-suite evaluator rejects non-CU paths in change_units', () => {
         case_id: testCase.id,
         status: 'pass',
         triggered_skills: testCase.expected_skills,
-        artifacts: ['docs/idea-brief.md'],
+        artifacts: ['docs/project.md'],
         ...reportEvidenceFor(testCase),
         change_units: ['docs/project.md', 'docs/goal.md', 'docs/change-units/CU-synthetic.md'],
         forbidden_behaviors: [],

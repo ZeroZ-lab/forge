@@ -8,7 +8,7 @@ when_to_use: Use when the user describes a feature with unclear scope, asks to d
 
 ## 职责
 
-把方向变成可执行 PRD：做什么、不做什么、谁用、如何验收。define 不做技术选型、不设计交互、不写代码。
+把方向变成可执行目标约束：做什么、不做什么、谁用、如何验收。define 不做技术选型、不设计交互、不写代码。
 
 ## 执行纪律
 
@@ -50,15 +50,15 @@ when_to_use: Use when the user describes a feature with unclear scope, asks to d
 
 ### R5: 验收测试（验收阶段）
 
-列出用户如何确认完成；给 test-cases 和 codegen 提供 AC 编号。
+列出用户如何确认完成；给测试实现和 codegen 提供 AC 编号。
 
 ## 文档约束
 
-产出 `PRD.md`，使用 `${CLAUDE_SKILL_DIR}/references/prd-template.md`。PRD 必须包含：目标、用户、场景、范围、AC、非功能需求、风险、开放问题、被拒范围。引用 project.md 共享约束，不复制技术方案。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。默认更新 feature `goal.md` 的目标、场景、范围、AC、风险和开放问题。只有产品团队有独立 owner、审批或更新周期时，才创建 `PRD.md`；PRD 引用 goal/project，不复制技术方案。
 
 ## 入口/出口条件
 
-入口：需求边界不清或用户要求 PRD。出口：PRD 可被 detail 读取，且没有阻塞性 `[NEEDS CLARIFICATION]`。若出现实时、搜索、推荐、优化、媒体、加密等技术信号，建议 research。
+入口：需求边界不清或用户要求定义。出口：goal（或 gated PRD）可被 detail 读取，且没有阻塞性 `[NEEDS CLARIFICATION]`。若出现实时、搜索、推荐、优化、媒体、加密等技术信号，建议 research。
 
 ## 轻量模式
 
@@ -82,4 +82,4 @@ when_to_use: Use when the user describes a feature with unclear scope, asks to d
 
 ## 历史维护
 
-完成后追加 feature changelog 和必要的 `docs/timeline.md`；超 100 行归档。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。需求目标或边界未发生持久变更时不写历史。

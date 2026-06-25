@@ -63,7 +63,7 @@
 | DESIGN.md tokens | CSS variables、theme、component variants |
 | goal.md（前端合约） | 页面结构、路由、模块边界 |
 | modules/*.md | components、hooks、state、props；API client、types、error handling |
-| testing/test-cases.md | component tests、interaction tests |
+| goal AC + current scenario matrix | component tests、interaction tests |
 
 ## 验收前自查
 

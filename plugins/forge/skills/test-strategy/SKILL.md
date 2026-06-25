@@ -48,11 +48,11 @@ fixture、factory、seed、隔离、清理和敏感数据策略。
 
 ## 文档约束
 
-产出 `testing/strategy.md`，包含覆盖矩阵、风险矩阵、CI gate、数据策略、mock 策略和手动验收边界。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。默认在对话中给出覆盖矩阵、风险矩阵、CI gate、数据策略、mock 策略和手动验收边界。只有跨模块、高风险、合规或独立 QA owner 时创建 `testing/strategy.md`；否则把关键验证约束压缩写入 goal。
 
 ## 入口/出口条件
 
-入口：功能风险较高、测试要求不清、准备发布或用户要求测试策略。出口：test-cases 可据此推导具体场景。
+入口：功能风险较高、测试要求不清、准备发布或用户要求测试策略。出口：test-cases 可据此推导具体场景，持久化门已明确。
 
 ## 红旗清单
 
@@ -71,4 +71,4 @@ fixture、factory、seed、隔离、清理和敏感数据策略。
 
 ## 历史维护（自动）
 
-完成后追加 feature changelog；由 test 编排器汇总 timeline。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。作为 `test` 子阶段时不单独写；standalone 且产生变更时持久化。

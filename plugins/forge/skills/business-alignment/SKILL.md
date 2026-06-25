@@ -54,7 +54,7 @@ when_to_use: Use after brainstorm or when a project idea needs validation agains
 
 ## 文档约束
 
-更新 `docs/idea-brief.md` 或 `docs/project.md` 的业务承诺摘要；不写技术方案。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。项目级承诺写入 `docs/project.md`；单 feature 承诺写入其 `goal.md`。不创建 idea brief，不写技术方案。
 
 ## 入口/出口条件
 
@@ -81,4 +81,4 @@ when_to_use: Use after brainstorm or when a project idea needs validation agains
 
 ## 历史维护（自动）
 
-完成后追加 idea/project 历史和必要 Change Unit。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。只有业务承诺或项目目标发生持久变更时才写历史。

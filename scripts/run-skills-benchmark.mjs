@@ -2,29 +2,22 @@
 
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 
+import { loadBenchmarkContract } from './lib/benchmark-contract.mjs';
 import { findCodexBin } from './lib/codex-bin.mjs';
 import { truncateList, markdownTableCell } from './lib/benchmark-helpers.mjs';
 import {
-  artifactPaths,
-  changeUnitPaths,
-  checkRun,
-  decisionIds,
-  docSyncTargets,
-  evidenceText,
-  globMatch,
-  goalCoveragePaths,
-  isChangeUnitPath,
-} from './lib/run-helpers.mjs';
+  createCaseRun,
+  createRunReport,
+  evaluateOracleChecks,
+  formatCaseRunContract,
+  inspectRun,
+} from './lib/run-report.mjs';
+import { loadRegistry } from './lib/registry.mjs';
 
 const root = process.cwd();
-
-function readJson(relativePath) {
-  return JSON.parse(fs.readFileSync(path.join(root, relativePath), 'utf8'));
-}
 
 function parseArgs(argv) {
   const args = {
@@ -96,28 +89,23 @@ function generateSummary(report, manifest, reportPath) {
   for (const run of report.cases) {
     counts[run.status] = (counts[run.status] ?? 0) + 1;
     const testCase = manifestById.get(run.case_id);
-    const checkResults = testCase ? checkRun(testCase, run) : [];
+    const checkResults = testCase ? evaluateOracleChecks(testCase, run) : [];
     const casePassedChecks = checkResults.filter((result) => result.passed).length;
     passedChecks += casePassedChecks;
     totalChecks += checkResults.length;
 
-    const artifacts = (run.artifacts ?? []).map((artifact) => (typeof artifact === 'string' ? artifact : artifact.path));
-    const changeUnits = (run.change_units ?? [])
-      .map((changeUnit) => (typeof changeUnit === 'string' ? changeUnit : changeUnit.path))
-      .filter(isChangeUnitPath);
-    const decisions = (run.decisions ?? []).map((decision) => (typeof decision === 'string' ? decision : decision.id));
-    const firstEvidence = run.evidence?.[0] ?? run.notes ?? '-';
+    const view = inspectRun(run);
 
     rows.push([
       run.case_id,
       run.status,
       `${casePassedChecks}/${checkResults.length}`,
-      truncateList(run.triggered_skills ?? []),
-      truncateList(artifacts),
-      truncateList(changeUnits, 2),
-      truncateList(run.commands_run ?? [], 2),
-      truncateList(decisions),
-      firstEvidence,
+      truncateList(view.triggeredSkills),
+      truncateList(view.artifacts),
+      truncateList(view.changeUnits, 2),
+      truncateList(view.commands, 2),
+      truncateList(view.decisions),
+      view.firstEvidence,
     ]);
   }
 
@@ -187,20 +175,7 @@ Fixture:
 ${fixture}
 
 最终 JSON object 必须符合：
-{
-  "case_id": "${testCase.id}",
-  "status": "pass" | "fail" | "blocked",
-  "triggered_skills": ["forge-..."],
-  "artifacts": ["path/or/dir"],
-  "change_units": ["docs/change-units/CU-....md"],
-  "goal_verification": [{"target": "docs/goal.md", "status": "completed"}],
-  "goal_coverage_entries": [{"source": "docs/features/<feature>/goal.md", "covers": ["src/..."]}],
-  "commands_run": ["exact command"],
-  "decisions": ["decision_id"],
-  "forbidden_behaviors": [],
-  "evidence": ["short evidence strings"],
-  "notes": "short note"
-}
+${formatCaseRunContract(testCase.id)}
 
 	只有真实执行或明确遵循了对应 skill 协议，才能把 skill 放进 triggered_skills。change_units 必须指向 docs/change-units/CU-*.md；goal_verification 必须是带 status 的对象，只有 completed 算同步完成；goal_coverage_entries 必须是对象；source 必须是 docs/ 下的源文档，covers 才能填写 src/、tests/ 或其他实现目标。`;
 }
@@ -245,57 +220,27 @@ function runCase({ codexBin, runDir, testCase }) {
   fs.closeSync(stderrFd);
 
   if (result.error) {
-    return {
-      case_id: testCase.id,
-      status: 'blocked',
-      triggered_skills: [],
-      artifacts: [],
-      change_units: [],
-      goal_verification: [],
-      goal_coverage_entries: [],
-      commands_run: [],
-      decisions: [],
-      forbidden_behaviors: [],
+    return createCaseRun(testCase.id, 'blocked', {
       evidence: [`codex exec failed: ${result.error.message}`],
       notes: `See ${stderrPath}`,
-    };
+    });
   }
 
   if (result.status !== 0) {
     const errorMessage = errorMessageFromEvents(eventsPath);
-    return {
-      case_id: testCase.id,
-      status: 'blocked',
-      triggered_skills: [],
-      artifacts: [],
-      change_units: [],
-      goal_verification: [],
-      goal_coverage_entries: [],
-      commands_run: [],
-      decisions: [],
-      forbidden_behaviors: [],
+    return createCaseRun(testCase.id, 'blocked', {
       evidence: [errorMessage ?? `codex exec exited ${result.status}`],
       notes: `See ${stderrPath}`,
-    };
+    });
   }
 
   try {
     return extractJsonObject(fs.readFileSync(lastMessagePath, 'utf8'));
   } catch (error) {
-    return {
-      case_id: testCase.id,
-      status: 'fail',
-      triggered_skills: [],
-      artifacts: [],
-      change_units: [],
-      goal_verification: [],
-      goal_coverage_entries: [],
-      commands_run: [],
-      decisions: [],
-      forbidden_behaviors: [],
+    return createCaseRun(testCase.id, 'fail', {
       evidence: [`could not parse final JSON: ${error.message}`],
       notes: `See ${lastMessagePath}`,
-    };
+    });
   }
 }
 
@@ -306,7 +251,8 @@ if (!codexBin) {
   process.exit(1);
 }
 
-const manifest = readJson('evals/skills-suite/manifest.json');
+const registry = loadRegistry(root);
+const { manifest } = loadBenchmarkContract(root, registry);
 let cases = manifest.cases;
 if (args.caseIds.length > 0) {
   const selected = new Set(args.caseIds);
@@ -323,14 +269,11 @@ if (cases.length === 0) {
 const runDir = path.join(root, '.eval-runs', 'skills-suite', args.runId);
 fs.mkdirSync(runDir, { recursive: true });
 
-const report = {
-  version: 2,
-  suite: 'forge',
-  run_id: args.runId,
+const report = createRunReport({
+  runId: args.runId,
   runner: `codex exec (${codexBin})`,
-  started_at: new Date().toISOString(),
   cases: [],
-};
+});
 
 for (const testCase of cases) {
   console.error(`Running ${testCase.id}...`);
@@ -343,20 +286,10 @@ for (const testCase of cases) {
   ) {
     const remaining = cases.slice(cases.indexOf(testCase) + 1);
     for (const skippedCase of remaining) {
-      report.cases.push({
-        case_id: skippedCase.id,
-        status: 'blocked',
-        triggered_skills: [],
-        artifacts: [],
-        change_units: [],
-        goal_verification: [],
-        goal_coverage_entries: [],
-        commands_run: [],
-        decisions: [],
-        forbidden_behaviors: [],
+      report.cases.push(createCaseRun(skippedCase.id, 'blocked', {
         evidence: ['skipped after Codex usage limit blocked the run'],
         notes: `Previous blocked case: ${testCase.id}`,
-      });
+      }));
     }
     break;
   }

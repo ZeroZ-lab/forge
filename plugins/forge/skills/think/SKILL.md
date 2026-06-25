@@ -8,17 +8,17 @@ when_to_use: 用户说"想想"、"分析"、"这个对吗"、"质疑一下"、"�
 
 ## 职责
 
-重新定义问题、暴露假设、压力测试方案，并把推理链写入 `docs/thinking/*.md`，防止决策依据蒸发。think 是增强层，不替代 define/detail/research。
+重新定义问题、暴露假设、压力测试方案。think 是增强层，不替代 define/detail/research，也不默认制造推理文档。
 
 ## 执行纪律
 
-遵守 D1-D9，定义见 `${CLAUDE_SKILL_DIR}/../shared/concepts/execution-discipline.md`。重点：D1 写 thinking 文档；D5 锁定当前问题；D6 暴露假设；D7 结论可验证。
+遵守 D1-D9，定义见 `${CLAUDE_SKILL_DIR}/../shared/concepts/execution-discipline.md`。重点：D1 将接受的决策写入权威文档；D5 锁定当前问题；D6 暴露假设；D7 结论可验证。
 
 ## 模式选择
 
 - 挑战：单一假设或“这个对吗”，对话中完成。
-- 分析：多因素问题，写 thinking 文档。
-- 攻击：已有方案需要 Red Team，写 thinking 文档。
+- 分析：多因素问题，默认在对话中完成。
+- 攻击：已有方案需要 Red Team，默认在对话中完成。
 
 ## 挑战模式（1 轮）
 
@@ -41,7 +41,7 @@ when_to_use: 用户说"想想"、"分析"、"这个对吗"、"质疑一下"、"�
 
 ### TH1: 问题重构（分析/攻击）
 
-记录原始问题、重构后问题和理由。
+记录原始问题、重构后问题和理由；只有通过独立产物门时才落盘。
 
 ### TH2: 假设验证（分析）
 
@@ -49,7 +49,7 @@ when_to_use: 用户说"想想"、"分析"、"这个对吗"、"质疑一下"、"�
 
 ### TH3: 分析结论（分析/攻击）
 
-判断是否影响下游文档；值得保留的推理写入 thinking。
+判断是否影响下游文档；接受的结论写入权威文档。
 
 ### TH4: 攻击结果（攻击）
 
@@ -57,11 +57,11 @@ when_to_use: 用户说"想想"、"分析"、"这个对吗"、"质疑一下"、"�
 
 ## 文档约束
 
-使用 `${CLAUDE_SKILL_DIR}/references/thinking-template.md`。必须包含：阶段、模式、回写目标、前提假设、有效期、过期触发器、问题重构、假设、分析过程、被否方案、结论和置信度。不写最终技术选型、不写功能清单、不写代码。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。默认只在对话中输出。只有分析会被多个后续决策复用、需独立复核且有明确失效条件时，才用 `${CLAUDE_SKILL_DIR}/references/thinking-template.md` 创建 `docs/thinking/*.md`。thinking 不是最终技术选型或功能事实源。
 
 ## 回写协议
 
-独立调用且无目标文档时，只写 thinking 文件；有回写目标时，只追加摘要和链接：
+有权威目标时，把被接受的结论直接写回；若同时存在 gated thinking 文件，可附链接：
 
 ```markdown
 > 决策依据（日期，模式，置信度）
@@ -72,7 +72,7 @@ when_to_use: 用户说"想想"、"分析"、"这个对吗"、"质疑一下"、"�
 
 ## 入口/出口条件
 
-入口：用户要求思考、分析、质疑、攻击，或关键决策不稳。出口：挑战结论，或 thinking 文档 + 必要回写。
+入口：用户要求思考、分析、质疑、攻击，或关键决策不稳。出口：结论、假设和验证动作明确；接受的结论已必要回写。
 
 ## 红旗清单
 
@@ -91,4 +91,4 @@ when_to_use: 用户说"想想"、"分析"、"这个对吗"、"质疑一下"、"�
 
 ## 历史维护（自动）
 
-有文件产物时追加 `docs/thinking/*.md`；推翻旧分析时移入 `docs/thinking/archive/`。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。纯对话分析不写 Change Unit；权威文档或 gated thinking 发生持久变更时写一次。

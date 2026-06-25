@@ -67,7 +67,9 @@ when_to_use: Use when the user has a vague product idea, wants options, asks to 
 
 ## 文档约束
 
-产出 `docs/idea-brief.md`，模板 `${CLAUDE_SKILL_DIR}/references/idea-brief-template.md`。必须包含方向地图、评分、假设、推荐、被拒方案、下一步。
+默认在对话中给出方向地图、评分、假设、推荐、被拒方案和下一步，不创建 idea brief。用户确认的目标和边界写入 feature `goal.md` 或 `docs/project.md`。
+
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。只有存在独立研究交接或审批责任时，才将可复用证据写入 gated `research-brief.md`。
 
 ## 入口/出口条件
 
@@ -90,4 +92,4 @@ when_to_use: Use when the user has a vague product idea, wants options, asks to 
 
 ## 历史维护（自动）
 
-完成后追加 `docs/idea-brief.md` 历史或 Change Unit。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。只有权威目标发生持久变更时才写 Change Unit。

@@ -29,20 +29,17 @@ Forge 的默认入口不是完整生命周期，而是**已有项目上的小功
 
 ## 默认最小文档集
 
-默认只要求 2 类文档：
+默认只有三类事实源：
 
-- `goal.md`：目标、边界、完成标准、关键决策（首屏合约）
-- `changelog.md`：这个 feature 的决策历史
+- `docs/project.md`：跨 feature 的共享决策、约束和领域语言
+- `docs/features/<feature>/goal.md`：目标、边界、完成标准和 feature 决策
+- `docs/change-units/CU-*.md`：每次变更的历史、风险和验证证据
 
-按需再补：
+只有 goal 不足以表达模块公共接口或不变量时，才加 `modules/*.md`。
 
-- `modules/*.md`：需要模块级接口、数据和行为细节时（详设下钻的唯一路径）
-- `docs/change-units/CU-*.md`：每次 feature / bugfix / refactor 的完整事件记录
-- `PRD.md`：需求边界还不清时再写
-- `plan.md`：任务复杂、需要切片或并行时再写
-- `testing/`、`deploy/`：测试或发布要独立建模时再开
-- `docs/timeline.md`：项目级决策演进或跨 feature 影响时再开
-- `docs/status.md`：多 feature 并行协调时再开
+PRD、interaction spec、research brief、testing strategy、deploy plan、DESIGN 和 ADR 都要先通过“独立产物门”：它必须有不同 owner/consumer、更新周期，或独立审批、审计、交接、运维责任。否则结论写回 project/goal/module，过程留在对话或 issue。
+
+默认不创建 changelog、timeline、status、Trace、plan.md、test-cases.md 或 idea brief。
 
 ## 怎么开始
 
@@ -58,6 +55,8 @@ Forge 的默认入口不是完整生命周期，而是**已有项目上的小功
 
 安装后直接用自然语言描述目标，Forge 会按 skill 描述触发相应协议。
 
+如果只想先判断该走哪条链路，可显式调用 `guide`。它只给出 L0–L3、调用深度和最短链路建议，不执行阶段。
+
 ### 默认 prompt
 
 - `用 Forge 为已有 feature 补 detail 目标`
@@ -72,14 +71,12 @@ Forge 不是只会 4 步主链，只是默认先从这里开始。下面这些�
 
 | 能力 | 什么时候再用 |
 |------|--------------|
-| `plan` | 任务复杂，需要垂直切片、依赖图或并行矩阵 |
-| `test` | 需要独立维护测试策略和测试用例产物 |
+| `plan` | 任务复杂，需要垂直切片、依赖图或并行矩阵；序列留在对话/issue |
+| `test` | 需要协调风险策略、场景和测试代码 |
 | `deploy` | 需要明确灰度、回滚、监控和发布清单 |
 | `research` | PRD 里出现实时、搜索、推荐、优化、媒体处理等技术信号 |
 | `think` | 需要 Socratic / First Principles / Red Team 深挖 |
 | `review` | 同类偏差反复出现，要回到方法论层面修正 |
-| `timeline` | 需要项目级演化记录 |
-| `status` | 需要多 feature 全局协调视图 |
 
 Advanced 入口见 [docs/advanced.md](docs/advanced.md)。
 
@@ -93,7 +90,7 @@ Advanced 入口见 [docs/advanced.md](docs/advanced.md)。
 node scripts/validate.mjs
 ```
 
-自检会校验版本同步、24 个 skill、frontmatter 短名、skill 行数上限、关键编排顺序、测试用例路径，以及禁止非运行 implementation 目标回流。
+自检会校验版本同步、已发布 skill 与 plugin manifest/registry 完全一致、跨平台显式调用策略、skill 行数与字符预算上限、关键编排顺序、测试用例路径，以及稳定／实验／归档隔离。
 
 ### 行为测试
 
@@ -109,7 +106,7 @@ node --test
 node scripts/evaluate-skills.mjs
 ```
 
-评测自检会校验 `evals/skills-suite/manifest.json`：至少 10 个固定任务、覆盖全部 24 个 skill、fixtures 存在、v2 oracle check 可机器读取，并要求 Change Unit 和目标验证证据。这只证明评测合约完整，不证明某次 agent 行为有效。
+评测自检会校验 `evals/skills-suite/manifest.json`：至少 21 个固定任务、覆盖全部 25 个已发布 skill、fixtures 存在、v2 oracle check 可机器读取，并要求变更型任务提供 Change Unit 和目标验证证据。这只证明评测合约完整，不证明某次 agent 行为有效。
 
 要评价真实运行，把 agent 执行记录整理成 `evals/skills-suite/report.schema.json` 格式，然后运行：
 
@@ -139,7 +136,7 @@ node scripts/evaluate-skills.mjs --skip-blocked --report .eval-runs/skills-suite
 - 架构审计：见 [docs/skill-architecture-audit.md](docs/skill-architecture-audit.md)
 - Skills Suite 评测：见 [docs/skill-suite-evaluation.md](docs/skill-suite-evaluation.md)
 
-## 8 阶段 × 24 个 Skill
+## 8 阶段 × 24 个协议 Skill + 1 个 Guide
 
 这套完整地图仍然保留，只是不再作为默认入口。需要完整阶段矩阵、编排 skill 和治理能力时，直接读 [AGENTS.md](AGENTS.md) 或 [docs/advanced.md](docs/advanced.md)。
 

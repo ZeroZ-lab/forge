@@ -2,7 +2,7 @@
   "version": 2,
   "name": "forge-skills-suite-benchmark",
   "description": "A deterministic v2 contract for checking whether Forge skills are triggered through complete, non-redundant chains; bounded, verified, traceable through Change Units, and goal-aware during representative agent runs.",
-  "minimum_cases": 16,
+  "minimum_cases": 21,
   "scoring_model": {
     "version": 1,
     "grade_thresholds": {
@@ -71,7 +71,6 @@
         "business-alignment"
       ],
       "expected_artifacts": [
-        "docs/idea-brief.md",
         "docs/project.md",
         "docs/change-units/CU-*.md",
         "goal.md"
@@ -95,10 +94,6 @@
         {
           "type": "skill_triggered",
           "skill": "business-alignment"
-        },
-        {
-          "type": "artifact_reported",
-          "path": "docs/idea-brief.md"
         },
         {
           "type": "decision_gate_reported",
@@ -268,7 +263,6 @@
         "docs/features/onboarding/interaction-spec.md",
         "DESIGN.md",
         "src/components/",
-        "docs/features/onboarding/frontend/fe-acceptance-report.md",
         "docs/change-units/CU-*.md",
         "goal.md"
       ],
@@ -315,10 +309,6 @@
           "path": "docs/features/onboarding/interaction-spec.md"
         },
         {
-          "type": "artifact_reported",
-          "path": "docs/features/onboarding/frontend/fe-acceptance-report.md"
-        },
-        {
           "type": "decision_gate_reported",
           "decision": "primary_flow"
         },
@@ -361,9 +351,7 @@
       ],
       "expected_artifacts": [
         "docs/features/tags/goal.md",
-        "docs/features/tags/api/goal.md",
-        "docs/features/tags/database/goal.md",
-        "docs/features/tags/frontend/goal.md",
+        "docs/features/tags/modules/tags.md",
         "docs/change-units/CU-*.md",
         "goal.md"
       ],
@@ -429,8 +417,6 @@
         "codegen"
       ],
       "expected_artifacts": [
-        "docs/features/tags/plan.md",
-        "docs/features/tags/testing/test-cases.md",
         "src/",
         "tests/",
         "docs/change-units/CU-*.md",
@@ -466,14 +452,6 @@
         {
           "type": "skill_triggered",
           "skill": "codegen"
-        },
-        {
-          "type": "artifact_reported",
-          "path": "docs/features/tags/plan.md"
-        },
-        {
-          "type": "artifact_reported",
-          "path": "docs/features/tags/testing/test-cases.md"
         },
         {
           "type": "artifact_reported",
@@ -633,8 +611,7 @@
         "test-cases"
       ],
       "expected_artifacts": [
-        "docs/features/billing/testing/goal.md",
-        "docs/features/billing/testing/test-cases.md",
+        "docs/features/billing/testing/strategy.md",
         "docs/change-units/CU-*.md",
         "goal.md"
       ],
@@ -664,7 +641,7 @@
         },
         {
           "type": "artifact_reported",
-          "path": "docs/features/billing/testing/goal.md"
+          "path": "docs/features/billing/testing/strategy.md"
         },
         {
           "type": "evidence_contains",
@@ -754,7 +731,7 @@
         "learn"
       ],
       "expected_artifacts": [
-        "docs/features/tags/deploy/goal.md",
+        "docs/features/tags/deploy/plan.md",
         "docs/change-units/CU-*.md",
         "goal.md"
       ],
@@ -807,19 +784,25 @@
       ],
       "expected_artifacts": [
         "docs/change-units/CU-*.md",
-        "docs/features/billing/testing/test-cases.md",
+        "tests/",
         "goal.md"
       ],
       "required_evidence": [
         "Change Unit",
         "Missing Invariant",
+        "red-capable",
+        "最小复现",
+        "修复前失败",
         "regression test",
+        "原始场景复验",
         "verification command",
         "运行验证",
         "goal verification"
       ],
       "forbidden_behaviors": [
+        "bugfix_without_red_capable_loop",
         "bugfix_without_regression",
+        "bugfix_without_original_scenario_recheck",
         "bugfix_modified_project_docs",
         "current_docs_without_change_unit"
       ],
@@ -854,7 +837,23 @@
         },
         {
           "type": "evidence_contains",
+          "text": "red-capable"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "最小复现"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "修复前失败"
+        },
+        {
+          "type": "evidence_contains",
           "text": "regression test"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "原始场景复验"
         },
         {
           "type": "command_reported",
@@ -866,11 +865,269 @@
         },
         {
           "type": "forbidden_behavior_absent",
+          "behavior": "bugfix_without_red_capable_loop"
+        },
+        {
+          "type": "forbidden_behavior_absent",
           "behavior": "bugfix_without_regression"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "bugfix_without_original_scenario_recheck"
         },
         {
           "type": "artifact_absent",
           "path": "docs/project.md"
+        },
+        {
+          "type": "goal_verified",
+          "target": "goal.md"
+        }
+      ]
+    },
+    {
+      "id": "bugfix-flaky-reproduction-rate",
+      "title": "间歇性 Bug 先提高复现率再修复",
+      "level": "patch",
+      "fixture": "evals/skills-suite/fixtures/bugfix-flaky-reproduction-rate.md",
+      "expected_skills": [
+        "codegen",
+        "review"
+      ],
+      "expected_artifacts": [
+        "docs/change-units/CU-*.md",
+        "tests/",
+        "goal.md"
+      ],
+      "required_evidence": [
+        "red-capable",
+        "初始复现率",
+        "修复后复现率",
+        "可证伪假设",
+        "regression test",
+        "Change Unit",
+        "goal verification"
+      ],
+      "forbidden_behaviors": [
+        "flaky_bug_treated_as_unreproducible_after_one_run",
+        "guessed_race_root_cause_without_harness",
+        "current_docs_without_change_unit"
+      ],
+      "oracle_checks": [
+        {
+          "type": "skill_triggered",
+          "skill": "codegen"
+        },
+        {
+          "type": "skill_triggered",
+          "skill": "review"
+        },
+        {
+          "type": "artifact_reported",
+          "path": "tests/"
+        },
+        {
+          "type": "change_unit_reported",
+          "path": "docs/change-units/CU-*.md"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "red-capable"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "初始复现率"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "修复后复现率"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "可证伪假设"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "regression test"
+        },
+        {
+          "type": "command_reported",
+          "command": "node --test"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "flaky_bug_treated_as_unreproducible_after_one_run"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "guessed_race_root_cause_without_harness"
+        },
+        {
+          "type": "goal_verified",
+          "target": "goal.md"
+        }
+      ]
+    },
+    {
+      "id": "bugfix-unreproducible-blocked",
+      "title": "无法建立红灯时停止猜测并请求证据",
+      "level": "patch",
+      "fixture": "evals/skills-suite/fixtures/bugfix-unreproducible-blocked.md",
+      "expected_skills": [
+        "codegen",
+        "review"
+      ],
+      "expected_artifacts": [
+        "goal.md"
+      ],
+      "required_evidence": [
+        "red-capable command unavailable",
+        "attempted feedback loops",
+        "requested production evidence",
+        "未验证风险",
+        "safe stop"
+      ],
+      "forbidden_behaviors": [
+        "guessed_root_cause_without_reproduction",
+        "code_changed_without_feedback_loop",
+        "fake_regression_test",
+        "bugfix_modified_project_docs"
+      ],
+      "oracle_checks": [
+        {
+          "type": "skill_triggered",
+          "skill": "codegen"
+        },
+        {
+          "type": "skill_triggered",
+          "skill": "review"
+        },
+        {
+          "type": "artifact_absent",
+          "path": "src/"
+        },
+        {
+          "type": "artifact_absent",
+          "path": "tests/"
+        },
+        {
+          "type": "artifact_absent",
+          "path": "docs/project.md"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "red-capable command unavailable"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "attempted feedback loops"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "requested production evidence"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "未验证风险"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "safe stop"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "guessed_root_cause_without_reproduction"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "code_changed_without_feedback_loop"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "fake_regression_test"
+        }
+      ]
+    },
+    {
+      "id": "bugfix-correct-test-seam",
+      "title": "回归测试必须覆盖真实故障 Seam",
+      "level": "patch",
+      "fixture": "evals/skills-suite/fixtures/bugfix-correct-test-seam.md",
+      "expected_skills": [
+        "codegen",
+        "review"
+      ],
+      "expected_artifacts": [
+        "docs/change-units/CU-*.md",
+        "tests/",
+        "goal.md"
+      ],
+      "required_evidence": [
+        "red-capable",
+        "correct seam",
+        "错误 seam",
+        "修复前失败",
+        "原始场景复验",
+        "Change Unit",
+        "goal verification"
+      ],
+      "forbidden_behaviors": [
+        "shallow_regression_seam",
+        "regression_test_passed_before_fix",
+        "current_docs_without_change_unit"
+      ],
+      "oracle_checks": [
+        {
+          "type": "skill_triggered",
+          "skill": "codegen"
+        },
+        {
+          "type": "skill_triggered",
+          "skill": "review"
+        },
+        {
+          "type": "artifact_reported",
+          "path": "tests/"
+        },
+        {
+          "type": "change_unit_reported",
+          "path": "docs/change-units/CU-*.md"
+        },
+        {
+          "type": "decision_gate_reported",
+          "decision": "test_seam"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "red-capable"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "correct seam"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "错误 seam"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "修复前失败"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "原始场景复验"
+        },
+        {
+          "type": "command_reported",
+          "command": "node --test"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "shallow_regression_seam"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "regression_test_passed_before_fix"
         },
         {
           "type": "goal_verified",
@@ -959,8 +1216,7 @@
       ],
       "expected_artifacts": [
         "docs/features/billing/goal.md",
-        "docs/features/billing/api/goal.md",
-        "docs/features/billing/database/goal.md",
+        "docs/features/billing/modules/billing.md",
         "docs/change-units/CU-*.md",
         "goal.md"
       ],
@@ -996,11 +1252,7 @@
         },
         {
           "type": "artifact_reported",
-          "path": "docs/features/billing/api/goal.md"
-        },
-        {
-          "type": "artifact_reported",
-          "path": "docs/features/billing/database/goal.md"
+          "path": "docs/features/billing/modules/billing.md"
         },
         {
           "type": "forbidden_behavior_absent",
@@ -1035,9 +1287,8 @@
         "review"
       ],
       "expected_artifacts": [
-        "docs/features/billing/api/goal.md",
-        "docs/features/billing/database/goal.md",
-        "docs/features/billing/changelog.md",
+        "docs/features/billing/goal.md",
+        "docs/features/billing/modules/billing.md",
         "docs/change-units/CU-*.md",
         "goal.md"
       ],
@@ -1051,7 +1302,7 @@
       "forbidden_behaviors": [
         "ignored_deviation_signal",
         "fresh_detail_without_context",
-        "contract_updated_without_changelog",
+        "contract_updated_without_change_unit",
         "current_docs_without_change_unit"
       ],
       "oracle_checks": [
@@ -1069,7 +1320,7 @@
         },
         {
           "type": "artifact_reported",
-          "path": "docs/features/billing/api/goal.md"
+          "path": "docs/features/billing/modules/billing.md"
         },
         {
           "type": "evidence_contains",
@@ -1109,8 +1360,7 @@
       ],
       "expected_artifacts": [
         "docs/features/webhook/goal.md",
-        "docs/features/webhook/api/goal.md",
-        "docs/features/webhook/database/goal.md",
+        "docs/features/webhook/modules/webhook.md",
         "docs/change-units/CU-*.md",
         "goal.md"
       ],
@@ -1219,6 +1469,142 @@
         {
           "type": "forbidden_behavior_absent",
           "behavior": "current_docs_without_change_unit"
+        }
+      ]
+    },
+    {
+      "id": "guide-shortest-chain",
+      "title": "Guide 只推荐最短链路而不执行",
+      "level": "lens",
+      "fixture": "evals/skills-suite/fixtures/guide-shortest-chain.md",
+      "expected_skills": [
+        "guide"
+      ],
+      "expected_artifacts": [],
+      "required_evidence": [
+        "L0",
+        "patch",
+        "codegen(patch)",
+        "跳过阶段",
+        "只推荐不执行"
+      ],
+      "forbidden_behaviors": [
+        "guide_invoked_lifecycle_skill",
+        "guide_modified_files",
+        "guide_created_change_unit",
+        "guide_recommended_full_lifecycle"
+      ],
+      "oracle_checks": [
+        {
+          "type": "skill_triggered",
+          "skill": "guide"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "L0"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "patch"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "codegen(patch)"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "跳过阶段"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "只推荐不执行"
+        },
+        {
+          "type": "artifact_absent",
+          "path": "docs/change-units/CU-*.md"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "guide_invoked_lifecycle_skill"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "guide_modified_files"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "guide_recommended_full_lifecycle"
+        }
+      ]
+    },
+    {
+      "id": "guide-routing-matrix",
+      "title": "Guide 正确区分新项目、生产 Bug 和跨模块功能",
+      "level": "lens",
+      "fixture": "evals/skills-suite/fixtures/guide-routing-matrix.md",
+      "expected_skills": [
+        "guide"
+      ],
+      "expected_artifacts": [],
+      "required_evidence": [
+        "L3",
+        "init",
+        "bugfix protocol",
+        "L2",
+        "detail(stage) -> plan(stage) -> codegen(stage) -> review(stage)",
+        "只引用职责"
+      ],
+      "forbidden_behaviors": [
+        "guide_invoked_lifecycle_skill",
+        "guide_modified_files",
+        "guide_created_change_unit",
+        "guide_copied_child_methodology",
+        "guide_guessed_bug_root_cause"
+      ],
+      "oracle_checks": [
+        {
+          "type": "skill_triggered",
+          "skill": "guide"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "L3"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "init"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "bugfix protocol"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "L2"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "detail(stage) -> plan(stage) -> codegen(stage) -> review(stage)"
+        },
+        {
+          "type": "evidence_contains",
+          "text": "只引用职责"
+        },
+        {
+          "type": "artifact_absent",
+          "path": "docs/change-units/CU-*.md"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "guide_invoked_lifecycle_skill"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "guide_copied_child_methodology"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "guide_guessed_bug_root_cause"
         }
       ]
     }

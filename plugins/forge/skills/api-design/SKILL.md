@@ -48,7 +48,7 @@ when_to_use: Use when creating or reviewing HTTP/RPC/resource contracts, endpoin
 
 ## 文档约束
 
-接口合约写入 feature `goal.md` 或 `modules/*.md`：端点、auth、request、response、errors、side effects、constraints。模块模板：`${CLAUDE_SKILL_DIR}/../shared/module-template.md`。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。共享 feature API 决策写入 `goal.md`；只有接口和不变量复杂到 goal 不足时才创建 `modules/*.md`，包含端点、auth、request、response、errors、side effects、constraints。模板：`${CLAUDE_SKILL_DIR}/../shared/module-template.md`。
 
 ## 入口/出口条件
 
@@ -71,4 +71,4 @@ when_to_use: Use when creating or reviewing HTTP/RPC/resource contracts, endpoin
 
 ## 历史维护（自动）
 
-完成后追加 feature changelog；作为 detail 子阶段时由 detail 汇总。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。standalone 且产生变更时持久化；作为 `detail` 子阶段时不单独写，由 orchestrator 汇总一次。

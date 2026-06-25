@@ -63,7 +63,7 @@ Canvas 2D / WebGL / Three.js / p5.js；按 2D/3D、后处理、性能预算选�
 
 ## 文档约束
 
-每个页面/组件 module 必须包含：需求、验收条件、组件树、数据消费、状态、表单、依赖和模块约束。模板：`${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md`；goal 模板：`${CLAUDE_SKILL_DIR}/../shared/frontend-goal-template.md`。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。共享前端决策写入 goal；只有页面/组件公共接口和不变量复杂到 goal 不足时才创建 module，包含组件树、数据消费、状态、表单、依赖和模块约束，并引用 goal AC。模板：`${CLAUDE_SKILL_DIR}/../shared/frontend-module-template.md`。
 
 命名：文件 PascalCase；导出 named export；Props 与组件同文件。project.md 已有技术栈时引用不重复，只补前端特有依赖并标注使用方。
 
@@ -79,7 +79,7 @@ Canvas 2D / WebGL / Three.js / p5.js；按 2D/3D、后处理、性能预算选�
 - 同一 Props/interface 在 goal 与 module 重复定义且不一致；按 `${CLAUDE_SKILL_DIR}/../shared/concepts/reference-not-repeat.md` 取 module spec 为权威。
 - 静默否决 PRD 点名技术；必须回 define 升级。
 - 技术选型表依赖无使用方。
-- module 缺入口 / 公共接口 / 组件结构 / 数据消费 / 内部函数 / 依赖关系。
+- module 缺入口 / 责任与不变量 / 公共接口 / 组件结构 / 数据消费 / 依赖关系。
 
 ## 验证清单
 
@@ -91,4 +91,4 @@ Canvas 2D / WebGL / Three.js / p5.js；按 2D/3D、后处理、性能预算选�
 
 ## 历史维护
 
-完成后追加 feature changelog 和 `docs/timeline.md`。超过 100 行时归档。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。作为 `detail` 子阶段时不单独写；standalone 且产生变更时持久化。

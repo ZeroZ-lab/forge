@@ -19,7 +19,7 @@ when_to_use: Use when the user asks to review changes, inspect a diff, check cod
 
 ## 上下游边界
 
-上游：PRD、project、DESIGN、goal、modules、plan、src、tests、changelog、timeline。下游：审查报告、阻塞项、文档补全清单、豁免记录。详细维度和报告模板见 `references/review-protocol.md`。
+上游：project、goal、modules、可选 gated artifacts、Change Units、src、tests。下游：对话中的 findings、阻塞项、文档补全清单、豁免记录。详细维度和报告模板见 `references/review-protocol.md`。
 
 ## 何时不使用
 
@@ -27,7 +27,7 @@ when_to_use: Use when the user asks to review changes, inspect a diff, check cod
 
 ## 审查模式
 
-**文档审查**（codegen 前）：查 WHAT/WHY/HOW/CONSTRAINTS 是否足够；`[NEEDS CLARIFICATION]` 是否残留；project/DESIGN/goal/modules/plan 是否一致；模块边界、公共接口、依赖和验收是否可验证；人类决策是否留痕。
+**文档审查**（codegen 前）：查 WHAT/WHY/CONSTRAINTS 是否足够；`[NEEDS CLARIFICATION]` 是否残留；project/goal/modules/可选 gated artifacts 是否一致；模块边界、公共接口、依赖和验收是否可验证；人类决策是否留痕。
 
 **代码审查**（deploy 前）：查实现是否满足 goal/modules；API、数据模型、错误码、权限、测试是否对齐；关键逻辑是否引用 FD#/PD#/DB#/AC#；测试是否覆盖验收条件和风险边界。
 
@@ -39,7 +39,13 @@ when_to_use: Use when the user asks to review changes, inspect a diff, check cod
 4. 每个问题给文件位置、证据、影响、修复建议和归因。
 5. Findings 先行，摘要靠后；阻塞项修复后复审。
 
-可用 subagent 且用户明确允许并行 agent 时，优先用独立上下文审查；否则主控必须保留最终裁决。
+代码审查涉及 P0/P1 风险时**默认走独立 subagent 上下文**——同一轮实现上下文自审自己的产物，天生偏向认为自己是对的，独立性是纸面上的。仅以下情况允许主控自审，且必须在报告中显式声明「主控自审」：
+
+- 单文件 lens 审查（范围 ≤ 1 文件，无 P0/P1）。
+- 纯文档审查（不涉及运行验证回执）。
+- 无 subagent 能力或用户明确禁止并行 agent——此时必须声明「受限于环境，主控自审」并列为残余风险。
+
+可用 subagent 且用户允许时，优先用独立上下文审查；主控保留最终裁决。
 
 ## 问题优先级
 
@@ -62,15 +68,13 @@ when_to_use: Use when the user asks to review changes, inspect a diff, check cod
 
 ## 运行时信号
 
-- 输入：artifact ready；health check trigger。
-- 输出：issues；skill/document/code/scope attribution。
-- 升级：P0/P1、WHY 缺失、偏差无根因、范围蔓延。
+输入 artifact ready / health check；输出 issues + 归因(skill/document/code/scope)；升级 P0/P1、WHY 缺失、偏差无根因、范围蔓延。
 
 ## 红旗清单
 
 - 只总结不列问题。
 - 只看格式不做目标对照。
-- 不读 changelog/timeline 就否定既有决策。
+- 不读相关 Change Unit 就否定既有决策。
 - 测试通过但代码和合约不一致。
 - 文档缺 WHY 却放行 codegen。
 - 发现问题后不复审或不归因。
@@ -85,8 +89,4 @@ when_to_use: Use when the user asks to review changes, inspect a diff, check cod
 
 ## 历史维护
 
-审查结果影响文档、发布状态或方法论时，追加 feature `changelog.md`、`docs/timeline.md`，并在需要时进入 `learn`。
-
-## 完成提示
-
-输出 findings、open questions、验证缺口、残余风险和下一步修复/复审/learn 建议。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md` 与 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。纯只读 findings 不落盘；改变权威文档/发布/方法论时持久化，必要时进入 `learn`。

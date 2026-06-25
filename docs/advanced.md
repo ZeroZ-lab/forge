@@ -20,17 +20,25 @@
 
 - [Skill Suite Evaluation](skill-suite-evaluation.md)
   说明 benchmark、report schema 和评分边界。
-- [Timeline](timeline.md)
-  查看最近的方法论演进记录。
-- [Timeline 2026 Archive](timeline/2026.md)
-  查看更早的归档演进记录。
+- [Skill Invocation Policy](skill-invocation-policy.md)
+  说明 Claude Code / Codex 调用控制、Guide 路由和上下文预算。
+- [Legacy Timeline](archive/timeline/current.md)
+  旧方法论时间线，只读历史，不再作为事实源。
+- [Legacy Timeline 2026](archive/timeline/2026.md)
+  更早的只读归档。
 
 ## 协调与进化
 
-- [Feature Stage Tracking Thinking](thinking/feature-stage-tracking.md)
-  说明为什么 `status.md` 只应在多 feature 协调时启用。
+- [Feature Stage Tracking Thinking](archive/thinking/feature-stage-tracking.md)
+  旧阶段跟踪分析；当前任务状态交给 issue tracker，不进入项目事实模型。
+- [Project Value Analysis](archive/thinking/project-value-analysis.md)
+  说明 Forge 的核心价值为什么收敛到 AI coding 的目标约束和验证协议。
+- [Skill Suite Effect Evaluation](archive/thinking/skill-suite-effect-evaluation.md)
+  说明 skills suite 效果评价应看 runtime behavior、traceability 和稳定性。
 - `plugins/forge/skills/test/`、`plugins/forge/skills/deploy/`
   需要测试治理或发布治理时再展开。
+- [Archived Skill Audit Fix Plan](archive/skill-audit-fix-plan.md)
+  2026-05-30 的旧修复计划，仅作历史参考，不作为当前执行入口。
 
 ## 默认与 Advanced 的边界
 
@@ -38,14 +46,12 @@
 
 - `goal.md`
 - `modules/*.md`
-- `changelog.md`
 - `detail -> codegen -> review`
 
 Advanced 入口关注：
 
 - `docs/change-units/CU-*.md`
-- `docs/change-units/` (Change Units)
-- `timeline.md` / `status.md`
+- `docs/project.md`、可选 ADR、Change Units
 - 完整阶段矩阵
 - 目标验证实践
 - 评测系统和方法论进化

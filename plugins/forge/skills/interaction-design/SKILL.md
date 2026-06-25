@@ -58,7 +58,7 @@ loading、empty、error、disabled、success、undo、confirm、权限和移动�
 
 ## 文档约束
 
-产出 interaction spec，模板 `${CLAUDE_SKILL_DIR}/references/interaction-template.md`。必须包含流程图/步骤、页面结构、状态表、异常路径和开放问题。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。默认把必要的流程、状态和异常约束写入 `goal.md` 或对应 module。只有复杂流程需要独立设计 review、交付或更新时，才用 `${CLAUDE_SKILL_DIR}/references/interaction-template.md` 创建 `interaction-spec.md`。
 
 ## 入口/出口条件
 
@@ -82,4 +82,4 @@ loading、empty、error、disabled、success、undo、confirm、权限和移动�
 
 ## 历史维护（自动）
 
-完成后追加 feature changelog；由 design 编排器汇总 timeline。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。作为 `design` 子阶段时不单独写；standalone 且产生变更时持久化。

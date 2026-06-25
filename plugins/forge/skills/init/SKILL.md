@@ -1,6 +1,6 @@
 ---
 name: init
-description: Orchestrates full project initialization across business alignment, technical design, and design-system setup to produce project.md, DESIGN.md, AGENTS.md, and CLAUDE.md when needed.
+description: Orchestrates project initialization across business alignment, technical design, optional design-system setup, and runtime agent instructions.
 when_to_use: Use when starting a new project, bootstrapping Forge docs, creating project-level technical/design decisions, or generating AGENTS.md/CLAUDE.md from project constraints.
 ---
 
@@ -24,15 +24,15 @@ when_to_use: Use when starting a new project, bootstrapping Forge docs, creating
 
 1. business-alignment：明确用户、指标、资源、Go/No-Go。
 2. technical-design：写技术约束和共享决策到 `docs/project.md`。
-3. fe-system：有前端时写 `DESIGN.md`；无前端记录跳过原因。
+3. fe-system：有独立跨 feature 设计系统时写 `DESIGN.md`；局部视觉约束留在 feature goal/module；无前端跳过。
 4. 生成 `AGENTS.md`：从 project/DESIGN 投影执行纪律、路径、验证方式。
 5. 生成 `CLAUDE.md`：指向 AGENTS 入口。
-6. 历史维护：追加 changelog/timeline 和 Change Unit。
+6. 产物与历史：遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md` 和 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`，由 init 在所有项目级出口条件通过后汇总一个 Change Unit。
 
 ## 产出
 
 - `docs/project.md`
-- `DESIGN.md`（有前端）
+- `DESIGN.md`（仅独立跨 feature 设计系统）
 - `AGENTS.md`
 - `CLAUDE.md`
 
@@ -56,10 +56,10 @@ when_to_use: Use when starting a new project, bootstrapping Forge docs, creating
 ## 验证清单
 
 - [ ] project 决策是否含理由和被拒方案？
-- [ ] DESIGN 是否只在有前端时生成？
+- [ ] DESIGN 是否只在通过独立产物门时生成？
 - [ ] AGENTS 是否包含执行纪律、目标文件、验证方式？
 - [ ] CLAUDE 是否指向 AGENTS？
-- [ ] 历史记录和 Change Unit 是否存在？
+- [ ] 有持久变更时 Change Unit 是否存在？
 
 ## 运行时信号
 

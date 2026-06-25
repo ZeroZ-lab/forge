@@ -5,7 +5,7 @@
     "name": "ZeroZ-lab",
     "url": "https://github.com/ZeroZ-lab/forge"
   },
-  "version": "0.36.2",
+  "version": "0.39.0",
   "homepage": "https://github.com/ZeroZ-lab/forge",
   "skills": "./skills",
   "interface": {

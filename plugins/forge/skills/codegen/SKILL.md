@@ -1,14 +1,14 @@
 ---
 name: codegen
-description: Implements goals into src and tests, verifying results meet stated criteria.
-when_to_use: Use by direct invocation or as a child protocol when the user explicitly asks to generate implementation from Forge goals, run the build phase, or implement documented tasks into code and tests.
+description: Implements goals and bugfixes into code and tests with verification.
+when_to_use: Use for documented implementation tasks, the Forge build phase, or reported runtime bugs.
 ---
 
 # Codegen — 构建阶段
 
 ## 职责
 
-从 `goal.md + modules/*.md` 和可选 `plan.md` 生成最小可运行代码与测试。codegen 不重新做产品或技术决策；它把目标实现出来，并用运行验证证明目标达成。
+从 `goal.md + modules/*.md` 和当前执行上下文生成最小可运行代码与测试。codegen 不重新做产品或技术决策；它把目标实现出来，并用运行验证证明目标达成。
 
 ## 执行纪律
 
@@ -16,11 +16,11 @@ when_to_use: Use by direct invocation or as a child protocol when the user expli
 - D5：只读相关文档和代码；无关问题只记录。
 - D7：生成后验证，不用猜测替代证据。
 - D8：同类问题连续 ≥2 次，建议回到 detail 复查目标。
-- D9：代码变更完成前必须有运行证据；无法运行标记 `⚠️ 未验证`。
+- D9：代码变更完成前必须有**可校验证据**——命令 + 真实输出（退出码或关键输出行），不是「测试通过」这类结论字符串；读代码是检查(inspect)，不是验证(verify)。无法运行标记 `⚠️ 未验证` + 阻塞原因。证据形态与分级见 `${CLAUDE_SKILL_DIR}/../shared/concepts/evidence-policy.md`。
 
 ## 上下游边界
 
-上游：`project.md`、`goal.md`、`modules/*.md`、`plan.md`、`DESIGN.md`（如有前端）、历史风险。下游：`src/`、`tests/`、验证摘要和 Trace Report。遇到前端组件/页面/hooks/样式时加载 `fe-artifact`。
+上游：project、goal、modules、当前任务序列、可选 gated artifacts 和历史风险。下游：`src/`、`tests/` 和 Change Unit 验证证据。前端加载 `fe-artifact`；bugfix 读取 `references/bugfix-protocol.md`。
 
 ## 方法论：读→生→验→修
 
@@ -30,7 +30,9 @@ when_to_use: Use by direct invocation or as a child protocol when the user expli
 
 ### 第二步：生（Generate）
 
-按 `plan.md` 拓扑顺序执行；没有 plan 时从 goal 推导最小任务序列并声明。每个任务只改完成当前验收所需文件。业务逻辑来自 modules，接口和数据模型来自 goal，目录结构来自 project。
+Bugfix 必须先按 reference 建立红灯、最小复现并验证根因假设；已有精确失败测试可复用。没有反馈循环时不修改实现。
+
+若当前对话或 issue 已有任务序列则按其执行；否则从 goal 推导最小任务序列并声明。每个任务只改完成当前验收所需文件。业务逻辑来自 modules，接口和数据模型来自 goal，目录结构来自 project。
 
 推导规则：
 
@@ -46,6 +48,8 @@ when_to_use: Use by direct invocation or as a child protocol when the user expli
 
 ### 第三步：验（Verify）
 
+> 路径自由、证据铁律：用什么命令验证由实现决定，但每个验证项必须交出**命令 + 真实输出**，不是结论。证据形态见 `${CLAUDE_SKILL_DIR}/../shared/concepts/evidence-policy.md`。
+
 先做运行验证，再做目标对照：
 
 1. 编译/类型/语法检查。
@@ -54,7 +58,7 @@ when_to_use: Use by direct invocation or as a child protocol when the user expli
 4. 运行当前任务相关测试。
 5. 对照 goal/modules：端点、字段、状态码、错误格式、权限、幂等、共享约束。
 
-简单任务任务末对照一次；复杂任务或验收 ≥3 项时分步对照。运行验证失败不得声明完成。
+简单任务任务末对照一次；复杂任务或验收 ≥3 项时分步对照。**运行验证失败不得声明完成；无命令回执（命令+输出）同样不得声明完成**——「看起来对」「应该没问题」是检查不是验证。
 
 ### 第四步：修（Fix）
 
@@ -72,15 +76,13 @@ when_to_use: Use by direct invocation or as a child protocol when the user expli
 
 ## 入口/出口条件
 
-入口：有 `goal.md`，最好有 `modules/*.md + plan.md`；goal-quality 至少满足源完整性和可重构性。缺 plan 时声明 AI 推导任务顺序；缺 modules 时声明模块文档缺失并从 goal 推导。
+入口：有 `goal.md`；按需有 `modules/*.md`；goal-quality 至少满足源完整性和可重构性。没有显式任务序列时声明 AI 推导顺序；缺 modules 时仅在 goal 足够完整的情况下继续。
 
-出口：相关 `src/ + tests/` 已生成；运行验证、相关测试、目标对照通过；无法验证的部分明确标记；用户确认或阻塞项已交出。
+出口：相关 `src/ + tests/` 已生成；运行验证、相关测试、目标对照通过，**且每个验证项附带命令回执（命令 + 真实输出）**；无回执的验证项必须标记 `⚠️ 未验证` + 阻塞原因；用户确认或阻塞项已交出。
 
 ## 运行时信号
 
-- 输入：detail feature goal；plan task sequence。
-- 输出：generated code；verification summary；repeat issue signal。
-- 升级：目标矛盾、需求歧义、修正 3 轮不收敛、范围蔓延。
+输入 detail goal + plan 任务序列；输出 代码 + 验证摘要 + repeat issue signal；升级 目标矛盾、需求歧义、修正 3 轮不收敛、范围蔓延。
 
 ## 何时不使用
 
@@ -89,9 +91,10 @@ when_to_use: Use by direct invocation or as a child protocol when the user expli
 ## 红旗清单
 
 - 未读目标文档就改代码。
-- 运行验证未执行却声明完成。
+- 运行验证未执行却声明完成；或用「测试通过」结论字符串替代命令回执。
 - 代码和 goal/modules 不一致。
 - 测试只验证实现细节，不覆盖 AC。
+- Bugfix 无 red-capable 命令、使用错误 test seam，或未复验原始场景。
 - 关键逻辑无决策编号。
 - 添加 goal 之外的新功能或依赖。
 - 多租户、权限、软删除等共享约束未注入。
@@ -104,12 +107,8 @@ when_to_use: Use by direct invocation or as a child protocol when the user expli
 - [ ] 相关测试是否通过，目标对照是否一致？
 - [ ] 关键逻辑是否注释 FD#/PD#/DB#/AC#？
 - [ ] 修正循环是否收敛，同类问题是否上报？
-- [ ] Trace Report 是否与 CU 完成证据对齐？
+- [ ] CU 是否包含命令、结果、文档同步和剩余风险？
 
 ## 历史维护（自动）
 
-完成后追加 feature `changelog.md` 和 `docs/timeline.md`，并生成 `docs/features/<feature>/trace-<date>.md`。Trace 只抽取验证摘要和 CU 证据，不新增事实采集；模板见 `${CLAUDE_SKILL_DIR}/../shared/trace-template.md`。
-
-## 完成提示
-
-报告已改文件、运行验证命令、测试结果、目标对照结果、未验证风险和下一步 review/deploy 建议。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md` 与 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。验证摘要、命令回执、剩余风险写入 Change Unit Evidence 段，不生成 trace 文件。

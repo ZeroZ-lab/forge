@@ -4,35 +4,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { loadBenchmarkContract } from '../lib/benchmark-contract.mjs';
 import { loadRegistry } from '../lib/registry.mjs';
-import {
-  artifactPaths,
-  changeUnitPaths,
-  checkRun,
-  decisionIds,
-  docSyncTargets,
-  evidenceText,
-  globMatch,
-  goalCoveragePaths,
-  isChangeUnitPath,
-  normalizeSkillName,
-  pathMatch,
-} from '../lib/run-helpers.mjs';
+import { inspectRun, inspectRunReport } from '../lib/run-report.mjs';
 
 const root = process.cwd();
 const failures = [];
-const allowedCheckTypes = new Set([
-  'artifact_reported',
-  'artifact_absent',
-  'change_unit_reported',
-  'goal_covers',
-  'command_reported',
-  'decision_gate_reported',
-  'goal_verified',
-  'evidence_contains',
-  'forbidden_behavior_absent',
-  'skill_triggered',
-]);
 const checkAxis = {
   artifact_reported: 'artifacts',
   artifact_absent: 'scope_control',
@@ -63,10 +40,6 @@ function fail(message) {
   failures.push(message);
 }
 
-function assert(condition, message) {
-  if (!condition) fail(message);
-}
-
 function readJson(relativeOrAbsolutePath) {
   const filePath = path.isAbsolute(relativeOrAbsolutePath)
     ? relativeOrAbsolutePath
@@ -77,14 +50,6 @@ function readJson(relativeOrAbsolutePath) {
     fail(`${relativeOrAbsolutePath}: cannot read JSON (${error.message})`);
     return {};
   }
-}
-
-function exists(relativePath) {
-  return fs.existsSync(path.join(root, relativePath));
-}
-
-function arrayOfStrings(value) {
-  return Array.isArray(value) && value.every((item) => typeof item === 'string' && item.length > 0);
 }
 
 function parseArgs(argv) {
@@ -108,102 +73,6 @@ function parseArgs(argv) {
     }
   }
   return parsed;
-}
-
-function validateManifest(registry, manifest) {
-  const registrySkills = new Set((registry.skills ?? []).map((skill) => skill.name));
-
-  assert(manifest.version === 2, 'manifest.version must be 2');
-  assert(manifest.name === 'forge-skills-suite-benchmark', 'manifest.name must be forge-skills-suite-benchmark');
-  assert(manifest.report_schema === 'evals/skills-suite/report.schema.json', 'manifest.report_schema must point to report.schema.json');
-  assert(exists(manifest.report_schema), `${manifest.report_schema}: missing`);
-  assert(Array.isArray(manifest.cases), 'manifest.cases must be an array');
-  assert(manifest.cases?.length >= manifest.minimum_cases, `manifest must contain at least ${manifest.minimum_cases} cases`);
-  assert(typeof manifest.scoring_model === 'object' && manifest.scoring_model !== null, 'manifest.scoring_model is required');
-  assert(Array.isArray(manifest.scoring_model?.axes), 'manifest.scoring_model.axes must be an array');
-  assert(typeof manifest.scoring_model?.grade_thresholds === 'object', 'manifest.scoring_model.grade_thresholds is required');
-  for (const axis of manifest.scoring_model?.axes ?? []) {
-    assert(typeof axis.id === 'string' && axis.id.length > 0, 'manifest.scoring_model.axes[].id is required');
-    assert(typeof axis.label === 'string' && axis.label.length > 0, `${axis.id}: scoring axis label is required`);
-    assert(typeof axis.weight === 'number' && axis.weight > 0, `${axis.id}: scoring axis weight must be positive`);
-  }
-
-  const caseIds = new Set();
-  const coveredSkills = new Set();
-
-  for (const testCase of manifest.cases ?? []) {
-    assert(typeof testCase.id === 'string' && /^[a-z0-9-]+$/.test(testCase.id), 'case.id must be kebab-case');
-    assert(!caseIds.has(testCase.id), `duplicate case id: ${testCase.id}`);
-    caseIds.add(testCase.id);
-
-    assert(typeof testCase.title === 'string' && testCase.title.length > 0, `${testCase.id}: title is required`);
-    assert(typeof testCase.fixture === 'string' && exists(testCase.fixture), `${testCase.id}: fixture is missing`);
-    assert(arrayOfStrings(testCase.expected_skills), `${testCase.id}: expected_skills must be non-empty strings`);
-    assert(arrayOfStrings(testCase.expected_artifacts), `${testCase.id}: expected_artifacts must be non-empty strings`);
-    assert(arrayOfStrings(testCase.required_evidence), `${testCase.id}: required_evidence must be non-empty strings`);
-    assert(arrayOfStrings(testCase.forbidden_behaviors), `${testCase.id}: forbidden_behaviors must be non-empty strings`);
-    assert(Array.isArray(testCase.oracle_checks) && testCase.oracle_checks.length > 0, `${testCase.id}: oracle_checks are required`);
-
-    for (const skillName of testCase.expected_skills ?? []) {
-      assert(registrySkills.has(skillName), `${testCase.id}: unknown expected skill ${skillName}`);
-      coveredSkills.add(skillName);
-    }
-
-    for (const check of testCase.oracle_checks ?? []) {
-      assert(check && typeof check === 'object' && !Array.isArray(check), `${testCase.id}: oracle check must be an object`);
-      assert(allowedCheckTypes.has(check.type), `${testCase.id}: unknown oracle check type ${check.type}`);
-      if (check.type === 'skill_triggered') assert(registrySkills.has(check.skill), `${testCase.id}: unknown oracle skill ${check.skill}`);
-      if (check.type === 'artifact_reported') assert(typeof check.path === 'string' && check.path.length > 0, `${testCase.id}: artifact_reported.path is required`);
-      if (check.type === 'artifact_absent') assert(typeof check.path === 'string' && check.path.length > 0, `${testCase.id}: artifact_absent.path is required`);
-      if (check.type === 'change_unit_reported') assert(typeof check.path === 'string' && check.path.length > 0, `${testCase.id}: change_unit_reported.path is required`);
-      if (check.type === 'goal_covers') assert(typeof check.path === 'string' && check.path.length > 0, `${testCase.id}: goal_covers.path is required`);
-      if (check.type === 'command_reported') assert(typeof check.command === 'string' && check.command.length > 0, `${testCase.id}: command_reported.command is required`);
-      if (check.type === 'decision_gate_reported') assert(typeof check.decision === 'string' && check.decision.length > 0, `${testCase.id}: decision_gate_reported.decision is required`);
-      if (check.type === 'goal_verified') assert(typeof check.target === 'string' && check.target.length > 0, `${testCase.id}: goal_verified.target is required`);
-      if (check.type === 'evidence_contains') assert(typeof check.text === 'string' && check.text.length > 0, `${testCase.id}: evidence_contains.text is required`);
-      if (check.type === 'forbidden_behavior_absent') assert(typeof check.behavior === 'string' && check.behavior.length > 0, `${testCase.id}: forbidden_behavior_absent.behavior is required`);
-    }
-  }
-
-  for (const skillName of registrySkills) {
-    assert(coveredSkills.has(skillName), `manifest does not cover ${skillName}`);
-  }
-
-  return { caseIds, coveredSkills };
-}
-
-function validGoalCoverageEntry(entry) {
-  return (
-    entry &&
-    typeof entry === 'object' &&
-    !Array.isArray(entry) &&
-    typeof entry.source === 'string' &&
-    entry.source.startsWith('docs/') &&
-    Array.isArray(entry.covers) &&
-    entry.covers.every((coveredPath) => typeof coveredPath === 'string' && coveredPath.length > 0)
-  );
-}
-
-function validChangeUnitEntry(entry) {
-  if (typeof entry === 'string') return isChangeUnitPath(entry);
-  return entry && typeof entry === 'object' && !Array.isArray(entry) && isChangeUnitPath(entry.path);
-}
-
-function validDocSyncEntry(entry) {
-  return (
-    entry &&
-    typeof entry === 'object' &&
-    !Array.isArray(entry) &&
-    typeof entry.target === 'string' &&
-    entry.target.length > 0 &&
-      ['completed', 'pending', 'blocked'].includes(entry.status)
-  );
-}
-
-function validMetrics(metrics) {
-  if (!metrics || typeof metrics !== 'object' || Array.isArray(metrics)) return false;
-  const allowedKeys = new Set(['user_interventions', 'turns', 'changed_files', 'elapsed_ms', 'tokens']);
-  return Object.entries(metrics).every(([key, value]) => allowedKeys.has(key) && typeof value === 'number' && value >= 0);
 }
 
 function clampScore(value) {
@@ -230,16 +99,12 @@ function gradeFor(score, thresholds) {
 }
 
 function expectedArtifactReported(expectedArtifact, run) {
-  const artifacts = artifactPaths(run);
-  const changeUnits = changeUnitPaths(run);
-  return expectedArtifact.startsWith('docs/change-units/')
-    ? [...changeUnits].some((changeUnitPath) => globMatch(expectedArtifact, changeUnitPath))
-    : [...artifacts].some((artifactPath) => pathMatch(expectedArtifact, artifactPath));
+  return inspectRun(run).matchesArtifact(expectedArtifact);
 }
 
 function routingScore(testCase, run) {
   const expected = new Set(testCase.expected_skills ?? []);
-  const triggered = new Set((run.triggered_skills ?? []).map(normalizeSkillName));
+  const triggered = new Set(inspectRun(run).triggeredSkills);
   if (expected.size === 0) return null;
 
   let hits = 0;
@@ -317,104 +182,23 @@ function aggregateScores(caseScores, scoringModel) {
   };
 }
 
-function validateReport(manifest, registry, report, options = {}) {
+function scoreReport(manifest, inspection) {
   const scoringModel = manifest.scoring_model ?? defaultScoringModel;
-  assert(report.version === 2, 'report.version must be 2');
-  assert(report.suite === 'forge', 'report.suite must be forge');
-  assert(typeof report.run_id === 'string' && report.run_id.length > 0, 'report.run_id is required');
-  assert(Array.isArray(report.cases), 'report.cases must be an array');
-
-  const registrySkills = new Set((registry.skills ?? []).map((skill) => skill.name));
-  const manifestById = new Map((manifest.cases ?? []).map((testCase) => [testCase.id, testCase]));
-  const runsByCase = new Map();
-
-  for (const run of report.cases ?? []) {
-    assert(typeof run.case_id === 'string' && manifestById.has(run.case_id), `report has unknown case_id ${run.case_id}`);
-    assert(!runsByCase.has(run.case_id), `report has duplicate case_id ${run.case_id}`);
-    runsByCase.set(run.case_id, run);
-
-    assert(['pass', 'fail', 'blocked'].includes(run.status), `${run.case_id}: status must be pass, fail, or blocked`);
-    assert(arrayOfStrings(run.triggered_skills), `${run.case_id}: triggered_skills must be strings`);
-    assert(arrayOfStrings(run.commands_run), `${run.case_id}: commands_run must be strings`);
-    assert(Array.isArray(run.artifacts), `${run.case_id}: artifacts must be an array`);
-    assert(Array.isArray(run.change_units), `${run.case_id}: change_units must be an array`);
-    assert(Array.isArray(run.goal_verification), `${run.case_id}: goal_verification must be an array`);
-    assert(Array.isArray(run.goal_coverage_entries ?? []), `${run.case_id}: goal_coverage_entries must be an array`);
-    assert(Array.isArray(run.evidence), `${run.case_id}: evidence must be an array`);
-    for (const entry of run.change_units ?? []) {
-      assert(validChangeUnitEntry(entry), `${run.case_id}: change_units must point to docs/change-units/CU-*.md`);
-    }
-    for (const entry of run.goal_verification ?? []) {
-      assert(validDocSyncEntry(entry), `${run.case_id}: goal_verification must be { target, status } objects`);
-    }
-    for (const entry of run.goal_coverage_entries ?? []) {
-      assert(validGoalCoverageEntry(entry), `${run.case_id}: goal_coverage_entries must be { source: "docs/...", covers: [...] } objects`);
-    }
-    if ('metrics' in run) {
-      assert(validMetrics(run.metrics), `${run.case_id}: metrics must contain only non-negative numeric runtime metrics`);
-    }
-
-    for (const skillName of (run.triggered_skills ?? []).map(normalizeSkillName)) {
-      assert(registrySkills.has(skillName), `${run.case_id}: unknown triggered skill ${skillName}`);
-    }
-
-    if (!(run.status === 'blocked' && options.skipBlocked)) {
-      const artifacts = artifactPaths(run);
-      const changeUnits = changeUnitPaths(run);
-      for (const expectedArtifact of manifestById.get(run.case_id)?.expected_artifacts ?? []) {
-        const reported = expectedArtifact.startsWith('docs/change-units/')
-          ? [...changeUnits].some((changeUnitPath) => globMatch(expectedArtifact, changeUnitPath))
-          : [...artifacts].some((artifactPath) => pathMatch(expectedArtifact, artifactPath));
-        if (!reported) fail(`${run.case_id}: expected artifact not reported ${expectedArtifact}`);
-      }
-
-      const changedCurrentDocs = [...artifacts].some((artifactPath) =>
-        ['docs/goal.md', 'docs/goal_verification.md'].some((currentPath) => globMatch(currentPath, artifactPath)),
-      );
-      if (changedCurrentDocs && changeUnits.size === 0) {
-        fail(`${run.case_id}: goal verification docs changed without a Change Unit`);
-      }
-    }
-  }
-
   let passedChecks = 0;
-  let blockedSkipped = 0;
   let totalChecks = 0;
-  let scoredCases = 0;
   const caseScores = [];
-
-  for (const testCase of manifest.cases ?? []) {
-    const run = runsByCase.get(testCase.id);
-    if (!run && options.allowPartial) continue;
-    assert(run, `report missing case ${testCase.id}`);
-    if (!run) continue;
-    if (run.status === 'blocked' && options.skipBlocked) {
-      blockedSkipped += 1;
-      continue;
-    }
-    scoredCases += 1;
-
-    if (run.status !== 'pass') fail(`${testCase.id}: status is ${run.status}`);
-
-    const results = checkRun(testCase, run);
-    caseScores.push(scoreCase(testCase, run, results, scoringModel));
-
-    for (const result of results) {
+  for (const { testCase, run, oracleResults } of inspection.caseEvaluations) {
+    caseScores.push(scoreCase(testCase, run, oracleResults, scoringModel));
+    for (const result of oracleResults) {
       totalChecks += 1;
-      if (result.passed) {
-        passedChecks += 1;
-      } else {
-        fail(`${testCase.id}: failed oracle ${JSON.stringify(result.check)}`);
-      }
+      if (result.passed) passedChecks += 1;
     }
   }
-
-  assert(scoredCases > 0, 'report did not include any scored benchmark cases');
   return {
-    blockedSkipped,
+    blockedSkipped: inspection.blockedSkipped,
     cases: caseScores,
     passedChecks,
-    scoredCases,
+    scoredCases: inspection.caseEvaluations.length,
     totalChecks,
     ...aggregateScores(caseScores, scoringModel),
   };
@@ -453,8 +237,13 @@ function writeScoreReport(scoreOutPath, report, score, manifest) {
 
 const args = parseArgs(process.argv.slice(2));
 const registry = loadRegistry(root);
-const manifest = readJson('evals/skills-suite/manifest.json');
-const { coveredSkills } = validateManifest(registry, manifest);
+let manifest = {};
+let coveredSkills = new Set();
+try {
+  ({ manifest, coveredSkills } = loadBenchmarkContract(root, registry));
+} catch (error) {
+  failures.push(...(error.issues ?? [error.message]));
+}
 
 if (failures.length > 0) {
   console.error('Forge skills-suite evaluation failed:\n');
@@ -470,10 +259,14 @@ if (!args.reportPath) {
 }
 
 const report = readJson(args.reportPath);
-const score = validateReport(manifest, registry, report, {
+const inspection = inspectRunReport(report, {
+  manifest,
+  registry,
   allowPartial: args.allowPartial,
   skipBlocked: args.skipBlocked,
 });
+failures.push(...inspection.issues);
+const score = scoreReport(manifest, inspection);
 writeScoreReport(args.scoreOutPath, report, score, manifest);
 
 if (failures.length > 0) {

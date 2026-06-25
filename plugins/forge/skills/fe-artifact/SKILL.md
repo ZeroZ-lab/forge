@@ -12,13 +12,13 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 
 ## 执行纪律
 
-- **D5**：不重新做产品决策，不改 API 合约，不绕过 DESIGN.md 自行发明视觉语言
+- **D5**：不重新做产品决策，不改 API 合约，不绕过权威视觉约束自行发明视觉语言
 - **D7**：前端可运行时必须启动本地预览并做真实验证，不凭猜测通过
 - **D1**：关键逻辑必须引用文档来源（From: modules/tasks.md AC3）
 
 ## 上下游边界
 
-**上游**：`DESIGN.md`、interaction-spec、goal.md（前端决策+组件索引）、modules/*.md、plan.md。
+**上游**：按需存在的 `DESIGN.md`、interaction-spec，以及 goal.md、modules/*.md 和当前执行任务序列。
 
 **下游**：前端源码、样式、hooks、基础测试，交给 fe-accept 和 review。
 
@@ -26,7 +26,7 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 
 ## 何时不使用
 - 无前端规格（goal.md 无前端决策且无 modules/）
-- 无 DESIGN.md（设计系统未建立）
+- 无任何权威视觉约束
 - 纯后端 API（无前端代码需要生成）
 - codegen 未处理前端任务时不单独调用
 
@@ -43,7 +43,7 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 详细规则见 `references/fe-artifact-protocol.md`。
 
 **最小执行规则**（不读 protocol 文件时仍需遵守）：
-- 每个页面/组件必须消费 DESIGN.md Token，不自行发明视觉语言
+- 每个页面/组件必须消费 goal/module 或 DESIGN.md 中的权威视觉约束，不自行发明视觉语言
 - 每个组件必须有 loading/error/empty/disabled 状态
 - 关键逻辑必须引用文档来源
 
@@ -51,16 +51,16 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 
 生成前必须读取：
 
-- `DESIGN.md`：token、组件模式、页面结构。
+- 权威视觉约束：优先读取相关 goal/module；存在跨 feature `DESIGN.md` 时再读取。
 - goal.md：前端边界和组件索引。
 - modules/*.md：组件职责、props、状态、交互；API 模块含请求、响应、错误码。
-- plan.md：任务顺序和验证方式。
+- 当前对话/issue：任务顺序和验证方式（如有）。
 
 读完后先复述生成范围、输入文档、将写入的文件和不确定点。
 
 ## 生成阶段
 
-按 plan 的任务顺序生成：
+按当前任务序列生成；没有显式序列时从 goal 推导最小顺序：
 
 1. 类型和 API client。
 2. hooks 和状态管理。
@@ -82,7 +82,7 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 
 - API 类型、错误和加载状态是否完整。
 - 组件 props 是否与 module 文档一致。
-- 视觉是否消费 `DESIGN.md` token。
+- 视觉是否消费权威 token/规则。
 - keyboard、focus、disabled、loading、empty、error 状态是否可用。
 - 移动端和桌面端是否不重叠、不溢出。
 
@@ -105,7 +105,7 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 - 没读 DESIGN.md 就写样式 → 停止，先读 DESIGN.md 提取 Token
 - 只写 happy path 没有 loading/error/empty → 强制补充所有状态
 - 组件 props 和 module 文档不一致 → 以 module 文档为准，标注差异
-- 页面结构和交互规格不一致 → 以 interaction-spec 为准
+- 页面结构与权威交互约束不一致 → 以 goal/module 或 gated interaction-spec 为准
 - 移动端文本溢出或控件重叠 → 强制修复响应式布局
 - 视觉状态无法被 fe-accept 验收 → 补充证据（截图/预览链接）
 
@@ -128,4 +128,3 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
   - 做独立审查
   - 继续测试策略
 ```
-

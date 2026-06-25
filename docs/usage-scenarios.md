@@ -12,8 +12,8 @@
 - 任务很多或有依赖：加 `plan`
 - 风险高或要沉淀测试资产：加 `test`
 - 要发布、灰度、回滚、监控：加 `deploy`
-- 多个 feature 并行：开 `docs/status.md`
-- 要记录项目级演进：开 `docs/timeline.md`
+- 多个 feature 并行：使用 issue tracker / project board
+- 要追溯项目演进：读取 `docs/change-units/`
 
 ## 场景例子
 
@@ -58,7 +58,7 @@
 
 - 需求明确
 - 影响范围小
-- 不值得先写 `PRD.md` 或 `plan.md`
+- 不值得先写独立 `PRD.md`；任务序列留在对话/issue
 
 ### 4. 加一个很小的端点或模块
 
@@ -93,8 +93,8 @@
 - 加 `plan`：任务复杂，需要切片、依赖、并行
 - 加 `test`：需要独立测试策略和测试用例
 - 加 `deploy`：需要灰度、回滚、监控
-- 开 `docs/status.md`：多个 feature 并行
-- 开 `docs/timeline.md`：项目级决策演进
+- 多 feature 状态交给 issue tracker / project board
+- 项目级决策演进由 project/ADR + Change Units 承担
 - 进 `think`：需要深度推演
 
 ## 决策表
@@ -111,8 +111,8 @@
 | bug 暴露出需求或边界没写清 | 回到 `define` 或 `detail` | 不只补代码 |
 | 需要正式测试策略和测试用例沉淀 | `test` | 不把测试要求全塞进 `review` |
 | 需要发布、灰度、回滚、监控 | `deploy` | 不把上线动作混进 `codegen/review` |
-| 多个 feature 并行推进 | 开 `docs/status.md` | 单 feature 不开 |
-| 需要记录项目级演进或跨 feature 决策 | 开 `docs/timeline.md` | 普通小改动不必开 |
+| 多个 feature 并行推进 | 使用 issue tracker / project board | 不创建项目内状态事实副本 |
+| 需要记录项目级演进或跨 feature 决策 | 更新 project/ADR，并写 Change Unit | CU 提供历史和验证证据 |
 | 同类偏差反复出现 2-3 次 | 重新审视 `define`/`detail` 目标定义 | 不一直局部打补丁 |
 
 ## 最短记忆版

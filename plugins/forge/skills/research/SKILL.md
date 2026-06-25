@@ -58,7 +58,9 @@ when_to_use: Use when requirements include realtime/collaboration, search/rankin
 
 ## 文档约束
 
-产出 `research-brief.md`，模板：`${CLAUDE_SKILL_DIR}/references/research-brief-template.md`。必须包含 SP 分解、算法卡片、组合建议、风险评估、验证计划和被拒方案。
+默认在对话中给出 SP 分解、算法卡片、组合建议、风险评估、验证计划和被拒方案。用户接受的约束写入 `project.md`、feature `goal.md` 或 ADR。
+
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。只有研究证据有独立复核、交接或长期复用责任时，才用 `${CLAUDE_SKILL_DIR}/references/research-brief-template.md` 创建 `research-brief.md`。
 
 ## 入口/出口条件
 
@@ -86,4 +88,4 @@ when_to_use: Use when requirements include realtime/collaboration, search/rankin
 
 ## 历史维护（自动）
 
-完成后追加 feature changelog 和 `docs/timeline.md`；research 结论进入 detail 前必须被写成目标约束或明确拒绝。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。research 结论进入 `detail` 前必须被写成目标约束或明确拒绝；未形成持久变更时不写历史。
