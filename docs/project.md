@@ -61,7 +61,7 @@
 npm test
 npm run validate
 npm run eval:skills
-npm run metrics:tokens
+npm run metrics:chars
 ```
 
 ## 风险

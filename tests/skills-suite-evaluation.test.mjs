@@ -136,11 +136,11 @@ test('skills-suite evaluator runs without external dependencies', () => {
 test('token footprint metric enforces the default runtime chain budget', () => {
   const output = execFileSync(
     process.execPath,
-    ['scripts/measure-token-footprint.mjs', '--max-default-chain-chars=9000', '--max-total-chars=56000'],
+    ['scripts/measure-char-footprint.mjs', '--max-default-chain-chars=9000', '--max-total-chars=56000'],
     { encoding: 'utf8' },
   );
   const json = JSON.parse(
-    execFileSync(process.execPath, ['scripts/measure-token-footprint.mjs', '--json'], { encoding: 'utf8' }),
+    execFileSync(process.execPath, ['scripts/measure-char-footprint.mjs', '--json'], { encoding: 'utf8' }),
   );
 
   assert.match(output, /Default chain \(detail -> codegen -> review\)/);

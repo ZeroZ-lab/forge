@@ -29,8 +29,8 @@ detail -> codegen -> review
 Run:
 
 ```bash
-npm run metrics:tokens
-npm run metrics:tokens -- --max-default-chain-chars=9000 --max-total-chars=56000
+npm run metrics:chars
+npm run metrics:chars -- --max-default-chain-chars=9000 --max-total-chars=56000
 ```
 
 `node scripts/validate.mjs` enforces two budgets:

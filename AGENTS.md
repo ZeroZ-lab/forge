@@ -144,7 +144,7 @@ tests/                      # 工具链测试
 npm test
 npm run validate
 npm run eval:skills
-npm run metrics:tokens
+npm run metrics:chars
 ```
 
 真实 benchmark 运行需要 Codex CLI：

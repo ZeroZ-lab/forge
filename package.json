@@ -5,7 +5,7 @@
   "scripts": {
     "eval:skills": "node scripts/evaluate-skills.mjs",
     "eval:skills:run": "node scripts/run-skills-benchmark.mjs",
-    "metrics:tokens": "node scripts/measure-token-footprint.mjs",
+    "metrics:chars": "node scripts/measure-char-footprint.mjs",
     "plugin:install:local": "node scripts/install-local-codex-plugin.mjs",
     "validate": "node scripts/validate.mjs",
     "test": "node --test 'tests/*.test.mjs'",

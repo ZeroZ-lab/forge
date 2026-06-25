@@ -90,7 +90,7 @@ assert(packageJson.scripts?.validate === 'node scripts/validate.mjs', 'package.j
 assert(packageJson.scripts?.test === "node --test 'tests/*.test.mjs'", 'package.json: missing scripts.test');
 assert(packageJson.scripts?.['eval:skills'] === 'node scripts/evaluate-skills.mjs', 'package.json: missing scripts.eval:skills');
 assert(packageJson.scripts?.['eval:skills:run'] === 'node scripts/run-skills-benchmark.mjs', 'package.json: missing scripts.eval:skills:run');
-assert(packageJson.scripts?.['metrics:tokens'] === 'node scripts/measure-token-footprint.mjs', 'package.json: missing scripts.metrics:tokens');
+assert(packageJson.scripts?.['metrics:chars'] === 'node scripts/measure-char-footprint.mjs', 'package.json: missing scripts.metrics:chars');
 assert(packageJson.scripts?.['plugin:install:local'] === 'node scripts/install-local-codex-plugin.mjs', 'package.json: missing scripts.plugin:install:local');
 assert(codexPlugin.skills === './skills', 'plugins/forge/.codex-plugin/plugin.json: skills must point to ./skills');
 assert(exists('plugins/forge/skills'), 'plugins/forge/skills: missing');
