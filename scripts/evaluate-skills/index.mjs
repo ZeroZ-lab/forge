@@ -5,6 +5,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { loadBenchmarkContract } from '../lib/benchmark-contract.mjs';
+import { loadIndependentEvidence } from '../lib/evidence-collector.mjs';
 import { loadRegistry } from '../lib/registry.mjs';
 import { inspectRun, inspectRunReport } from '../lib/run-report.mjs';
 
@@ -19,7 +20,9 @@ const checkAxis = {
   decision_gate_reported: 'decisions',
   goal_verified: 'goal_verification',
   evidence_contains: 'verification',
+  transcript_contains: 'verification',
   forbidden_behavior_absent: 'scope_control',
+  forbidden_files_absent: 'scope_control',
   skill_triggered: 'routing',
 };
 const defaultScoringModel = {
@@ -33,6 +36,22 @@ const defaultScoringModel = {
     { id: 'scope_control', label: 'Scope control', weight: 15 },
     { id: 'traceability', label: 'Traceability', weight: 20 },
     { id: 'goal_verification', label: 'Goal verification coverage', weight: 10 },
+  ],
+};
+
+// Fair comparison model: excludes axes that are structurally impossible for a
+// no-Forge baseline to score on (routing requires triggering Forge skills;
+// traceability/goal_verification require Forge-schema CU + goal_coverage).
+// Only behaviorally verifiable axes are compared, so the uplift gate measures
+// "did Forge produce better real behavior", not "did Forge fill its own schema".
+const fairComparisonScoringModel = {
+  version: 1,
+  grade_thresholds: { A: 90, B: 80, C: 70, D: 60, F: 0 },
+  axes: [
+    { id: 'artifacts', label: 'Artifact completeness', weight: 25 },
+    { id: 'decisions', label: 'Decision gates', weight: 25 },
+    { id: 'verification', label: 'Verification evidence', weight: 25 },
+    { id: 'scope_control', label: 'Scope control', weight: 25 },
   ],
 };
 
@@ -53,15 +72,41 @@ function readJson(relativeOrAbsolutePath) {
 }
 
 function parseArgs(argv) {
-  const parsed = { allowPartial: false, reportPath: null, scoreOutPath: null, skipBlocked: false, verifyDisk: false };
+  const parsed = {
+    allowPartial: false,
+    baselineReportPath: null,
+    compareOutPath: null,
+    minScoreRatio: 2,
+    reportPath: null,
+    scoreOutPath: null,
+    skipBlocked: false,
+    trustSelfReport: false,
+    verifyDisk: false,
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--report') {
       parsed.reportPath = argv[index + 1];
       index += 1;
       if (!parsed.reportPath) fail('--report requires a file path');
+    } else if (arg === '--baseline-report') {
+      parsed.baselineReportPath = argv[index + 1];
+      index += 1;
+      if (!parsed.baselineReportPath) fail('--baseline-report requires a file path');
     } else if (arg === '--allow-partial') {
       parsed.allowPartial = true;
+    } else if (arg === '--compare-out') {
+      parsed.compareOutPath = argv[index + 1];
+      index += 1;
+      if (!parsed.compareOutPath) fail('--compare-out requires a file path');
+    } else if (arg === '--min-score-ratio') {
+      parsed.minScoreRatio = Number.parseFloat(argv[index + 1]);
+      index += 1;
+      if (!Number.isFinite(parsed.minScoreRatio) || parsed.minScoreRatio <= 0) {
+        fail('--min-score-ratio requires a positive number');
+      }
+    } else if (arg === '--trust-self-report') {
+      parsed.trustSelfReport = true;
     } else if (arg === '--score-out') {
       parsed.scoreOutPath = argv[index + 1];
       index += 1;
@@ -184,8 +229,8 @@ function aggregateScores(caseScores, scoringModel) {
   };
 }
 
-function scoreReport(manifest, inspection) {
-  const scoringModel = manifest.scoring_model ?? defaultScoringModel;
+function scoreReport(manifest, inspection, scoringModelOverride) {
+  const scoringModel = scoringModelOverride ?? manifest.scoring_model ?? defaultScoringModel;
   let passedChecks = 0;
   let totalChecks = 0;
   const caseScores = [];
@@ -213,6 +258,75 @@ function printableAxisScores(score) {
     .join(', ');
 }
 
+function passRate(inspection) {
+  const total = inspection.caseEvaluations.length;
+  if (total === 0) return null;
+  const passed = inspection.caseEvaluations.filter(({ run }) => run.status === 'pass').length;
+  return roundScore((passed / total) * 100);
+}
+
+function scoreRatio(forgeScore, baselineScore) {
+  if (forgeScore === null || forgeScore === undefined || baselineScore === null || baselineScore === undefined) {
+    return null;
+  }
+  if (baselineScore === 0) return forgeScore > 0 ? Infinity : 1;
+  return forgeScore / baselineScore;
+}
+
+function formatRatio(value) {
+  if (value === Infinity || value === 'Infinity') return 'Infinity';
+  if (value === null || value === undefined) return 'n/a';
+  return `${roundScore(value)}x`;
+}
+
+function reportRatio(value) {
+  return value === Infinity ? 'Infinity' : roundScore(value);
+}
+
+function compareReports({ baselineReport, baselineScore, baselineInspection, forgeReport, forgeScore, forgeInspection, minScoreRatio }) {
+  const ratio = scoreRatio(forgeScore.score, baselineScore.score);
+  const forgePassRate = passRate(forgeInspection);
+  const baselinePassRate = passRate(baselineInspection);
+  return {
+    version: 1,
+    suite: 'forge',
+    comparison: 'forge-vs-no-forge',
+    min_score_ratio: minScoreRatio,
+    forge: {
+      run_id: forgeReport.run_id,
+      score: forgeScore.score,
+      grade: forgeScore.grade,
+      pass_rate: forgePassRate,
+      scored_cases: forgeScore.scoredCases,
+    },
+    baseline: {
+      run_id: baselineReport.run_id,
+      score: baselineScore.score,
+      grade: baselineScore.grade,
+      pass_rate: baselinePassRate,
+      scored_cases: baselineScore.scoredCases,
+    },
+    uplift: {
+      score_ratio: reportRatio(ratio),
+      score_delta: roundScore((forgeScore.score ?? 0) - (baselineScore.score ?? 0)),
+      pass_rate_delta:
+        forgePassRate === null || baselinePassRate === null ? null : roundScore(forgePassRate - baselinePassRate),
+      score_ratio_passed: ratio !== null && ratio >= minScoreRatio,
+      pass_rate_not_worse:
+        forgePassRate !== null && baselinePassRate !== null && forgePassRate >= baselinePassRate,
+    },
+  };
+}
+
+function writeJsonReport(outputPath, payload) {
+  if (!outputPath) return;
+  try {
+    fs.writeFileSync(outputPath, `${JSON.stringify(payload, null, 2)}\n`);
+  } catch (error) {
+    fail(`${outputPath}: cannot write JSON report (${error.message})`);
+  }
+}
+
 function writeScoreReport(scoreOutPath, report, score, manifest) {
   if (!scoreOutPath) return;
   const output = {
@@ -230,11 +344,7 @@ function writeScoreReport(scoreOutPath, report, score, manifest) {
     },
     blocked_skipped: score.blockedSkipped,
   };
-  try {
-    fs.writeFileSync(scoreOutPath, `${JSON.stringify(output, null, 2)}\n`);
-  } catch (error) {
-    fail(`${scoreOutPath}: cannot write score report (${error.message})`);
-  }
+  writeJsonReport(scoreOutPath, output);
 }
 
 const args = parseArgs(process.argv.slice(2));
@@ -258,21 +368,44 @@ if (failures.length > 0) {
 
 console.log(`Forge skills-suite benchmark contract passed (${manifest.cases.length} cases, ${coveredSkills.size} skills covered).`);
 
+if (args.baselineReportPath && !args.reportPath) {
+  fail('--baseline-report requires --report');
+}
+
+if (failures.length > 0) {
+  console.error('Forge skills-suite evaluation failed:\n');
+  for (const failure of failures) console.error(`- ${failure}`);
+  process.exit(1);
+}
+
 if (!args.reportPath) {
   console.log('No run report supplied; behavioral effectiveness is not claimed.');
   process.exit(0);
 }
 
 const report = readJson(args.reportPath);
+// Independent evidence lives next to the report: <reportDir>/<caseId>.events.jsonl
+// and <reportDir>/workspaces/<caseId>/. When absent, checks fall back to
+// self-report (tagged). --trust-self-report forces the fallback even when
+// evidence is present (escape hatch for synthetic tests / legacy reports).
+const reportDir = reportAbsPath ? path.dirname(reportAbsPath) : root;
+const evidenceAvailable = !args.trustSelfReport;
+const loadEvidence = evidenceAvailable
+  ? (caseId) => {
+      const evidence = loadIndependentEvidence(reportDir, caseId);
+      return evidence.available ? evidence : undefined;
+    }
+  : undefined;
 const inspection = inspectRunReport(report, {
   manifest,
   registry,
   allowPartial: args.allowPartial,
   skipBlocked: args.skipBlocked,
+  loadEvidence,
+  trustSelfReport: args.trustSelfReport,
 });
 failures.push(...inspection.issues);
 if (args.verifyDisk && Array.isArray(report?.cases)) {
-  const reportDir = reportAbsPath ? path.dirname(reportAbsPath) : root;
   for (const run of report.cases) {
     const workspaceDir = path.join(reportDir, 'workspaces', run.case_id);
     const resolveDiskPath = (relativePath) => {
@@ -317,11 +450,65 @@ if (args.verifyDisk && Array.isArray(report?.cases)) {
 const score = scoreReport(manifest, inspection);
 writeScoreReport(args.scoreOutPath, report, score, manifest);
 
+let comparison = null;
+if (args.baselineReportPath) {
+  const baselineReport = readJson(args.baselineReportPath);
+  const baselineInspection = inspectRunReport(baselineReport, {
+    manifest,
+    registry,
+    allowPartial: args.allowPartial,
+    skipBlocked: args.skipBlocked,
+    strictOutcomes: false,
+    loadEvidence: (caseId) => {
+      const baselineDir = args.baselineReportPath
+        ? (path.isAbsolute(args.baselineReportPath) ? path.dirname(args.baselineReportPath) : path.dirname(path.join(root, args.baselineReportPath)))
+        : root;
+      const evidence = loadIndependentEvidence(baselineDir, caseId);
+      return evidence.available ? evidence : undefined;
+    },
+    trustSelfReport: args.trustSelfReport,
+  });
+  failures.push(...baselineInspection.issues.map((issue) => `baseline: ${issue}`));
+  // Re-score both sides on the fair comparison model so the uplift gate
+  // measures behaviorally verifiable axes only (no schema-filling红利).
+  const forgeFairScore = scoreReport(manifest, inspection, fairComparisonScoringModel);
+  const baselineFairScore = scoreReport(manifest, baselineInspection, fairComparisonScoringModel);
+  // keep the full-model score for display, but gate on the fair score
+  comparison = compareReports({
+    baselineReport,
+    baselineScore: baselineFairScore,
+    baselineInspection,
+    forgeReport: report,
+    forgeScore: forgeFairScore,
+    forgeInspection: inspection,
+    minScoreRatio: args.minScoreRatio,
+  });
+  comparison.scoring_model = 'fair-comparison (artifacts, decisions, verification, scope_control)';
+  writeJsonReport(args.compareOutPath, comparison);
+
+  if (!comparison.uplift.score_ratio_passed) {
+    failures.push(
+      `Forge fair-comparison score ratio ${formatRatio(comparison.uplift.score_ratio)} is below required ${args.minScoreRatio}x baseline`,
+    );
+  }
+  if (!comparison.uplift.pass_rate_not_worse) {
+    failures.push(
+      `Forge pass rate ${comparison.forge.pass_rate}% is below baseline pass rate ${comparison.baseline.pass_rate}%`,
+    );
+  }
+}
+
 if (failures.length > 0) {
   console.error('\nForge skills-suite report failed:\n');
   for (const failure of failures) console.error(`- ${failure}`);
   if (score.score !== null && score.score !== undefined) {
     console.error(`\nScore: ${score.score}/100 (${score.grade}); axes: ${printableAxisScores(score)}`);
+  }
+  if (comparison) {
+    console.error(
+      `Comparison: Forge ${comparison.forge.score}/100 vs baseline ${comparison.baseline.score}/100 ` +
+        `(${formatRatio(comparison.uplift.score_ratio)}, required ${comparison.min_score_ratio}x)`,
+    );
   }
   process.exit(1);
 }
@@ -330,4 +517,12 @@ const blockedSuffix = score.blockedSkipped > 0 ? `, ${score.blockedSkipped} bloc
 const diskSuffix = args.verifyDisk ? ', on-disk verified' : '';
 console.log(`Forge skills-suite report passed (${score.scoredCases} cases${blockedSuffix}, ${score.passedChecks}/${score.totalChecks} oracle checks${diskSuffix}).`);
 console.log(`Score: ${score.score}/100 (${score.grade}); axes: ${printableAxisScores(score)}`);
+if (comparison) {
+  console.log(
+    `Forge vs no-Forge: ${score.score}/100 vs ${comparison.baseline.score}/100 ` +
+      `(${formatRatio(comparison.uplift.score_ratio)}, required ${comparison.min_score_ratio}x); ` +
+      `pass rate ${comparison.forge.pass_rate}% vs ${comparison.baseline.pass_rate}%.`,
+  );
+  if (args.compareOutPath) console.log(`Comparison report written to ${args.compareOutPath}`);
+}
 if (args.scoreOutPath) console.log(`Score report written to ${args.scoreOutPath}`);

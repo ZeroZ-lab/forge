@@ -124,6 +124,19 @@ node scripts/run-skills-benchmark.mjs --case thinking-red-team
 node scripts/evaluate-skills.mjs --allow-partial --report .eval-runs/skills-suite/<run-id>/report.json
 ```
 
+做 Forge vs no-Forge 对照时，用同一 fixture 分别跑完整 Forge prompt 和 no-Forge 最小提示 baseline；no-Forge 模式会剥离 fixture 中的 Forge scoring 指令，只保留产品任务和验收标准：
+
+```bash
+node scripts/run-skills-benchmark.mjs --mode forge --case default-chain-small-feature --run-id forge-default-chain
+node scripts/run-skills-benchmark.mjs --mode no-forge --case default-chain-small-feature --run-id no-forge-default-chain
+node scripts/evaluate-skills.mjs \
+  --allow-partial \
+  --report .eval-runs/skills-suite/forge-default-chain/report.json \
+  --baseline-report .eval-runs/skills-suite/no-forge-default-chain/report.json
+```
+
+默认比较门要求 Forge 分数至少达到 no-Forge baseline 的 `2.0x`，且 pass rate 不低于 baseline；阈值可用 `--min-score-ratio` 调整。
+
 如果全量运行被 Codex usage limit 中断，可以只评分已完成 case：
 
 ```bash

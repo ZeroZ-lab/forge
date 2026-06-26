@@ -74,3 +74,52 @@ test('loadBenchmarkContract reports fixture and oracle contract errors together'
   );
   fs.rmSync(tempRoot, { recursive: true, force: true });
 });
+
+test('loadBenchmarkContract rejects deprecated evidence_contains and accepts new oracle types', () => {
+  const tempRoot = writeContractRoot((manifest) => {
+    manifest.cases[0].oracle_checks = [{ type: 'evidence_contains', text: 'legacy' }];
+    manifest.cases[1].oracle_checks = [
+      { type: 'transcript_contains', text: 'reasoned mid-task' },
+      { type: 'forbidden_files_absent', path: 'docs/status.md' },
+    ];
+    manifest.cases[1].forbidden_files = ['docs/status.md'];
+  });
+
+  assert.throws(
+    () => loadBenchmarkContract(tempRoot, { skills: [{ name: 'codegen' }] }),
+    (error) => {
+      assert.ok(
+        error.issues.some((issue) => issue.includes('unknown oracle check type evidence_contains')),
+        'contract must reject deprecated evidence_contains',
+      );
+      return true;
+    },
+  );
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
+test('loadBenchmarkContract accepts forbidden_files field when it is a string array', () => {
+  const tempRoot = writeContractRoot((manifest) => {
+    manifest.cases[0].forbidden_files = ['docs/status.md', 'docs/timeline.md'];
+    manifest.cases[0].oracle_checks = [
+      { type: 'skill_triggered', skill: 'codegen' },
+      { type: 'forbidden_files_absent', path: 'docs/status.md' },
+    ];
+  });
+
+  const { manifest } = loadBenchmarkContract(tempRoot, { skills: [{ name: 'codegen' }] });
+  assert.deepEqual(manifest.cases[0].forbidden_files, ['docs/status.md', 'docs/timeline.md']);
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
+test('loadBenchmarkContract rejects non-string forbidden_files entries', () => {
+  const tempRoot = writeContractRoot((manifest) => {
+    manifest.cases[0].forbidden_files = ['ok', 123];
+  });
+
+  assert.throws(
+    () => loadBenchmarkContract(tempRoot, { skills: [{ name: 'codegen' }] }),
+    (error) => error.issues.some((issue) => issue.includes('forbidden_files must contain only non-empty strings')),
+  );
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});

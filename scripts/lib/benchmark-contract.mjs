@@ -86,6 +86,11 @@ export function loadBenchmarkContract(rootDir, registry) {
     for (const field of ['expected_skills', 'expected_artifacts', 'required_evidence', 'forbidden_behaviors']) {
       if (!stringArray(testCase[field])) issues.push(`${testCase.id}: ${field} must contain only non-empty strings`);
     }
+    // forbidden_files is optional; when present it enumerates files/globs the
+    // agent must NOT create, checked against independent disk + event evidence.
+    if ('forbidden_files' in testCase && !stringArray(testCase.forbidden_files)) {
+      issues.push(`${testCase.id}: forbidden_files must contain only non-empty strings`);
+    }
 
     for (const skillName of testCase.expected_skills ?? []) {
       if (!registrySkills.has(skillName)) issues.push(`${testCase.id}: unknown expected skill ${skillName}`);

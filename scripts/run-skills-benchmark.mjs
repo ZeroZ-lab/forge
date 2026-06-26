@@ -7,7 +7,7 @@ import process from 'node:process';
 
 import { loadBenchmarkContract } from './lib/benchmark-contract.mjs';
 import { findCodexBin } from './lib/codex-bin.mjs';
-import { truncateList, markdownTableCell } from './lib/benchmark-helpers.mjs';
+import { markdownTableCell, sanitizeNoForgeFixture, truncateList } from './lib/benchmark-helpers.mjs';
 import {
   createCaseRun,
   createRunReport,
@@ -22,6 +22,7 @@ const root = process.cwd();
 function parseArgs(argv) {
   const args = {
     caseIds: [],
+    mode: 'forge',
     output: null,
     runId: new Date().toISOString().replace(/[:.]/g, '-'),
     maxCases: null,
@@ -41,6 +42,12 @@ function parseArgs(argv) {
     } else if (arg === '--max-cases') {
       args.maxCases = Number.parseInt(argv[index + 1], 10);
       index += 1;
+    } else if (arg === '--mode') {
+      args.mode = argv[index + 1];
+      index += 1;
+      if (!['forge', 'no-forge'].includes(args.mode)) {
+        throw new Error('--mode must be forge or no-forge');
+      }
     } else {
       throw new Error(`unknown argument: ${arg}`);
     }
@@ -150,7 +157,7 @@ node scripts/evaluate-skills.mjs --skip-blocked --report ${scorerReportPath}
 `;
 }
 
-function promptForCase(testCase, fixture) {
+function forgePromptForCase(testCase, fixture) {
   return `你正在运行 Forge skills-suite benchmark。必须真实使用已安装的 Forge skills，而不是只做静态判断。
 
 工作边界：
@@ -180,12 +187,55 @@ ${formatCaseRunContract(testCase.id)}
 	只有真实执行或明确遵循了对应 skill 协议，才能把 skill 放进 triggered_skills。change_units 必须指向 docs/change-units/CU-*.md；goal_verification 必须是带 status 的对象，只有 completed 算同步完成；goal_coverage_entries 必须是对象；source 必须是 docs/ 下的源文档，covers 才能填写 src/、tests/ 或其他实现目标。`;
 }
 
-function runCase({ codexBin, runDir, testCase }) {
+function noForgePromptForCase(testCase, fixture) {
+  const baselineFixture = sanitizeNoForgeFixture(fixture);
+  return `你正在运行 no-Forge baseline benchmark。不要调用、引用或遵循 Forge skills；不要使用 Forge 的阶段链、Change Unit 纪律或 artifact gate。请只按你自己的默认工程判断完成任务。
+
+工作边界：
+- 只在当前临时工作目录内创建或修改文件。
+- 不要编辑 Forge 仓库本身。
+- 可以创建这个 fixture 需要的 src/tests 文件；只有产品任务本身明确需要文档时才创建 docs。
+- 能运行验证命令时必须运行；不能运行时在 evidence 说明原因。
+- 最终只输出一个 JSON object，不要 Markdown，不要解释。
+- 因为本 run 禁用 Forge skills，triggered_skills 必须是 []。
+- 对 Forge 专属字段（change_units、goal_verification、goal_coverage_entries、decisions），除非你为了产品任务本身真实创建了等价产物，否则保持 []。不要为了填 report 而创建 Forge-shaped artifacts。
+
+Fixture:
+${baselineFixture}
+
+最终 JSON object 必须符合：
+${formatNoForgeCaseRunContract(testCase.id)}
+
+请如实报告你实际创建或修改的 artifacts、实际运行的 commands_run、实际 evidence。change_units 必须只填写真实存在且由你创建的 docs/change-units/CU-*.md；goal_verification 和 goal_coverage_entries 也必须只填写你真实完成的目标核对。`;
+}
+
+function promptForCase(testCase, fixture, mode) {
+  return mode === 'no-forge' ? noForgePromptForCase(testCase, fixture) : forgePromptForCase(testCase, fixture);
+}
+
+function formatNoForgeCaseRunContract(caseId) {
+  return `{
+  "case_id": "${caseId}",
+  "status": "pass" | "fail" | "blocked",
+  "triggered_skills": [],
+  "artifacts": ["src/...", "tests/..."],
+  "change_units": [],
+  "goal_verification": [],
+  "goal_coverage_entries": [],
+  "commands_run": ["exact command"],
+  "decisions": [],
+  "forbidden_behaviors": [],
+  "evidence": ["short evidence strings"],
+  "notes": "short note"
+}`;
+}
+
+function runCase({ codexBin, mode, runDir, testCase }) {
   const caseDir = path.join(runDir, 'workspaces', testCase.id);
   fs.mkdirSync(caseDir, { recursive: true });
 
   const fixture = fs.readFileSync(path.join(root, testCase.fixture), 'utf8');
-  const prompt = promptForCase(testCase, fixture);
+  const prompt = promptForCase(testCase, fixture, mode);
   const lastMessagePath = path.join(runDir, `${testCase.id}.last.txt`);
   const eventsPath = path.join(runDir, `${testCase.id}.events.jsonl`);
   const stderrPath = path.join(runDir, `${testCase.id}.stderr.log`);
@@ -271,13 +321,13 @@ fs.mkdirSync(runDir, { recursive: true });
 
 const report = createRunReport({
   runId: args.runId,
-  runner: `codex exec (${codexBin})`,
+  runner: `codex exec ${args.mode} (${codexBin})`,
   cases: [],
 });
 
 for (const testCase of cases) {
   console.error(`Running ${testCase.id}...`);
-  const result = runCase({ codexBin, runDir, testCase });
+  const result = runCase({ codexBin, mode: args.mode, runDir, testCase });
   report.cases.push(result);
   fs.writeFileSync(path.join(runDir, 'report.partial.json'), JSON.stringify(report, null, 2));
   if (

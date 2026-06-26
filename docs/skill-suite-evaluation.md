@@ -30,12 +30,12 @@ Run:
 
 ```bash
 npm run metrics:chars
-npm run metrics:chars -- --max-default-chain-chars=9000 --max-total-chars=56000
+npm run metrics:chars -- --max-default-chain-chars=4500 --max-total-chars=56000
 ```
 
 `node scripts/validate.mjs` enforces two budgets:
 
-- default chain `detail -> codegen -> review` <= 9,000 characters
+- default chain `detail -> codegen -> review` <= 4,500 characters
 - all `SKILL.md` runtime files <= 56,000 characters
 
 This gate proves token footprint control, not behavior effectiveness. Behavior still requires a real run report.
@@ -161,6 +161,42 @@ node scripts/evaluate-skills.mjs \
 ```
 
 `goal_verification` is scored from `goal_verified` and `goal_covers` oracle checks. Each check verifies that a goal document covers its stated targets. Missing checks lower the score proportionally.
+
+## Forge vs No-Forge Comparison
+
+Forge effectiveness must be compared against a no-Forge baseline, not only against its own oracle. The runner supports two prompt modes:
+
+```bash
+node scripts/run-skills-benchmark.mjs \
+  --mode forge \
+  --case default-chain-small-feature \
+  --run-id forge-default-chain
+
+node scripts/run-skills-benchmark.mjs \
+  --mode no-forge \
+  --case default-chain-small-feature \
+  --run-id no-forge-default-chain
+```
+
+`forge` mode gives the agent the full benchmark case contract and requires real Forge skill use. `no-forge` mode strips Forge-specific scoring instructions from the fixture, gives only the product task plus a minimal JSON report shape, explicitly forbids Forge skills, and requires `triggered_skills: []`. This keeps the baseline close to "no large prompt" behavior.
+
+Compare the two reports with the default 100% uplift gate:
+
+```bash
+node scripts/evaluate-skills.mjs \
+  --allow-partial \
+  --report .eval-runs/skills-suite/forge-default-chain/report.json \
+  --baseline-report .eval-runs/skills-suite/no-forge-default-chain/report.json \
+  --compare-out .eval-runs/skills-suite/default-chain-comparison.json
+```
+
+The comparison passes only when:
+
+- the Forge report itself passes the normal hard oracle gate;
+- Forge score is at least `2.0x` the no-Forge baseline score, configurable with `--min-score-ratio`;
+- Forge pass rate is not worse than the baseline pass rate.
+
+Baseline reports are allowed to fail oracle checks because those failures are the measured comparison signal. They must still be valid v2 report shapes over the selected cases.
 
 ## Evaluation Discipline
 

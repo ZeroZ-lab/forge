@@ -1,3 +1,11 @@
+import {
+  commandWasRun,
+  fileChangeRecorded,
+  skillWasRead,
+  transcriptContains,
+  workspaceHasArtifact,
+} from './evidence-collector.mjs';
+
 const RUN_STATUSES = new Set(['pass', 'fail', 'blocked']);
 const DOC_SYNC_STATUSES = new Set(['completed', 'pending', 'blocked']);
 const METRIC_KEYS = new Set(['user_interventions', 'turns', 'changed_files', 'elapsed_ms', 'tokens']);
@@ -10,9 +18,19 @@ const ORACLE_FIELDS = {
   command_reported: 'command',
   decision_gate_reported: 'decision',
   goal_verified: 'target',
-  evidence_contains: 'text',
+  // evidence_contains is intentionally ABSENT here: the contract rejects new
+  // uses. evaluateOracleChecks keeps a deprecated branch for legacy manifests.
+  transcript_contains: 'text',
   forbidden_behavior_absent: 'behavior',
+  forbidden_files_absent: 'path',
   skill_triggered: 'skill',
+};
+
+/** Evidence source labels: where a check's verdict came from. */
+const SOURCE = {
+  INDEPENDENT: 'independent', // backed by tamper-proof events/disk
+  SELF_REPORT: 'self-report', // only the agent's self-filled JSON was available
+  DEPRECATED: 'deprecated', // oracle type no longer trusted (evidence_contains)
 };
 
 function stringArray(value) {
@@ -219,31 +237,131 @@ export function oracleCheckIssues(testCase, registrySkills) {
   return issues;
 }
 
-export function evaluateOracleChecks(testCase, run) {
+function artifactMatchesSelfReport(view, expected) {
+  return view.matchesArtifact(expected);
+}
+
+function artifactMatchesIndependent(evidence, expected) {
+  // independent = created in event stream OR present on disk
+  return fileChangeRecorded(evidence, expected) || workspaceHasArtifact(evidence, expected);
+}
+
+/**
+ * Evaluate a case's oracle checks.
+ *
+ * Trust model (override-first):
+ * - When `evidence` (independent, from evidence-collector) is available for a
+ *   check type, that verdict wins and the result is tagged `independent`.
+ * - When no independent evidence is available (or trustSelfReport forces it),
+ *   the check falls back to the agent's self-filled JSON and is tagged
+ *   `self-report`. A self-report pass is NOT behavioral evidence.
+ *
+ * @param {object} testCase   manifest case with oracle_checks.
+ * @param {object} run        the agent's case run (self-report).
+ * @param {object} [evidence] optional independent evidence from evidence-collector.
+ * @param {object} [options]  { trustSelfReport: boolean } escape hatch.
+ * @returns {Array<{passed, check, source}>}
+ */
+export function evaluateOracleChecks(testCase, run, evidence, options = {}) {
   const view = inspectRun(run);
   const triggeredSkills = new Set(view.triggeredSkills);
   const commands = new Set(view.commands);
   const decisions = new Set(view.decisions);
   const completedGoalTargets = new Set(view.completedGoalTargets);
   const forbiddenBehaviors = new Set(view.forbiddenBehaviors);
+  const hasEvidence = Boolean(evidence && evidence.available) && !options.trustSelfReport;
 
   return (testCase.oracle_checks ?? []).map((check) => {
     let passed = false;
-    if (check.type === 'skill_triggered') passed = triggeredSkills.has(check.skill);
-    if (check.type === 'artifact_reported') passed = view.matchesArtifact(check.path);
-    if (check.type === 'artifact_absent') passed = !view.matchesArtifact(check.path);
-    if (check.type === 'change_unit_reported') passed = view.matchesArtifact(check.path);
-    if (check.type === 'goal_covers') {
+    let source = hasEvidence ? SOURCE.INDEPENDENT : SOURCE.SELF_REPORT;
+
+    if (check.type === 'skill_triggered') {
+      // independent: the agent actually read the skill's SKILL.md (exit 0)
+      if (hasEvidence && skillWasRead(evidence, check.skill)) {
+        passed = true;
+      } else if (hasEvidence) {
+        // independent evidence exists but did not corroborate -> fail on independent
+        passed = false;
+      } else {
+        passed = triggeredSkills.has(check.skill);
+        source = SOURCE.SELF_REPORT;
+      }
+    } else if (check.type === 'command_reported') {
+      // independent: the command was actually run (with a recorded exit code)
+      if (hasEvidence && commandWasRun(evidence, check.command, { requireExitCode: true })) {
+        passed = true;
+      } else if (hasEvidence) {
+        passed = false;
+      } else {
+        passed = commands.has(check.command);
+        source = SOURCE.SELF_REPORT;
+      }
+    } else if (check.type === 'artifact_reported') {
+      if (hasEvidence && artifactMatchesIndependent(evidence, check.path)) {
+        passed = true;
+      } else if (hasEvidence) {
+        passed = false;
+      } else {
+        passed = artifactMatchesSelfReport(view, check.path);
+        source = SOURCE.SELF_REPORT;
+      }
+    } else if (check.type === 'artifact_absent') {
+      // independent: must be absent from BOTH event stream and disk
+      if (hasEvidence) {
+        passed = !artifactMatchesIndependent(evidence, check.path);
+      } else {
+        passed = !artifactMatchesSelfReport(view, check.path);
+        source = SOURCE.SELF_REPORT;
+      }
+    } else if (check.type === 'change_unit_reported') {
+      if (hasEvidence && (fileChangeRecorded(evidence, check.path) || workspaceHasArtifact(evidence, check.path))) {
+        passed = true;
+      } else if (hasEvidence) {
+        passed = false;
+      } else {
+        passed = view.matchesArtifact(check.path);
+        source = SOURCE.SELF_REPORT;
+      }
+    } else if (check.type === 'goal_covers') {
       passed = view.goalCoverage.some((coveredPath) => pathMatch(check.path, coveredPath));
-    }
-    if (check.type === 'command_reported') passed = commands.has(check.command);
-    if (check.type === 'decision_gate_reported') passed = decisions.has(check.decision);
-    if (check.type === 'goal_verified') {
+      source = SOURCE.SELF_REPORT;
+    } else if (check.type === 'decision_gate_reported') {
+      passed = decisions.has(check.decision);
+      source = SOURCE.SELF_REPORT;
+    } else if (check.type === 'goal_verified') {
       passed = [...completedGoalTargets].some((target) => pathMatch(check.target, target));
+      source = SOURCE.SELF_REPORT;
+    } else if (check.type === 'evidence_contains') {
+      passed = view.evidence.includes(check.text);
+      source = SOURCE.DEPRECATED;
+    } else if (check.type === 'transcript_contains') {
+      // independent: the phrase appears in an in-process agent_message (NOT the
+      // final self-report). This separates mid-task reasoning from keyword echo.
+      if (hasEvidence) {
+        const found = transcriptContains(evidence, check.text);
+        passed = found === true;
+        source = SOURCE.INDEPENDENT;
+      } else {
+        passed = view.evidence.includes(check.text);
+        source = SOURCE.SELF_REPORT;
+      }
+    } else if (check.type === 'forbidden_files_absent') {
+      // independent: the forbidden path must be absent from BOTH event stream
+      // file changes AND the on-disk workspace. This catches files the agent
+      // created even when it did not self-report them.
+      if (hasEvidence) {
+        passed = !artifactMatchesIndependent(evidence, check.path);
+      } else {
+        // no independent evidence -> fall back to self-report (cannot prove a
+        // negative from absence of evidence). A real run provides evidence.
+        passed = !artifactMatchesSelfReport(view, check.path);
+        source = SOURCE.SELF_REPORT;
+      }
+    } else if (check.type === 'forbidden_behavior_absent') {
+      passed = !forbiddenBehaviors.has(check.behavior);
+      source = SOURCE.SELF_REPORT;
     }
-    if (check.type === 'evidence_contains') passed = view.evidence.includes(check.text);
-    if (check.type === 'forbidden_behavior_absent') passed = !forbiddenBehaviors.has(check.behavior);
-    return { passed, check };
+    return { passed, check, source };
   });
 }
 
@@ -280,7 +398,7 @@ function runIssues(run, testCase, registrySkills, options) {
     if (!registrySkills.has(skillName)) issues.push(`${label}: unknown triggered skill ${skillName}`);
   }
 
-  if (testCase && !(run.status === 'blocked' && options.skipBlocked)) {
+  if (testCase && options.strictOutcomes && !(run.status === 'blocked' && options.skipBlocked)) {
     const view = inspectRun(run);
     for (const expectedArtifact of testCase.expected_artifacts ?? []) {
       if (!view.matchesArtifact(expectedArtifact)) {
@@ -298,12 +416,12 @@ function runIssues(run, testCase, registrySkills, options) {
   return issues;
 }
 
-export function inspectRunReport(report, { manifest, registry, allowPartial = false, skipBlocked = false }) {
+export function inspectRunReport(report, { manifest, registry, allowPartial = false, skipBlocked = false, strictOutcomes = true, loadEvidence, trustSelfReport = false }) {
   const issues = [];
   const registrySkills = new Set((registry.skills ?? []).map((skill) => skill.name));
   const manifestById = new Map((manifest.cases ?? []).map((testCase) => [testCase.id, testCase]));
   const runsByCase = new Map();
-  const options = { skipBlocked };
+  const options = { skipBlocked, strictOutcomes };
 
   if (report?.version !== 2) issues.push('report.version must be 2');
   if (report?.suite !== 'forge') issues.push('report.suite must be forge');
@@ -333,12 +451,20 @@ export function inspectRunReport(report, { manifest, registry, allowPartial = fa
       blockedSkipped += 1;
       continue;
     }
-    if (run.status !== 'pass') issues.push(`${testCase.id}: status is ${run.status}`);
-    const oracleResults = evaluateOracleChecks(testCase, run);
-    for (const result of oracleResults) {
-      if (!result.passed) issues.push(`${testCase.id}: failed oracle ${JSON.stringify(result.check)}`);
+    if (strictOutcomes && run.status !== 'pass') issues.push(`${testCase.id}: status is ${run.status}`);
+    // load independent evidence (events.jsonl + workspace) when a loader is wired up.
+    // Absence is graceful: checks fall back to self-report tagged as such.
+    let evidence;
+    try {
+      evidence = loadEvidence ? loadEvidence(testCase.id) : undefined;
+    } catch {
+      evidence = undefined;
     }
-    caseEvaluations.push({ testCase, run, oracleResults });
+    const oracleResults = evaluateOracleChecks(testCase, run, evidence, { trustSelfReport });
+    for (const result of oracleResults) {
+      if (strictOutcomes && !result.passed) issues.push(`${testCase.id}: failed oracle ${JSON.stringify(result.check)}`);
+    }
+    caseEvaluations.push({ testCase, run, oracleResults, evidence });
   }
 
   if (caseEvaluations.length === 0) issues.push('report did not include any scored benchmark cases');

@@ -86,6 +86,14 @@
         "skipped_business_decision",
         "current_docs_without_change_unit"
       ],
+      "forbidden_files": [
+        "docs/status.md",
+        "docs/timeline.md",
+        "docs/CODE_MAP.yml",
+        "docs/CURRENT_STATE.md",
+        "docs/REBUILD_GUIDE.md",
+        "docs/idea-brief.md"
+      ],
       "oracle_checks": [
         {
           "type": "skill_triggered",
@@ -110,6 +118,30 @@
         {
           "type": "forbidden_behavior_absent",
           "behavior": "current_docs_without_change_unit"
+        },
+        {
+          "type": "forbidden_files_absent",
+          "path": "docs/status.md"
+        },
+        {
+          "type": "forbidden_files_absent",
+          "path": "docs/timeline.md"
+        },
+        {
+          "type": "forbidden_files_absent",
+          "path": "docs/CODE_MAP.yml"
+        },
+        {
+          "type": "forbidden_files_absent",
+          "path": "docs/CURRENT_STATE.md"
+        },
+        {
+          "type": "forbidden_files_absent",
+          "path": "docs/REBUILD_GUIDE.md"
+        },
+        {
+          "type": "forbidden_files_absent",
+          "path": "docs/idea-brief.md"
         },
         {
           "type": "goal_verified",
@@ -226,7 +258,7 @@
           "path": "docs/features/realtime-search/PRD.md"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "技术信号词"
         },
         {
@@ -313,7 +345,7 @@
           "decision": "primary_flow"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "四维验收"
         },
         {
@@ -385,7 +417,7 @@
           "skill": "frontend-design"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "下游依赖"
         },
         {
@@ -462,7 +494,7 @@
           "path": "tests/"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "AC-"
         },
         {
@@ -470,7 +502,7 @@
           "command": "node --test"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "归因"
         },
         {
@@ -551,7 +583,7 @@
           "path": "tests/"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "detail -> codegen -> review"
         },
         {
@@ -559,7 +591,7 @@
           "command": "node --test"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "运行验证"
         },
         {
@@ -644,7 +676,7 @@
           "path": "docs/features/billing/testing/strategy.md"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "风险分层"
         },
         {
@@ -695,7 +727,7 @@
           "path": "docs/thinking/*.md"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "假设清单"
         },
         {
@@ -832,27 +864,27 @@
           "path": "docs/features/billing/goal.md"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "Missing Invariant"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "red-capable"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "最小复现"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "修复前失败"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "regression test"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "原始场景复验"
         },
         {
@@ -860,7 +892,7 @@
           "command": "node --test"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "运行验证"
         },
         {
@@ -931,23 +963,23 @@
           "path": "docs/change-units/CU-*.md"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "red-capable"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "初始复现率"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "修复后复现率"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "可证伪假设"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "regression test"
         },
         {
@@ -1015,23 +1047,23 @@
           "path": "docs/project.md"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "red-capable command unavailable"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "attempted feedback loops"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "requested production evidence"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "未验证风险"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "safe stop"
         },
         {
@@ -1098,23 +1130,23 @@
           "decision": "test_seam"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "red-capable"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "correct seam"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "错误 seam"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "修复前失败"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "原始场景复验"
         },
         {
@@ -1187,7 +1219,7 @@
           "behavior": "DESIGN.md_generated_for_backend_project"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "skip frontend"
         },
         {
@@ -1259,7 +1291,7 @@
           "behavior": "frontend_contract_generated_for_backend_project"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "no frontend"
         },
         {
@@ -1323,11 +1355,11 @@
           "path": "docs/features/billing/modules/billing.md"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "偏差"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "downstream gap"
         },
         {
@@ -1405,7 +1437,7 @@
           "behavior": "interaction-spec_generated_for_backend_project"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "skip design"
         },
         {
@@ -1451,7 +1483,7 @@
           "skill": "learn"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "Archive Decision Report"
         },
         {
@@ -1500,23 +1532,23 @@
           "skill": "guide"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "L0"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "patch"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "codegen(patch)"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "跳过阶段"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "只推荐不执行"
         },
         {
@@ -1567,27 +1599,27 @@
           "skill": "guide"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "L3"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "init"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "bugfix protocol"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "L2"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "detail(stage) -> plan(stage) -> codegen(stage) -> review(stage)"
         },
         {
-          "type": "evidence_contains",
+          "type": "transcript_contains",
           "text": "只引用职责"
         },
         {

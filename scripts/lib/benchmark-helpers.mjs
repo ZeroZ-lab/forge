@@ -26,3 +26,29 @@ export function truncateList(items, limit = 4) {
 export function markdownTableCell(value) {
   return String(value).replaceAll('\n', '<br>').replaceAll('|', '\\|');
 }
+
+export function sanitizeNoForgeFixture(fixture) {
+  let sanitized = fixture;
+  for (const marker of ['\n实现要求:', '\n实现要求：', '\nExpected behavior:']) {
+    const index = sanitized.indexOf(marker);
+    if (index !== -1) sanitized = sanitized.slice(0, index);
+  }
+  const forgeSpecificPatterns = [
+    /Forge/i,
+    /默认主链/,
+    /detail\s*->\s*codegen\s*->\s*review/,
+    /Change Unit/i,
+    /goal verification/i,
+    /goal_verification/i,
+    /goal_coverage_entries/i,
+    /trigger/i,
+    /skill/i,
+    /docs\/project\.md/,
+  ];
+  return sanitized
+    .split(/\r?\n/)
+    .filter((line) => !forgeSpecificPatterns.some((pattern) => pattern.test(line)))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}

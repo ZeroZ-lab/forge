@@ -182,8 +182,8 @@ const totalSkillChars = skillDirs.reduce((sum, skillName) => {
   return sum + read(`plugins/forge/skills/${skillName}/SKILL.md`).length;
 }, read('plugins/forge/skills/shared/SKILL.md').length);
 assert(
-  defaultRuntimeChainChars <= 9000,
-  `default runtime chain char budget exceeded: ${defaultRuntimeChainChars} chars > 9000 chars`,
+  defaultRuntimeChainChars <= 4500,
+  `default runtime chain char budget exceeded: ${defaultRuntimeChainChars} chars > 4500 chars`,
 );
 assert(
   totalSkillChars <= 56000,
