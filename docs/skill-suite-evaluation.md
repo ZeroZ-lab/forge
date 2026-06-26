@@ -64,6 +64,8 @@ node scripts/evaluate-skills.mjs --allow-partial --report .eval-runs/skills-suit
 The runner stores transcripts and temporary workspaces under `.eval-runs/skills-suite/`.
 Each run writes both `report.json` for machine scoring and `summary.md` for human review in the run directory.
 
+`--verify-disk` is behavior-backed: every reported Change Unit must exist in the run workspace, include a `## Verification` section, and cite a command that appears in that run's `events.jsonl` with exit code 0. Echoing a command string, such as `echo "node --test"`, does not count as command execution.
+
 If Codex usage limits or other external conditions block a full run, score only completed cases with:
 
 ```bash
@@ -170,17 +172,19 @@ Forge effectiveness must be compared against a no-Forge baseline, not only again
 node scripts/run-skills-benchmark.mjs \
   --mode forge \
   --case default-chain-small-feature \
+  --runs 2 \
   --run-id forge-default-chain
 
 node scripts/run-skills-benchmark.mjs \
   --mode no-forge \
   --case default-chain-small-feature \
+  --runs 2 \
   --run-id no-forge-default-chain
 ```
 
-`forge` mode gives the agent the full benchmark case contract and requires real Forge skill use. `no-forge` mode strips Forge-specific scoring instructions from the fixture, gives only the product task plus a minimal JSON report shape, explicitly forbids Forge skills, and requires `triggered_skills: []`. This keeps the baseline close to "no large prompt" behavior.
+`forge` mode gives the agent the fixture task text, the answer-free report shape, and the published skill registry names, but not per-case oracle answers. `no-forge` mode strips Forge-specific scoring instructions from the fixture, gives the same product task plus a minimal JSON report shape, explicitly forbids Forge skills, and requires `triggered_skills: []`. This keeps the baseline close to "no large prompt" behavior without deleting product acceptance criteria.
 
-Compare the two reports with the default 100% uplift gate:
+Compare the two reports with the default repeated-sample gate:
 
 ```bash
 node scripts/evaluate-skills.mjs \
@@ -193,8 +197,12 @@ node scripts/evaluate-skills.mjs \
 The comparison passes only when:
 
 - the Forge report itself passes the normal hard oracle gate;
-- Forge score is at least `2.0x` the no-Forge baseline score, configurable with `--min-score-ratio`;
-- Forge pass rate is not worse than the baseline pass rate.
+- both arms include repeated samples for the selected case set, with distinct `evidence_id` values;
+- Forge's confidence interval lower bound is greater than the no-Forge baseline upper bound;
+- Forge point-estimate score is at least `2.0x` the no-Forge baseline score, configurable with `--min-score-ratio`;
+- Forge oracle-derived pass rate is not worse than the baseline pass rate.
+
+The 2.0x threshold is currently calibrated from 2 selected n=1 cases (guide-shortest-chain, default-chain-small-feature), not a suite-level result. It must not be cited as a suite-level effectiveness claim until a full 21-case multi-run comparison with variance and confidence intervals is published.
 
 Baseline reports are allowed to fail oracle checks because those failures are the measured comparison signal. They must still be valid v2 report shapes over the selected cases.
 

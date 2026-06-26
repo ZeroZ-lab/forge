@@ -6,9 +6,6 @@ User prompt:
 
 Expected behavior:
 
-- Trigger init orchestration.
-- Load business-alignment and technical-design skills.
-- Skip fe-system entirely — no DESIGN.md, no design token sections.
 - Produce project.md and AGENTS.md without any frontend-related sections.
 - Record the "skip frontend" decision as an explicit decision entry in project.md.
 - Run repository validation after writing project-level files.

@@ -7,6 +7,7 @@ import test from 'node:test';
 
 import { loadBenchmarkContract } from '../scripts/lib/benchmark-contract.mjs';
 import { loadRegistry } from '../scripts/lib/registry.mjs';
+import { inspectRunReport } from '../scripts/lib/run-report.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const registry = loadRegistry(root);
@@ -157,6 +158,19 @@ test('skills-suite evaluator verifies change units on disk with --verify-disk', 
   const cuPath = 'docs/change-units/CU-verify-disk-workspace.md';
   fs.mkdirSync(path.join(workspaceDir, 'docs/change-units'), { recursive: true });
   fs.writeFileSync(
+    path.join(runDir, `${testCase.id}.events.jsonl`),
+    `${JSON.stringify({
+      type: 'item.completed',
+      item: {
+        type: 'command_execution',
+        command: 'node --test',
+        exit_code: 0,
+        status: 'completed',
+        aggregated_output: 'ok - verify disk test\n',
+      },
+    })}\n`,
+  );
+  fs.writeFileSync(
     path.join(workspaceDir, cuPath),
     [
       '# CU-verify-disk-workspace',
@@ -203,7 +217,7 @@ test('skills-suite evaluator verifies change units on disk with --verify-disk', 
   );
   const missing = spawnSync(
     process.execPath,
-    ['scripts/evaluate-skills.mjs', '--allow-partial', '--verify-disk', '--report', missingReportPath],
+    ['scripts/evaluate-skills.mjs', '--allow-partial', '--verify-disk', '--trust-self-report', '--report', missingReportPath],
     { encoding: 'utf8' },
   );
   assert.notEqual(missing.status, 0);
@@ -220,7 +234,7 @@ test('skills-suite evaluator verifies change units on disk with --verify-disk', 
   );
   const present = spawnSync(
     process.execPath,
-    ['scripts/evaluate-skills.mjs', '--allow-partial', '--verify-disk', '--report', reportPath],
+    ['scripts/evaluate-skills.mjs', '--allow-partial', '--verify-disk', '--trust-self-report', '--report', reportPath],
     { encoding: 'utf8' },
   );
   assert.equal(present.status, 0, present.stderr);
@@ -255,7 +269,7 @@ test('skills-suite evaluator --verify-disk requires a Verification section with 
     );
     const missing = spawnSync(
       process.execPath,
-      ['scripts/evaluate-skills.mjs', '--allow-partial', '--verify-disk', '--report', reportPath],
+      ['scripts/evaluate-skills.mjs', '--allow-partial', '--verify-disk', '--trust-self-report', '--report', reportPath],
       { encoding: 'utf8' },
     );
     assert.notEqual(missing.status, 0);
@@ -266,7 +280,75 @@ test('skills-suite evaluator --verify-disk requires a Verification section with 
   }
 });
 
-test('skills-suite evaluator scores a complete report', () => {
+test('skills-suite evaluator --verify-disk rejects echoed verification commands', () => {
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'bugfix-unreproducible-blocked');
+  const runDir = fs.mkdtempSync(path.join(os.tmpdir(), 'forge-verify-disk-echo-'));
+  const reportPath = path.join(runDir, 'report.json');
+  const workspaceDir = path.join(runDir, 'workspaces', testCase.id);
+  const cuPath = 'docs/change-units/CU-verify-disk-echo.md';
+  fs.mkdirSync(path.join(workspaceDir, 'docs/change-units'), { recursive: true });
+  fs.writeFileSync(path.join(workspaceDir, 'goal.md'), '# Goal\n');
+  fs.writeFileSync(
+    path.join(workspaceDir, cuPath),
+    [
+      '# CU-verify-disk-echo',
+      '',
+      '## Verification',
+      '',
+      '```sh',
+      'node --test',
+      '```',
+      '',
+    ].join('\n'),
+  );
+  fs.writeFileSync(
+    path.join(runDir, `${testCase.id}.events.jsonl`),
+    `${JSON.stringify({
+      type: 'item.completed',
+      item: {
+        type: 'command_execution',
+        command: 'echo "node --test"',
+        exit_code: 0,
+        status: 'completed',
+        aggregated_output: 'node --test\n',
+      },
+    })}\n`,
+  );
+  fs.writeFileSync(
+    reportPath,
+    JSON.stringify(
+      {
+        version: 2,
+        suite: 'forge',
+        run_id: 'verify-disk-echo',
+        cases: [
+          {
+            case_id: testCase.id,
+            status: 'pass',
+            triggered_skills: testCase.expected_skills,
+            artifacts: testCase.expected_artifacts,
+            ...reportEvidenceFor(testCase),
+            change_units: [cuPath],
+            forbidden_behaviors: [],
+          },
+        ],
+      },
+      null,
+      2,
+    ),
+  );
+  const result = spawnSync(
+    process.execPath,
+    ['scripts/evaluate-skills.mjs', '--allow-partial', '--verify-disk', '--trust-self-report', '--report', reportPath],
+    { encoding: 'utf8' },
+  );
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Verification command was not executed successfully/);
+  fs.rmSync(runDir, { recursive: true, force: true });
+});
+
+test('skills-suite evaluator rejects an answer-echo report lacking independent evidence', () => {
   const reportPath = path.join(os.tmpdir(), `forge-skills-report-${process.pid}.json`);
   const cases = manifest.cases.map((testCase) => {
     return {
@@ -276,22 +358,62 @@ test('skills-suite evaluator scores a complete report', () => {
       artifacts: testCase.expected_artifacts,
       ...reportEvidenceFor(testCase),
       forbidden_behaviors: [],
-      notes: 'synthetic evaluator smoke report; not behavior evidence',
+      notes: 'answer-echo report: echoes oracle answers, no events.jsonl, no workspace',
     };
   });
 
   fs.writeFileSync(
     reportPath,
-    JSON.stringify({ version: 2, suite: 'forge', run_id: 'synthetic-smoke', cases }, null, 2),
+    JSON.stringify({ version: 2, suite: 'forge', run_id: 'answer-echo', cases }, null, 2),
   );
 
-  const output = execFileSync(process.execPath, ['scripts/evaluate-skills.mjs', '--report', reportPath], {
-    encoding: 'utf8',
-  });
-
-  assert.match(output, /report passed/);
-  assert.match(output, /Score: 100\/100 \(A\)/);
+  // Master gate: a hand-written answer-echo report that echoes every oracle
+  // answer via self-report, with NO independent evidence (no events.jsonl,
+  // no workspace), under default trust (no --trust-self-report) MUST fail the
+  // hard gate. A self-report pass is NOT behavioral evidence. execFileSync
+  // throws on the non-zero exit.
+  let caught;
+  try {
+    execFileSync(process.execPath, ['scripts/evaluate-skills.mjs', '--report', reportPath], {
+      encoding: 'utf8',
+    });
+  } catch (error) {
+    caught = error;
+  }
+  assert.ok(
+    caught,
+    'evaluate-skills.mjs must exit non-zero for an answer-echo report with no independent evidence',
+  );
+  assert.match(caught.stderr, /failed/);
+  assert.doesNotMatch(caught.stderr, /report passed/);
   fs.unlinkSync(reportPath);
+});
+
+test('inspectRunReport flags no-evidence self-report passes under requireIndependent (mixed bypass closed)', () => {
+  // Regression for the mixed-bypass: a case that passes purely via self-report
+  // with NO events.jsonl used to slip through the per-case requireIndependent
+  // check — the `evidence?.available &&` guard skipped no-evidence cases, so
+  // one real case (with evidence) could cover N self-report-only echo cases.
+  // The guard is removed; a no-evidence self-report pass must now be flagged.
+  const testCase = manifest.cases[0];
+  const run = {
+    case_id: testCase.id,
+    status: 'pass',
+    triggered_skills: testCase.expected_skills,
+    artifacts: testCase.expected_artifacts,
+    ...reportEvidenceFor(testCase),
+    forbidden_behaviors: [],
+    notes: 'echo case: self-report only, no events.jsonl',
+  };
+  const inspection = inspectRunReport(
+    { version: 2, suite: 'forge', run_id: 'mixed-bypass', cases: [run] },
+    { manifest, registry, requireIndependent: true, strictOutcomes: true, loadEvidence: () => null },
+  );
+  const lacksEvidence = inspection.issues.filter((i) => /lacks independent evidence/.test(i));
+  assert.ok(
+    lacksEvidence.length > 0,
+    'a no-evidence self-report pass must be flagged under requireIndependent (mixed bypass closed)',
+  );
 });
 
 test('skills-suite evaluator writes a machine-readable score report', () => {
@@ -321,7 +443,7 @@ test('skills-suite evaluator writes a machine-readable score report', () => {
 
   const output = execFileSync(
     process.execPath,
-    ['scripts/evaluate-skills.mjs', '--report', reportPath, '--score-out', scorePath],
+    ['scripts/evaluate-skills.mjs', '--trust-self-report', '--report', reportPath, '--score-out', scorePath],
     { encoding: 'utf8' },
   );
   const score = JSON.parse(fs.readFileSync(scorePath, 'utf8'));
@@ -331,6 +453,11 @@ test('skills-suite evaluator writes a machine-readable score report', () => {
   assert.equal(score.grade, 'A');
   assert.equal(score.axes.goal_verification, 100);
   assert.equal(score.cases.length, manifest.cases.length);
+  // per-check source provenance is persisted; a trusted synthetic report is
+  // 100% self-report (independent_ratio 0) — honest about its evidence basis.
+  assert.equal(score.evidence_sources.independent, 0);
+  assert.equal(score.evidence_sources['self-report'], score.oracle_checks.total);
+  assert.equal(score.independent_ratio, 0);
   fs.unlinkSync(reportPath);
   fs.unlinkSync(scorePath);
 });
@@ -362,13 +489,27 @@ test('skills-suite evaluator compares Forge against a no-Forge baseline', () => 
     evidence: ['no-Forge baseline smoke report'],
   };
 
+  const repeat = (run, index) => ({
+    ...run,
+    repeat_index: index,
+    evidence_id: `${run.case_id}.r${index}`,
+  });
+
   fs.writeFileSync(
     forgeReportPath,
-    JSON.stringify({ version: 2, suite: 'forge', run_id: 'forge-compare-smoke', cases: [forgeRun] }, null, 2),
+    JSON.stringify(
+      { version: 2, suite: 'forge', run_id: 'forge-compare-smoke', cases: [repeat(forgeRun, 0), repeat(forgeRun, 1)] },
+      null,
+      2,
+    ),
   );
   fs.writeFileSync(
     baselineReportPath,
-    JSON.stringify({ version: 2, suite: 'forge', run_id: 'no-forge-compare-smoke', cases: [baselineRun] }, null, 2),
+    JSON.stringify(
+      { version: 2, suite: 'forge', run_id: 'no-forge-compare-smoke', cases: [repeat(baselineRun, 0), repeat(baselineRun, 1)] },
+      null,
+      2,
+    ),
   );
 
   const output = execFileSync(
@@ -376,6 +517,7 @@ test('skills-suite evaluator compares Forge against a no-Forge baseline', () => 
     [
       'scripts/evaluate-skills.mjs',
       '--allow-partial',
+      '--trust-self-report',
       '--report',
       forgeReportPath,
       '--baseline-report',
@@ -388,6 +530,7 @@ test('skills-suite evaluator compares Forge against a no-Forge baseline', () => 
   const comparison = JSON.parse(fs.readFileSync(comparePath, 'utf8'));
 
   assert.match(output, /Forge vs no-Forge/);
+  assert.equal(comparison.statistical_gate.passed, true);
   assert.ok(comparison.uplift.score_ratio >= 2);
   assert.equal(comparison.uplift.score_ratio_passed, true);
   assert.equal(comparison.uplift.pass_rate_not_worse, true);
@@ -395,6 +538,8 @@ test('skills-suite evaluator compares Forge against a no-Forge baseline', () => 
   assert.match(comparison.scoring_model, /fair-comparison/);
   assert.match(comparison.scoring_model, /scope_control/);
   assert.doesNotMatch(comparison.scoring_model, /routing/);
+  // the Forge-schema decisions axis (self-report-only) must be removed
+  assert.doesNotMatch(comparison.scoring_model, /decisions/);
 
   fs.unlinkSync(forgeReportPath);
   fs.unlinkSync(baselineReportPath);
@@ -428,6 +573,7 @@ test('skills-suite evaluator fails when Forge does not clear the 100 percent com
     [
       'scripts/evaluate-skills.mjs',
       '--allow-partial',
+      '--trust-self-report',
       '--report',
       forgeReportPath,
       '--baseline-report',
@@ -438,6 +584,73 @@ test('skills-suite evaluator fails when Forge does not clear the 100 percent com
 
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /below required 2x baseline/);
+
+  fs.unlinkSync(forgeReportPath);
+  fs.unlinkSync(baselineReportPath);
+});
+
+test('skills-suite evaluator rejects a zero-baseline comparison as not comparable (no Infinity auto-pass)', () => {
+  const forgeReportPath = path.join(os.tmpdir(), `forge-skills-zero-base-forge-${process.pid}.json`);
+  const baselineReportPath = path.join(os.tmpdir(), `forge-skills-zero-base-baseline-${process.pid}.json`);
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'default-chain-small-feature');
+  // Forge arm: full self-report answers (trusted) -> fair score 100.
+  const forgeRun = {
+    case_id: testCase.id,
+    status: 'pass',
+    triggered_skills: testCase.expected_skills,
+    artifacts: testCase.expected_artifacts,
+    ...reportEvidenceFor(testCase),
+    forbidden_behaviors: [],
+  };
+  // Baseline arm: fails EVERY fair axis (artifacts absent, no verification,
+  // every forbidden behavior present + forbidden artifact present) -> fair 0.
+  const forbiddenBehaviors = testCase.oracle_checks
+    .filter((check) => check.type === 'forbidden_behavior_absent')
+    .map((check) => check.behavior);
+  const baselineRun = {
+    case_id: testCase.id,
+    status: 'pass',
+    triggered_skills: [],
+    artifacts: ['docs/project.md'],
+    change_units: [],
+    goal_verification: [],
+    goal_coverage_entries: [],
+    commands_run: [],
+    decisions: [],
+    forbidden_behaviors: forbiddenBehaviors,
+    evidence: [],
+  };
+
+  fs.writeFileSync(
+    forgeReportPath,
+    JSON.stringify({ version: 2, suite: 'forge', run_id: 'forge-zero-base', cases: [forgeRun] }, null, 2),
+  );
+  fs.writeFileSync(
+    baselineReportPath,
+    JSON.stringify({ version: 2, suite: 'forge', run_id: 'baseline-zero-base', cases: [baselineRun] }, null, 2),
+  );
+
+  // A zero baseline must NOT mint an Infinity ratio that auto-passes the 2.0x
+  // gate. scoreRatio returns null and the gate hard-fails with "not
+  // comparable, cannot auto-pass".
+  const result = spawnSync(
+    process.execPath,
+    [
+      'scripts/evaluate-skills.mjs',
+      '--allow-partial',
+      '--trust-self-report',
+      '--report',
+      forgeReportPath,
+      '--baseline-report',
+      baselineReportPath,
+    ],
+    { encoding: 'utf8' },
+  );
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /not comparable, cannot auto-pass/);
+  // scoreRatio must return null (not Infinity) for a zero baseline.
+  assert.doesNotMatch(result.stderr, /Infinity/);
 
   fs.unlinkSync(forgeReportPath);
   fs.unlinkSync(baselineReportPath);
@@ -465,7 +678,7 @@ test('skills-suite evaluator supports partial reports and artifact globs', () =>
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
   const output = execFileSync(
     process.execPath,
-    ['scripts/evaluate-skills.mjs', '--allow-partial', '--report', reportPath],
+    ['scripts/evaluate-skills.mjs', '--allow-partial', '--trust-self-report', '--report', reportPath],
     { encoding: 'utf8' },
   );
 
@@ -511,7 +724,7 @@ test('skills-suite evaluator can skip externally blocked cases', () => {
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
   const output = execFileSync(
     process.execPath,
-    ['scripts/evaluate-skills.mjs', '--allow-partial', '--skip-blocked', '--report', reportPath],
+    ['scripts/evaluate-skills.mjs', '--allow-partial', '--skip-blocked', '--trust-self-report', '--report', reportPath],
     { encoding: 'utf8' },
   );
 

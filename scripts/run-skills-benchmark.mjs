@@ -7,12 +7,12 @@ import process from 'node:process';
 
 import { loadBenchmarkContract } from './lib/benchmark-contract.mjs';
 import { findCodexBin } from './lib/codex-bin.mjs';
-import { markdownTableCell, sanitizeNoForgeFixture, truncateList } from './lib/benchmark-helpers.mjs';
+import { markdownTableCell, truncateList } from './lib/benchmark-helpers.mjs';
+import { promptForCase } from './lib/benchmark-prompts.mjs';
 import {
   createCaseRun,
   createRunReport,
   evaluateOracleChecks,
-  formatCaseRunContract,
   inspectRun,
 } from './lib/run-report.mjs';
 import { loadRegistry } from './lib/registry.mjs';
@@ -26,6 +26,9 @@ function parseArgs(argv) {
     output: null,
     runId: new Date().toISOString().replace(/[:.]/g, '-'),
     maxCases: null,
+    repeats: 1,
+    seed: null,
+    temperature: null,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -42,6 +45,20 @@ function parseArgs(argv) {
     } else if (arg === '--max-cases') {
       args.maxCases = Number.parseInt(argv[index + 1], 10);
       index += 1;
+    } else if (arg === '--runs' || arg === '--repeats') {
+      args.repeats = Number.parseInt(argv[index + 1], 10);
+      index += 1;
+      if (!Number.isInteger(args.repeats) || args.repeats <= 0) {
+        throw new Error(`${arg} must be a positive integer`);
+      }
+    } else if (arg === '--seed') {
+      args.seed = argv[index + 1];
+      index += 1;
+      if (!args.seed) throw new Error('--seed requires a value');
+    } else if (arg === '--temperature') {
+      args.temperature = argv[index + 1];
+      index += 1;
+      if (!args.temperature) throw new Error('--temperature requires a value');
     } else if (arg === '--mode') {
       args.mode = argv[index + 1];
       index += 1;
@@ -86,6 +103,10 @@ function errorMessageFromEvents(eventsPath) {
   return null;
 }
 
+function runLabel(run) {
+  return typeof run.repeat_index === 'number' ? `${run.case_id}#${run.repeat_index}` : run.case_id;
+}
+
 function generateSummary(report, manifest, reportPath) {
   const manifestById = new Map(manifest.cases.map((testCase) => [testCase.id, testCase]));
   const counts = { pass: 0, fail: 0, blocked: 0 };
@@ -104,7 +125,7 @@ function generateSummary(report, manifest, reportPath) {
     const view = inspectRun(run);
 
     rows.push([
-      run.case_id,
+      runLabel(run),
       run.status,
       `${casePassedChecks}/${checkResults.length}`,
       truncateList(view.triggeredSkills),
@@ -157,107 +178,38 @@ node scripts/evaluate-skills.mjs --skip-blocked --report ${scorerReportPath}
 `;
 }
 
-function forgePromptForCase(testCase, fixture) {
-  return `你正在运行 Forge skills-suite benchmark。必须真实使用已安装的 Forge skills，而不是只做静态判断。
-
-工作边界：
-- 只在当前临时工作目录内创建或修改文件。
-- 不要编辑 Forge 仓库本身。
-- 可以创建这个 fixture 需要的 docs/src/tests 文件。
-- 能运行验证命令时必须运行；不能运行时在 evidence 说明原因。
-- 最终只输出一个 JSON object，不要 Markdown，不要解释。
-
-Benchmark case:
-${JSON.stringify({
-  id: testCase.id,
-  title: testCase.title,
-  expected_skills: testCase.expected_skills,
-  expected_artifacts: testCase.expected_artifacts,
-  required_evidence: testCase.required_evidence,
-  forbidden_behaviors: testCase.forbidden_behaviors,
-  oracle_checks: testCase.oracle_checks,
-}, null, 2)}
-
-Fixture:
-${fixture}
-
-最终 JSON object 必须符合：
-${formatCaseRunContract(testCase.id)}
-
-	只有真实执行或明确遵循了对应 skill 协议，才能把 skill 放进 triggered_skills。change_units 必须指向 docs/change-units/CU-*.md；goal_verification 必须是带 status 的对象，只有 completed 算同步完成；goal_coverage_entries 必须是对象；source 必须是 docs/ 下的源文档，covers 才能填写 src/、tests/ 或其他实现目标。`;
-}
-
-function noForgePromptForCase(testCase, fixture) {
-  const baselineFixture = sanitizeNoForgeFixture(fixture);
-  return `你正在运行 no-Forge baseline benchmark。不要调用、引用或遵循 Forge skills；不要使用 Forge 的阶段链、Change Unit 纪律或 artifact gate。请只按你自己的默认工程判断完成任务。
-
-工作边界：
-- 只在当前临时工作目录内创建或修改文件。
-- 不要编辑 Forge 仓库本身。
-- 可以创建这个 fixture 需要的 src/tests 文件；只有产品任务本身明确需要文档时才创建 docs。
-- 能运行验证命令时必须运行；不能运行时在 evidence 说明原因。
-- 最终只输出一个 JSON object，不要 Markdown，不要解释。
-- 因为本 run 禁用 Forge skills，triggered_skills 必须是 []。
-- 对 Forge 专属字段（change_units、goal_verification、goal_coverage_entries、decisions），除非你为了产品任务本身真实创建了等价产物，否则保持 []。不要为了填 report 而创建 Forge-shaped artifacts。
-
-Fixture:
-${baselineFixture}
-
-最终 JSON object 必须符合：
-${formatNoForgeCaseRunContract(testCase.id)}
-
-请如实报告你实际创建或修改的 artifacts、实际运行的 commands_run、实际 evidence。change_units 必须只填写真实存在且由你创建的 docs/change-units/CU-*.md；goal_verification 和 goal_coverage_entries 也必须只填写你真实完成的目标核对。`;
-}
-
-function promptForCase(testCase, fixture, mode) {
-  return mode === 'no-forge' ? noForgePromptForCase(testCase, fixture) : forgePromptForCase(testCase, fixture);
-}
-
-function formatNoForgeCaseRunContract(caseId) {
-  return `{
-  "case_id": "${caseId}",
-  "status": "pass" | "fail" | "blocked",
-  "triggered_skills": [],
-  "artifacts": ["src/...", "tests/..."],
-  "change_units": [],
-  "goal_verification": [],
-  "goal_coverage_entries": [],
-  "commands_run": ["exact command"],
-  "decisions": [],
-  "forbidden_behaviors": [],
-  "evidence": ["short evidence strings"],
-  "notes": "short note"
-}`;
-}
-
-function runCase({ codexBin, mode, runDir, testCase }) {
-  const caseDir = path.join(runDir, 'workspaces', testCase.id);
+function runCase({ codexBin, mode, runDir, testCase, publishedSkillNames, repeatIndex, repeats, seed, temperature }) {
+  const evidenceId = repeats > 1 ? `${testCase.id}.r${repeatIndex}` : testCase.id;
+  const caseDir = path.join(runDir, 'workspaces', evidenceId);
   fs.mkdirSync(caseDir, { recursive: true });
 
   const fixture = fs.readFileSync(path.join(root, testCase.fixture), 'utf8');
-  const prompt = promptForCase(testCase, fixture, mode);
-  const lastMessagePath = path.join(runDir, `${testCase.id}.last.txt`);
-  const eventsPath = path.join(runDir, `${testCase.id}.events.jsonl`);
-  const stderrPath = path.join(runDir, `${testCase.id}.stderr.log`);
+  const prompt = promptForCase(testCase, fixture, mode, publishedSkillNames);
+  const lastMessagePath = path.join(runDir, `${evidenceId}.last.txt`);
+  const eventsPath = path.join(runDir, `${evidenceId}.events.jsonl`);
+  const stderrPath = path.join(runDir, `${evidenceId}.stderr.log`);
   const stdoutFd = fs.openSync(eventsPath, 'w');
   const stderrFd = fs.openSync(stderrPath, 'w');
+  const codexArgs = [
+    '-a',
+    'never',
+    'exec',
+    '--json',
+    '-C',
+    caseDir,
+    '--skip-git-repo-check',
+    '-s',
+    'workspace-write',
+    '--output-last-message',
+    lastMessagePath,
+  ];
+  if (seed) codexArgs.push('--seed', String(seed));
+  if (temperature) codexArgs.push('--temperature', String(temperature));
+  codexArgs.push(prompt);
 
   const result = spawnSync(
     codexBin,
-    [
-      '-a',
-      'never',
-      'exec',
-      '--json',
-      '-C',
-      caseDir,
-      '--skip-git-repo-check',
-      '-s',
-      'workspace-write',
-      '--output-last-message',
-      lastMessagePath,
-      prompt,
-    ],
+    codexArgs,
     {
       cwd: root,
       encoding: 'utf8',
@@ -271,6 +223,8 @@ function runCase({ codexBin, mode, runDir, testCase }) {
 
   if (result.error) {
     return createCaseRun(testCase.id, 'blocked', {
+      evidence_id: evidenceId,
+      ...(repeats > 1 ? { repeat_index: repeatIndex } : {}),
       evidence: [`codex exec failed: ${result.error.message}`],
       notes: `See ${stderrPath}`,
     });
@@ -279,15 +233,25 @@ function runCase({ codexBin, mode, runDir, testCase }) {
   if (result.status !== 0) {
     const errorMessage = errorMessageFromEvents(eventsPath);
     return createCaseRun(testCase.id, 'blocked', {
+      evidence_id: evidenceId,
+      ...(repeats > 1 ? { repeat_index: repeatIndex } : {}),
       evidence: [errorMessage ?? `codex exec exited ${result.status}`],
       notes: `See ${stderrPath}`,
     });
   }
 
   try {
-    return extractJsonObject(fs.readFileSync(lastMessagePath, 'utf8'));
+    const parsed = extractJsonObject(fs.readFileSync(lastMessagePath, 'utf8'));
+    return {
+      ...parsed,
+      case_id: testCase.id,
+      evidence_id: evidenceId,
+      ...(repeats > 1 ? { repeat_index: repeatIndex } : {}),
+    };
   } catch (error) {
     return createCaseRun(testCase.id, 'fail', {
+      evidence_id: evidenceId,
+      ...(repeats > 1 ? { repeat_index: repeatIndex } : {}),
       evidence: [`could not parse final JSON: ${error.message}`],
       notes: `See ${lastMessagePath}`,
     });
@@ -302,6 +266,9 @@ if (!codexBin) {
 }
 
 const registry = loadRegistry(root);
+// Blinding: the Forge arm learns ONLY the published skill NAMES (registry), never
+// the per-case expected_skills/oracle_checks. Oracle answers stay in the manifest.
+const publishedSkillNames = registry.skills.map((skill) => skill.name);
 const { manifest } = loadBenchmarkContract(root, registry);
 let cases = manifest.cases;
 if (args.caseIds.length > 0) {
@@ -321,27 +288,54 @@ fs.mkdirSync(runDir, { recursive: true });
 
 const report = createRunReport({
   runId: args.runId,
-  runner: `codex exec ${args.mode} (${codexBin})`,
+  runner: `codex exec ${args.mode} (${codexBin}), repeats=${args.repeats}`,
   cases: [],
 });
 
+let stopAfterUsageLimit = false;
 for (const testCase of cases) {
-  console.error(`Running ${testCase.id}...`);
-  const result = runCase({ codexBin, mode: args.mode, runDir, testCase });
-  report.cases.push(result);
-  fs.writeFileSync(path.join(runDir, 'report.partial.json'), JSON.stringify(report, null, 2));
-  if (
-    result.status === 'blocked' &&
-    result.evidence.some((item) => /usage limit|try again/i.test(item))
-  ) {
-    const remaining = cases.slice(cases.indexOf(testCase) + 1);
-    for (const skippedCase of remaining) {
-      report.cases.push(createCaseRun(skippedCase.id, 'blocked', {
-        evidence: ['skipped after Codex usage limit blocked the run'],
-        notes: `Previous blocked case: ${testCase.id}`,
-      }));
+  if (stopAfterUsageLimit) break;
+  for (let repeatIndex = 0; repeatIndex < args.repeats; repeatIndex += 1) {
+    console.error(`Running ${testCase.id}${args.repeats > 1 ? `#${repeatIndex}` : ''}...`);
+    const result = runCase({
+      codexBin,
+      mode: args.mode,
+      runDir,
+      testCase,
+      publishedSkillNames,
+      repeatIndex,
+      repeats: args.repeats,
+      seed: args.seed,
+      temperature: args.temperature,
+    });
+    report.cases.push(result);
+    fs.writeFileSync(path.join(runDir, 'report.partial.json'), JSON.stringify(report, null, 2));
+    if (
+      result.status === 'blocked' &&
+      result.evidence.some((item) => /usage limit|try again/i.test(item))
+    ) {
+      const remaining = cases.slice(cases.indexOf(testCase) + 1);
+      for (const skippedCase of remaining) {
+        for (let skippedRepeat = 0; skippedRepeat < args.repeats; skippedRepeat += 1) {
+          report.cases.push(createCaseRun(skippedCase.id, 'blocked', {
+            evidence_id: args.repeats > 1 ? `${skippedCase.id}.r${skippedRepeat}` : skippedCase.id,
+            ...(args.repeats > 1 ? { repeat_index: skippedRepeat } : {}),
+            evidence: ['skipped after Codex usage limit blocked the run'],
+            notes: `Previous blocked case: ${testCase.id}`,
+          }));
+        }
+      }
+      for (let skippedRepeat = repeatIndex + 1; skippedRepeat < args.repeats; skippedRepeat += 1) {
+        report.cases.push(createCaseRun(testCase.id, 'blocked', {
+          evidence_id: args.repeats > 1 ? `${testCase.id}.r${skippedRepeat}` : testCase.id,
+          ...(args.repeats > 1 ? { repeat_index: skippedRepeat } : {}),
+          evidence: ['skipped after Codex usage limit blocked the run'],
+          notes: `Previous blocked repeat: ${testCase.id}#${repeatIndex}`,
+        }));
+      }
+      stopAfterUsageLimit = true;
+      break;
     }
-    break;
   }
 }
 

@@ -6,7 +6,6 @@ User prompt:
 
 Expected behavior:
 
-- Trigger plan, test-cases, and codegen as one implementation chain.
 - Produce vertical slices and a scenario matrix linked to acceptance criteria without creating plan.md or test-cases.md.
 - Generate src and tests from documented goals.
 - Run a verification command and report any deviation with attribution (skill 方法论 / 文档未同步 / 代码实现).

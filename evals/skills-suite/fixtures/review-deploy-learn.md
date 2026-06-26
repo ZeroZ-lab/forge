@@ -6,6 +6,5 @@ User prompt:
 
 Expected behavior:
 
-- Trigger review, deploy, and learn only when evidence supports each step.
 - Require rollback planning before release.
 - Do not change methodology from a single weak signal.

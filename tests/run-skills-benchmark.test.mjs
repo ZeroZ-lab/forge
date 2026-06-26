@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { markdownTableCell, sanitizeNoForgeFixture, truncateList } from '../scripts/lib/benchmark-helpers.mjs';
+import { forgePromptForCase, promptForCase } from '../scripts/lib/benchmark-prompts.mjs';
 import {
   createCaseRun,
   createRunReport,
@@ -137,6 +138,27 @@ test('inspectRunReport supports partial reports and skipped blocked cases', () =
   assert.equal(result.caseEvaluations.length, 1);
 });
 
+test('inspectRunReport supports repeated samples for the same case_id', () => {
+  const manifest = { cases: [allChecksCase] };
+  const registry = { skills: [{ name: 'codegen' }] };
+  const report = createRunReport({
+    runId: 'repeated',
+    runner: 'test',
+    cases: [
+      { ...passingRun(), repeat_index: 0, evidence_id: 'all-checks.r0' },
+      { ...passingRun(), repeat_index: 1, evidence_id: 'all-checks.r1' },
+    ],
+  });
+  const result = inspectRunReport(report, { manifest, registry });
+
+  assert.deepEqual(result.issues, []);
+  assert.equal(result.caseEvaluations.length, 2);
+  assert.deepEqual(
+    result.caseEvaluations.map(({ run }) => run.evidence_id),
+    ['all-checks.r0', 'all-checks.r1'],
+  );
+});
+
 test('inspectRunReport accepts schema-optional decisions and forbidden behaviors', () => {
   const run = passingRun();
   delete run.decisions;
@@ -184,9 +206,9 @@ test('no-Forge fixture sanitizer removes Forge scoring instructions', () => {
   assert.match(sanitized, /AC-1/);
   assert.doesNotMatch(sanitized, /默认主链/);
   assert.doesNotMatch(sanitized, /detail -> codegen -> review/);
-  assert.doesNotMatch(sanitized, /docs\/features/);
+  assert.match(sanitized, /docs\/features/);
   assert.doesNotMatch(sanitized, /docs\/change-units/);
-  assert.doesNotMatch(sanitized, /Expected behavior/);
+  assert.match(sanitized, /实现要求/);
 });
 
 test('evaluateOracleChecks without evidence falls back to self-report source', () => {
@@ -265,4 +287,84 @@ test('evaluateOracleChecks trustSelfReport escape hatch ignores evidence', () =>
   // escape hatch forces self-report even when evidence contradicts
   assert.equal(skillResult.source, 'self-report');
   assert.equal(skillResult.passed, true);
+});
+
+test('forgePromptForCase is blind: no per-case oracle answers leak into the Forge arm prompt', () => {
+  // A case fully populated with oracle answers — the very shape that used to be
+  // JSON.stringify'd verbatim into the prompt (run-skills-benchmark.mjs:171-179).
+  const oracleTestCase = {
+    id: 'default-chain-small-feature',
+    title: '默认主链小功能迭代',
+    expected_skills: ['detail', 'codegen', 'review'],
+    expected_artifacts: ['docs/features/task-archive/goal.md', 'src/', 'tests/', 'docs/change-units/CU-*.md'],
+    required_evidence: ['default chain', 'feature goal', 'verification command', '运行验证'],
+    forbidden_behaviors: [
+      'escalated_clear_feature_to_define',
+      'generated_plan_for_small_feature',
+      'claimed_complete_without_runtime_evidence',
+    ],
+    oracle_checks: [
+      { type: 'skill_triggered', skill: 'detail' },
+      { type: 'skill_triggered', skill: 'codegen' },
+      { type: 'skill_triggered', skill: 'review' },
+      { type: 'decision_gate_reported', decision: 'business_go_no_go' },
+      { type: 'decision_gate_reported', decision: 'test_seam' },
+      { type: 'command_reported', command: 'node --test' },
+      { type: 'transcript_contains', text: 'detail -> codegen -> review' },
+      { type: 'transcript_contains', text: '运行验证' },
+    ],
+  };
+  const fixture = [
+    '# Fixture: 默认主链小功能迭代',
+    '',
+    '> 给 task-management 增加 "archive completed tasks" 功能。',
+    '',
+    '验收标准：',
+    '',
+    '- AC-1：done task before cutoff is archived.',
+  ].join('\n');
+  const publishedSkills = ['detail', 'codegen', 'review', 'guide', 'think', 'business-alignment'];
+  const prompt = forgePromptForCase(oracleTestCase, fixture, publishedSkills);
+
+  // The Forge arm must NOT see the per-case oracle answers. These tokens only
+  // existed in the old serialized oracle block; they must be absent now.
+  assert.doesNotMatch(prompt, /oracle_checks/);
+  assert.doesNotMatch(prompt, /expected_skills/);
+  assert.doesNotMatch(prompt, /expected_artifacts/);
+  assert.doesNotMatch(prompt, /required_evidence/);
+  assert.doesNotMatch(prompt, /business_go_no_go/);
+  assert.doesNotMatch(prompt, /test_seam/);
+  // The coached exact chain / exact command must not be handed to the agent.
+  assert.doesNotMatch(prompt, /detail -> codegen -> review/);
+  // Note: "forbidden_behaviors" is intentionally NOT asserted absent here — it is
+  // a legitimate report-schema field name the agent must fill. Blinding removes the
+  // expected ANSWERS (the behaviors array above), not the schema shape, and the
+  // fixture de-coaching removes the per-case coaching text separately.
+
+  // The Forge arm still receives what it needs: the fixture task text, the
+  // acceptance criteria, the published skill registry NAMES (not per-case answers),
+  // and the answer-free report schema.
+  assert.match(prompt, /archive completed tasks/);
+  assert.match(prompt, /验收标准/);
+  assert.match(prompt, /AC-1/);
+  assert.match(prompt, /已发布 Forge skill 名称/);
+  assert.match(prompt, /business-alignment/); // a registry name, not an answer
+  assert.match(prompt, /guide/); // a registry name, not an answer
+  assert.match(prompt, /"case_id": "default-chain-small-feature"/); // report schema
+  assert.equal(prompt.includes('oracle_checks'), false);
+});
+
+test('promptForCase passes the published registry only to the forge arm', () => {
+  const testCase = { id: 'x', title: 'x', expected_skills: ['detail'], oracle_checks: [] };
+  const fixture = '> do work.';
+  const published = ['detail', 'codegen', 'review'];
+  const forgePrompt = promptForCase(testCase, fixture, 'forge', published);
+  const noForgePrompt = promptForCase(testCase, fixture, 'no-forge', published);
+
+  // Forge arm sees the published skill names; the no-forge arm does not (it is
+  // told to keep triggered_skills empty and never sees the registry list).
+  assert.match(forgePrompt, /已发布 Forge skill 名称/);
+  assert.match(forgePrompt, /detail, codegen, review/);
+  assert.doesNotMatch(noForgePrompt, /已发布 Forge skill 名称/);
+  assert.doesNotMatch(noForgePrompt, /oracle_checks/);
 });

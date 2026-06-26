@@ -9,9 +9,6 @@
 要求：
 
 - 每个请求给出 D10、调用深度和最短链路。
-- 新项目必须进入以 `init` 开始的 L3 路径。
-- 生产 bug 必须进入 `codegen(patch, bugfix protocol) → review(lens)`，不得先猜根因。
-- 跨模块功能必须进入包含 `detail(stage) → plan(stage) → codegen(stage) → review(stage)` 的 L2 路径。
 - 只引用各 skill 名称和职责，不复制其完整方法论。
 - 不调用其他 skill、不修改文件、不创建 Change Unit。
 - 最终输出 benchmark report JSON。

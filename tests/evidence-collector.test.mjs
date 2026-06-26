@@ -13,6 +13,7 @@ import {
   loadIndependentEvidence,
   resolveWorkspacePath,
   skillWasRead,
+  transcriptContains,
   workspaceHasArtifact,
 } from '../scripts/lib/evidence-collector.mjs';
 import { evaluateOracleChecks } from '../scripts/lib/run-report.mjs';
@@ -34,10 +35,10 @@ function buildRunDir(events = [], files = {}) {
   return { runDir, caseId, eventsPath, workspaceDir };
 }
 
-function cmdEvent(command, exitCode = 0, status = 'completed') {
+function cmdEvent(command, exitCode = 0, status = 'completed', output = '') {
   return {
     type: 'item.completed',
-    item: { id: `item_${Math.random()}`, type: 'command_execution', command, exit_code: exitCode, status },
+    item: { id: `item_${Math.random()}`, type: 'command_execution', command, exit_code: exitCode, status, aggregated_output: output },
   };
 }
 
@@ -94,13 +95,13 @@ test('loadIndependentEvidence extracts file changes', () => {
 
 test('loadIndependentEvidence extracts skills read via SKILL.md command', () => {
   const { runDir, caseId } = buildRunDir([
-    cmdEvent("/bin/zsh -lc \"sed -n '1,260p' /Users/x/.codex/plugins/cache/forge/skills/codegen/SKILL.md\"", 0),
-    cmdEvent('/bin/zsh -lc "cat /Users/x/skills/detail/SKILL.md"', 0),
+    cmdEvent("/bin/zsh -lc \"sed -n '1,260p' /Users/x/.codex/plugins/cache/forge/skills/codegen/SKILL.md\"", 0, 'completed', '---\nname: codegen\n'),
+    cmdEvent('/bin/zsh -lc "cat /Users/x/skills/detail/SKILL.md"', 0, 'completed', '---\nname: detail\n'),
     cmdEvent('/bin/zsh -lc "cat /Users/x/skills/missing/SKILL.md"', 1, 'failed'),
   ]);
   try {
     const ev = loadIndependentEvidence(runDir, caseId);
-    // exit_code 1 read must NOT count
+    // exit_code 1 read must NOT count; echo/path-only cheats must NOT count
     assert.deepEqual(ev.skillsRead.sort(), ['codegen', 'detail']);
   } finally {
     fs.rmSync(runDir, { recursive: true, force: true });
@@ -160,16 +161,59 @@ test('loadIndependentEvidence sums token usage across turns', () => {
   }
 });
 
-test('commandWasRun matches fragment and respects requireExitCode', () => {
-  const { runDir, caseId } = buildRunDir([cmdEvent('node --test tests/', 0), cmdEvent('npm run build', null)]);
+test('commandWasRun matches fragment, rejects wrappers, requires an effect', () => {
+  const { runDir, caseId } = buildRunDir([
+    cmdEvent('node --test tests/', 0, 'completed', 'ok - 3 tests\n'), // real: output + exit 0
+    cmdEvent('npm run build', null), // null exit, no output, no file_change
+    cmdEvent('node --test scripts/clean.js', 0), // exit 0 but no output, no file_change -> no effect
+  ]);
   try {
     const ev = loadIndependentEvidence(runDir, caseId);
-    assert.equal(commandWasRun(ev, 'node --test'), true);
-    assert.equal(commandWasRun(ev, 'node --test', { requireExitCode: true }), true);
-    assert.equal(commandWasRun(ev, 'npm run build'), true);
-    // exit code null but command present
+    // real command with stdout + exit 0 counts
+    assert.equal(commandWasRun(ev, 'node --test tests/'), true);
+    assert.equal(commandWasRun(ev, 'node --test tests/', { requireExitCode: true }), true);
+    // null exit + no output + no file_change -> no observable effect
+    assert.equal(commandWasRun(ev, 'npm run build'), false);
     assert.equal(commandWasRun(ev, 'npm run build', { requireExitCode: true }), false);
+    // exit 0 but no output and no file_change -> no observable effect
+    assert.equal(commandWasRun(ev, 'node --test scripts/clean.js'), false);
     assert.equal(commandWasRun(ev, 'nonexistent'), false);
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('commandWasRun rejects echo/cat/printf/heredoc wrappers (echo-cheat)', () => {
+  // echo-cheat: every matching command merely prints the fragment instead of
+  // executing it. commandWasRun('echo "node --test"') must NOT be true.
+  const { runDir, caseId } = buildRunDir([
+    cmdEvent('echo "node --test"', 0, 'completed', 'node --test\n'),
+    cmdEvent("printf '%s\\n' 'node --test'", 0, 'completed', 'node --test\n'),
+    cmdEvent('cat <<EOF\nnode --test\nEOF', 0, 'completed', 'node --test\n'),
+    cmdEvent('node -e \'console.log("node --test")\'', 0, 'completed', 'node --test\n'),
+  ]);
+  try {
+    const ev = loadIndependentEvidence(runDir, caseId);
+    assert.equal(commandWasRun(ev, 'node --test'), false);
+    assert.equal(commandWasRun(ev, 'node --test', { requireExitCode: true }), false);
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('commandWasRun counts a no-stdout command when the run touched files', () => {
+  // a real command that produces no stdout but the run changed files on disk
+  // still counts (effect = file_change), and a wrapper still does not.
+  const { runDir, caseId } = buildRunDir([
+    cmdEvent('node scripts/seed.js', 0), // exit 0, no stdout
+    fileChangeEvent('/abs/src/seeded.js', 'add'),
+    cmdEvent('echo "node scripts/seed.js"', 0, 'completed', 'node scripts/seed.js\n'),
+  ]);
+  try {
+    const ev = loadIndependentEvidence(runDir, caseId);
+    assert.equal(commandWasRun(ev, 'node scripts/seed.js'), true); // effect via file_change
+    // echo wrapper still rejected even though file_change exists
+    assert.equal(commandWasRun(ev, 'echo "node scripts/seed.js"'), false);
   } finally {
     fs.rmSync(runDir, { recursive: true, force: true });
   }
@@ -204,13 +248,78 @@ test('fileChangeRecorded matches events stream file paths', () => {
 
 test('skillWasRead reflects exit-code-0 reads only', () => {
   const { runDir, caseId } = buildRunDir([
-    cmdEvent('/bin/zsh -lc "cat /x/skills/review/SKILL.md"', 0),
+    cmdEvent('/bin/zsh -lc "cat /x/skills/review/SKILL.md"', 0, 'completed', '---\nname: review\n'),
     cmdEvent('/bin/zsh -lc "cat /x/skills/failed/SKILL.md"', 1, 'failed'),
   ]);
   try {
     const ev = loadIndependentEvidence(runDir, caseId);
     assert.equal(skillWasRead(ev, 'review'), true);
     assert.equal(skillWasRead(ev, 'failed'), false);
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('skillWasRead rejects echo/path-only skill cheats but counts real reads', () => {
+  // echo-cheat against skill_triggered: `echo skills/codegen/SKILL.md` prints
+  // the path string and never reads the body. It must NOT count as reading the
+  // skill. find only locates the path; a failed cat does not count. A real cat
+  // that retrieved the body (non-empty output) + exit 0 still counts.
+  const { runDir, caseId } = buildRunDir([
+    cmdEvent('echo skills/codegen/SKILL.md', 0, 'completed', 'skills/codegen/SKILL.md\n'),
+    cmdEvent("find . -path '*/skills/codegen/SKILL.md' -print", 0, 'completed', './skills/codegen/SKILL.md\n'),
+    cmdEvent('/bin/zsh -lc "cat /x/skills/codegen/SKILL.md"', 1, 'failed', ''),
+    cmdEvent('/bin/zsh -lc "cat /x/skills/review/SKILL.md"', 0, 'completed', '---\nname: review\n'),
+  ]);
+  try {
+    const ev = loadIndependentEvidence(runDir, caseId);
+    assert.equal(skillWasRead(ev, 'codegen'), false); // echo/find/failed cheats rejected
+    assert.equal(ev.skillsRead.includes('codegen'), false);
+    assert.equal(skillWasRead(ev, 'review'), true); // real cat read counts
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('skillWasRead counts a file_change touching the SKILL.md path', () => {
+  // a file_change on the standard skill path is a real read event
+  // (covers staged-disk evidence where a read is represented as a touch)
+  const { runDir, caseId } = buildRunDir([
+    fileChangeEvent('/abs/plugins/forge/skills/codegen/SKILL.md', 'update'),
+  ]);
+  try {
+    const ev = loadIndependentEvidence(runDir, caseId);
+    assert.equal(skillWasRead(ev, 'codegen'), true);
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('transcriptContains rejects a phrase echoed in a non-reasoning message', () => {
+  // the phrase appears ONLY in a structured JSON echo (mid-task stuffing),
+  // not in free-form reasoning -> must NOT count (answer-echo defense).
+  const { runDir, caseId } = buildRunDir([
+    messageEvent('{"status":"pass","note":"tests passed"}'),
+  ]);
+  try {
+    const ev = loadIndependentEvidence(runDir, caseId);
+    assert.equal(transcriptContains(ev, 'tests passed'), false);
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('transcriptContains matches phrases in free-form reasoning, not the final report', () => {
+  const { runDir, caseId } = buildRunDir([
+    messageEvent('I will verify that tests passed before reporting.'), // free-form reasoning
+    messageEvent('{"case_id":"x","status":"pass","evidence":["tests passed"]}'), // final report
+  ]);
+  try {
+    const ev = loadIndependentEvidence(runDir, caseId);
+    // reasoning message matches; final structured report does not
+    assert.equal(transcriptContains(ev, 'tests passed'), true);
+    // a phrase that exists only in the final report must not match
+    assert.equal(transcriptContains(ev, 'case_id'), false);
   } finally {
     fs.rmSync(runDir, { recursive: true, force: true });
   }
@@ -300,6 +409,66 @@ test('forbidden_files_absent oracle turns red for the real false-pass run with e
   assert.ok(failedForbidden.every((r) => r.source === 'independent'));
 });
 
+test('semantic oracle branches use disk and event evidence, not self-report', () => {
+  const { runDir, caseId } = buildRunDir(
+    [
+      cmdEvent('node --test', 0, 'completed', 'ok - semantic oracle\n'),
+      messageEvent('I selected decision gate FD1 after checking the goal.'),
+      messageEvent('{"case_id":"semantic","status":"pass"}'),
+    ],
+    {
+      'goal.md': '# Goal\n\nCovers src/index.ts and requires verification.\n',
+      'src/index.ts': 'export const ok = true;\n',
+      'docs/change-units/CU-semantic.md': '# CU\n\n## Decisions\n\n- FD1: keep the tested seam.\n',
+    },
+  );
+  try {
+    const ev = loadIndependentEvidence(runDir, caseId);
+    const testCase = {
+      id: 'semantic',
+      oracle_checks: [
+        { type: 'goal_covers', path: 'src/index.ts' },
+        { type: 'goal_verified', target: 'goal.md' },
+        { type: 'decision_gate_reported', decision: 'FD1' },
+      ],
+    };
+    const run = {
+      triggered_skills: [],
+      artifacts: [],
+      change_units: [],
+      goal_verification: [],
+      goal_coverage_entries: [],
+      commands_run: [],
+      decisions: [],
+      forbidden_behaviors: [],
+      evidence: [],
+    };
+    const results = evaluateOracleChecks(testCase, run, ev);
+
+    assert.ok(results.every((result) => result.source === 'independent'));
+    assert.ok(results.every((result) => result.passed));
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('semantic goal coverage rejects an empty goal document', () => {
+  const { runDir, caseId } = buildRunDir([messageEvent('inspecting empty goal')], { 'goal.md': '# Goal\n' });
+  try {
+    const ev = loadIndependentEvidence(runDir, caseId);
+    const [result] = evaluateOracleChecks(
+      { id: 'empty-goal', oracle_checks: [{ type: 'goal_covers', path: 'src/index.ts' }] },
+      { goal_coverage_entries: [{ source: 'goal.md', covers: ['src/index.ts'] }] },
+      ev,
+    );
+
+    assert.equal(result.source, 'independent');
+    assert.equal(result.passed, false);
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
 test('loadIndependentEvidence parses a real repo run sample when present', () => {
   const sampleRunDir = path.join(root, '.eval-runs/skills-suite/2026-06-05T03-39-19-428Z');
   if (!fs.existsSync(sampleRunDir)) {
@@ -315,4 +484,32 @@ test('loadIndependentEvidence parses a real repo run sample when present', () =>
     ev.filesChanged.some(({ path: p }) => p.includes('CODE_MAP.yml') || p.includes('status.md') || p.includes('timeline.md')),
     'independent evidence must observe the forbidden files the self-report missed',
   );
+});
+
+test('transcriptContains matches Unicode arrows against an ASCII -> phrase', () => {
+  // Oracle phrases use ASCII `->` (e.g. "detail -> codegen -> review") but the
+  // published skills and AGENTS.md reason with Unicode `→`. Normalization must
+  // bridge the two so a compliant Forge arm that read the skills still matches.
+  const evidence = {
+    available: true,
+    messages: [
+      { text: 'For this small feature I will run detail → codegen → review.', isFinalReport: false },
+    ],
+  };
+  assert.equal(transcriptContains(evidence, 'detail -> codegen -> review'), true);
+  assert.equal(
+    transcriptContains(
+      { available: true, messages: [{ text: 'use detail -> codegen -> review now', isFinalReport: false }] },
+      'detail -> codegen -> review',
+    ),
+    true,
+  );
+  assert.equal(
+    transcriptContains(
+      { available: true, messages: [{ text: 'unrelated reasoning', isFinalReport: false }] },
+      'detail -> codegen -> review',
+    ),
+    false,
+  );
+  assert.equal(transcriptContains({ available: false, messages: [] }, 'detail -> codegen -> review'), null);
 });

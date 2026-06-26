@@ -5,6 +5,8 @@ import {
   transcriptContains,
   workspaceHasArtifact,
 } from './evidence-collector.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const RUN_STATUSES = new Set(['pass', 'fail', 'blocked']);
 const DOC_SYNC_STATUSES = new Set(['completed', 'pending', 'blocked']);
@@ -27,7 +29,7 @@ const ORACLE_FIELDS = {
 };
 
 /** Evidence source labels: where a check's verdict came from. */
-const SOURCE = {
+export const SOURCE = {
   INDEPENDENT: 'independent', // backed by tamper-proof events/disk
   SELF_REPORT: 'self-report', // only the agent's self-filled JSON was available
   DEPRECATED: 'deprecated', // oracle type no longer trusted (evidence_contains)
@@ -246,6 +248,91 @@ function artifactMatchesIndependent(evidence, expected) {
   return fileChangeRecorded(evidence, expected) || workspaceHasArtifact(evidence, expected);
 }
 
+function evidenceFileBodies(evidence, predicate) {
+  if (!evidence || !Array.isArray(evidence.workspaceFiles)) return [];
+  const bodies = [];
+  for (const relativePath of evidence.workspaceFiles) {
+    if (!predicate(relativePath)) continue;
+    const absolutePath = path.join(evidence.workspaceDir, relativePath);
+    try {
+      bodies.push({ path: relativePath, body: fs.readFileSync(absolutePath, 'utf8') });
+    } catch {
+      // Missing or unreadable files are not independent evidence.
+    }
+  }
+  return bodies;
+}
+
+function markdownEvidenceBodies(evidence) {
+  return evidenceFileBodies(evidence, (relativePath) =>
+    /(^|\/)(goal|project)\.md$/i.test(relativePath) ||
+    relativePath.startsWith('docs/') ||
+    relativePath === 'DESIGN.md',
+  );
+}
+
+function changeUnitEvidenceBodies(evidence) {
+  return evidenceFileBodies(evidence, (relativePath) => isChangeUnitPath(relativePath));
+}
+
+function hasSuccessfulCommandEvidence(evidence) {
+  if (!evidence || !Array.isArray(evidence.commands)) return false;
+  const hasFileChange = Array.isArray(evidence.filesChanged) && evidence.filesChanged.length > 0;
+  return evidence.commands.some((entry) => {
+    if (entry.exitCode !== 0) return false;
+    if (!/\b(node|npm|npx|git|yarn|pnpm|deno|bash|sh|python|pytest|pip)\b/.test(entry.command)) return false;
+    const stdout = typeof entry.stdout === 'string' ? entry.stdout : '';
+    return stdout.length > 0 || hasFileChange;
+  });
+}
+
+function goalCoversIndependent(evidence, expectedPath) {
+  return markdownEvidenceBodies(evidence).some(({ body }) => body.includes(expectedPath));
+}
+
+function goalVerifiedIndependent(evidence, target) {
+  return workspaceHasArtifact(evidence, target) && hasSuccessfulCommandEvidence(evidence);
+}
+
+function decisionGateIndependent(evidence, decision) {
+  const decisionInChangeUnit = changeUnitEvidenceBodies(evidence).some(({ body }) => {
+    const hasDecisionSection = /^##\s*(Decisions?|Decision Gates?)\b/im.test(body);
+    return hasDecisionSection && body.includes(decision);
+  });
+  return decisionInChangeUnit && transcriptContains(evidence, decision) === true;
+}
+
+function forbiddenBehaviorIndependent(evidence, behavior, view) {
+  if (view.forbiddenBehaviors.includes(behavior)) return false;
+  if (behavior === 'current_docs_without_change_unit') {
+    const changedDocs = (evidence.filesChanged ?? []).some(({ path: changed }) =>
+      /(^|\/)(docs\/|AGENTS\.md|CLAUDE\.md|DESIGN\.md)/.test(changed),
+    );
+    const hasChangeUnit = (evidence.workspaceFiles ?? []).some(isChangeUnitPath) ||
+      (evidence.filesChanged ?? []).some(({ path: changed }) => isChangeUnitPath(changed.replace(/^.*?(docs\/change-units\/)/, '$1')));
+    return !(changedDocs && !hasChangeUnit);
+  }
+  if (behavior === 'guide_modified_files') {
+    return (evidence.filesChanged ?? []).length === 0 && (evidence.workspaceFiles ?? []).length === 0;
+  }
+  if (behavior === 'code_changed_without_feedback_loop') {
+    const changedCode = (evidence.filesChanged ?? []).some(({ path: changed }) =>
+      /(^|\/)(src|tests)\//.test(changed),
+    );
+    return !(changedCode && !hasSuccessfulCommandEvidence(evidence));
+  }
+  const triggeredMatch = behavior.match(/^([a-z-]+)_triggered_/);
+  if (triggeredMatch && skillWasRead(evidence, triggeredMatch[1])) return false;
+  if (/DESIGN\.md_generated/.test(behavior) && workspaceHasArtifact(evidence, 'DESIGN.md')) return false;
+  if (/interaction-spec_generated/.test(behavior) && workspaceHasArtifact(evidence, 'interaction-spec.md')) return false;
+  if (/generated_code_without_contract/.test(behavior)) {
+    const hasCode = (evidence.workspaceFiles ?? []).some((file) => /^(src|tests)\//.test(file));
+    const hasDocs = (evidence.workspaceFiles ?? []).some((file) => /^docs\/.*\.md$/.test(file));
+    return !(hasCode && !hasDocs);
+  }
+  return !transcriptContains(evidence, behavior);
+}
+
 /**
  * Evaluate a case's oracle checks.
  *
@@ -323,14 +410,29 @@ export function evaluateOracleChecks(testCase, run, evidence, options = {}) {
         source = SOURCE.SELF_REPORT;
       }
     } else if (check.type === 'goal_covers') {
-      passed = view.goalCoverage.some((coveredPath) => pathMatch(check.path, coveredPath));
-      source = SOURCE.SELF_REPORT;
+      if (hasEvidence) {
+        passed = goalCoversIndependent(evidence, check.path);
+        source = SOURCE.INDEPENDENT;
+      } else {
+        passed = view.goalCoverage.some((coveredPath) => pathMatch(check.path, coveredPath));
+        source = SOURCE.SELF_REPORT;
+      }
     } else if (check.type === 'decision_gate_reported') {
-      passed = decisions.has(check.decision);
-      source = SOURCE.SELF_REPORT;
+      if (hasEvidence) {
+        passed = decisionGateIndependent(evidence, check.decision);
+        source = SOURCE.INDEPENDENT;
+      } else {
+        passed = decisions.has(check.decision);
+        source = SOURCE.SELF_REPORT;
+      }
     } else if (check.type === 'goal_verified') {
-      passed = [...completedGoalTargets].some((target) => pathMatch(check.target, target));
-      source = SOURCE.SELF_REPORT;
+      if (hasEvidence) {
+        passed = goalVerifiedIndependent(evidence, check.target);
+        source = SOURCE.INDEPENDENT;
+      } else {
+        passed = [...completedGoalTargets].some((target) => pathMatch(check.target, target));
+        source = SOURCE.SELF_REPORT;
+      }
     } else if (check.type === 'evidence_contains') {
       passed = view.evidence.includes(check.text);
       source = SOURCE.DEPRECATED;
@@ -358,8 +460,13 @@ export function evaluateOracleChecks(testCase, run, evidence, options = {}) {
         source = SOURCE.SELF_REPORT;
       }
     } else if (check.type === 'forbidden_behavior_absent') {
-      passed = !forbiddenBehaviors.has(check.behavior);
-      source = SOURCE.SELF_REPORT;
+      if (hasEvidence) {
+        passed = forbiddenBehaviorIndependent(evidence, check.behavior, view);
+        source = SOURCE.INDEPENDENT;
+      } else {
+        passed = !forbiddenBehaviors.has(check.behavior);
+        source = SOURCE.SELF_REPORT;
+      }
     }
     return { passed, check, source };
   });
@@ -416,7 +523,16 @@ function runIssues(run, testCase, registrySkills, options) {
   return issues;
 }
 
-export function inspectRunReport(report, { manifest, registry, allowPartial = false, skipBlocked = false, strictOutcomes = true, loadEvidence, trustSelfReport = false }) {
+export function inspectRunReport(report, {
+  manifest,
+  registry,
+  allowPartial = false,
+  skipBlocked = false,
+  strictOutcomes = true,
+  loadEvidence,
+  trustSelfReport = false,
+  requireIndependent = false,
+} = {}) {
   const issues = [];
   const registrySkills = new Set((registry.skills ?? []).map((skill) => skill.name));
   const manifestById = new Map((manifest.cases ?? []).map((testCase) => [testCase.id, testCase]));
@@ -433,38 +549,56 @@ export function inspectRunReport(report, { manifest, registry, allowPartial = fa
       issues.push(`report has unknown case_id ${run?.case_id}`);
       continue;
     }
-    if (runsByCase.has(run.case_id)) issues.push(`report has duplicate case_id ${run.case_id}`);
-    runsByCase.set(run.case_id, run);
+    if (!runsByCase.has(run.case_id)) runsByCase.set(run.case_id, []);
+    runsByCase.get(run.case_id).push(run);
     issues.push(...runIssues(run, manifestById.get(run.case_id), registrySkills, options));
   }
 
   let blockedSkipped = 0;
   const caseEvaluations = [];
   for (const testCase of manifest.cases ?? []) {
-    const run = runsByCase.get(testCase.id);
-    if (!run && allowPartial) continue;
-    if (!run) {
+    const runs = runsByCase.get(testCase.id) ?? [];
+    if (runs.length === 0 && allowPartial) continue;
+    if (runs.length === 0) {
       issues.push(`report missing case ${testCase.id}`);
       continue;
     }
-    if (run.status === 'blocked' && skipBlocked) {
-      blockedSkipped += 1;
-      continue;
+    for (const run of runs) {
+      const repeatLabel = typeof run.repeat_index === 'number' ? `#${run.repeat_index}` : '';
+      if (run.status === 'blocked' && skipBlocked) {
+        blockedSkipped += 1;
+        continue;
+      }
+      if (strictOutcomes && run.status !== 'pass') issues.push(`${testCase.id}${repeatLabel}: status is ${run.status}`);
+      // load independent evidence (events.jsonl + workspace) when a loader is wired up.
+      // Absence is graceful: checks fall back to self-report tagged as such.
+      let evidence;
+      try {
+        evidence = loadEvidence ? loadEvidence(testCase.id, run) : undefined;
+      } catch {
+        evidence = undefined;
+      }
+      const oracleResults = evaluateOracleChecks(testCase, run, evidence, { trustSelfReport });
+      for (const result of oracleResults) {
+        if (strictOutcomes && !result.passed) {
+          issues.push(`${testCase.id}${repeatLabel}: failed oracle ${JSON.stringify(result.check)}`);
+        }
+        if (
+          strictOutcomes &&
+          requireIndependent &&
+          result.passed &&
+          result.source !== SOURCE.INDEPENDENT
+        ) {
+          // A self-report pass is NOT behavioral evidence — whether or not an
+          // events.jsonl exists for the case. The previous `evidence?.available &&`
+          // guard let no-evidence echo cases slip through (mixed bypass: one real
+          // case covers N self-report-only cases). Drop the guard so any pass that
+          // is not independently corroborated fails under requireIndependent.
+          issues.push(`${testCase.id}${repeatLabel}: oracle lacks independent evidence ${JSON.stringify(result.check)}`);
+        }
+      }
+      caseEvaluations.push({ testCase, run, oracleResults, evidence });
     }
-    if (strictOutcomes && run.status !== 'pass') issues.push(`${testCase.id}: status is ${run.status}`);
-    // load independent evidence (events.jsonl + workspace) when a loader is wired up.
-    // Absence is graceful: checks fall back to self-report tagged as such.
-    let evidence;
-    try {
-      evidence = loadEvidence ? loadEvidence(testCase.id) : undefined;
-    } catch {
-      evidence = undefined;
-    }
-    const oracleResults = evaluateOracleChecks(testCase, run, evidence, { trustSelfReport });
-    for (const result of oracleResults) {
-      if (strictOutcomes && !result.passed) issues.push(`${testCase.id}: failed oracle ${JSON.stringify(result.check)}`);
-    }
-    caseEvaluations.push({ testCase, run, oracleResults, evidence });
   }
 
   if (caseEvaluations.length === 0) issues.push('report did not include any scored benchmark cases');

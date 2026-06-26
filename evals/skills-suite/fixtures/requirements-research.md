@@ -6,6 +6,5 @@ User prompt:
 
 Expected behavior:
 
-- Trigger requirements definition.
 - Detect technical signal words: realtime, search, ranking, recommendation.
 - Produce an algorithm menu before any final technical choice.

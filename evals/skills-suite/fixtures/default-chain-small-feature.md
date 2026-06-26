@@ -6,7 +6,6 @@
 
 范围和约束：
 
-- 使用默认主链 `detail -> codegen -> review`。
 - 需求已经清楚，不要升级到 define、plan、test、deploy 或项目初始化。
 - 只创建 feature 级目标文档、实现代码、测试、Change Unit 和 goal verification。
 - 不要创建或修改 `docs/project.md`。
@@ -22,14 +21,11 @@
 
 - 创建 `docs/features/task-archive/goal.md`，记录目标、边界、完成标准和关键决策。
 - 创建最小实现文件和 `node:test` 回归测试。
-- 运行并在 `commands_run` 里精确报告 `node --test`。
 - 创建 `docs/change-units/CU-*.md`。
 - 在 `goal_coverage_entries` 中证明 `docs/features/task-archive/goal.md` 覆盖 `src/` 和 `tests/`。
-- 在最终 JSON 的 `evidence` 里包含精确文本 `detail -> codegen -> review` 和 `运行验证`。
 
 Expected behavior:
 
-- Trigger only the default chain skills: detail, codegen, review.
 - Produce a feature goal before implementation.
 - Generate executable code and tests from the goal.
 - Run runtime verification.

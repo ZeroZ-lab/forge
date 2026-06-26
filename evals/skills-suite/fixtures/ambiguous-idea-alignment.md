@@ -6,6 +6,5 @@ User prompt:
 
 Expected behavior:
 
-- Trigger exploration and business alignment.
 - Produce an idea brief and a go/no-go decision.
 - Do not generate implementation files.

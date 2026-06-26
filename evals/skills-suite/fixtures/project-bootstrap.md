@@ -6,6 +6,5 @@ User prompt:
 
 Expected behavior:
 
-- Trigger init orchestration.
 - Record technical and design decisions before projecting AGENTS.md.
 - Run repository validation after writing project-level files.

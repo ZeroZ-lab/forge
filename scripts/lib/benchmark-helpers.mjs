@@ -28,11 +28,6 @@ export function markdownTableCell(value) {
 }
 
 export function sanitizeNoForgeFixture(fixture) {
-  let sanitized = fixture;
-  for (const marker of ['\n实现要求:', '\n实现要求：', '\nExpected behavior:']) {
-    const index = sanitized.indexOf(marker);
-    if (index !== -1) sanitized = sanitized.slice(0, index);
-  }
   const forgeSpecificPatterns = [
     /Forge/i,
     /默认主链/,
@@ -43,9 +38,10 @@ export function sanitizeNoForgeFixture(fixture) {
     /goal_coverage_entries/i,
     /trigger/i,
     /skill/i,
+    /docs\/change-units/i,
     /docs\/project\.md/,
   ];
-  return sanitized
+  return fixture
     .split(/\r?\n/)
     .filter((line) => !forgeSpecificPatterns.some((pattern) => pattern.test(line)))
     .join('\n')

@@ -6,6 +6,5 @@ User prompt:
 
 Expected behavior:
 
-- Trigger detail orchestration.
 - Design API before deriving database and frontend contracts.
 - Record downstream references and shared data model decisions.

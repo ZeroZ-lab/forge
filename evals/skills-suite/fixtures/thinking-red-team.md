@@ -6,6 +6,5 @@ User prompt:
 
 Expected behavior:
 
-- Trigger think.
 - Produce a docs/thinking artifact with assumptions and attack result.
 - Report the writeback target instead of hiding the final decision in the thinking document.

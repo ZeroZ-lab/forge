@@ -6,9 +6,6 @@ User prompt:
 
 Expected behavior:
 
-- Trigger detail orchestration.
-- Load api-design and db-design skills.
-- Skip frontend-design — no frontend contract produced.
 - Produce API contract (endpoints, request/response schemas, pagination) and database contract (query optimization for date range, export table or view).
 - Record "no frontend" as an explicit skip decision in the feature contract.
 - Record downstream references between API and database contracts.

@@ -13,7 +13,7 @@ Context files:
 
 Expected behavior:
 
-- Re-enter detail orchestration from deviation signal (not a fresh detail run).
+- Re-enter from the deviation signal (not a fresh pass); correct the contract.
 - Read deviation summary and review findings as primary input.
 - Update API contract with corrected constraints: ISO date string format, `totalCount` in response header.
 - Update the module contract if query changes are needed.

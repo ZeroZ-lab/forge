@@ -114,7 +114,7 @@ node scripts/evaluate-skills.mjs
 node scripts/evaluate-skills.mjs --report path/to/report.json
 ```
 
-加 `--verify-disk` 可让评测额外校验报告里声称的 Change Unit 确实落盘（把"自报来源"升级为"磁盘可验"），但仍不等同于完整的行为有效性。
+加 `--verify-disk` 可让评测额外校验报告里声称的 Change Unit 确实落盘，并要求 CU `Verification` 段里的命令能在同一 run 的 `events.jsonl` 中找到 exit 0 的真实执行记录；仅在 Markdown 中写命令不算验证。
 
 也可以直接用 Codex CLI 跑真实 fixtures：
 
@@ -127,15 +127,15 @@ node scripts/evaluate-skills.mjs --allow-partial --report .eval-runs/skills-suit
 做 Forge vs no-Forge 对照时，用同一 fixture 分别跑完整 Forge prompt 和 no-Forge 最小提示 baseline；no-Forge 模式会剥离 fixture 中的 Forge scoring 指令，只保留产品任务和验收标准：
 
 ```bash
-node scripts/run-skills-benchmark.mjs --mode forge --case default-chain-small-feature --run-id forge-default-chain
-node scripts/run-skills-benchmark.mjs --mode no-forge --case default-chain-small-feature --run-id no-forge-default-chain
+node scripts/run-skills-benchmark.mjs --mode forge --case default-chain-small-feature --runs 2 --run-id forge-default-chain
+node scripts/run-skills-benchmark.mjs --mode no-forge --case default-chain-small-feature --runs 2 --run-id no-forge-default-chain
 node scripts/evaluate-skills.mjs \
   --allow-partial \
   --report .eval-runs/skills-suite/forge-default-chain/report.json \
   --baseline-report .eval-runs/skills-suite/no-forge-default-chain/report.json
 ```
 
-默认比较门要求 Forge 分数至少达到 no-Forge baseline 的 `2.0x`，且 pass rate 不低于 baseline；阈值可用 `--min-score-ratio` 调整。
+默认比较门拒绝单 run 对照：每个被比较的 case 至少要有重复样本和不同 `evidence_id`，并要求 Forge 的置信区间下界超过 baseline 上界，同时点估计分数至少达到 no-Forge baseline 的 `2.0x` 且 oracle-derived pass rate 不低于 baseline。该 2.0x 阈值目前仅由历史 2 个选定 n=1 案例校准（guide-shortest-chain、default-chain-small-feature），非 suite 级经验主张；在全 21 case 多 run 实证发布前不应作为能力结论引用。
 
 如果全量运行被 Codex usage limit 中断，可以只评分已完成 case：
 

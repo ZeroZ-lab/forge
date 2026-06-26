@@ -6,7 +6,6 @@ User prompt:
 
 Expected behavior:
 
-- Trigger design orchestration, interaction design, fe-system, fe-artifact, and fe-accept as one frontend chain.
 - Define primary flow, empty/loading/error states, reusable tokens, component states, and implementation coverage.
 - Avoid producing a marketing landing page instead of the workflow.
 - Do not claim visual acceptance without runtime or preview evidence.
