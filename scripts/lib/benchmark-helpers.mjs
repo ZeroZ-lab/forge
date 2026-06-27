@@ -33,8 +33,14 @@ export function sanitizeNoForgeFixture(fixture) {
     /默认主链/,
     /detail\s*->\s*codegen\s*->\s*review/,
     /Change Unit/i,
+    /docs\/features\/[^`\s]+\/goal\.md/i,
+    /\bfeature goal\b/i,
+    /goal before implementation/i,
+    /from the goal/i,
+    /against the goal/i,
     /goal verification/i,
     /goal_verification/i,
+    /goal coverage/i,
     /goal_coverage_entries/i,
     /triggered_skills/i,
     /expected_skills/i,
@@ -43,9 +49,16 @@ export function sanitizeNoForgeFixture(fixture) {
     /docs\/change-units/i,
     /docs\/project\.md/,
   ];
-  return fixture
-    .split(/\r?\n/)
-    .filter((line) => !forgeSpecificPatterns.some((pattern) => pattern.test(line)))
+  let inExpectedBehaviorBlock = false;
+  const lines = fixture.split(/\r?\n/).filter((line) => {
+    if (/^Expected behavior:\s*$/i.test(line.trim())) {
+      inExpectedBehaviorBlock = true;
+      return false;
+    }
+    if (inExpectedBehaviorBlock) return false;
+    return !forgeSpecificPatterns.some((pattern) => pattern.test(line));
+  });
+  return lines
     .join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();

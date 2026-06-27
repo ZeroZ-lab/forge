@@ -194,24 +194,31 @@ test('no-Forge fixture sanitizer removes Forge scoring instructions', () => {
     '实现要求：',
     '',
     '- 创建 `docs/features/task-archive/goal.md`。',
+    '- 创建最小实现文件和 `node:test` 回归测试。',
     '- 创建 `docs/change-units/CU-*.md`。',
     '- triggered_skills 必须包含 detail、codegen、review。',
     '- Preserve product skill trigger schedules for user-created automations.',
     '',
     'Expected behavior:',
     '',
+    '- Produce a feature goal before implementation.',
+    '- Generate executable code and tests from the goal.',
     '- Trigger only the default chain skills.',
   ].join('\n');
   const sanitized = sanitizeNoForgeFixture(fixture);
 
   assert.match(sanitized, /archive completed tasks/);
   assert.match(sanitized, /AC-1/);
+  assert.match(sanitized, /node:test/);
   assert.doesNotMatch(sanitized, /默认主链/);
   assert.doesNotMatch(sanitized, /detail -> codegen -> review/);
-  assert.match(sanitized, /docs\/features/);
+  assert.doesNotMatch(sanitized, /docs\/features/);
   assert.doesNotMatch(sanitized, /docs\/change-units/);
   assert.doesNotMatch(sanitized, /triggered_skills/);
   assert.doesNotMatch(sanitized, /Trigger only the default chain skills/);
+  assert.doesNotMatch(sanitized, /feature goal before implementation/);
+  assert.doesNotMatch(sanitized, /from the goal/);
+  assert.doesNotMatch(sanitized, /Expected behavior/);
   assert.match(sanitized, /Preserve product skill trigger schedules/);
   assert.match(sanitized, /实现要求/);
 });

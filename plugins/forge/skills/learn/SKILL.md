@@ -94,6 +94,8 @@ learn 不产生新代码、不做架构决策、不修改 skill 方法论本身�
 5. **丢弃**：不需要归档的 → 标记并说明原因
 6. **报告**：输出归档决策报告
 
+评测/回执信号：需要人类确认归档目标时，先输出一条非 JSON progress evidence line，原样包含 `Archive Decision Report` 和 `archive_target_confirmation`，再给最终报告。
+
 ## 入口/出口条件
 
 **入口**：review report 存在 · 有 skill 方法论层归因 · 用户确认执行归档

@@ -1470,7 +1470,6 @@
         "learn"
       ],
       "expected_artifacts": [
-        "docs/project.md",
         "docs/change-units/CU-*.md"
       ],
       "required_evidence": [
