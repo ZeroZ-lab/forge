@@ -64,5 +64,6 @@
 
 - Code diff:
 - Test evidence (command + output, not conclusion):
+- Goal coverage: `docs/features/<feature>/goal.md` covers `src/...`, `tests/...`, and any synced modules/docs:
 - Doc sync result:
 - Residual risk:

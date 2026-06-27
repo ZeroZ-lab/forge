@@ -6,7 +6,7 @@ Forge treats documents as goal constraints, not implementation blueprints.
 
 - Project documents define shared constraints and recorded decisions.
 - Feature documents define: what's the goal, where are the boundaries, what counts as done.
-- Changelog preserves decision history.
+- Change Units preserve decision history and verification evidence; do not maintain a parallel changelog.
 - AI self-drives implementation path, structure, and technical details.
 - Decision records (WHY) are the most valuable output — they outlast any code.
 

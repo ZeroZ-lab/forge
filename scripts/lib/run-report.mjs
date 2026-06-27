@@ -164,7 +164,7 @@ export function formatCaseRunContract(caseId) {
   "triggered_skills": ["forge-..."],
   "artifacts": ["path/or/dir"],
   "change_units": ["docs/change-units/CU-....md"],
-  "goal_verification": [{"target": "docs/goal.md", "status": "completed"}],
+  "goal_verification": [{"target": "docs/goal.md", "status": "completed" | "pending" | "blocked"}],
   "goal_coverage_entries": [{"source": "docs/features/<feature>/goal.md", "covers": ["src/..."]}],
   "commands_run": ["exact command"],
   "decisions": ["decision_id"],

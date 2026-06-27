@@ -1,12 +1,12 @@
 ---
 name: review
-description: Performs independent review of diffs, documents, code, tests, and consistency before build or release. Use for lightweight review requests and for full quality-gate review when explicitly requested.
-when_to_use: Use when the user asks to review changes, inspect a diff, check code quality, audit documents, find goal inconsistency, run an adversarial review, verify implementation against docs, or assess release readiness.
+description: Reviews diffs, docs, code, tests, and goal consistency before build or release.
+when_to_use: Use when the user asks to review changes, inspect a diff, audit docs/code, find goal inconsistency, or assess release readiness.
 ---
 
 # Review — 独立审查
 
-找会导致目标未达成、错误发布或未来验证失败的问题；不是总结优点。审 project/goal/modules/CU/src/tests。Refs: `references/review-protocol.md`, `../shared/rubrics/implementation-quality.md`, `../shared/rubrics/goal-quality.md`, `../shared/concepts/artifact-policy.md`.
+找会导致目标未达成、错误发布或未来验证失败的问题；不是总结优点。审 project/goal/modules/CU/src/tests。Refs: `references/review-protocol.md`, `../shared/concepts/artifact-policy.md`.
 
 ## 硬门
 
@@ -17,21 +17,23 @@ when_to_use: Use when the user asks to review changes, inspect a diff, check cod
 
 ## 模式/流程
 
-文档审查：查 WHAT/WHY/CONSTRAINTS、`[NEEDS CLARIFICATION]`、文档一致性、边界、接口、依赖、验收、人类决策。
+文档审查：查 WHAT/WHY/CONSTRAINTS、`[NEEDS CLARIFICATION]`、一致性、边界、接口、依赖、验收、人类决策。
 
 代码审查：查实现是否满足 goal/modules；API、数据模型、错误码、权限、测试、FD#/PD#/DB#/AC# 是否对齐。
 
-流程：声明模式/范围/读取文件 → 建目标基线 → 先 P0/P1 后 P2 → findings 先行、摘要靠后 → 阻塞修复后复审。
+Safe-stop lens：bugfix 无 red-capable 命令时，只查 `src/`、`tests/`、project/goal 文档未改，未伪造 regression test，证据请求、`未验证风险` 和 `safe stop` 已记录。
+
+流程：声明范围/读取文件 → 建目标基线 → 先 P0/P1 后 P2 → findings 先行 → 阻塞修复后复审。
 
 ## 独立性/优先级
 
-P0/P1 代码风险默认用独立 subagent；主控保留裁决。仅单文件 lens、纯文档、无 subagent 或用户禁用时可主控自审，并声明残余风险。
+P0/P1 代码风险默认用独立 subagent；主控保留裁决。单文件 lens、纯文档或无 subagent 时可主控自审并声明残余风险。
 
 - P0：错误实现、数据损坏、安全漏洞、无法发布。
 - P1：重要行为偏离、测试失真、未来验证失败。
 - P2：清晰度、可维护性、局部一致性。
 
-归因：skill → learn；文档 → detail；代码 → codegen；范围蔓延 → define/detail，参考 `../shared/red-flags/scope-creep.md`。
+归因：skill → learn；文档 → detail；代码 → codegen；范围蔓延 → define/detail。
 
 ## 红旗/出口
 

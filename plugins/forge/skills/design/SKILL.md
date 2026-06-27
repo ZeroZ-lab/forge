@@ -24,7 +24,7 @@ when_to_use: Use when the user asks for the design stage, coordinated interactio
 
 ## 分支与恢复
 
-- 纯后端 API → 跳过整个设计阶段，记录跳过原因并进入 detail。
+- 纯后端 API → 跳过整个设计阶段，记录 `skip design` 决策；理由写明 pure backend / no user interface，并进入 detail。
 - 已有权威交互约束 → Phase 1 只检查是否与目标对齐，不重复设计。
 - 已有 DESIGN.md → Phase 2 只处理 feature 相关增量和冲突。
 - 用户不确认视觉方向 → 停止生成 DESIGN.md，保留 2-3 个方向和代价供选择。
@@ -46,7 +46,7 @@ when_to_use: Use when the user asks for the design stage, coordinated interactio
 
 ## 跳过规则
 
-- 纯后端 API → 跳过整个阶段，直接进入 `detail 阶段`
+- 纯后端 API → 跳过整个阶段，直接进入 `detail 阶段`，且不创建 `interaction-spec.md` 或更新 `DESIGN.md`
 - 已有 DESIGN.md → Phase 2 只更新 feature 相关的部分
 
 ## 何时不使用

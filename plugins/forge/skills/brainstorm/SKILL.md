@@ -67,7 +67,7 @@ when_to_use: Use when the user has a vague product idea, wants options, asks to 
 
 ## 文档约束
 
-默认在对话中给出方向地图、评分、假设、推荐、被拒方案和下一步，不创建 idea brief。用户确认的目标和边界写入 feature `goal.md` 或 `docs/project.md`。
+默认在对话中给出轻量 idea brief（方向地图、评分、假设、推荐、被拒方案和下一步），不创建 `docs/idea-brief.md`。用户确认的目标和边界写入 feature `goal.md` 或 `docs/project.md`。
 
 遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。只有存在独立研究交接或审批责任时，才将可复用证据写入 gated `research-brief.md`。
 

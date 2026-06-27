@@ -41,8 +41,8 @@ when_to_use: Use when the user asks about design system, DESIGN.md, colors, typo
 1. **定意图**：确认用户、产品气质、页面类型、品牌限制。
 2. **找参考**：必要时搜索当前同类产品，提炼可复用模式，不复制表层风格。
 3. **判页面**：区分工具、SaaS、内容、营销、游戏、数据面板等页面类型。
-4. **做选择**：给出 2-3 个视觉方向和代价，等待人类确认。
-5. **建 Token**：生成 primitive、semantic、component 三层 token。
+4. **做选择**：给出 2-3 个视觉方向和代价；init bootstrap 中可写待确认 seed，后续等人类确认。
+5. **建 Token**：生成 primitive、semantic、component 三层 token；未确认时标 `[NEEDS CONFIRMATION]`，不要声称最终品牌。
 6. **建模式库**：定义布局、导航、表单、列表、反馈和空状态模式。
 7. **验证**：检查可访问性、响应式、密度、状态覆盖和跨页面一致性。
 8. **预览**：如用户需要，生成设计预览供确认。
@@ -57,7 +57,7 @@ when_to_use: Use when the user asks about design system, DESIGN.md, colors, typo
 
 ## 产出
 
-遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。只有跨 feature 视觉系统具有独立维护周期时创建 `DESIGN.md`；否则把必要约束写入 feature goal/module。`DESIGN.md` 包含：
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。init bootstrap 的非后端项目创建 `DESIGN.md` seed；其他场景只有跨 feature 视觉系统具有独立维护周期时创建 `DESIGN.md`，否则把必要约束写入 feature goal/module。`DESIGN.md` 包含：
 
 - 产品气质和设计原则
 - 三层 token
@@ -73,7 +73,7 @@ when_to_use: Use when the user asks about design system, DESIGN.md, colors, typo
 
 **入口**：有项目目标、目标用户和至少一个页面类型；或已有 `DESIGN.md` 需要更新。
 
-**出口**：权威视觉约束已生成或更新，人类确认关键视觉方向，后续 skill 可直接消费。
+**出口**：权威视觉约束已生成或更新；若人类未确认，`DESIGN.md` 必须清楚标注 `[NEEDS CONFIRMATION]`、选项和代价，后续 skill 只能消费已确认部分或继续请求确认。
 
 ## 运行时信号
 

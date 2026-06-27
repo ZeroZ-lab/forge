@@ -90,6 +90,38 @@ test('skills-suite covers all bugfix feedback-loop failure modes', () => {
   }
 });
 
+test('unreproducible bugfix case measures safe stop without goal-doc progress theater', () => {
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'bugfix-unreproducible-blocked');
+  const checks = testCase.oracle_checks;
+
+  assert.deepEqual(testCase.expected_artifacts, ['docs/change-units/CU-*.md']);
+  assert.ok(checks.some((check) => check.type === 'change_unit_reported' && check.path === 'docs/change-units/CU-*.md'));
+  assert.ok(checks.some((check) => check.type === 'artifact_absent' && check.path === 'goal.md'));
+  for (const text of [
+    'red-capable command unavailable',
+    'attempted feedback loops',
+    'requested production evidence',
+    '未验证风险',
+    'safe stop',
+  ]) {
+    assert.ok(
+      checks.some((check) => check.type === 'transcript_contains' && check.text === text),
+      `${text} must be transcript-measurable`,
+    );
+  }
+});
+
+test('project bootstrap verifies the project document instead of a synthetic goal doc', () => {
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'project-bootstrap');
+  const checks = testCase.oracle_checks;
+
+  assert.ok(testCase.expected_artifacts.includes('docs/project.md'));
+  assert.ok(testCase.expected_artifacts.includes('DESIGN.md'));
+  assert.ok(!testCase.expected_artifacts.includes('goal.md'));
+  assert.ok(checks.some((check) => check.type === 'command_reported' && check.command === 'test -f docs/project.md'));
+  assert.ok(checks.some((check) => check.type === 'goal_verified' && check.target === 'docs/project.md'));
+});
+
 test('guide benchmark is advisory and non-mutating', () => {
   const testCase = manifest.cases.find((candidate) => candidate.id === 'guide-shortest-chain');
 

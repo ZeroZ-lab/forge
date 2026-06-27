@@ -38,7 +38,7 @@ loading、empty、error、disabled、success、undo、confirm、权限和移动�
 
 ### I1: 用户流程（流程阶段）
 
-记录主流程和异常流程。
+记录主流程和异常流程；主流程决策 ID 使用 `primary_flow`，并写明入口、成功出口、异常出口和被拒路径。
 
 ### I2: 信息架构（结构阶段）
 

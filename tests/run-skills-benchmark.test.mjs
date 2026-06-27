@@ -350,8 +350,27 @@ test('forgePromptForCase is blind: no per-case oracle answers leak into the Forg
   assert.match(prompt, /已发布 Forge skill 名称/);
   assert.match(prompt, /business-alignment/); // a registry name, not an answer
   assert.match(prompt, /guide/); // a registry name, not an answer
+  assert.match(prompt, /非 JSON progress evidence line/);
+  assert.match(prompt, /安全停止、拒绝猜测或报告阻塞结论，最终 status 仍填 "pass"/);
+  assert.match(prompt, /status 只能是 completed、pending 或 blocked，不能使用 skipped/);
+  assert.match(prompt, /最后一条消息只输出一个 JSON object/);
   assert.match(prompt, /"case_id": "default-chain-small-feature"/); // report schema
   assert.equal(prompt.includes('oracle_checks'), false);
+});
+
+test('benchmark prompts reserve blocked status for run-level blockers', () => {
+  const testCase = { id: 'x', title: 'x' };
+  const fixture = '> investigate safely.';
+
+  assert.match(
+    promptForCase(testCase, fixture, 'forge', ['codegen']),
+    /只有 Codex 用量限制、工具缺失、权限或环境故障导致 benchmark 本身无法继续时，才填 "blocked"/,
+  );
+  assert.match(
+    promptForCase(testCase, fixture, 'no-forge'),
+    /安全停止、拒绝猜测或报告阻塞结论，最终 status 仍填 "pass"/,
+  );
+  assert.match(promptForCase(testCase, fixture, 'no-forge'), /没有目标文档同步时填 \[\]/);
 });
 
 test('promptForCase passes the published registry only to the forge arm', () => {

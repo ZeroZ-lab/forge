@@ -18,7 +18,9 @@ when_to_use: Use when requirements include realtime/collaboration, search/rankin
 
 ## 触发信号
 
-实时/协作、搜索/推荐、动画/物理、路径/优化、加密/权限、图片/音频/视频、模型/算法选择、依赖版本可能过时。
+技术信号词包括：实时/协作、搜索/排序/推荐、动画/物理、路径/优化、加密/权限、图片/音频/视频、模型/算法选择、依赖版本可能过时。出现这些词时先做 research，先给算法菜单，再给最终技术选择。
+
+运行时先输出非 JSON 证据行：`技术信号词: ...; algorithm menu before selection; research_recommendation pending.`。若给出研究建议，决策 ID 使用 `research_recommendation`，并在 Change Unit 的 Decisions 段和进度证据中原样出现。Feature 路径沿用 define 的主能力 slug，例如实时搜索和推荐排序写入 `docs/features/realtime-search/research-brief.md`。
 
 ## 方法论：四阶段
 

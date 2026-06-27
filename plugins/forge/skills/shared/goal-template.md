@@ -38,6 +38,7 @@
 > 怎么判断做完了。每条优先用 EARS 句式，让验收条件天然可测、可被 codegen 自检、被 review 逐条打勾。
 > 句式：`WHEN <事件/前置条件>，系统 SHALL <可观察、可验收的行为>`。
 > 状态型条件可用 `WHILE <状态>`；可选触发可用 `WHERE <特性存在>`。纯展示类无明确触发时可退化为陈述句，但仍须可验收。
+> Goal coverage：若本 feature 会修改代码、测试、模块或发布面，在本节或「按需约束」列出覆盖路径（如 `src/...`、`tests/...`、`docs/features/<feature>/modules/...`），让 codegen/review 能证明产物受此 goal 约束。
 
 - [ ] WHEN <事件/前置>，系统 SHALL <可验收行为>
 - [ ] WHEN <事件/前置>，系统 SHALL <可验收行为>

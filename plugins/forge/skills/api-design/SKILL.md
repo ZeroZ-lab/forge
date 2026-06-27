@@ -48,7 +48,7 @@ when_to_use: Use when creating or reviewing HTTP/RPC/resource contracts, endpoin
 
 ## 文档约束
 
-遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。共享 feature API 决策写入 `goal.md`；只有接口和不变量复杂到 goal 不足时才创建 `modules/*.md`，包含端点、auth、request、response、errors、side effects、constraints。模板：`${CLAUDE_SKILL_DIR}/../shared/module-template.md`。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。共享 feature API 决策写入 `goal.md`；只有接口和不变量复杂到 goal 不足时才创建 `modules/*.md`，包含端点、auth、request、response、errors、side effects、constraints。每个 API 合同必须标注下游依赖：哪些 DB 查询、前端状态或测试场景消费该合同，避免后续阶段猜接口。模板：`${CLAUDE_SKILL_DIR}/../shared/module-template.md`。
 
 ## 入口/出口条件
 

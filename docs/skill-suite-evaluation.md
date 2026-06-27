@@ -42,7 +42,7 @@ This gate proves token footprint control, not behavior effectiveness. Behavior s
 
 ## V2 Traceability Contract
 
-The benchmark contract is now version 2. Every mutating scored case must prove that the run is traceable through a Change Unit. Non-mutating advisory or blocked-diagnosis cases must instead prove that no current artifact was changed.
+The benchmark contract is now version 2. Every mutating scored case must prove that the run is traceable through a Change Unit. Non-mutating advisory cases must prove that no current artifact was changed; safe-stop bugfix cases may record a Change Unit, but must not modify current project/goal/code/test artifacts to simulate progress.
 
 Each case report includes:
 
@@ -73,6 +73,8 @@ node scripts/evaluate-skills.mjs --skip-blocked --report .eval-runs/skills-suite
 ```
 
 Skipped blocked cases are not evidence of skill effectiveness.
+
+In run reports, `status: "blocked"` is reserved for benchmark execution blockers such as usage limits, missing tools, permissions, or environment failures. If a fixture's correct outcome is to stop safely, refuse to guess, or request missing production evidence, the case status is still `pass` when the safety-stop oracle is satisfied.
 
 ## Benchmark Contract
 
@@ -182,7 +184,7 @@ node scripts/run-skills-benchmark.mjs \
   --run-id no-forge-default-chain
 ```
 
-`forge` mode gives the agent the fixture task text, the answer-free report shape, and the published skill registry names, but not per-case oracle answers. `no-forge` mode strips Forge-specific scoring instructions from the fixture, gives the same product task plus a minimal JSON report shape, explicitly forbids Forge skills, and requires `triggered_skills: []`. This keeps the baseline close to "no large prompt" behavior without deleting product acceptance criteria.
+`forge` mode gives the agent the fixture task text, the answer-free report shape, and the published skill registry names, but not per-case oracle answers. `no-forge` mode strips Forge-specific scoring instructions from the fixture, gives the same product task plus a minimal JSON report shape, explicitly forbids Forge skills, and requires `triggered_skills: []`. Both modes require the final message to be the JSON report, while allowing at least one non-JSON progress evidence line during execution so `transcript_contains` can be scored from the event stream rather than the final self-report. This keeps the baseline close to "no large prompt" behavior without deleting product acceptance criteria.
 
 Compare the two reports with the default repeated-sample gate:
 

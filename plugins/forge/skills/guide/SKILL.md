@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 ## 职责
 
-把用户任务映射为最短 Forge 链路。只推荐，不调用其他 skill、不修改文件、不创建阶段产物。
+把用户任务映射为最短 Forge 链路。只推荐，不调用其他 skill、不修改文件、不创建阶段产物、不写 Change Unit。
 
 ## 判断顺序
 
@@ -22,7 +22,7 @@ disable-model-invocation: true
    - lens：只分析或 review。
    - patch：局部修正并验证。
    - stage：显式执行完整阶段并维护产物。
-4. 推荐最短链路，并逐项说明为什么启用或跳过。
+4. 推荐最短链路，并逐项说明为什么启用或跳过。描述子 skill 时只引用职责和出口，不复制 child methodology，不猜 bug 根因。
 
 ## 路由基线
 
@@ -32,23 +32,25 @@ disable-model-invocation: true
 | 报告运行时 bug | `codegen(patch, bugfix protocol) → review(lens)` |
 | 需求明确的小功能 | `detail(patch) → codegen(patch) → review(lens)` |
 | 边界不清的小功能 | `define(patch) → detail(patch) → codegen(patch) → review(lens)` |
-| 跨模块且有依赖 | `detail(stage) → plan(stage) → codegen(stage) → review(stage)` |
+| 跨模块且有依赖 | `detail(stage) -> plan(stage) -> codegen(stage) -> review(stage)` |
 | 新项目或完整治理 | 按 Forge 完整生命周期选择必要阶段 |
 
 `research`、`design`、`test`、`deploy`、`think` 只在任务信号明确时加入，不为流程完整而加入。
 
 ## 输出
 
+执行中先发一条非 JSON evidence line，使用这些固定标签：`L0/L1/L2/L3`、`patch/lens/stage`、推荐链路、`跳过阶段`、`只推荐不执行`。矩阵路由逐字使用：`Evidence: L3 init; L1 bugfix protocol; L2 detail(stage) -> plan(stage) -> codegen(stage) -> review(stage); 只引用职责; 只推荐不执行.`
+
 ```md
 复杂度：L#
 调用深度：lens / patch / stage
 推荐链路：...
-逐阶段推进：按推荐链路列出每阶段出口后的常见后继（如 detail→codegen、codegen→review、review 通过→deploy 或返工 codegen）；以本推荐为准，不自动执行。
+逐阶段推进：按推荐链路列出每阶段出口后的常见后继（如 detail -> codegen、codegen -> review、review 通过 -> deploy 或返工 codegen）；以本推荐为准，不自动执行。
 启用理由：...
 跳过阶段：阶段 — 原因
+边界：只推荐不执行；只引用职责，不复制子 skill 方法；不创建/修改文件。
 关键风险：...
 开始前需要的人类决策：无 / ...
 ```
 
 若任务信息不足以安全区分两条链路，只提出一个会改变执行范围的关键问题。
-

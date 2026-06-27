@@ -54,7 +54,7 @@ when_to_use: Use when the user describes a feature with unclear scope, asks to d
 
 ## 文档约束
 
-遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。默认更新 feature `goal.md` 的目标、场景、范围、AC、风险和开放问题。只有产品团队有独立 owner、审批或更新周期时，才创建 `PRD.md`；PRD 引用 goal/project，不复制技术方案。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。默认更新 feature `goal.md` 的目标、场景、范围、AC、风险和开放问题。只有产品团队有独立 owner、审批或更新周期时，才创建 `PRD.md`；PRD 引用 goal/project，不复制技术方案。Feature 路径取用户主能力名，不把辅助能力追加到目录；例如“实时搜索和推荐排序”写 `docs/features/realtime-search/PRD.md`，推荐排序进入范围/研究章节。
 
 ## 入口/出口条件
 

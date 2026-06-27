@@ -54,7 +54,7 @@ when_to_use: Use after brainstorm or when a project idea needs validation agains
 
 ## 文档约束
 
-遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。项目级承诺写入 `docs/project.md`；单 feature 承诺写入其 `goal.md`。不创建 idea brief，不写技术方案。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。项目级承诺写入 `docs/project.md`；单 feature 承诺写入其 `goal.md`。Go / No-Go 必须作为显式决策记录选择、理由、拒绝项和复评条件；决策 ID 使用 `business_go_no_go`，并在进度证据中原样提到。不创建 `docs/idea-brief.md`，不写技术方案。
 
 ## 入口/出口条件
 

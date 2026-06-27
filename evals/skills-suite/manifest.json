@@ -164,8 +164,7 @@
         "DESIGN.md",
         "AGENTS.md",
         "CLAUDE.md",
-        "docs/change-units/CU-*.md",
-        "goal.md"
+        "docs/change-units/CU-*.md"
       ],
       "required_evidence": [
         "project decisions",
@@ -198,7 +197,7 @@
         },
         {
           "type": "command_reported",
-          "command": "node scripts/validate.mjs"
+          "command": "test -f docs/project.md"
         },
         {
           "type": "change_unit_reported",
@@ -214,7 +213,7 @@
         },
         {
           "type": "goal_verified",
-          "target": "goal.md"
+          "target": "docs/project.md"
         }
       ]
     },
@@ -1010,7 +1009,7 @@
         "review"
       ],
       "expected_artifacts": [
-        "goal.md"
+        "docs/change-units/CU-*.md"
       ],
       "required_evidence": [
         "red-capable command unavailable",
@@ -1045,6 +1044,14 @@
         {
           "type": "artifact_absent",
           "path": "docs/project.md"
+        },
+        {
+          "type": "artifact_absent",
+          "path": "goal.md"
+        },
+        {
+          "type": "change_unit_reported",
+          "path": "docs/change-units/CU-*.md"
         },
         {
           "type": "transcript_contains",

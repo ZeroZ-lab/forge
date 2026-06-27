@@ -18,7 +18,7 @@ when_to_use: Use when deciding test strategy, coverage expectations, risk-based 
 
 ## 方法论：风险驱动测试金字塔
 
-先读 goal/modules/风险/发布要求，再按业务风险选择单元、集成、E2E、契约、性能、安全和手动验收组合。拒绝虚荣覆盖率。
+先读 goal/modules/风险/发布要求，做风险分层，再按业务风险选择单元、集成、E2E、契约、性能、安全和手动验收组合。拒绝虚荣覆盖率。
 
 ## 决策点
 
