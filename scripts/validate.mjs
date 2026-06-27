@@ -210,7 +210,8 @@ assertIncludes('archive/skills/README.md', [
 ]);
 assertIncludes('docs/skill-suite-evaluation.md', [
   'Benchmark contract is valid',
-  'A run proves skill effectiveness',
+  'A run satisfies scenario compliance',
+  'compliance/regression harness',
   'evals/skills-suite/manifest.json',
   'evals/skills-suite/report.schema.json',
 ]);

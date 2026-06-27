@@ -100,15 +100,15 @@ node --test
 
 行为测试验证评测合约和工具脚本的静态完整性，不模拟真实 skill 执行。
 
-### Skill Suite 评测
+### Skill Suite 合规/回归评测
 
 ```bash
 node scripts/evaluate-skills.mjs
 ```
 
-评测自检会校验 `evals/skills-suite/manifest.json`：至少 21 个固定任务、覆盖全部 25 个已发布 skill、fixtures 存在、v2 oracle check 可机器读取，并要求变更型任务提供 Change Unit 和目标验证证据。这只证明评测合约完整，不证明某次 agent 行为有效。
+Skill Suite 是固定场景的 compliance/regression harness，用来防止 Forge 路由、产物、追踪、验证和范围控制协议回归。评测自检会校验 `evals/skills-suite/manifest.json`：至少 21 个固定任务、覆盖全部 25 个已发布 skill、fixtures 存在、v2 oracle check 可机器读取，并要求变更型任务提供 Change Unit 和目标验证证据。这只证明评测合约完整，不证明某次 agent 行为有效。
 
-要评价真实运行，把 agent 执行记录整理成 `evals/skills-suite/report.schema.json` 格式，然后运行：
+要评价一次真实运行是否符合这组固定场景，把 agent 执行记录整理成 `evals/skills-suite/report.schema.json` 格式，然后运行：
 
 ```bash
 node scripts/evaluate-skills.mjs --report path/to/report.json
@@ -124,7 +124,7 @@ node scripts/run-skills-benchmark.mjs --case thinking-red-team
 node scripts/evaluate-skills.mjs --allow-partial --report .eval-runs/skills-suite/<run-id>/report.json
 ```
 
-做 Forge vs no-Forge 对照时，用同一 fixture 分别跑完整 Forge prompt 和 no-Forge 最小提示 baseline；no-Forge 模式会剥离 fixture 中的 Forge scoring 指令，只保留产品任务和验收标准：
+做实验性 Forge vs no-Forge 对照时，用同一 fixture 分别跑完整 Forge prompt 和 no-Forge 最小提示 baseline；no-Forge 模式会剥离 fixture 中的 Forge scoring 指令，只保留产品任务和验收标准：
 
 ```bash
 node scripts/run-skills-benchmark.mjs --mode forge --case default-chain-small-feature --runs 2 --run-id forge-default-chain
@@ -135,7 +135,7 @@ node scripts/evaluate-skills.mjs \
   --baseline-report .eval-runs/skills-suite/no-forge-default-chain/report.json
 ```
 
-默认比较门拒绝单 run 对照：每个被比较的 case 至少要有重复样本和不同 `evidence_id`，并要求 Forge 的置信区间下界超过 baseline 上界，同时点估计分数至少达到 no-Forge baseline 的 `2.0x` 且 oracle-derived pass rate 不低于 baseline。该 2.0x 阈值目前仅由历史 2 个选定 n=1 案例校准（guide-shortest-chain、default-chain-small-feature），非 suite 级经验主张；在全 21 case 多 run 实证发布前不应作为能力结论引用。
+默认比较门拒绝单 run 对照：每个被比较的 case 至少要有重复样本和不同 `evidence_id`，并要求 Forge 的置信区间下界超过 baseline 上界，同时 fair-comparison 点估计分数至少达到 no-Forge baseline fair-comparison 分数的 `2.0x` 且 oracle-derived pass rate 不低于 baseline。该 2.0x 阈值目前仅由历史 2 个选定 n=1 案例校准（guide-shortest-chain、default-chain-small-feature），非 suite 级经验主张；在全 21 case 多 run 实证发布前不应作为能力结论引用。即使比较门通过，它也只是这组固定场景的合规差异信号，不是独立质量 benchmark。
 
 如果全量运行被 Codex usage limit 中断，可以只评分已完成 case：
 

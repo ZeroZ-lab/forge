@@ -96,13 +96,14 @@ test('loadIndependentEvidence extracts file changes', () => {
 test('loadIndependentEvidence extracts skills read via SKILL.md command', () => {
   const { runDir, caseId } = buildRunDir([
     cmdEvent("/bin/zsh -lc \"sed -n '1,260p' /Users/x/.codex/plugins/cache/forge/skills/codegen/SKILL.md\"", 0, 'completed', '---\nname: codegen\n'),
+    cmdEvent("/bin/zsh -lc \"pwd && sed -n '1,240p' /Users/x/.codex/plugins/cache/forge/skills/review/SKILL.md && git status --short\"", 0, 'completed', '/tmp/run\n---\nname: review\n'),
     cmdEvent('/bin/zsh -lc "cat /Users/x/skills/detail/SKILL.md"', 0, 'completed', '---\nname: detail\n'),
     cmdEvent('/bin/zsh -lc "cat /Users/x/skills/missing/SKILL.md"', 1, 'failed'),
   ]);
   try {
     const ev = loadIndependentEvidence(runDir, caseId);
     // exit_code 1 read must NOT count; echo/path-only cheats must NOT count
-    assert.deepEqual(ev.skillsRead.sort(), ['codegen', 'detail']);
+    assert.deepEqual(ev.skillsRead.sort(), ['codegen', 'detail', 'review']);
   } finally {
     fs.rmSync(runDir, { recursive: true, force: true });
   }
@@ -512,4 +513,37 @@ test('transcriptContains matches Unicode arrows against an ASCII -> phrase', () 
     false,
   );
   assert.equal(transcriptContains({ available: false, messages: [] }, 'detail -> codegen -> review'), null);
+});
+
+test('transcriptContains matches verification signals across fixture languages', () => {
+  const evidence = {
+    available: true,
+    messages: [
+      { text: 'Implementation is in place. I am running the narrow runtime verification now.', isFinalReport: false },
+      { text: 'Verification passed with node:test coverage for the acceptance criteria.', isFinalReport: false },
+    ],
+  };
+
+  assert.equal(transcriptContains(evidence, '运行验证'), true);
+  assert.equal(
+    transcriptContains(
+      { available: true, messages: [{ text: '验证回执是 node --test exit 0。', isFinalReport: false }] },
+      '运行验证',
+    ),
+    true,
+  );
+  assert.equal(
+    transcriptContains(
+      { available: true, messages: [{ text: '{"evidence":["runtime verification"]}', isFinalReport: false }] },
+      '运行验证',
+    ),
+    false,
+  );
+  assert.equal(
+    transcriptContains(
+      { available: true, messages: [{ text: 'runtime verification', isFinalReport: true }] },
+      '运行验证',
+    ),
+    false,
+  );
 });

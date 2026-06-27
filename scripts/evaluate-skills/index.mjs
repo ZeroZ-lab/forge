@@ -594,7 +594,8 @@ if (args.baselineReportPath) {
       repeatedSamplesHaveDistinctEvidence(report) &&
       repeatedSamplesHaveDistinctEvidence(baselineReport),
   });
-  // keep the full-model score for display, but gate on the fair score
+  // Keep the full-model score in the normal report, but gate and comparison
+  // output on the same fair score model.
   comparison = compareReports({
     baselineReport,
     baselineScore: baselineFairScore,
@@ -679,7 +680,7 @@ console.log(
 );
 if (comparison) {
   console.log(
-    `Forge vs no-Forge: ${score.score}/100 vs ${comparison.baseline.score}/100 ` +
+    `Forge vs no-Forge (fair-comparison): ${comparison.forge.score}/100 vs ${comparison.baseline.score}/100 ` +
       `(${formatRatio(comparison.uplift.score_ratio)}, required ${comparison.min_score_ratio}x); ` +
       `pass rate ${comparison.forge.pass_rate}% vs ${comparison.baseline.pass_rate}%.`,
   );

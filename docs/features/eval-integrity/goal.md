@@ -4,13 +4,14 @@
 
 ## Intent
 
-把 Forge eval 体系从「证明 Forge 像 Forge」的自洽循环改造为「行为有效、盲评、非自指」的评测：
+把 Forge eval 体系从「证明 Forge 像 Forge」的自洽循环改造为更诚实的固定场景 compliance/regression harness；行为有效性不由本 suite 单独证明，后续需 held-out 或外部审阅的 effectiveness suite：
 
 - Forge arm 不再被喂 oracle 答案（`run-skills-benchmark.mjs:171-179`）。
 - 篡改证明层不再被 echo 击穿（`evidence-collector.mjs` 三检测器）。
 - 自报 pass 不再等价于独立 pass 计分（`evaluate-skills/index.mjs:173-176` 忽略 `result.source`）。
 - 2.0x 门不再由两个自选 n=1 案例或 `Infinity` 自动通过撑起。
 - 「honest metric / 效果+100% / token-50%」不再是改名与阈值挪动的品牌包装。
+- 公开文档必须把 skills-suite 定位为一致性/回归检查，而非独立质量 benchmark。
 
 ## Master Gate（完成判据）
 
@@ -20,7 +21,7 @@
 
 ## Boundaries（非目标）
 
-- **不在本 feature**：独立外部作者审阅 oracle/fixtures/schema（社会性，非代码）；落地前 suite 须显式重定位为「一致性/回归检查」而非独立质量 benchmark。
+- **不在本 feature**：独立外部作者审阅 oracle/fixtures/schema（社会性，非代码）；现有 suite 重定位为「一致性/回归检查」后，独立有效性仍需单独 suite。
 - **不在本 feature（各单独 CU）**：C3 validator `gate_owner` 真锚点解析；H1 `pass_rate` 从 oracle 裁决派生；`sanitizeNoForgeFixture` 截断/剥行非对称修复。
 - **不在本 feature（需真实 run，P3 单独 CU）**：全 suite 2.0x 经验主张；Codex seed/temperature flag 真实验证与复现断言；21-case×两臂×K≥5 真实多 run。
 - **不在本 feature（运行时工作）**：`heldout-large-existing-repo` 大型代码库预 staging；`heldout-test-fails-mid-implementation` red→green exit-code 序列——runtime 播种前不计入 `minimum_cases`。
@@ -33,6 +34,7 @@
 4. **source 加权**：`oracleAxisScore` 自报 pass=0、独立 pass=满分；`writeScoreReport` 持久化 per-check source；`fairComparisonScoringModel` 无 `decisions` 轴（重归一化）；artifacts 轴走 `oracleAxisScore`（`artifact_reported` 独立裁决）而非 `artifactCompletenessScore` 自报。
 5. **Infinity**：`scoreRatio` baseline=0 返回 `null`；门失败并报「not comparable, cannot auto-pass」。
 6. **README/docs 诚实**：`evals/skills-suite/README.md` 不再说「10 non-redundant chain cases」（改 21 + per-level 分布 + skip-frontend 三重披露）；`manifest.json` 不再「non-redundant」；每条 2.0x 线带「2 个选定 n=1 案例，非 suite 级」caveat。
+7. **定位诚实**：`docs/skill-suite-evaluation.md`、README、suite README、manifest 和 `docs/project.md` 都把 skills-suite 描述为固定场景 compliance/regression harness，不把通过 oracle 写成独立 effectiveness proof。
 
 ## 分阶段（摘要）
 

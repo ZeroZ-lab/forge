@@ -89,6 +89,7 @@ function extractSkillFromCommand(command) {
 // Verbs that retrieve file CONTENT (a real read). `find`/`ls` only locate a
 // path; `echo`/`printf` only print — none fetch the SKILL.md body.
 const READ_VERBS = /^(cat|sed|head|tail|awk|less|more|nl|bat|rg|grep)\b/;
+const READ_SKILL_RE = /(?:^|[;&|]\s*)(?:cat|sed|head|tail|awk|less|more|nl|bat|rg|grep)\b[^;&|\n]*skills\/([^/'"]+)\/SKILL\.md/;
 
 /**
  * Did a command_execution item actually READ a skill's SKILL.md?
@@ -103,7 +104,8 @@ function isRealSkillRead(item) {
   const command = typeof item.command === 'string' ? item.command : '';
   if (!SKILL_PATH_RE.test(command)) return false;
   if (item.exit_code !== 0) return false;
-  if (!READ_VERBS.test(commandVerb(command))) return false;
+  const innerCommand = shellUnwrap(command);
+  if (!READ_VERBS.test(commandVerb(command)) && !READ_SKILL_RE.test(innerCommand)) return false;
   const out = typeof item.aggregated_output === 'string' ? item.aggregated_output : '';
   return out.length > 0;
 }
@@ -350,6 +352,16 @@ function isStructuredEcho(text) {
 const ARROW_RE = /[→⇒⇨➜⟶➔]/g;
 const normalizeArrows = (s) => (typeof s === 'string' ? s.replace(ARROW_RE, '->') : s);
 
+function transcriptPhraseMatches(message, phrase) {
+  const text = normalizeArrows(message);
+  const needle = normalizeArrows(phrase);
+  if (text.includes(needle)) return true;
+  if (needle === '运行验证') {
+    return /运行[^。\n]*验证|验证(回执|命令|通过|证据|信号)|最窄验证|runtime verification|verification (passed|signal|command|evidence|required)|running [^.。\n]*verification/i.test(text);
+  }
+  return false;
+}
+
 export function transcriptContains(evidence, phrase) {
   if (!evidence || !evidence.available) return null;
   if (typeof phrase !== 'string' || phrase.length === 0) return false;
@@ -361,5 +373,5 @@ export function transcriptContains(evidence, phrase) {
   const reasoning = (evidence.messages ?? []).filter(
     (m) => !m.isFinalReport && typeof m.text === 'string' && !isStructuredEcho(m.text),
   );
-  return reasoning.some((m) => normalizeArrows(m.text).includes(needle));
+  return reasoning.some((m) => transcriptPhraseMatches(m.text, needle));
 }

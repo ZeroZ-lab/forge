@@ -1,7 +1,7 @@
 {
   "version": 2,
   "name": "forge-skills-suite-benchmark",
-  "description": "A deterministic v2 contract for checking whether Forge skills are triggered through complete chains and stage/patch/lens/analysis paths across 21 cases; 3 skip-frontend cases (init-skip-frontend, detail-backend-only, design-skip-no-frontend) share one dimension and are not independent on that axis (see evals/skills-suite/README.md); bounded, verified, traceable through Change Units, and goal-aware during representative agent runs.",
+  "description": "A deterministic v2 compliance/regression contract for checking whether Forge skills follow routing, artifact, verification, scope-control, traceability, and goal-awareness expectations across 21 fixed cases (stage/patch/lens/analysis paths included); 3 skip-frontend cases (init-skip-frontend, detail-backend-only, design-skip-no-frontend) share one dimension and are not independent on that axis (see evals/skills-suite/README.md); not an independent real-world effectiveness benchmark.",
   "minimum_cases": 21,
   "scoring_model": {
     "version": 1,

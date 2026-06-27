@@ -1,13 +1,17 @@
-# Skill Suite Evaluation
+# Skill Suite Compliance/Regression Evaluation
 
-Forge skills must be evaluated by runtime behavior, not by prose quality alone.
+Forge skills-suite is a compliance/regression harness for fixed Forge scenarios.
+It evaluates whether runs follow the published routing, artifact, traceability,
+verification, and scope-control contracts. It is not an independent proof that
+Forge improves real-world delivery; that requires held-out or externally reviewed
+tasks and a strong baseline.
 
 ## What Is Verifiable
 
 The repository now separates two claims:
 
 1. **Benchmark contract is valid**: cases exist, cover every skill, fixtures exist, and oracle checks are machine-readable.
-2. **A run proves skill effectiveness**: an actual agent run produced a report that passes the benchmark oracle.
+2. **A run satisfies scenario compliance**: an actual agent run produced a report that passes the suite oracle for the fixed cases.
 3. **Runtime token footprint is bounded**: high-frequency skill chains stay under an explicit `SKILL.md` loading budget.
 
 The first claim is checked locally by `node scripts/evaluate-skills.mjs`. The second claim requires a report from a real run:
@@ -17,6 +21,7 @@ node scripts/evaluate-skills.mjs --report path/to/report.json
 ```
 
 No-report mode must not be used as evidence that the skills are effective. It only proves the evaluation harness is intact.
+Even a passing run report is scenario-compliance evidence for this suite, not a suite-level effectiveness claim.
 
 ## Token Footprint Gate
 
@@ -38,11 +43,11 @@ npm run metrics:chars -- --max-default-chain-chars=4500 --max-total-chars=56000
 - default chain `detail -> codegen -> review` <= 4,500 characters
 - all `SKILL.md` runtime files <= 56,000 characters
 
-This gate proves token footprint control, not behavior effectiveness. Behavior still requires a real run report.
+This gate proves token footprint control, not behavior effectiveness. Scenario compliance still requires a real run report.
 
 ## V2 Traceability Contract
 
-The benchmark contract is now version 2. Every mutating scored case must prove that the run is traceable through a Change Unit. Non-mutating advisory cases must prove that no current artifact was changed; safe-stop bugfix cases may record a Change Unit, but must not modify current project/goal/code/test artifacts to simulate progress.
+The benchmark contract is now version 2. Every mutating scored case must show that the run is traceable through a Change Unit. Non-mutating advisory cases must show that no current artifact was changed; safe-stop bugfix cases may record a Change Unit, but must not modify current project/goal/code/test artifacts to simulate progress.
 
 Each case report includes:
 
@@ -100,13 +105,13 @@ The suite keeps a minimum representative case count in the manifest and covers a
 
 Cases should prefer complete adjacent chains over isolated single-stage prompts when the chain has a natural runtime handoff. For example, frontend design should continue through implementation acceptance, and implementation planning should continue through test cases and codegen. Keep standalone cases only when the skill is intentionally a sidecar, such as red-team thinking.
 
-## Value Scenario Coverage
+## Compliance Scenario Coverage
 
-The suite now makes the main product-value claims measurable instead of relying on prose:
+The suite maps product-value scenarios to measurable compliance signals. These checks are useful for regression control, but they do not prove real-world effectiveness by themselves:
 
-| Value Scenario | Benchmark Case | What It Proves |
+| Scenario | Benchmark Case | What It Checks |
 |----------------|----------------|----------------|
-| Clear small feature iteration | `default-chain-small-feature` | The high-frequency `detail -> codegen -> review` path can create a feature goal, implement code, run `node --test`, review the result, and avoid project-doc scope creep. |
+| Clear small feature iteration | `default-chain-small-feature` | The high-frequency `detail -> codegen -> review` path creates a feature goal, implements code, runs `node --test`, reviews the result, and avoids project-doc scope creep. |
 | Ambiguous requirement convergence | `requirements-research` | A vague feature with technical signal words is narrowed into PRD plus research options before implementation. |
 | Frontend experience delivery | `interaction-design-system` | Design, visual system, frontend artifact, and acceptance evidence stay connected through one chain. |
 | Deterministic regression bugfix | `bugfix-regression-change-unit` | The exact symptom goes red before the fix, is minimized, becomes a regression test, and is rechecked through the original scenario. |
@@ -134,11 +139,11 @@ Each case report records:
 - `evidence`
 - `status`
 
-The evaluator treats missing or indirect evidence as failure. A passing report must prove every oracle check for every benchmark case.
+The evaluator treats missing or indirect evidence as failure. A passing report must satisfy every oracle check for every benchmark case.
 
 ## Scoring System
 
-The evaluator now produces a 0-100 score for real run reports. Pass/fail remains the hard gate: a report with failed oracle checks is still rejected even when a partial score can be computed.
+The evaluator now produces a 0-100 scenario-compliance score for real run reports. Pass/fail remains the hard gate: a report with failed oracle checks is still rejected even when a partial score can be computed.
 
 The scoring model is declared in `evals/skills-suite/manifest.json` under `scoring_model` so suite comparisons use an auditable contract instead of hidden weights.
 
@@ -166,9 +171,9 @@ node scripts/evaluate-skills.mjs \
 
 `goal_verification` is scored from `goal_verified` and `goal_covers` oracle checks. Each check verifies that a goal document covers its stated targets. Missing checks lower the score proportionally.
 
-## Forge vs No-Forge Comparison
+## Experimental Forge vs No-Forge Comparison
 
-Forge effectiveness must be compared against a no-Forge baseline, not only against its own oracle. The runner supports two prompt modes:
+Forge-vs-baseline uplift is an experimental comparison over this compliance suite, not a standalone effectiveness claim. The runner supports two prompt modes:
 
 ```bash
 node scripts/run-skills-benchmark.mjs \
@@ -201,12 +206,12 @@ The comparison passes only when:
 - the Forge report itself passes the normal hard oracle gate;
 - both arms include repeated samples for the selected case set, with distinct `evidence_id` values;
 - Forge's confidence interval lower bound is greater than the no-Forge baseline upper bound;
-- Forge point-estimate score is at least `2.0x` the no-Forge baseline score, configurable with `--min-score-ratio`;
+- Forge fair-comparison point-estimate score is at least `2.0x` the no-Forge baseline fair-comparison score, configurable with `--min-score-ratio`;
 - Forge oracle-derived pass rate is not worse than the baseline pass rate.
 
 The 2.0x threshold is currently calibrated from 2 selected n=1 cases (guide-shortest-chain, default-chain-small-feature), not a suite-level result. It must not be cited as a suite-level effectiveness claim until a full 21-case multi-run comparison with variance and confidence intervals is published.
 
-Baseline reports are allowed to fail oracle checks because those failures are the measured comparison signal. They must still be valid v2 report shapes over the selected cases.
+Baseline reports are allowed to fail oracle checks because those failures are the measured comparison signal. They must still be valid v2 report shapes over the selected cases. Treat this comparison as a diagnostic until a held-out or externally reviewed effectiveness suite exists.
 
 ## Evaluation Discipline
 
@@ -216,4 +221,4 @@ Baseline reports are allowed to fail oracle checks because those failures are th
 - Mark interrupted runs as incomplete instead of failed skill behavior.
 - Compare suites by pass rate, scope control, verification evidence, and user intervention count.
 - Treat score deltas as diagnostic signals, not as release approval when any hard oracle fails.
-- Evaluate skill prose with `plugins/forge/skills/shared/rubrics/skill-quality.md`; runtime evidence remains the release gate.
+- Evaluate skill prose with `plugins/forge/skills/shared/rubrics/skill-quality.md`; runtime scenario-compliance evidence remains the release gate for this suite.

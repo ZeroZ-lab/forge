@@ -561,11 +561,15 @@ test('skills-suite evaluator compares Forge against a no-Forge baseline', () => 
   );
   const comparison = JSON.parse(fs.readFileSync(comparePath, 'utf8'));
 
-  assert.match(output, /Forge vs no-Forge/);
+  assert.match(output, /Forge vs no-Forge \(fair-comparison\)/);
   assert.equal(comparison.statistical_gate.passed, true);
   assert.ok(comparison.uplift.score_ratio >= 2);
   assert.equal(comparison.uplift.score_ratio_passed, true);
   assert.equal(comparison.uplift.pass_rate_not_worse, true);
+  assert.match(
+    output,
+    new RegExp(`Forge vs no-Forge \\(fair-comparison\\): ${comparison.forge.score}/100 vs ${comparison.baseline.score}/100`),
+  );
   // fair comparison model must be declared and exclude schema-only axes
   assert.match(comparison.scoring_model, /fair-comparison/);
   assert.match(comparison.scoring_model, /scope_control/);

@@ -35,7 +35,7 @@
 | PD4 | 计划与状态 | 对话/issue tracker | 它们是执行状态，不是项目事实 | `plan.md` / `status.md` |
 | PD5 | 测试场景 | 自动化场景以测试代码为源 | 避免 AC、场景文档和代码三份漂移 | 默认 `test-cases.md` |
 | PD6 | 插件结构 | skills flat list + shared deep modules | 兼容发现机制，同时集中共享知识 | 嵌套发布 skills |
-| PD7 | 有效性证据 | runtime benchmark + validator/tests | 文档质量不能证明 skill 行为 | 仅静态审阅 |
+| PD7 | 评测证据分层 | compliance/regression harness + validator/tests；独立有效性需 held-out/external suite | 文档质量和固定场景合规都不能单独证明真实项目效果 | 把 skills-suite 分数当独立质量证明 |
 
 ## 文档约束
 
@@ -68,4 +68,4 @@ npm run metrics:chars
 
 - 过度压缩可能把真正独立的产品、设计、合规或运维责任塞回 goal；独立产物门用于防止这一点。
 - optional artifact 若重复 goal/project，将重新产生漂移；review 必须检查单一事实源。
-- benchmark contract 只证明评测定义完整；真实 skill 效果必须由 agent run report 证明。
+- skills-suite 是固定场景的 compliance/regression harness；benchmark contract 只证明评测定义完整，run report 只证明该固定场景合规。真实 skill 效果必须由 held-out 或外部审阅的 effectiveness suite 另证。

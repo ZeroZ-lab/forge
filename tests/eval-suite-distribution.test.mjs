@@ -111,6 +111,37 @@ test('eval-suite manifest description does not overclaim "non-redundant"', () =>
   assert.match(description, /skip-frontend/i, 'manifest description must disclose the skip-frontend overlap');
 });
 
+test('eval-suite is positioned as compliance/regression, not independent effectiveness proof', () => {
+  const positioningDocs = [
+    ['README.md', path.join(root, 'README.md')],
+    ['docs/skill-suite-evaluation.md', path.join(root, 'docs', 'skill-suite-evaluation.md')],
+    ['evals/skills-suite/README.md', suiteReadmePath],
+  ];
+  const oldOverclaims = [
+    /A run proves skill effectiveness/i,
+    /Forge effectiveness must be compared/i,
+    /main product-value claims/i,
+    /What It Proves/i,
+    /independent quality benchmark(?![^.]*not)/i,
+  ];
+
+  for (const [label, filePath] of positioningDocs) {
+    const content = fs.readFileSync(filePath, 'utf8');
+    assert.match(
+      content,
+      /compliance\/regression harness/i,
+      `${label} must state the compliance/regression harness positioning`,
+    );
+    for (const pattern of oldOverclaims) {
+      assert.doesNotMatch(content, pattern, `${label} must not revive the old effectiveness-proof framing`);
+    }
+  }
+
+  const description = manifest.description ?? '';
+  assert.match(description, /compliance\/regression contract/i);
+  assert.match(description, /not an independent real-world effectiveness benchmark/i);
+});
+
 // M2 docs-honesty guard: every doc that makes a 2.0x comparison-gate claim
 // must carry the "n=1, not suite-level" caveat (the 2.0x threshold is currently
 // calibrated from 2 selected n=1 cases, not a suite-level result), and the

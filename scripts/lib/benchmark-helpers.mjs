@@ -29,15 +29,17 @@ export function markdownTableCell(value) {
 
 export function sanitizeNoForgeFixture(fixture) {
   const forgeSpecificPatterns = [
-    /Forge/i,
+    /\bForge\b/i,
     /默认主链/,
     /detail\s*->\s*codegen\s*->\s*review/,
     /Change Unit/i,
     /goal verification/i,
     /goal_verification/i,
     /goal_coverage_entries/i,
-    /trigger/i,
-    /skill/i,
+    /triggered_skills/i,
+    /expected_skills/i,
+    /Trigger only .*default chain skills/i,
+    /trigger .*Forge .*skills?/i,
     /docs\/change-units/i,
     /docs\/project\.md/,
   ];

@@ -195,6 +195,8 @@ test('no-Forge fixture sanitizer removes Forge scoring instructions', () => {
     '',
     '- 创建 `docs/features/task-archive/goal.md`。',
     '- 创建 `docs/change-units/CU-*.md`。',
+    '- triggered_skills 必须包含 detail、codegen、review。',
+    '- Preserve product skill trigger schedules for user-created automations.',
     '',
     'Expected behavior:',
     '',
@@ -208,6 +210,9 @@ test('no-Forge fixture sanitizer removes Forge scoring instructions', () => {
   assert.doesNotMatch(sanitized, /detail -> codegen -> review/);
   assert.match(sanitized, /docs\/features/);
   assert.doesNotMatch(sanitized, /docs\/change-units/);
+  assert.doesNotMatch(sanitized, /triggered_skills/);
+  assert.doesNotMatch(sanitized, /Trigger only the default chain skills/);
+  assert.match(sanitized, /Preserve product skill trigger schedules/);
   assert.match(sanitized, /实现要求/);
 });
 
