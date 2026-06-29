@@ -16,7 +16,7 @@ when_to_use: Use when a feature needs a goal before implementation, detail stage
 
 ## 流程
 
-**Phase 0**：建 `docs/features/<feature>/goal.md`；首屏含目标/边界/完成标准，FD# 决策，module 索引，goal coverage（覆盖哪些 `src/`、`tests/`、module/发布面）。
+**Phase 0**：建 `docs/features/<feature>/goal.md`；首屏含目标/边界/完成标准，FD# 决策，module 索引，goal coverage（覆盖哪些 `src/`、`tests/`、module/发布面）。完成标准可用 EARS 或 BDD `Given / When / Then`，但必须收敛为带 AC# 的权威行为合同，不生成完整 BDD 用例集。
 
 **Phase 1: API 设计**：有后端才加载 `api-design`；API 先于 DB，记录 DB/前端/测试等下游依赖的单一权威。
 
@@ -28,6 +28,6 @@ when_to_use: Use when a feature needs a goal before implementation, detail stage
 
 ## 红旗/出口
 
-红旗：缺需求却完整生成；前端不明却加载 frontend-design；纯后端仍生成前端/设计合同；goal/module 重复不一致；静默否决 PRD 点名技术；范围不清却级联；看到偏差/复审信号却 fresh detail。
+红旗：缺需求却完整生成；前端不明却加载 frontend-design；纯后端仍生成前端/设计合同；goal/module 重复不一致；静默否决 PRD 点名技术；范围不清却级联；看到偏差/复审信号却 fresh detail；把 BDD 场景写成第二份验收事实。
 
 出口：goal 首屏完整；必要 modules 完整；goal coverage 覆盖 `src/` / `tests/` / modules；下游依赖和 downstream gap 已记录；冲突已交用户。历史只汇总一次。

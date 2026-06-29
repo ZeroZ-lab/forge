@@ -41,7 +41,7 @@ Do not create:
 
 - `changelog.md`, `timeline.md`, `status.md`, or `trace-*.md`;
 - `plan.md` or standalone review reports;
-- `testing/test-cases.md`;
+- `testing/test-cases.md` or `.feature` use-case libraries;
 - idea briefs or stage-completion reports.
 
 Task sequences belong in the current conversation or issue tracker. Automated scenarios belong in test code. Change history and verification evidence belong in the Change Unit. Derived views may be generated from Change Units outside the project fact model, but are not maintained as source documents.

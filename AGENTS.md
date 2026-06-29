@@ -12,7 +12,7 @@ Forge 默认服务已有项目上的小功能迭代：
 | 边界不清 | `define → detail → codegen → review` |
 | 局部 bugfix | 读 goal/代码 → 最小修复 → 回归验证 → review |
 
-`plan`、`test`、`deploy`、`research`、`think` 按风险启用，不因生命周期阶段存在就自动生成文档。
+`plan`、`test`、`deploy`、`research`、`think` 按风险启用，不因生命周期阶段存在就自动生成文档。BDD 是跨阶段行为表达与追溯方式，不是独立阶段或默认文档类型。
 
 当前发布：24 个决策协议 + 1 个显式 guide。
 
@@ -59,11 +59,11 @@ project/
 
 否则：
 
-- 探索、计划、场景矩阵、review 和 thinking 留在对话/issue；
+- 探索、计划、BDD/场景矩阵、review 和 thinking 留在对话/issue；
 - 接受的结论写回 project、goal、module、ADR、测试或 CU；
 - 自动化场景写进测试代码。
 
-默认不创建 `changelog.md`、`timeline.md`、`status.md`、`trace-*.md`、`plan.md`、`testing/test-cases.md` 或 idea brief。
+默认不创建 `changelog.md`、`timeline.md`、`status.md`、`trace-*.md`、`plan.md`、`testing/test-cases.md`、`.feature` 用例库或 idea brief。
 
 ## 核心纪律（D1–D10）
 
@@ -92,7 +92,7 @@ project/
 | plan | 对话/issue 中的任务序列 | 不创建 plan.md |
 | codegen | src + tests + CU | 不创建 Trace |
 | test-strategy | 对话中的风险策略 | 独立 QA/合规治理时 strategy |
-| test-cases | 场景矩阵/测试代码 | 不创建 test-cases.md |
+| test-cases | BDD 场景矩阵/测试代码 | 不创建 test-cases.md |
 | review | 对话 findings | 只有权威文档变更才写 CU |
 | deploy | 对话发布清单 | 生产/迁移/回滚交接时 deploy plan |
 | think | 对话分析 | 多决策复用且有失效条件时 thinking |

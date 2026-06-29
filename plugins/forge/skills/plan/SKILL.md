@@ -23,8 +23,8 @@ when_to_use: Use when work spans multiple modules, has ordering or parallelizati
 
 1. 按可独立验证的用户价值切片，不按 controller/service/repository 横切。
 2. 标出依赖、可并行任务、关键路径和最早风险验证点。
-3. 每个任务绑定来源 AC/FD、修改范围、完成证据和停止条件。
-4. 从 AC 推导测试场景类别，但不创建测试用例文档。
+3. 每个任务绑定来源 AC#/FD、修改范围、完成证据和停止条件。
+4. 从 AC# 推导 BDD 场景类别（正常、边界、错误、权限等），但不创建测试用例文档。
 5. 让 codegen 能逐片实现、验证和安全停止。
 
 ## 产出
@@ -34,6 +34,7 @@ when_to_use: Use when work spans multiple modules, has ordering or parallelizati
 - 任务序列；
 - 依赖与并行关系；
 - 风险优先级；
+- 每片引用的 AC# 与 BDD 场景类别；
 - 每片验证命令/证据；
 - 未解决决策。
 

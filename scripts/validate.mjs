@@ -444,10 +444,25 @@ assertIncludes('plugins/forge/skills/test-cases/SKILL.md', [
   '测试代码',
   '不创建 `testing/test-cases.md`',
 ]);
+const bddProtocolMarkers = {
+  'docs/project.md': ['BDD 是行为表达与追溯协议', '`goal.md` AC', '`.feature`'],
+  'AGENTS.md': ['BDD 是跨阶段行为表达与追溯方式', 'BDD/场景矩阵', '`.feature` 用例库'],
+  'plugins/forge/skills/shared/goal-template.md': ['AC#', 'Given / When / Then', 'BDD 场景只能表达 AC'],
+  'plugins/forge/skills/define/SKILL.md': ['BDD 例子', 'AC#', '不创建 `.feature`'],
+  'plugins/forge/skills/detail/SKILL.md': ['Given / When / Then', 'AC#', '不生成完整 BDD 用例集'],
+  'plugins/forge/skills/plan/SKILL.md': ['AC#', 'BDD 场景类别', '不创建测试用例文档'],
+  'plugins/forge/skills/test-cases/SKILL.md': ['AC# / Given / When / Then / 层级 / 是否自动化 / 风险', '不创建 `testing/test-cases.md` 或 `.feature` 用例库'],
+  'plugins/forge/skills/codegen/SKILL.md': ['BDD 场景必须回链 AC#', '测试名或断言保留 AC#'],
+  'plugins/forge/skills/review/SKILL.md': ['AC 无测试、测试无 AC#、场景改写 AC'],
+};
+for (const [file, markers] of Object.entries(bddProtocolMarkers)) {
+  assertIncludes(file, markers);
+}
 assertIncludes('plugins/forge/skills/shared/concepts/artifact-policy.md', [
   '## Default durable sources',
   '## Independent-artifact gate',
   '## Non-artifacts by default',
+  '.feature',
 ]);
 
 const deploySkillPath = 'plugins/forge/skills/deploy/SKILL.md';
@@ -531,6 +546,7 @@ if (exists('docs/features')) {
 
   for (const file of filesUnder('docs/features')) {
     assert(!/\/trace-[^/]+\.md$/.test(file), `${file}: Trace is superseded by the Change Unit`);
+    assert(!/\.feature$/.test(file), `${file}: BDD scenarios must trace goal AC and not become default .feature artifacts`);
   }
 }
 

@@ -19,7 +19,7 @@ when_to_use: Use when the user asks to review changes, inspect a diff, audit doc
 
 文档审查：查 WHAT/WHY/CONSTRAINTS、`[NEEDS CLARIFICATION]`、一致性、边界、接口、依赖、验收、人类决策。
 
-代码审查：查实现是否满足 goal/modules；API、数据模型、错误码、权限、测试、FD#/PD#/DB#/AC# 是否对齐。
+代码审查：查实现是否满足 goal/modules；API、数据模型、错误码、权限、测试、FD#/PD#/DB#/AC# 是否对齐；BDD 场景、测试名和断言是否追溯 AC# 且未改写 AC。
 
 Safe-stop lens：bugfix 无 red-capable 命令时，只查 `src/`、`tests/`、project/goal 文档未改，未伪造 regression test，证据请求、`未验证风险` 和 `safe stop` 已记录。
 
@@ -37,6 +37,6 @@ P0/P1 代码风险默认用独立 subagent；主控保留裁决。单文件 lens
 
 ## 红旗/出口
 
-红旗：只总结不列问题；只看格式不做目标对照；不读相关 CU 就否定既有决策；测试通过但代码和合约不一致；文档缺 WHY 却放行；发现问题后不复审/不归因。
+红旗：只总结不列问题；只看格式不做目标对照；不读相关 CU 就否定既有决策；测试通过但代码和合约不一致；AC 无测试、测试无 AC#、场景改写 AC；文档缺 WHY 却放行；发现问题后不复审/不归因。
 
 出口：列 P0/P1/P2；P0/P1 必有位置、证据、影响、建议；无问题也说明测试缺口和残余风险。历史遵循 `../shared/concepts/history-maintenance.md`；只读 findings 不落盘，改变权威文档/发布/方法论时持久化。

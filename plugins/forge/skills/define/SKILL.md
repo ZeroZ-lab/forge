@@ -24,11 +24,11 @@ when_to_use: Use when the user describes a feature with unclear scope, asks to d
 
 ### 第二步：场景覆盖（Scenario）
 
-用用户故事覆盖正常、边界、错误和权限路径。每条故事只表达一个可观察行为。
+用用户故事和 BDD 例子覆盖正常、边界、错误和权限路径。每条故事只表达一个可观察行为，BDD 例子用于发现验收边界，不成为独立用例库。
 
 ### 第三步：验收确认（Verify）
 
-把场景转成 Given-When-Then 或 EARS。验收必须能被测试、手动验证或明确标注不可自动化。
+把场景转成带 AC 编号的 Given-When-Then 或 EARS。验收必须能被测试、手动验证或明确标注不可自动化。
 
 ## 决策点
 
@@ -38,7 +38,7 @@ when_to_use: Use when the user describes a feature with unclear scope, asks to d
 
 ### R2: 验收条件（验收阶段）
 
-每条 AC 必须有输入、动作、预期输出和失败边界。
+每条 AC 必须有输入、动作、预期输出和失败边界；BDD 写法必须能追溯到 AC#。
 
 ### R3: 非功能需求（约束阶段）
 
@@ -50,7 +50,7 @@ when_to_use: Use when the user describes a feature with unclear scope, asks to d
 
 ### R5: 验收测试（验收阶段）
 
-列出用户如何确认完成；给测试实现和 codegen 提供 AC 编号。
+列出用户如何确认完成；给 test-cases 和 codegen 提供 AC#，不创建 `.feature` 或 `testing/test-cases.md` 默认事实源。
 
 ## 文档约束
 

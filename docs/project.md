@@ -33,7 +33,7 @@
 | PD2 | 默认事实源 | project + goal/modules + CU | 三类事实分别覆盖共享约束、当前目标和演化证据 | changelog/timeline/trace 并存 |
 | PD3 | 额外文档 | 独立产物门 | 文档必须有独立责任，而非阶段映射 | 每个 skill 固定产物 |
 | PD4 | 计划与状态 | 对话/issue tracker | 它们是执行状态，不是项目事实 | `plan.md` / `status.md` |
-| PD5 | 测试场景 | 自动化场景以测试代码为源 | 避免 AC、场景文档和代码三份漂移 | 默认 `test-cases.md` |
+| PD5 | BDD 与测试场景 | BDD 是行为表达与追溯协议；权威行为合同在 `goal.md` AC，自动化场景以测试代码为源 | 避免 AC、场景文档、`.feature` 和代码多份漂移 | 默认 `test-cases.md` / `.feature` 用例库 |
 | PD6 | 插件结构 | skills flat list + shared deep modules | 兼容发现机制，同时集中共享知识 | 嵌套发布 skills |
 | PD7 | 评测证据分层 | compliance/regression harness + validator/tests；独立有效性需 held-out/external suite | 文档质量和固定场景合规都不能单独证明真实项目效果 | 把 skills-suite 分数当独立质量证明 |
 
@@ -42,6 +42,7 @@
 - `docs/project.md`：共享决策、约束和领域语言。
 - `docs/features/<feature>/goal.md`：feature 唯一核心合约。
 - `modules/*.md`：可选公共接口、不变量、依赖；不复制完成标准。
+- BDD 场景不得成为第二事实源；`Given / When / Then` 只能表达或追溯 AC，完整场景矩阵默认留在对话/issue 或测试代码。
 - `docs/change-units/CU-*.md`：唯一变更历史与验证证据。
 - `AGENTS.md`：运行时适配层，不复制业务事实。
 - `CLAUDE.md`：可选薄入口。
