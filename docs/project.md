@@ -36,6 +36,7 @@
 | PD5 | 测试场景 | 自动化场景以测试代码为源 | 避免 AC、场景文档和代码三份漂移 | 默认 `test-cases.md` |
 | PD6 | 插件结构 | skills flat list + shared deep modules | 兼容发现机制，同时集中共享知识 | 嵌套发布 skills |
 | PD7 | 评测证据分层 | compliance/regression harness + validator/tests；独立有效性需 held-out/external suite | 文档质量和固定场景合规都不能单独证明真实项目效果 | 把 skills-suite 分数当独立质量证明 |
+| PD8 | 图表技术 | Mermaid 优先，PlantUML 兜底；图内联进权威文档，不建独立散图 | GitHub 原生渲染零依赖符合 D4，单一兜底避免工具栈膨胀，内联避免图与文档漂移 | 引入 D2/Structurizr/Kroki；用 Excalidraw/draw.io 存二进制 |
 
 ## 文档约束
 
@@ -53,6 +54,7 @@
 - 候选 skill 进入 `experiments/skills/`；退役 skill 进入 `archive/skills/`。
 - Claude/Codex manifest 与 `package.json` 版本保持一致。
 - 默认链路和全部 SKILL.md 受 token gate 约束。
+- 图表选型与放置遵循 `plugins/forge/skills/shared/concepts/diagram-policy.md`：Mermaid 优先，PlantUML 兜底，内联进权威文档。
 - 变更以最窄有效的 tests、validator、evaluator 和 token metrics 验证。
 
 ## 关键命令

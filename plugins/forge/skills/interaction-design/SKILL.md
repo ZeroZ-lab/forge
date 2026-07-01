@@ -60,6 +60,8 @@ loading、empty、error、disabled、success、undo、confirm、权限和移动�
 
 遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。默认把必要的流程、状态和异常约束写入 `goal.md` 或对应 module。只有复杂流程需要独立设计 review、交付或更新时，才用 `${CLAUDE_SKILL_DIR}/references/interaction-template.md` 创建 `interaction-spec.md`。
 
+流程图、状态图、时序图按 PD8 选型，遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/diagram-policy.md`：Mermaid 优先，PlantUML 仅在 Mermaid 表达不了时兜底；图内联进权威文档，不建独立散图文件。
+
 ## 入口/出口条件
 
 入口：用户路径不清、UI flow 需设计或 review。出口：frontend-design 能据此拆组件和数据流。
