@@ -24,5 +24,5 @@ Concentrate durable change evidence behind one internal interface. Skill modules
 ## Local exceptions
 
 - `review` persists only when the review changes durable documents, release state, or methodology.
-- `learn` persists only after the user confirms the archive decision.
+- `learn` persists only after the user confirms the archive decision inside the current project boundary; cross-project lessons remain suggestions until confirmed in their target project or global asset flow.
 - `think` may archive superseded thinking documents, but accepted conclusions must be written back to an authoritative source.

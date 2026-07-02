@@ -6,7 +6,7 @@ when_to_use: Use when the user asks to review changes, inspect a diff, audit doc
 
 # Review — 独立审查
 
-找会导致目标未达成、错误发布或未来验证失败的问题；不是总结优点。审 project/goal/modules/CU/src/tests。Refs: `references/review-protocol.md`, `../shared/concepts/artifact-policy.md`.
+找会导致目标未达成、错误发布或未来验证失败的问题；不是总结优点。审 project/goal/modules/CU/src/tests。Refs: `references/review-protocol.md`, `../shared/concepts/artifact-policy.md`, `../shared/concepts/delegation-matrix.md`.
 
 ## 硬门
 
@@ -27,7 +27,7 @@ Safe-stop lens：bugfix 无 red-capable 命令时，只查 `src/`、`tests/`、p
 
 ## 独立性/优先级
 
-P0/P1 代码风险默认用独立 subagent；主控保留裁决。单文件 lens、纯文档或无 subagent 时可主控自审并声明残余风险。
+P0/P1 代码风险按 delegation matrix 默认用独立 subagent；主控保留裁决。单文件 lens、纯文档或无 subagent 时可主控自审并声明残余风险。
 
 - P0：错误实现、数据损坏、安全漏洞、无法发布。
 - P1：重要行为偏离、测试失真、未来验证失败。

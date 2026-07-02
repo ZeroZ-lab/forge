@@ -35,7 +35,7 @@
 | D10 级别 | 证据要求 |
 |---------|---------|
 | L0 / L1 | ≥1 命令回执,对话可见即可 |
-| L2 / L3 | 命令回执**写入 Change Unit 的 Evidence 段** + 关键路径(触及 P0/P1 风险)走独立 subagent 复核 |
+| L2 / L3 | 命令回执**写入 Change Unit 的 Evidence 段** + 关键路径(触及 P0/P1 风险)按 `${CLAUDE_SKILL_DIR}/../shared/concepts/delegation-matrix.md` 走独立 subagent 复核 |
 
 降级不缩小验证地板:L0 也必须有 ≥1 命令回执,只是不需要落盘和 subagent。
 
@@ -52,4 +52,4 @@
 
 ## 边界(已知限制)
 
-本文件定义的是**skill 文档层**的约束。它要求模型交出命令回执,但**无法在 harness 层面校验命令输出是否被伪造**——模型可以编造一个看起来真实的 `npm test` 输出。彻底堵这个洞需要运行时执行回执(超出 skill 文档能力范围)。review 的独立 subagent 复核是当前 suite 内对「伪造输出」的唯一压力。
+本文件定义的是**skill 文档层**的约束。它要求模型交出命令回执,但**无法在 harness 层面校验命令输出是否被伪造**——模型可以编造一个看起来真实的 `npm test` 输出。彻底堵这个洞需要运行时执行回执(超出 skill 文档能力范围)。按 delegation matrix 触发的独立复核是当前 suite 内对「伪造输出」的唯一压力。

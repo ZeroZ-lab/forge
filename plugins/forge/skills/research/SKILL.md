@@ -64,6 +64,8 @@ when_to_use: Use when requirements include realtime/collaboration, search/rankin
 
 遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md`。只有研究证据有独立复核、交接或长期复用责任时，才用 `${CLAUDE_SKILL_DIR}/references/research-brief-template.md` 创建 `research-brief.md`。
 
+仅当出现**标准件密集信号**（前端框架 / SDK / ORM / 认证服务 / 部署平台等成熟生态领域）时，可选输出 buy-vs-build 矩阵（能力 / 候选标准件 / 选择理由 / 不适用场景 / 是否自研），见 `${CLAUDE_SKILL_DIR}/references/buy-vs-build-matrix-template.md`。后端核心服务、算法/模型、基础设施等生态稀薄场景不强求填表——走默认算法菜单，不套本矩阵。矩阵默认对话输出，接受的选型写回 `project.md` 或 ADR，不落 durable 文件。
+
 ## 入口/出口条件
 
 入口：PRD/goal 有技术信号或用户显式要求研究。出口：用户能基于菜单做决策，并知道下一步 POC 或 detail 写入哪些约束。

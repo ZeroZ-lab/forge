@@ -24,7 +24,11 @@ when_to_use: Use when a feature needs a goal before implementation, detail stage
 
 **Phase 3**：有前端才加载 `frontend-design`。纯后端必须记录 `no frontend` 或 `skip design` 决策和理由，不加载 frontend-design/interaction-design/fe-system。
 
-**Phase 4**：编号无冲突；仅 goal 不足以表达公共接口/不变量时建 modules；接口签名、AC、路径、依赖只留单一权威，冲突交用户。
+**Phase 4**：编号无冲突；建 modules 用**双轴判据**：(1) 文档必要性——goal 不足以表达公共接口/不变量；(2) 生成稳定性——该单元能否被 AI 一次可控生成、人能否独立验收。两轴交集定粒度。接口签名、AC、路径、依赖只留单一权威，冲突交用户。
+
+- 过细反例：Button/Title/Icon 级——标准件已有或无独立验收价值，不建 module。
+- 过粗反例：一个 module 塞多个无法独立验收的单元——AI 单次生成失控，应拆。
+- 文档必要性仍是首要轴；生成稳定性是叠加判据，不替代它。
 
 ## 红旗/出口
 
