@@ -23,6 +23,24 @@ node scripts/evaluate-skills.mjs --report path/to/report.json
 No-report mode must not be used as evidence that the skills are effective. It only proves the evaluation harness is intact.
 Even a passing run report is scenario-compliance evidence for this suite, not a suite-level effectiveness claim.
 
+## Held-Out Effectiveness Contract
+
+Real-world effectiveness probes live separately in `evals/effectiveness-suite/`.
+That suite defines five held-out task classes: small feature vertical slice,
+bugfix red-capable loop, frontend buy-vs-build, delegation, and learn boundary.
+
+Run:
+
+```bash
+npm run eval:effectiveness
+```
+
+This validates the held-out task contract only. It does not run Codex and does
+not claim Forge is effective. Effectiveness requires Forge and no-Forge runs,
+at least two repeats per case and mode, runtime evidence, and human/external
+review over goal completion, scope control, verification strength, doc drift,
+and human reviewability.
+
 ## Token Footprint Gate
 
 Runtime token cost is measured on loaded `SKILL.md` files, not on every packaged reference file. The default high-frequency chain is:

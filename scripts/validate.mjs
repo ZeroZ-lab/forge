@@ -5,6 +5,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { loadBenchmarkContract } from './lib/benchmark-contract.mjs';
+import { loadEffectivenessContract } from './lib/effectiveness-contract.mjs';
 import { loadRegistry } from './lib/registry.mjs';
 
 const root = process.cwd();
@@ -89,6 +90,7 @@ assert(
 assert(packageJson.scripts?.validate === 'node scripts/validate.mjs', 'package.json: missing scripts.validate');
 assert(packageJson.scripts?.test === "node --test 'tests/*.test.mjs'", 'package.json: missing scripts.test');
 assert(packageJson.scripts?.['eval:skills'] === 'node scripts/evaluate-skills.mjs', 'package.json: missing scripts.eval:skills');
+assert(packageJson.scripts?.['eval:effectiveness'] === 'node scripts/validate-effectiveness-suite.mjs', 'package.json: missing scripts.eval:effectiveness');
 assert(packageJson.scripts?.['eval:skills:run'] === 'node scripts/run-skills-benchmark.mjs', 'package.json: missing scripts.eval:skills:run');
 assert(packageJson.scripts?.['metrics:chars'] === 'node scripts/measure-char-footprint.mjs', 'package.json: missing scripts.metrics:chars');
 assert(packageJson.scripts?.['plugin:install:local'] === 'node scripts/install-local-codex-plugin.mjs', 'package.json: missing scripts.plugin:install:local');
@@ -315,6 +317,11 @@ try {
   loadBenchmarkContract(root, runtimeRegistry);
 } catch (error) {
   for (const issue of error.issues ?? [error.message]) fail(`evals/skills-suite/manifest.json: ${issue}`);
+}
+try {
+  loadEffectivenessContract(root);
+} catch (error) {
+  for (const issue of error.issues ?? [error.message]) fail(`evals/effectiveness-suite/manifest.json: ${issue}`);
 }
 
 const requiredProtocols = {

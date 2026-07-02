@@ -23,6 +23,7 @@ disable-model-invocation: true
    - patch：局部修正并验证。
    - stage：显式执行完整阶段并维护产物。
 4. 推荐最短链路，并逐项说明为什么启用或跳过。描述子 skill 时只引用职责和出口，不复制 child methodology，不猜 bug 根因。
+5. 上下文重或高风险时引用 delegation matrix：多文件/长日志派调查，P0/P1/安全/迁移/发布只派分析或审查，最终判断不外包。
 
 ## 路由基线
 

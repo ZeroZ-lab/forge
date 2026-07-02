@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "name": "forge-effectiveness-suite",
+  "description": "Held-out real-task contract for comparing Forge and no-Forge behavior. Contract validation proves task coverage only; effectiveness requires real multi-run reports and external or human review.",
+  "minimum_cases": 5,
+  "required_repeats": 2,
+  "modes": ["forge", "no-forge"],
+  "metrics": [
+    "goal_completion",
+    "scope_control",
+    "verification_strength",
+    "doc_drift",
+    "human_reviewability"
+  ],
+  "cases": [
+    {
+      "id": "small-feature-vertical-slice",
+      "title": "Small feature vertical slice",
+      "scenario": "small-feature",
+      "fixture": "evals/effectiveness-suite/fixtures/small-feature-vertical-slice.md",
+      "success_signals": [
+        "feature delivered as one independently verifiable slice",
+        "minimal authoritative docs only",
+        "runtime or test command evidence present"
+      ],
+      "failure_signals": [
+        "generated horizontal layer piles without a working slice",
+        "created plan/status/changelog drift",
+        "claimed completion without command evidence"
+      ],
+      "human_review_prompts": [
+        "Can a reviewer run or inspect one closed user workflow?",
+        "Did documentation stay proportional to the feature?"
+      ]
+    },
+    {
+      "id": "bugfix-red-capable-loop",
+      "title": "Bugfix red-capable loop",
+      "scenario": "bugfix",
+      "fixture": "evals/effectiveness-suite/fixtures/bugfix-red-capable-loop.md",
+      "success_signals": [
+        "reproduction fails before implementation change",
+        "regression test targets the real seam",
+        "original scenario is rechecked after the fix"
+      ],
+      "failure_signals": [
+        "guessed root cause without a failing signal",
+        "added a test that would pass before the fix",
+        "changed unrelated implementation"
+      ],
+      "human_review_prompts": [
+        "Could the test fail on the original bug?",
+        "Is the patch smaller than the diagnosis?"
+      ]
+    },
+    {
+      "id": "frontend-standard-piece-choice",
+      "title": "Frontend standard-piece choice",
+      "scenario": "frontend-buy-vs-build",
+      "fixture": "evals/effectiveness-suite/fixtures/frontend-standard-piece-choice.md",
+      "success_signals": [
+        "mature UI/form/auth/deploy options considered",
+        "business-specific code is separated from commodity pieces",
+        "buy/build rationale is reviewable"
+      ],
+      "failure_signals": [
+        "reimplemented commodity components without reason",
+        "mixed adapters with business logic",
+        "selected a standard piece without an inapplicability boundary"
+      ],
+      "human_review_prompts": [
+        "Which pieces were bought versus built, and why?",
+        "What condition would trigger replacing the choice?"
+      ]
+    },
+    {
+      "id": "delegation-context-heavy-review",
+      "title": "Delegation for context-heavy review",
+      "scenario": "delegation",
+      "fixture": "evals/effectiveness-suite/fixtures/delegation-context-heavy-review.md",
+      "success_signals": [
+        "context-heavy search is delegated or explicitly kept local with reason",
+        "subagent output is treated as evidence, not final judgment",
+        "high-risk decisions stay with the orchestrator/human"
+      ],
+      "failure_signals": [
+        "orchestrator reads everything without narrowing decision surface",
+        "delegated high-risk final decision",
+        "forwarded long raw findings without synthesis"
+      ],
+      "human_review_prompts": [
+        "Did delegation reduce context load without losing accountability?",
+        "Can each conclusion be traced to evidence?"
+      ]
+    },
+    {
+      "id": "learn-cross-project-candidate",
+      "title": "Learn cross-project candidate",
+      "scenario": "learn-boundary",
+      "fixture": "evals/effectiveness-suite/fixtures/learn-cross-project-candidate.md",
+      "success_signals": [
+        "current-project archive decisions are separated from cross-project candidates",
+        "cross-project items stay suggestion-only",
+        "archive_target_confirmation remains the confirmation gate"
+      ],
+      "failure_signals": [
+        "wrote to global memory or another project",
+        "promoted one project rule as universal without confirmation",
+        "lost useful reusable findings instead of listing candidates"
+      ],
+      "human_review_prompts": [
+        "Which target owner must confirm the candidate?",
+        "What invalidates the candidate outside this project?"
+      ]
+    }
+  ]
+}

@@ -21,6 +21,8 @@ when_to_use: Use when the user asks to review changes, inspect a diff, audit doc
 
 代码审查：查实现是否满足 goal/modules；API、数据模型、错误码、权限、测试、FD#/PD#/DB#/AC# 是否对齐。
 
+Buy-vs-build lens：前端/认证/ORM/SDK/部署/组件等成熟生态场景，查是否有 buy/build 理由；无理由自研标准件归因 research/codegen。
+
 Safe-stop lens：bugfix 无 red-capable 命令时，只查 `src/`、`tests/`、project/goal 文档未改，未伪造 regression test，证据请求、`未验证风险` 和 `safe stop` 已记录。
 
 流程：声明范围/读取文件 → 建目标基线 → 先 P0/P1 后 P2 → findings 先行 → 阻塞修复后复审。
