@@ -30,6 +30,7 @@
 
 ```text
 repo/
+├── marketplace.json                     # 仓库根入口（zcode 等以仓库根扫描的客户端）
 ├── .agents/
 │   └── plugins/
 │       └── marketplace.json
@@ -138,6 +139,7 @@ Claude manifest 需要显式列出每个 skill：
 - `plugins/your-plugin/.claude-plugin/plugin.json`（version 字段）
 - `plugins/your-plugin/.codex-plugin/plugin.json`（version 字段）
 - `package.json`（version 字段）
+- `marketplace.json`（`plugins[].version`）
 - `plugins/your-plugin/.claude-plugin/marketplace.json`（`plugins[].version`）
 - `.agents/plugins/marketplace.json`（`plugins[].version`）
 - `.claude-plugin/marketplace.json`（`plugins[].version`）
@@ -145,7 +147,8 @@ Claude manifest 需要显式列出每个 skill：
 manifest 的顶层 `version` 与各 marketplace 的 `plugins[].version` 必须同步更新。
 
 marketplace 必须带 version：部分客户端（如 zcode）通过 `marketplace.json` 的 `plugins[].version`
-检测更新，不写则永远检测不到新版本。`scripts/bump-version.mjs` 会同时更新所有这些位置，
+检测更新，不写则永远检测不到新版本。zcode 以仓库根为入口扫描，因此根目录 `marketplace.json`
+是它实际读取的清单，必须存在且带 version。`scripts/bump-version.mjs` 会同时更新所有这些位置，
 `scripts/validate.mjs` 会在发布前校验一致性。
 
 ## 推荐发布流程
@@ -172,6 +175,7 @@ marketplace 必须带 version：部分客户端（如 zcode）通过 `marketplac
 
 当前仓库可直接作为参考实现：
 
+- 根目录 marketplace（zcode 等仓库根扫描客户端）: `marketplace.json`
 - Codex marketplace: `.agents/plugins/marketplace.json`
 - Claude marketplace: `plugins/forge/.claude-plugin/marketplace.json`
 - Codex manifest: `plugins/forge/.codex-plugin/plugin.json`

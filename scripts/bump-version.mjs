@@ -21,6 +21,7 @@ const manifestFiles = [
 // Marketplace manifests. Clients such as zcode detect updates by comparing
 // `plugins[].version`, so the forge entry must carry the release version.
 const marketplaceFiles = [
+  'marketplace.json',
   '.claude-plugin/marketplace.json',
   'plugins/forge/.claude-plugin/marketplace.json',
   '.agents/plugins/marketplace.json',

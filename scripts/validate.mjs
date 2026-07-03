@@ -91,6 +91,7 @@ assert(
 // Marketplaces carry `plugins[].version` so update-aware clients (e.g. zcode)
 // can detect new releases. Every forge entry must match the release version.
 const marketplaceFiles = [
+  ['marketplace.json', json('marketplace.json')],
   ['.claude-plugin/marketplace.json', rootMarketplace],
   ['plugins/forge/.claude-plugin/marketplace.json', claudeMarketplace],
   ['.agents/plugins/marketplace.json', codexMarketplace],
