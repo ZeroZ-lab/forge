@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Improve — 架构加深机会发现
 
-Refs: references/module-depth.md, references/html-report-format.md, plugins/forge/skills/shared/concepts/artifact-policy.md, plugins/forge/skills/shared/concepts/history-maintenance.md.
+Refs: references/module-depth.md, references/html-report-format.md, ../shared/concepts/artifact-policy.md, ../shared/concepts/history-maintenance.md.
 
 ## 职责
 
@@ -39,7 +39,7 @@ Refs: references/module-depth.md, references/html-report-format.md, plugins/forg
 
 ## 文档约束
 
-遵循 `plugins/forge/skills/shared/concepts/artifact-policy.md`。
+遵循 `../shared/concepts/artifact-policy.md`。
 
 - 写：`.forge/improve/<scope>/index.html`（cache）+ 对话。
 - 不写：`CONTEXT.md`、`refactor-plan.md`、`trace-*.md`、候选独立文档、`docs/**` 架构事实。
@@ -65,4 +65,4 @@ Refs: references/module-depth.md, references/html-report-format.md, plugins/forg
 
 ## 历史维护
 
-遵循 `plugins/forge/skills/shared/concepts/history-maintenance.md`。生成缓存不写 CU；修改本 skill、references 才写 CU。
+遵循 `../shared/concepts/history-maintenance.md`。生成缓存不写 CU；修改本 skill、references 才写 CU。

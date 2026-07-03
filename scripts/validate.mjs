@@ -129,7 +129,9 @@ const skillCount = skillDirs.length;
 const guideCount = skillDirs.includes('guide') ? 1 : 0;
 const derivedViewSkills = ['architecture-view'];
 const derivedViewCount = derivedViewSkills.filter((skillName) => skillDirs.includes(skillName)).length;
-const protocolSkillCount = skillCount - guideCount - derivedViewCount;
+const discoverySkills = ['improve'];
+const discoveryCount = discoverySkills.filter((skillName) => skillDirs.includes(skillName)).length;
+const protocolSkillCount = skillCount - guideCount - derivedViewCount - discoveryCount;
 const skillLineLimit = 350;
 
 assert(skillDirs.length > 0, 'expected at least one skill');
@@ -264,6 +266,7 @@ for (const file of sharedKnowledgeFiles) {
 const historyAwareSkills = [
   'api-design',
   'architecture-view',
+  'improve',
   'brainstorm',
   'business-alignment',
   'codegen',
@@ -297,6 +300,7 @@ for (const skillName of historyAwareSkills) {
 const artifactAwareSkills = [
   'api-design',
   'architecture-view',
+  'improve',
   'brainstorm',
   'business-alignment',
   'codegen',
@@ -397,16 +401,17 @@ const marketplaceDescription = claudeMarketplace.plugins?.find((plugin) => plugi
 assert(
   marketplaceDescription.includes(`${skillCount} 个已发布 skill`) &&
     marketplaceDescription.includes(`${protocolSkillCount} 个决策协议`) &&
-    marketplaceDescription.includes(`${derivedViewCount} 个派生视图 skill`),
-  `plugins/forge/.claude-plugin/marketplace.json: forge description must mention ${skillCount} published skills, ${protocolSkillCount} protocol skills, and ${derivedViewCount} derived-view skills`,
+    marketplaceDescription.includes(`${derivedViewCount} 个派生视图 skill`) &&
+    marketplaceDescription.includes(`${discoveryCount} 个架构发现 skill`),
+  `plugins/forge/.claude-plugin/marketplace.json: forge description must mention ${skillCount} published skills, ${protocolSkillCount} protocol skills, ${derivedViewCount} derived-view skills, and ${discoveryCount} discovery skills`,
 );
 assert(
-  read('README.md').includes(`8 阶段 × ${protocolSkillCount} 个协议 Skill + ${derivedViewCount} 个派生视图 Skill + ${guideCount} 个 Guide`),
-  `README.md: must document ${protocolSkillCount} protocol skills + ${derivedViewCount} derived-view skills + ${guideCount} guide`,
+  read('README.md').includes(`8 阶段 × ${protocolSkillCount} 个协议 Skill + ${derivedViewCount} 个派生视图 Skill + ${discoveryCount} 个架构发现 Skill + ${guideCount} 个 Guide`),
+  `README.md: must document ${protocolSkillCount} protocol skills + ${derivedViewCount} derived-view skills + ${discoveryCount} discovery skills + ${guideCount} guide`,
 );
 assert(
-  read('AGENTS.md').includes(`${protocolSkillCount} 个决策协议 + ${derivedViewCount} 个派生视图 skill + ${guideCount} 个显式 guide`),
-  `AGENTS.md: must document ${protocolSkillCount} protocol skills + ${derivedViewCount} derived-view skills + ${guideCount} guide`,
+  read('AGENTS.md').includes(`${protocolSkillCount} 个决策协议 + ${derivedViewCount} 个派生视图 skill + ${discoveryCount} 个架构发现 skill + ${guideCount} 个显式 guide`),
+  `AGENTS.md: must document ${protocolSkillCount} protocol skills + ${derivedViewCount} derived-view skills + ${discoveryCount} discovery skills + ${guideCount} guide`,
 );
 assertIncludes('AGENTS.md', ['## 执行协议', '最小变更', '不引入未要求的抽象']);
 assertIncludes('plugins/forge/skills/init/references/agents-template.md', ['## 执行纪律', '权威文档', '最窄有效验证']);

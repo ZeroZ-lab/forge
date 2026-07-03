@@ -2,7 +2,7 @@
   "version": 2,
   "name": "forge-skills-suite-benchmark",
   "description": "A deterministic v2 compliance/regression contract for checking whether Forge skills follow routing, artifact, verification, scope-control, traceability, and goal-awareness expectations across 22 fixed cases (stage/patch/lens/analysis paths included); 3 skip-frontend cases (init-skip-frontend, detail-backend-only, design-skip-no-frontend) share one dimension and are not independent on that axis (see evals/skills-suite/README.md); not an independent real-world effectiveness benchmark.",
-  "minimum_cases": 22,
+  "minimum_cases": 23,
   "scoring_model": {
     "version": 1,
     "grade_thresholds": {
@@ -1581,6 +1581,75 @@
         {
           "type": "forbidden_behavior_absent",
           "behavior": "architecture_view_invented_confirmed_facts"
+        }
+      ]
+    },
+    {
+      "id": "improve-deepening-candidates",
+      "title": "Improve 只出自包含候选报告",
+      "level": "lens",
+      "fixture": "evals/skills-suite/fixtures/improve-deepening-candidates.md",
+      "expected_skills": [
+        "improve"
+      ],
+      "expected_artifacts": [
+        ".forge/improve/shallow-demo/index.html"
+      ],
+      "required_evidence": [
+        "derived-view",
+        "not-fact-source",
+        ".forge/improve/shallow-demo/index.html"
+      ],
+      "forbidden_behaviors": [
+        "improve_created_authoritative_doc",
+        "improve_created_change_unit",
+        "improve_invented_architecture_facts"
+      ],
+      "forbidden_files": [
+        "docs/improve-report.md",
+        "docs/refactor-plan.md",
+        "docs/change-units/CU-*.md"
+      ],
+      "oracle_checks": [
+        {
+          "type": "skill_triggered",
+          "skill": "improve"
+        },
+        {
+          "type": "artifact_reported",
+          "path": ".forge/improve/shallow-demo/index.html"
+        },
+        {
+          "type": "transcript_contains",
+          "text": "derived-view"
+        },
+        {
+          "type": "transcript_contains",
+          "text": "not-fact-source"
+        },
+        {
+          "type": "artifact_absent",
+          "path": "docs/improve-report.md"
+        },
+        {
+          "type": "artifact_absent",
+          "path": "docs/refactor-plan.md"
+        },
+        {
+          "type": "artifact_absent",
+          "path": "docs/change-units/CU-*.md"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "improve_created_authoritative_doc"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "improve_created_change_unit"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "improve_invented_architecture_facts"
         }
       ]
     },

@@ -227,7 +227,7 @@ The comparison passes only when:
 - Forge fair-comparison point-estimate score is at least `2.0x` the no-Forge baseline fair-comparison score, configurable with `--min-score-ratio`;
 - Forge oracle-derived pass rate is not worse than the baseline pass rate.
 
-The 2.0x threshold is currently calibrated from 2 selected n=1 cases (guide-shortest-chain, default-chain-small-feature), not a suite-level result. It must not be cited as a suite-level effectiveness claim until a full 22-case multi-run comparison with variance and confidence intervals is published.
+The 2.0x threshold is currently calibrated from 2 selected n=1 cases (guide-shortest-chain, default-chain-small-feature), not a suite-level result. It must not be cited as a suite-level effectiveness claim until a full 23-case multi-run comparison with variance and confidence intervals is published.
 
 Baseline reports are allowed to fail oracle checks because those failures are the measured comparison signal. They must still be valid v2 report shapes over the selected cases. Treat this comparison as a diagnostic until a held-out or externally reviewed effectiveness suite exists.
 
