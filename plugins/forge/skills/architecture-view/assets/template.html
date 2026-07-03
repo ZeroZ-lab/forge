@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forge architecture-view</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --surface: #ffffff;
+      --text: #17202a;
+      --muted: #637083;
+      --line: #d8dee8;
+      --green: #15803d;
+      --blue: #2563eb;
+      --rose: #be123c;
+      --amber: #b45309;
+      --radius: 8px;
+      --shadow: 0 10px 28px rgba(23, 32, 42, 0.08);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font: 15px/1.5 var(--sans);
+      letter-spacing: 0;
+    }
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.15;
+    }
+    h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+    p {
+      margin: 7px 0 0;
+      color: var(--muted);
+    }
+    .notice {
+      margin: 16px 0;
+      padding: 12px 14px;
+      border: 1px solid #fed7aa;
+      border-left: 4px solid var(--amber);
+      border-radius: var(--radius);
+      background: #fffbeb;
+      color: #7c2d12;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .pill, .status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+    .status.confirmed, .status.present { background: #dcfce7; color: #166534; }
+    .status.inferred { background: #dbeafe; color: #1d4ed8; }
+    .status.missing { background: #ffe4e6; color: #be123c; }
+    .status.not_applicable { background: #f1f5f9; color: #475569; }
+    .panel {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .panel-body { padding: 14px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: #475569;
+      background: #f8fafc;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    tr:last-child td { border-bottom: 0; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .item {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+    .item h3 {
+      margin: 0 0 6px;
+      font-size: 15px;
+      overflow-wrap: anywhere;
+    }
+    .item .source {
+      display: block;
+      margin-top: 9px;
+      color: #475569;
+      font-family: var(--mono);
+      font-size: 11px;
+      overflow-wrap: anywhere;
+    }
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+    code {
+      border-radius: 5px;
+      padding: 2px 5px;
+      background: #f1f5f9;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+    @media (max-width: 760px) {
+      .page { padding: 18px; }
+      header { flex-direction: column; }
+      .meta { justify-content: flex-start; }
+      .grid { grid-template-columns: 1fr; }
+      table { min-width: 720px; }
+      .panel { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <h1 id="title">Architecture View</h1>
+        <p>derived-view · not-fact-source · local cache from Forge authoritative docs</p>
+      </div>
+      <div class="meta" id="meta"></div>
+    </header>
+
+    <div class="notice">
+      此页面是派生视图，不是事实源。修正结论必须回写到 goal、module、project 或 ADR。
+    </div>
+
+    <section class="panel">
+      <div class="panel-body">
+        <h2>Coverage Matrix</h2>
+        <table>
+          <thead>
+            <tr><th>View</th><th>Status</th><th>Summary</th><th>Source</th></tr>
+          </thead>
+          <tbody id="coverage"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div id="views"></div>
+  </main>
+
+  <script id="architecture-view-data" type="application/json">__ARCHITECTURE_VIEW_DATA__</script>
+  <script>
+    const data = JSON.parse(document.getElementById("architecture-view-data").textContent);
+    const statusLabel = {
+      confirmed: "Present with source",
+      present: "Present with source",
+      inferred: "Inferred",
+      missing: "Missing",
+      not_applicable: "Not applicable"
+    };
+    const viewLabels = {
+      modules: "功能模块关系",
+      dataModels: "数据模型",
+      interfaces: "接口关系",
+      runtime: "运行链路",
+      deployment: "部署拓扑"
+    };
+    const title = document.getElementById("title");
+    title.textContent = `${data.feature} · Architecture View`;
+    const meta = document.getElementById("meta");
+    meta.innerHTML = [
+      `generated ${data.generatedAt}`,
+      `${data.sources.length} source files`,
+      "derived-view",
+      "not-fact-source"
+    ].map((item) => `<span class="pill">${escapeHtml(item)}</span>`).join("");
+
+    const coverage = document.getElementById("coverage");
+    coverage.innerHTML = data.coverage.map((row) => `
+      <tr>
+        <td>${escapeHtml(row.label)}</td>
+        <td><span class="status ${escapeHtml(row.status)}">${escapeHtml(statusLabel[row.status] || row.status)}</span></td>
+        <td>${escapeHtml(row.summary)}</td>
+        <td>${formatSources(row.sourceRefs)}</td>
+      </tr>
+    `).join("");
+
+    const views = document.getElementById("views");
+    views.innerHTML = Object.entries(data.views).map(([key, view]) => {
+      const items = view.items || [];
+      const cards = items.length === 0
+        ? `<p class="empty">No confirmed source-backed items for this view.</p>`
+        : `<div class="grid">${items.map(renderItem).join("")}</div>`;
+      return `<section class="panel"><div class="panel-body"><h2>${escapeHtml(viewLabels[key] || key)}</h2>${cards}</div></section>`;
+    }).join("");
+
+    function renderItem(item) {
+      const detail = item.detail ? `<p>${escapeHtml(item.detail)}</p>` : "";
+      const payload = item.payload ? `<p><code>${escapeHtml(item.payload)}</code></p>` : "";
+      return `
+        <article class="item">
+          <h3>${escapeHtml(item.label)}</h3>
+          <span class="status ${escapeHtml(item.status)}">${escapeHtml(statusLabel[item.status] || item.status)}</span>
+          ${detail}
+          ${payload}
+          <span class="source">${formatSources(item.sourceRefs)}</span>
+        </article>
+      `;
+    }
+
+    function formatSources(sourceRefs = []) {
+      if (!sourceRefs.length) return "";
+      return sourceRefs.map((ref) => `${escapeHtml(ref.file)}:${Number(ref.line)} ${escapeHtml(ref.heading)}`).join("<br>");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+  </script>
+</body>
+</html>

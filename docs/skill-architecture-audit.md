@@ -8,14 +8,14 @@
 当前仓库基线：
 
 - `node scripts/validate.mjs` 通过：`Forge validation passed (23 skills, ...)`。
-- 当前 suite 发布 25 个一级 `plugins/forge/skills/*` skill：24 个生命周期协议 + 1 个显式 `guide`；`shared` 是不进入 registry 的内部知识包。
+- 当前 suite 发布 26 个一级 `plugins/forge/skills/*` skill：24 个生命周期协议 + 1 个派生视图 skill + 1 个显式 `guide`；`shared` 是不进入 registry 的内部知识包。
 - `plugins/forge/.claude-plugin/plugin.json` 显式枚举 `skills/*`，`scripts/validate.mjs` 校验 manifest 与目录一致。
 - `plugins/forge/skills/shared/` 已从产物模板扩展出 concepts、rubrics、red-flags、output-contracts 四类 Knowledge 文件。
 
 不改 flat 结构的原因：
 
 - Claude Code 只发现 `plugins/forge/skills/` 一级子目录的 `SKILL.md`，当前 flat list 是安装和发现边界。
-- Validator 已经把 25 个发布 skill、frontmatter 短名、manifest 枚举、调用策略和行数上限作为稳定约束。
+- Validator 已经把 26 个发布 skill、frontmatter 短名、manifest 枚举、调用策略和行数上限作为稳定约束。
 - 嵌套分类目录会破坏现有 plugin discovery 和 validator 约束；分类应留在文档说明里，不进入物理目录。
 
 审计标准来源：
@@ -268,7 +268,7 @@ skill 之间的衔接、目标验证和升级规则写在各 skill 正文，不�
 `scripts/validate.mjs` 校验：
 
 - `docs/skill-architecture-audit.md` 存在
-- 25 个发布 skill 的 frontmatter 短名与目录名一致、描述存在、行数不超限
+- 26 个发布 skill 的 frontmatter 短名与目录名一致、描述存在、行数不超限
 - `plugins/forge/.claude-plugin/plugin.json` 的 skill 枚举与目录一致
 - shared Knowledge 层文件存在
 - 关键编排顺序（如 detail 内 API 先于 DB）和测试用例路径

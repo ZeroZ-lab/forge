@@ -106,7 +106,7 @@ node --test
 node scripts/evaluate-skills.mjs
 ```
 
-Skill Suite 是固定场景的 compliance/regression harness，用来防止 Forge 路由、产物、追踪、验证和范围控制协议回归。评测自检会校验 `evals/skills-suite/manifest.json`：至少 21 个固定任务、覆盖全部 25 个已发布 skill、fixtures 存在、v2 oracle check 可机器读取，并要求变更型任务提供 Change Unit 和目标验证证据。这只证明评测合约完整，不证明某次 agent 行为有效。
+Skill Suite 是固定场景的 compliance/regression harness，用来防止 Forge 路由、产物、追踪、验证和范围控制协议回归。评测自检会校验 `evals/skills-suite/manifest.json`：至少 22 个固定任务、覆盖全部 26 个已发布 skill、fixtures 存在、v2 oracle check 可机器读取，并要求变更型任务提供 Change Unit 和目标验证证据。这只证明评测合约完整，不证明某次 agent 行为有效。
 
 要评价一次真实运行是否符合这组固定场景，把 agent 执行记录整理成 `evals/skills-suite/report.schema.json` 格式，然后运行：
 
@@ -151,7 +151,7 @@ node scripts/evaluate-skills.mjs --skip-blocked --report .eval-runs/skills-suite
 - 架构审计：见 [docs/skill-architecture-audit.md](docs/skill-architecture-audit.md)
 - Skills Suite 评测：见 [docs/skill-suite-evaluation.md](docs/skill-suite-evaluation.md)
 
-## 8 阶段 × 24 个协议 Skill + 1 个 Guide
+## 8 阶段 × 24 个协议 Skill + 1 个派生视图 Skill + 1 个 Guide
 
 这套完整地图仍然保留，只是不再作为默认入口。需要完整阶段矩阵、编排 skill 和治理能力时，直接读 [AGENTS.md](AGENTS.md) 或 [docs/advanced.md](docs/advanced.md)。
 

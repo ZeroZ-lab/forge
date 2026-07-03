@@ -10,7 +10,7 @@ Run the deterministic contract check:
 node scripts/evaluate-skills.mjs
 ```
 
-That command proves the compliance contract definition is complete: 21 cases (stage 8 / chain 3 / patch 7 / lens 2 / analysis 1), all registered skills covered, fixtures present, v2 Change Unit oracle checks valid, and goal verification evidence required where relevant. Only 3 of the 21 are chain-level, so this is not a set of 21 non-redundant chains. Three cases (init-skip-frontend, detail-backend-only, design-skip-no-frontend) share the same skip-frontend dimension and are not independent on that axis.
+That command proves the compliance contract definition is complete: 22 cases (stage 8 / chain 3 / patch 7 / lens 3 / analysis 1), all registered skills covered, fixtures present, v2 Change Unit oracle checks valid, and goal verification evidence required where relevant. Only 3 of the 22 are chain-level, so this is not a set of 22 non-redundant chains. Three cases (init-skip-frontend, detail-backend-only, design-skip-no-frontend) share the same skip-frontend dimension and are not independent on that axis.
 
 To score whether a real agent run complies with these fixed scenarios, collect a JSON report matching `report.schema.json` and run:
 
@@ -31,7 +31,7 @@ node scripts/evaluate-skills.mjs \
   --baseline-report .eval-runs/skills-suite/no-forge-default-chain/report.json
 ```
 
-The default comparison gate rejects single-run comparisons. Both arms need repeated samples with distinct `evidence_id` values; Forge's confidence interval lower bound must exceed the baseline upper bound, Forge's fair-comparison score must be at least 2.0x the no-Forge baseline fair-comparison score, and Forge must avoid a worse oracle-derived pass rate. The 2.0x threshold is currently calibrated from historical 2 selected n=1 cases (guide-shortest-chain, default-chain-small-feature), not a suite-level result; do not cite it as a suite-level effectiveness claim until a full 21-case multi-run comparison is published. Even then, this suite measures fixed-scenario compliance unless the cases are replaced or supplemented with held-out or externally reviewed effectiveness tasks.
+The default comparison gate rejects single-run comparisons. Both arms need repeated samples with distinct `evidence_id` values; Forge's confidence interval lower bound must exceed the baseline upper bound, Forge's fair-comparison score must be at least 2.0x the no-Forge baseline fair-comparison score, and Forge must avoid a worse oracle-derived pass rate. The 2.0x threshold is currently calibrated from historical 2 selected n=1 cases (guide-shortest-chain, default-chain-small-feature), not a suite-level result; do not cite it as a suite-level effectiveness claim until a full 22-case multi-run comparison is published. Even then, this suite measures fixed-scenario compliance unless the cases are replaced or supplemented with held-out or externally reviewed effectiveness tasks.
 
 v2 reports must include:
 

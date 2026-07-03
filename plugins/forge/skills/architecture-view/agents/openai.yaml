@@ -1,0 +1,6 @@
+interface:
+  display_name: "Forge Architecture View"
+  short_description: "从 Forge 权威文档生成本地派生架构视图"
+  default_prompt: "Use $architecture-view to generate a derived architecture view for this feature."
+policy:
+  allow_implicit_invocation: false

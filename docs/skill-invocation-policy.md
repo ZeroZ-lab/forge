@@ -48,6 +48,7 @@
 | 分类 | Skill | 调用策略 |
 |------|-------|----------|
 | 显式建议层 | `guide` | Claude/Codex 均禁止隐式调用 |
+| 派生视图层 | `architecture-view` | Claude/Codex 均禁止隐式调用 |
 | 内部知识层 | `shared` | 不进入 Claude manifest；Codex 禁止隐式调用 |
 | 生命周期协议 | 其余正式 skill | 保留隐式调用，由 description/when_to_use 控制 |
 
