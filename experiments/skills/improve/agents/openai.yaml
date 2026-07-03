@@ -1,0 +1,6 @@
+interface:
+  display_name: "Forge Improve"
+  short_description: "扫码找浅模块重构机会，出自包含 HTML 候选报告"
+  default_prompt: "Use $improve to scan for shallow-module deepening opportunities and render an HTML candidate report."
+policy:
+  allow_implicit_invocation: false
