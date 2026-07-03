@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "forge",
-      "version": "0.52.0",
+      "version": "0.52.1",
       "description": "27 个已发布 skill：24 个决策协议覆盖完整生命周期，另含 1 个派生视图 skill、1 个架构发现 skill 与 1 个显式 Guide。文档是目标约束，代码是实现。",
       "source": "./plugins/forge"
     }

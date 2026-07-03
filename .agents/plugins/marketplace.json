@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "forge",
-      "version": "0.52.0",
+      "version": "0.52.1",
       "source": {
         "source": "local",
         "path": "./plugins/forge"
