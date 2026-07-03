@@ -60,6 +60,7 @@ repo/
   "plugins": [
     {
       "name": "your-plugin",
+      "version": "0.1.0",
       "source": {
         "source": "local",
         "path": "./plugins/your-plugin"
@@ -87,6 +88,7 @@ repo/
   "plugins": [
     {
       "name": "your-plugin",
+      "version": "0.1.0",
       "description": "Plugin description",
       "source": "./plugins/your-plugin"
     }
@@ -136,8 +138,15 @@ Claude manifest 需要显式列出每个 skill：
 - `plugins/your-plugin/.claude-plugin/plugin.json`（version 字段）
 - `plugins/your-plugin/.codex-plugin/plugin.json`（version 字段）
 - `package.json`（version 字段）
+- `plugins/your-plugin/.claude-plugin/marketplace.json`（`plugins[].version`）
+- `.agents/plugins/marketplace.json`（`plugins[].version`）
+- `.claude-plugin/marketplace.json`（`plugins[].version`）
 
-三个文件的 `version` 字段必须同步更新。
+manifest 的顶层 `version` 与各 marketplace 的 `plugins[].version` 必须同步更新。
+
+marketplace 必须带 version：部分客户端（如 zcode）通过 `marketplace.json` 的 `plugins[].version`
+检测更新，不写则永远检测不到新版本。`scripts/bump-version.mjs` 会同时更新所有这些位置，
+`scripts/validate.mjs` 会在发布前校验一致性。
 
 ## 推荐发布流程
 
@@ -157,6 +166,7 @@ Claude manifest 需要显式列出每个 skill：
 - Codex marketplace 的 `source.path === "./plugins/your-plugin"`
 - Codex manifest 的 `skills === "./skills"`
 - Claude manifest 的每一项 skill 都以 `"./skills/"` 开头
+- 每份 marketplace 的 forge 条目都带 `version` 且与 `package.json` 一致
 
 ## Forge 的当前实现
 

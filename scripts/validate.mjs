@@ -77,6 +77,7 @@ function referencedMarkdownFiles(skillName, content) {
 const packageJson = json('package.json');
 const claudePlugin = json('plugins/forge/.claude-plugin/plugin.json');
 const codexPlugin = json('plugins/forge/.codex-plugin/plugin.json');
+const rootMarketplace = json('.claude-plugin/marketplace.json');
 const claudeMarketplace = json('plugins/forge/.claude-plugin/marketplace.json');
 const codexMarketplace = json('.agents/plugins/marketplace.json');
 const runtimeRegistry = loadRegistry(root);
@@ -86,6 +87,22 @@ assert(
     packageJson.version === codexPlugin.version,
   `version mismatch: package=${packageJson.version}, claude=${claudePlugin.version}, codex=${codexPlugin.version}`,
 );
+
+// Marketplaces carry `plugins[].version` so update-aware clients (e.g. zcode)
+// can detect new releases. Every forge entry must match the release version.
+const marketplaceFiles = [
+  ['.claude-plugin/marketplace.json', rootMarketplace],
+  ['plugins/forge/.claude-plugin/marketplace.json', claudeMarketplace],
+  ['.agents/plugins/marketplace.json', codexMarketplace],
+];
+for (const [file, marketplace] of marketplaceFiles) {
+  const entry = marketplace.plugins?.find((plugin) => plugin.name === 'forge');
+  assert(entry, `${file}: no forge entry in plugins[]`);
+  assert(
+    entry.version === packageJson.version,
+    `${file}: forge version ${entry.version ?? '<missing>'} must match package.json ${packageJson.version}`,
+  );
+}
 
 assert(packageJson.scripts?.validate === 'node scripts/validate.mjs', 'package.json: missing scripts.validate');
 assert(packageJson.scripts?.test === "node --test 'tests/*.test.mjs'", 'package.json: missing scripts.test');

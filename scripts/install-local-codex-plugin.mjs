@@ -10,6 +10,7 @@ import { findCodexBin } from './lib/codex-bin.mjs';
 const root = process.cwd();
 const marketplaceName = 'forge-local';
 const pluginName = 'forge';
+const pluginVersion = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
 
 function run(codexBin, args, options = {}) {
   const result = spawnSync(codexBin, args, {
@@ -52,6 +53,7 @@ const marketplace = {
   plugins: [
     {
       name: pluginName,
+      version: pluginVersion,
       source: {
         source: 'local',
         path: './plugins/forge',

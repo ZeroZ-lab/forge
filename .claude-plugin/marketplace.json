@@ -9,6 +9,7 @@
   "plugins": [
     {
       "name": "forge",
+      "version": "0.51.0",
       "source": "./plugins/forge",
       "description": "文档是目标约束。目标是什么、边界在哪、怎么算完成。默认服务已有项目的小功能迭代。",
       "author": {
