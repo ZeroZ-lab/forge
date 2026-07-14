@@ -16,8 +16,7 @@ function writeFile(root, relativePath, content) {
   fs.writeFileSync(filePath, content);
 }
 
-function fixtureRoot() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'architecture-view-'));
+function fixtureRoot(root = fs.mkdtempSync(path.join(os.tmpdir(), 'architecture-view-'))) {
   writeFile(root, 'docs/project.md', '# Project\n\n## 目标\n\n- demo\n');
   writeFile(root, 'docs/features/order-routing/goal.md', `# Order Routing
 
@@ -124,11 +123,122 @@ test('architecture-view does not invent runtime or deployment content', () => {
 test('architecture-view CLI writes HTML output', () => {
   const root = fixtureRoot();
   const out = '.forge/architecture-views/order-routing/index.html';
-  const written = runCli(['--root', root, '--feature', 'order-routing', '--out', out]);
+  const written = runCli(['--root', root, '--feature', 'order-routing']);
 
   assert.equal(written, path.join(root, out));
   assert.ok(fs.existsSync(path.join(root, out)));
   assert.match(fs.readFileSync(path.join(root, out), 'utf8'), /Coverage Matrix/);
+});
+
+test('architecture-view rejects lexical output escapes without touching outside files', (t) => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'architecture-view-output-'));
+  const root = fixtureRoot(path.join(parent, 'project'));
+  const outside = path.join(parent, 'outside.html');
+  t.after(() => fs.rmSync(parent, { recursive: true, force: true }));
+
+  fs.writeFileSync(outside, 'outside sentinel');
+
+  for (const out of ['../outside.html', outside, 'C:outside.html', 'C:\\outside.html']) {
+    assert.throws(
+      () => runCli(['--root', root, '--feature', 'order-routing', '--out', out]),
+      /output must stay within project root/,
+    );
+    assert.equal(fs.readFileSync(outside, 'utf8'), 'outside sentinel');
+  }
+});
+
+test('architecture-view rejects output symlinks that escape the project', (t) => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'architecture-view-symlink-'));
+  const root = fixtureRoot(path.join(parent, 'project'));
+  const outsideDir = path.join(parent, 'outside');
+  const outsideFile = path.join(outsideDir, 'sentinel.html');
+  t.after(() => fs.rmSync(parent, { recursive: true, force: true }));
+
+  fs.mkdirSync(outsideDir, { recursive: true });
+  fs.writeFileSync(outsideFile, 'outside sentinel');
+  fs.symlinkSync(outsideDir, path.join(root, 'linked-outside'), 'dir');
+
+  assert.throws(
+    () => runCli([
+      '--root', root,
+      '--feature', 'order-routing',
+      '--out', 'linked-outside/new.html',
+    ]),
+    /output must stay within project root/,
+  );
+  assert.equal(fs.existsSync(path.join(outsideDir, 'new.html')), false);
+
+  const customDir = path.join(root, '.forge/custom');
+  fs.mkdirSync(customDir, { recursive: true });
+  fs.symlinkSync(outsideFile, path.join(customDir, 'existing-link.html'), 'file');
+  fs.symlinkSync(
+    path.join(outsideDir, 'missing.html'),
+    path.join(customDir, 'dangling-link.html'),
+    'file',
+  );
+
+  for (const out of ['.forge/custom/existing-link.html', '.forge/custom/dangling-link.html']) {
+    assert.throws(
+      () => runCli(['--root', root, '--feature', 'order-routing', '--out', out]),
+      /output must stay within project root/,
+    );
+  }
+  assert.equal(fs.readFileSync(outsideFile, 'utf8'), 'outside sentinel');
+  assert.equal(fs.existsSync(path.join(outsideDir, 'missing.html')), false);
+});
+
+test('architecture-view preserves legal custom outputs and internal symlinks', (t) => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'architecture-view-custom-output-'));
+  const realRoot = fixtureRoot(path.join(parent, 'real-project'));
+  const linkedRoot = path.join(parent, 'project-link');
+  t.after(() => fs.rmSync(parent, { recursive: true, force: true }));
+  fs.symlinkSync(realRoot, linkedRoot, 'dir');
+
+  const normalizedOut = '.forge/custom/../custom/view.json';
+  const normalizedWritten = runCli([
+    '--root', linkedRoot,
+    '--feature', 'order-routing',
+    '--format', 'json',
+    '--out', normalizedOut,
+  ]);
+  assert.equal(normalizedWritten, path.join(linkedRoot, '.forge/custom/view.json'));
+  assert.equal(JSON.parse(fs.readFileSync(normalizedWritten, 'utf8')).feature, 'order-routing');
+
+  const existingOut = path.join(linkedRoot, '.forge/custom/existing.html');
+  fs.writeFileSync(existingOut, 'replace me');
+  assert.equal(
+    runCli(['--root', linkedRoot, '--feature', 'order-routing', '--out', existingOut]),
+    existingOut,
+  );
+  assert.match(fs.readFileSync(existingOut, 'utf8'), /Coverage Matrix/);
+
+  const canonicalOut = path.join(realRoot, '.forge/custom/canonical.html');
+  assert.equal(
+    runCli(['--root', linkedRoot, '--feature', 'order-routing', '--out', canonicalOut]),
+    canonicalOut,
+  );
+  assert.match(fs.readFileSync(canonicalOut, 'utf8'), /Coverage Matrix/);
+
+  const realOutputDir = path.join(realRoot, 'real-output');
+  fs.mkdirSync(realOutputDir);
+  fs.symlinkSync(realOutputDir, path.join(realRoot, 'inside-link'), 'dir');
+  const internalLinkOut = 'inside-link/nested/view.html';
+  assert.equal(
+    runCli(['--root', realRoot, '--feature', 'order-routing', '--out', internalLinkOut]),
+    path.join(realRoot, internalLinkOut),
+  );
+  assert.ok(fs.existsSync(path.join(realOutputDir, 'nested/view.html')));
+
+  const internalTarget = path.join(realOutputDir, 'target.html');
+  const internalFileLink = path.join(realRoot, 'inside-file-link.html');
+  fs.writeFileSync(internalTarget, 'replace me through a safe link');
+  fs.symlinkSync(internalTarget, internalFileLink, 'file');
+  assert.equal(
+    runCli(['--root', realRoot, '--feature', 'order-routing', '--out', internalFileLink]),
+    internalFileLink,
+  );
+  assert.match(fs.readFileSync(internalTarget, 'utf8'), /Coverage Matrix/);
+  assert.equal(fs.lstatSync(internalFileLink).isSymbolicLink(), true);
 });
 
 test('architecture-view rejects unsafe feature identifiers before reads or writes', (t) => {

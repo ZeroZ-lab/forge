@@ -438,25 +438,105 @@ export function renderHtml(viewModel, templatePath = DEFAULT_TEMPLATE) {
   return template.replace('__ARCHITECTURE_VIEW_DATA__', escapeJsonForHtml(viewModel));
 }
 
-function writeOutput(outPath, content) {
-  fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  fs.writeFileSync(outPath, content);
+function outputBoundaryError() {
+  return new Error('output must stay within project root');
+}
+
+function isContained(basePath, candidatePath) {
+  const relative = path.relative(basePath, candidatePath);
+  return relative === '' || (
+    relative !== '..' &&
+    !relative.startsWith(`..${path.sep}`) &&
+    !path.isAbsolute(relative)
+  );
+}
+
+function nearestExistingEntry(targetPath) {
+  const suffix = [];
+  let current = targetPath;
+
+  while (true) {
+    try {
+      fs.lstatSync(current);
+      return { existingPath: current, suffix };
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw outputBoundaryError();
+      const parent = path.dirname(current);
+      if (parent === current) throw outputBoundaryError();
+      suffix.unshift(path.basename(current));
+      current = parent;
+    }
+  }
+}
+
+function planContainedOutput(root, outPath) {
+  const rootAbsolute = path.resolve(root);
+  const requestedAbsolute = path.resolve(rootAbsolute, outPath);
+  const windowsAbsolute = path.win32.isAbsolute(outPath);
+  const windowsDriveRelative = /^[a-z]:/i.test(outPath) && !windowsAbsolute;
+  let rootReal;
+  try {
+    rootReal = fs.realpathSync(rootAbsolute);
+  } catch {
+    throw outputBoundaryError();
+  }
+  if ((windowsAbsolute && !path.isAbsolute(outPath)) || windowsDriveRelative) {
+    throw outputBoundaryError();
+  }
+
+  let existingReal;
+  const { existingPath, suffix } = nearestExistingEntry(requestedAbsolute);
+  try {
+    existingReal = fs.realpathSync(existingPath);
+  } catch {
+    throw outputBoundaryError();
+  }
+
+  const canonicalAbsolute = path.resolve(existingReal, ...suffix);
+  if (
+    !isContained(rootReal, existingReal) ||
+    !isContained(rootReal, canonicalAbsolute)
+  ) {
+    throw outputBoundaryError();
+  }
+
+  return { requestedAbsolute, canonicalAbsolute };
+}
+
+function writeContainedOutput(root, outPath, content) {
+  const initial = planContainedOutput(root, outPath);
+  fs.mkdirSync(path.dirname(initial.canonicalAbsolute), { recursive: true });
+
+  const final = planContainedOutput(root, outPath);
+  const flags =
+    fs.constants.O_WRONLY |
+    fs.constants.O_CREAT |
+    fs.constants.O_TRUNC |
+    (fs.constants.O_NOFOLLOW ?? 0);
+  const descriptor = fs.openSync(final.canonicalAbsolute, flags, 0o666);
+  try {
+    fs.writeFileSync(descriptor, content, 'utf8');
+  } finally {
+    fs.closeSync(descriptor);
+  }
+  return final.requestedAbsolute;
 }
 
 export function runCli(argv = process.argv.slice(2)) {
   const args = parseArgs(argv);
+  const defaultOut = args.format === 'html'
+    ? `.forge/architecture-views/${args.feature}/index.html`
+    : null;
+  const outPath = args.out ?? defaultOut;
+  if (outPath) planContainedOutput(args.root, outPath);
+
   const viewModel = buildViewModel({ root: args.root, feature: args.feature });
   if (args.strict) assertConfirmedSources(viewModel);
   const content = args.format === 'json'
     ? `${JSON.stringify(viewModel, null, 2)}\n`
     : renderHtml(viewModel);
-  const defaultOut = args.format === 'html'
-    ? `.forge/architecture-views/${args.feature}/index.html`
-    : null;
-  const outPath = args.out ?? defaultOut;
   if (outPath) {
-    writeOutput(path.resolve(args.root, outPath), content);
-    return path.resolve(args.root, outPath);
+    return writeContainedOutput(args.root, outPath, content);
   }
   process.stdout.write(content);
   return null;
