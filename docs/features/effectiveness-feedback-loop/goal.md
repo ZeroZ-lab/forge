@@ -19,7 +19,7 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 
 | AC | 内容 | 验证 |
 |----|------|------|
-| AC1 | `evals/effectiveness-suite/` 存在并覆盖 5 类 held-out scenario | `npm run eval:effectiveness` |
+| AC1 | `evals/effectiveness-suite/` 存在并覆盖至少 5 类 held-out scenario；Forge Next B01 已扩展为含 direct-action 的 6 类 | `npm run eval:effectiveness` |
 | AC2 | contract 明确 Forge/no-Forge、至少 2 repeats、5 个 review metrics，且不声称真实 effectiveness | 文档审查 + 测试 |
 | AC3 | detail 规则明确 module/task 服务可独立验收的 vertical slice | `rg "vertical slice" plugins/forge/skills/detail/SKILL.md` |
 | AC4 | review 有 buy-vs-build lens，能检查成熟生态场景下无理由自研 | `rg "Buy-vs-build lens" plugins/forge/skills/review/SKILL.md` |

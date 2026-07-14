@@ -24,6 +24,8 @@
 | Gated artifact | 通过独立 owner/周期/审批/交接责任门槛的可选文档 |
 | Skill | 抽象决策或执行协议，不等同于文档类型 |
 | Orchestrator | 协调多个 skill，并为一次持久变更汇总一个 CU |
+| Kernel | 只管理目标、权限、范围、权威事实、证据、任务状态和完成条件的外部控制边界 |
+| Direct action | 模型不调用 Skill，直接执行并验证当前目标所需动作的一等路径 |
 
 ## 共享决策
 
@@ -39,6 +41,9 @@
 | PD8 | 图表技术 | Mermaid 优先，PlantUML 兜底；图内联进权威文档，不建独立散图 | GitHub 原生渲染零依赖符合 D4，单一兜底避免工具栈膨胀，内联避免图与文档漂移 | 引入 D2/Structurizr/Kroki；用 Excalidraw/draw.io 存二进制 |
 | PD9 | 阻塞后的变更证据 | 保留变更时由 standalone 或 orchestrator 写一个部分完成 CU；完全回滚则不写 | 长程或失败任务不能丢失已发生变更、未验证项和回滚证据，同时避免 child 重复写入 | child 自写 CU；阻塞后一律不记录；无变更也写 CU |
 | PD10 | Node 支持线 | Node 22 与 24 两条 LTS major；每次发布按官方生命周期复核 | 2026-07-14 两者仍受 LTS 支持，Node 官方建议生产只用 Active/Maintenance LTS | 已 EOL 的 20；仍为 Current 的 26 |
+| PD11 | Kernel 非干扰边界 | Kernel 约束外部目标与证据，不替模型选择阶段、Skill、实现策略或内部推理；有效性以同模型 Forge/no-Forge 的 outcome、安全和证据配对比较 | 模型能力增强时仍可直接行动、跳过或拒绝无关能力，Forge 不把既有流程变成能力上限 | 固定 Skill 命中率；按模型名称假定能力全序；以阶段完成代替目标结果 |
+
+PD11 当前是评测与后续 Kernel 迁移的约束，不改变 PD1 的已发布默认入口；默认调用逻辑只能在 Forge Next B10 基线冻结并通过对应门禁后迁移。
 
 ## 文档约束
 
@@ -66,6 +71,7 @@
 npm test
 npm run validate
 npm run eval:skills
+npm run eval:effectiveness
 npm run metrics:chars
 npm run check:supported
 ```
@@ -75,3 +81,4 @@ npm run check:supported
 - 过度压缩可能把真正独立的产品、设计、合规或运维责任塞回 goal；独立产物门用于防止这一点。
 - optional artifact 若重复 goal/project，将重新产生漂移；review 必须检查单一事实源。
 - skills-suite 是固定场景的 compliance/regression harness；benchmark contract 只证明评测定义完整，run report 只证明该固定场景合规。真实 skill 效果必须由 held-out 或外部审阅的 effectiveness suite 另证。
+- effectiveness suite 必须保持动作路径中立：直接行动和可选 Skill 调用都可成功，只有可验证结果、安全与有效证据进入成功判定。

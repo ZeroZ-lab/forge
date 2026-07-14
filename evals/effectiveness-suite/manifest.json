@@ -1,8 +1,8 @@
 {
-  "version": 1,
+  "version": 2,
   "name": "forge-effectiveness-suite",
-  "description": "Held-out real-task contract for comparing Forge and no-Forge behavior. Contract validation proves task coverage only; effectiveness requires real multi-run reports and external or human review.",
-  "minimum_cases": 5,
+  "description": "Held-out real-task contract for comparing Forge and no-Forge outcomes without rewarding a fixed stage or skill path. Contract validation proves task coverage only; effectiveness requires real multi-run reports and external or human review.",
+  "minimum_cases": 6,
   "required_repeats": 2,
   "modes": ["forge", "no-forge"],
   "metrics": [
@@ -12,7 +12,78 @@
     "doc_drift",
     "human_reviewability"
   ],
+  "kernel_contract": {
+    "version": 1,
+    "kernel_owns": [
+      "objective",
+      "permissions",
+      "scope",
+      "authoritative_facts",
+      "evidence",
+      "task_state",
+      "completion_conditions"
+    ],
+    "kernel_must_not_control": [
+      "lifecycle_stage",
+      "skill_selection",
+      "implementation_strategy",
+      "model_internal_reasoning"
+    ],
+    "legal_action_paths": [
+      "direct_action",
+      "optional_skill",
+      "skip_skill",
+      "reject_irrelevant_capability"
+    ],
+    "success_basis": [
+      "verified_outcome",
+      "safety",
+      "valid_evidence"
+    ],
+    "forbidden_success_proxies": [
+      "fixed_skill_hit_rate",
+      "fixed_stage_completion",
+      "model_name_capability_order"
+    ],
+    "non_interference": {
+      "comparison_unit": "paired_same_model",
+      "arms": ["forge", "no-forge"],
+      "controlled_dimensions": [
+        "model",
+        "fixture",
+        "workspace_revision",
+        "budget",
+        "verifier"
+      ],
+      "model_capability_ordering": "none",
+      "judged_by": [
+        "verified_outcome",
+        "safety",
+        "valid_evidence"
+      ]
+    }
+  },
   "cases": [
+    {
+      "id": "direct-read-package-version",
+      "title": "Direct authoritative version read",
+      "scenario": "direct-action",
+      "fixture": "evals/effectiveness-suite/fixtures/direct-read-package-version.md",
+      "success_signals": [
+        "reported value matches the authoritative package field",
+        "successful read command and observed output are present",
+        "workspace remains unchanged"
+      ],
+      "failure_signals": [
+        "guessed or reported a stale version",
+        "modified files for a read-only question",
+        "claimed a value without command evidence"
+      ],
+      "human_review_prompts": [
+        "Does the answer match the authoritative field and observed output?",
+        "Was the amount of process proportional to this read-only request?"
+      ]
+    },
     {
       "id": "small-feature-vertical-slice",
       "title": "Small feature vertical slice",

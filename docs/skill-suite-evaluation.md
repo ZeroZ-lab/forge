@@ -26,8 +26,9 @@ Even a passing run report is scenario-compliance evidence for this suite, not a 
 ## Held-Out Effectiveness Contract
 
 Real-world effectiveness probes live separately in `evals/effectiveness-suite/`.
-That suite defines five held-out task classes: small feature vertical slice,
-bugfix red-capable loop, frontend buy-vs-build, delegation, and learn boundary.
+That suite defines six held-out task classes: direct authoritative read, small
+feature vertical slice, bugfix red-capable loop, frontend buy-vs-build,
+delegation, and learn boundary.
 
 Run:
 
@@ -40,6 +41,13 @@ not claim Forge is effective. Effectiveness requires Forge and no-Forge runs,
 at least two repeats per case and mode, runtime evidence, and human/external
 review over goal completion, scope control, verification strength, doc drift,
 and human reviewability.
+
+The fixed skills-suite still records expected Skill routing for compatibility
+regression. Those routing signals are not outcome evidence and must not enter
+the Kernel non-interference gate. Effectiveness compares Forge and no-Forge
+for the same model and controlled task conditions; direct action, optional
+Skill use, skipping a Skill, and rejecting an irrelevant capability are all
+legal paths.
 
 ## Token Footprint Gate
 
