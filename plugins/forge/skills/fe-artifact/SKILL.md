@@ -8,14 +8,14 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 
 ## 职责
 
-把前端目标实现为可运行、可验收的前端代码。它是 codegen 的前端子协议，负责把设计系统、交互规格、API 合约和组件规格落到页面与组件。
+把前端目标实现为可运行、可验证的前端代码。它是 codegen 的前端子协议，负责把设计系统、交互规格、API 合约和组件规格落到页面与组件；实现是否 `verified` 由实际 verifier 回执决定，是否 `accepted` 只由后续 fe-accept 决定。
 
 历史证据统一遵循 `../shared/concepts/history-maintenance.md`。
 
 ## 执行纪律
 
 - **D5**：不重新做产品决策，不改 API 合约，不绕过权威视觉约束自行发明视觉语言
-- **D7**：前端可运行时必须启动本地预览并做真实验证，不凭猜测通过
+- **D7**：选择与真实运行表面匹配的 verifier；没有通过回执时不得声称 verified 或完成
 - **D1**：关键逻辑必须引用文档来源（From: modules/tasks.md AC3）
 
 ## 上下游边界
@@ -88,13 +88,13 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 - keyboard、focus、disabled、loading、empty、error 状态是否可用。
 - 移动端和桌面端是否不重叠、不溢出。
 
-前端可运行时，必须启动本地预览并做真实截图或浏览器验证。
+前端有可交互运行表面时，启动本地预览并做截图或浏览器验证；库、静态包等使用与其表面匹配的测试或构建 verifier。`preview available` 只表示验证器可以运行，不是验证结论。
 
 ## 入口/出口条件
 
 **入口**：已有前端规格或 codegen 正在处理前端任务。
 
-**出口**：相关前端文件已生成，基础验证完成，剩余风险已记录。
+**出口**：相关前端文件已生成，并输出下述三态结果回执。只有 `verified` 可交给 fe-accept；其他状态保留未验证项或失败证据后停止完成声明。
 
 ## 历史维护
 
@@ -102,12 +102,13 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 - 作为 **child** 时，返回 changed files、decisions、risks 和 verification evidence，does not write Change Unit；由明确的 orchestrator 统一持久化。
 - 变更前/后阻塞及 retained mutation 的唯一写入者规则直接继承共享历史契约，不在本 skill 建立第二套规则。
 
-## 运行时信号
+## 实现结果协议
 
-- 输入：frontend task、design tokens
-- 输出：frontend artifact ready、preview blocked
-- 路由：详见本文件 frontmatter.signal_routes
-- 升级：无法运行或预览 · 设计输入缺失
+- `implemented_unverified`：文件已生成或修改，但没有 verifier 回执。必须标记 `⚠️ 未验证`，记录原因和 unverified items，不得声称完成。
+- `verification_failed`：实际 verifier 返回 failed。保留实现事实、失败 evidence、未验证项和 rollback，不得声称 verified 或完成。
+- `verified`：只有实际 verifier 返回 passed 且存在可引用 evidence 时成立；它表示对应实现验证通过，不表示 `accepted`。
+
+preview 与上述 result 正交：回执必须单独报告 `preview_status` 和 `preview_evidence`，不能用 preview available 提升 result。`accepted` 不属于 fe-artifact 回执，只能由后续 fe-accept 基于独立验收证据给出。唯一 canonical receipt 字段见 `references/fe-artifact-protocol.md`。
 
 ## 红旗清单
 - 没读 DESIGN.md 就写样式 → 停止，先读 DESIGN.md 提取 Token
@@ -126,13 +127,6 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 - [ ] 移动端和桌面端是否无重叠、无横向溢出？
 - [ ] 关键逻辑是否引用文档来源（From: modules/xxx.md AC3）？
 
-## 完成提示
+## 结果提示
 
-```
-前端实现完成：相关页面、组件、hooks 和样式已生成。
-
-下一步：
-  - 运行前端验收
-  - 做独立审查
-  - 继续测试策略
-```
+报告 `result`、changed files、preview status/evidence、verifier/target/outcome/evidence、unverified items 和 rollback。只有 `result: verified` 可写“实现已验证”并建议进入 fe-accept；其余状态按事实写“已实现但未验证”或“验证失败”。

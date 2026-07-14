@@ -72,3 +72,29 @@
 - 不把权限逻辑只放在 UI 层。
 - 不用不可访问的 icon-only 控件。
 - 不让动态内容改变工具栏、棋盘、表格等固定格式区域尺寸。
+
+## 实现结果回执
+
+preview、实现、验证和验收是四个不同事实：
+
+- `preview available`：预览表面可访问；它可以成为 verifier 的目标，但本身不是通过证据。
+- implemented：changed files 已真实保留。
+- verified：verifier 对明确 target 返回 passed，且 evidence 可复查。
+- accepted：仅由 fe-accept 的独立验收产生，fe-artifact 始终不得自报。
+
+每次保留前端变更时返回：
+
+| 字段 | 规则 |
+|------|------|
+| `result` | `implemented_unverified` / `verification_failed` / `verified` |
+| `changed_files` | 实际保留的文件路径，至少一个 |
+| `preview_status` | `not_run` / `available` / `unavailable`；与 result 正交 |
+| `preview_evidence` | preview 未运行时为 `null`；其他状态必须记录 URL、输出或不可用原因 |
+| `verifier` | 实际工具或命令；未运行时为 `not_run` |
+| `verification_target` | verifier 检查的行为、构建或视觉表面；未运行时为 `not_run` |
+| `verification_outcome` | `not_run` / `failed` / `passed`，必须与 result 一致 |
+| `evidence` | 未运行时为 `null`；passed/failed 时必须是可复查的输出、报告或 artifact |
+| `unverified_items` | 未覆盖或失败后仍未确认的内容；not_run/failed 时至少一项 |
+| `rollback` | 每次保留变更都提供的恢复方式 |
+
+回执不包含 `accepted` 或其派生布尔值。standalone 按共享历史契约写一个 Change Unit；child 只把本回执交给 orchestrator，由顶层统一持久化。开发服务器成功启动本身不能把 result 提升为 `verified`。

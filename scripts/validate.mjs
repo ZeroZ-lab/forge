@@ -363,7 +363,17 @@ const requiredProtocols = {
   },
   'fe-artifact': {
     path: 'plugins/forge/skills/fe-artifact/references/fe-artifact-protocol.md',
-    markers: ['# Fe Artifact Protocol', '## 五层翻译详解', '### 1. 意图层', '### 5. 适配层'],
+    markers: [
+      '# Fe Artifact Protocol',
+      '## 五层翻译详解',
+      '### 1. 意图层',
+      '### 5. 适配层',
+      '## 实现结果回执',
+      '`preview_status`',
+      '`verification_outcome`',
+      '`unverified_items`',
+      '`rollback`',
+    ],
   },
   'fe-accept': {
     path: 'plugins/forge/skills/fe-accept/references/fe-accept-protocol.md',
@@ -381,6 +391,12 @@ for (const [skillName, protocol] of Object.entries(requiredProtocols)) {
   assert(read(skillPath).includes(referenceName), `${skillPath}: must reference ${referenceName}`);
   assert(exists(protocol.path), `${protocol.path}: missing`);
   if (exists(protocol.path)) assertIncludes(protocol.path, protocol.markers);
+}
+
+const feArtifactSkill = read('plugins/forge/skills/fe-artifact/SKILL.md');
+assert(!feArtifactSkill.includes('frontmatter.signal_routes'), 'fe-artifact: stale signal_routes reference');
+for (const result of ['implemented_unverified', 'verification_failed', 'verified']) {
+  assert(feArtifactSkill.includes(result), `fe-artifact: missing result state ${result}`);
 }
 
 assertIncludes('plugins/forge/skills/shared/module-template.md', ['## 入口', '## 责任与不变量', '## 公共接口', '## 依赖关系']);
