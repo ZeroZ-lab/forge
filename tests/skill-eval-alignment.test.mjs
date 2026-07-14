@@ -71,3 +71,15 @@ test('published skills keep Change Unit as the only history source', async () =>
   assert.doesNotMatch(corpus, /Changelog preserves decision history/i);
   assert.match(corpus, /Change Units preserve decision history/);
 });
+
+test('fe-artifact assigns Change Unit ownership by invocation mode', async () => {
+  const skill = await readFile(
+    new URL('plugins/forge/skills/fe-artifact/SKILL.md', root),
+    'utf8',
+  );
+
+  assert.match(skill, /standalone[\s\S]*one Change Unit/i);
+  assert.match(skill, /child[\s\S]*does not write[\s\S]*orchestrator/i);
+  assert.match(skill, /blocked before mutation[\s\S]*no Change Unit/i);
+  assert.match(skill, /blocked after mutation[\s\S]*partial changes[\s\S]*rollback/i);
+});

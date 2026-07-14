@@ -276,6 +276,7 @@ const historyAwareSkills = [
   'design',
   'detail',
   'fe-accept',
+  'fe-artifact',
   'fe-system',
   'frontend-design',
   'interaction-design',

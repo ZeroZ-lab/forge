@@ -10,6 +10,8 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 
 把前端目标实现为可运行、可验收的前端代码。它是 codegen 的前端子协议，负责把设计系统、交互规格、API 合约和组件规格落到页面与组件。
 
+历史证据统一遵循 `../shared/concepts/history-maintenance.md`。
+
 ## 执行纪律
 
 - **D5**：不重新做产品决策，不改 API 合约，不绕过权威视觉约束自行发明视觉语言
@@ -93,6 +95,13 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 **入口**：已有前端规格或 codegen 正在处理前端任务。
 
 **出口**：相关前端文件已生成，基础验证完成，剩余风险已记录。
+
+## 历史维护
+
+- **standalone**：未声明由其他编排器拥有最终完成判定时按 standalone 处理；发生源码、样式或测试变更且出口条件通过后，写 one Change Unit。
+- **child**：作为 codegen 或其他明确拥有最终完成判定与历史责任的 orchestrator 子能力时，does not write Change Unit；只返回 changed files、decisions、risks 和 verification evidence，由 orchestrator 汇总一次。
+- **blocked before mutation**：尚未产生变更即阻塞时，写 no Change Unit，只报告阻塞原因和恢复条件。
+- **blocked after mutation**：已经产生变更后才阻塞时，返回 partial changes、未验证项和 rollback；由 standalone 调用或 orchestrator 负责写入一个未完成证据明确的 Change Unit。
 
 ## 运行时信号
 
