@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  supported-node:
+    name: Node ${{ matrix.node }} / supported contract
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+      - name: Runtime versions
+        run: |
+          node --version
+          npm --version
+      - name: npm test
+        run: npm test
+      - name: npm run validate
+        run: npm run validate
+      - name: npm run eval:skills
+        run: npm run eval:skills

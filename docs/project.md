@@ -38,6 +38,7 @@
 | PD7 | 评测证据分层 | compliance/regression harness + validator/tests；独立有效性需 held-out/external suite | 文档质量和固定场景合规都不能单独证明真实项目效果 | 把 skills-suite 分数当独立质量证明 |
 | PD8 | 图表技术 | Mermaid 优先，PlantUML 兜底；图内联进权威文档，不建独立散图 | GitHub 原生渲染零依赖符合 D4，单一兜底避免工具栈膨胀，内联避免图与文档漂移 | 引入 D2/Structurizr/Kroki；用 Excalidraw/draw.io 存二进制 |
 | PD9 | 阻塞后的变更证据 | 保留变更时由 standalone 或 orchestrator 写一个部分完成 CU；完全回滚则不写 | 长程或失败任务不能丢失已发生变更、未验证项和回滚证据，同时避免 child 重复写入 | child 自写 CU；阻塞后一律不记录；无变更也写 CU |
+| PD10 | Node 支持线 | Node 22 与 24 两条 LTS major；每次发布按官方生命周期复核 | 2026-07-14 两者仍受 LTS 支持，Node 官方建议生产只用 Active/Maintenance LTS | 已 EOL 的 20；仍为 Current 的 26 |
 
 ## 文档约束
 
@@ -57,6 +58,7 @@
 - 默认链路和全部 SKILL.md 受 token gate 约束。
 - 图表选型与放置遵循 `plugins/forge/skills/shared/concepts/diagram-policy.md`：Mermaid 优先，PlantUML 兜底，内联进权威文档。
 - 变更以最窄有效的 tests、validator、evaluator 和 token metrics 验证。
+- Node 支持范围以 `package.json#engines` 为公开契约，CI matrix 为执行契约；生命周期依据 [Node.js Releases](https://nodejs.org/en/about/previous-releases) 在每次发布时复核。
 
 ## 关键命令
 
@@ -65,6 +67,7 @@ npm test
 npm run validate
 npm run eval:skills
 npm run metrics:chars
+npm run check:supported
 ```
 
 ## 风险

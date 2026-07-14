@@ -8,6 +8,7 @@
     "eval:skills:run": "node scripts/run-skills-benchmark.mjs",
     "metrics:chars": "node scripts/measure-char-footprint.mjs",
     "plugin:install:local": "node scripts/install-local-codex-plugin.mjs",
+    "check:supported": "npm test && npm run validate && npm run eval:skills",
     "validate": "node scripts/validate.mjs",
     "test": "node --test 'tests/*.test.mjs'",
     "bump": "node scripts/bump-version.mjs",
@@ -15,6 +16,9 @@
   },
   "author": "ZeroZ-lab",
   "license": "MIT",
+  "engines": {
+    "node": ">=22 <23 || >=24 <25"
+  },
   "keywords": [
     "documentation",
     "decision-records",
