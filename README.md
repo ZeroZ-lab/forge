@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/forge-logo.png" alt="Forge logo" width="180">
+  <img src="https://raw.githubusercontent.com/ZeroZ-lab/forge/master/assets/forge-logo.png" alt="Forge logo" width="180">
 </p>
 
 # Forge
@@ -63,7 +63,7 @@ PRD、interaction spec、research brief、testing strategy、deploy plan、DESIG
 - `按 goal 生成这个 feature 的实现`
 - `review 当前修改是否偏离 goal`
 
-插件发布到 Codex / Claude Code 的目录布局和 manifest 约束见 [docs/plugin-publishing.md](docs/plugin-publishing.md)。
+插件发布到 Codex / Claude Code 的目录布局和 manifest 约束见 [发布文档](https://github.com/ZeroZ-lab/forge/blob/master/docs/plugin-publishing.md)。
 
 ## 按需能力
 
@@ -78,9 +78,9 @@ Forge 不是只会 4 步主链，只是默认先从这里开始。下面这些�
 | `think` | 需要 Socratic / First Principles / Red Team 深挖 |
 | `review` | 同类偏差反复出现，要回到方法论层面修正 |
 
-Advanced 入口见 [docs/advanced.md](docs/advanced.md)。
+Advanced 入口见 [高级能力文档](https://github.com/ZeroZ-lab/forge/blob/master/docs/advanced.md)。
 
-常见场景怎么选流程，见 [docs/usage-scenarios.md](docs/usage-scenarios.md)。
+常见场景怎么选流程，见 [使用场景文档](https://github.com/ZeroZ-lab/forge/blob/master/docs/usage-scenarios.md)。
 
 ## 开发自检
 
@@ -147,13 +147,13 @@ node scripts/evaluate-skills.mjs --skip-blocked --report .eval-runs/skills-suite
 
 默认入口收窄了，但完整框架没有删：
 
-- 全量 skill 和阶段说明：见 [AGENTS.md](AGENTS.md)
-- 架构审计：见 [docs/skill-architecture-audit.md](docs/skill-architecture-audit.md)
-- Skills Suite 评测：见 [docs/skill-suite-evaluation.md](docs/skill-suite-evaluation.md)
+- 全量 skill 和阶段说明：见 [AGENTS.md](https://github.com/ZeroZ-lab/forge/blob/master/AGENTS.md)
+- 架构审计：见 [Skill 架构审计](https://github.com/ZeroZ-lab/forge/blob/master/docs/skill-architecture-audit.md)
+- Skills Suite 评测：见 [Skill Suite 评测文档](https://github.com/ZeroZ-lab/forge/blob/master/docs/skill-suite-evaluation.md)
 
 ## 8 阶段 × 24 个协议 Skill + 1 个派生视图 Skill + 1 个架构发现 Skill + 1 个 Guide
 
-这套完整地图仍然保留，只是不再作为默认入口。需要完整阶段矩阵、编排 skill 和治理能力时，直接读 [AGENTS.md](AGENTS.md) 或 [docs/advanced.md](docs/advanced.md)。
+这套完整地图仍然保留，只是不再作为默认入口。需要完整阶段矩阵、编排 skill 和治理能力时，直接读 [AGENTS.md](https://github.com/ZeroZ-lab/forge/blob/master/AGENTS.md) 或 [高级能力文档](https://github.com/ZeroZ-lab/forge/blob/master/docs/advanced.md)。
 
 ## 核心理念
 

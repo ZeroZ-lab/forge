@@ -8,6 +8,8 @@
     "eval:skills:run": "node scripts/run-skills-benchmark.mjs",
     "metrics:chars": "node scripts/measure-char-footprint.mjs",
     "plugin:install:local": "node scripts/install-local-codex-plugin.mjs",
+    "plugin:smoke:packed": "node scripts/smoke-packed-plugin.mjs",
+    "check:package": "node scripts/check-package-contents.mjs",
     "check:supported": "npm test && npm run validate && npm run eval:skills",
     "validate": "node scripts/validate.mjs",
     "test": "node --test 'tests/*.test.mjs'",
@@ -16,6 +18,12 @@
   },
   "author": "ZeroZ-lab",
   "license": "MIT",
+  "files": [
+    ".agents/plugins/marketplace.json",
+    ".claude-plugin/marketplace.json",
+    "marketplace.json",
+    "plugins/forge"
+  ],
   "engines": {
     "node": ">=22 <23 || >=24 <25"
   },
