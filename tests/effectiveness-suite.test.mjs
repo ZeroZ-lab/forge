@@ -27,7 +27,7 @@ function withMutatedContract(mutate, check) {
 }
 
 test('effectiveness suite contract covers the six held-out scenarios', () => {
-  assert.equal(manifest.version, 2);
+  assert.equal(manifest.version, 3);
   assert.equal(manifest.name, 'forge-effectiveness-suite');
   assert.equal(manifest.cases.length, manifest.minimum_cases);
   assert.equal(manifest.required_repeats, 2);
@@ -101,7 +101,7 @@ test('effectiveness contract rejects structured fixed skill and stage routing pr
 
 test('kernel contract rejects action control and model-name capability ordering', () => {
   for (const mutate of [
-    (contract) => { contract.version = 1; },
+    (contract) => { contract.version = 2; },
     (contract) => { contract.metrics.push('fixed_skill_hit_rate'); },
     (contract) => { contract.scoring_model = { success: 'codegen hit' }; },
     (contract) => { contract.kernel_contract.required_skill = 'codegen'; },
@@ -114,6 +114,22 @@ test('kernel contract rejects action control and model-name capability ordering'
       assert.throws(
         () => loadEffectivenessContract(fixtureRoot),
         (error) => error.issues?.some((issue) => /manifest\.version|manifest\.metrics|unsupported field|kernel_contract/.test(issue)),
+      );
+    });
+  }
+});
+
+test('effectiveness contract rejects missing or redirected report contracts', () => {
+  for (const mutate of [
+    (contract) => { delete contract.report_schema; },
+    (contract) => { contract.report_schema = 'evals/skills-suite/report.schema.json'; },
+    (contract) => { delete contract.report_compatibility; },
+    (contract) => { contract.report_compatibility = 'evals/skills-suite/report.compatibility.json'; },
+  ]) {
+    withMutatedContract(mutate, (fixtureRoot) => {
+      assert.throws(
+        () => loadEffectivenessContract(fixtureRoot),
+        (error) => error.issues?.some((issue) => /manifest\.report_(?:schema|compatibility)/.test(issue)),
       );
     });
   }

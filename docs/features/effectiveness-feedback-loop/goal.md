@@ -13,7 +13,8 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 - **不在本 feature**：运行真实 Codex benchmark 或发布 effectiveness 结论。
 - **不在本 feature**：新增默认生命周期阶段、状态看板或 `plan.md`。
 - **不在本 feature**：自动写跨项目 memory、其他仓库或用户全局配置。
-- **不在本 feature**：bump version、commit、push。
+- **不在本 feature**：bump 发布版本、发布或 push。
+- **不在 B02**：生产 report 构造器、跨引用语义校验、Evidence Envelope 有效性判断或 outcome scorer；分别由 B03、B06、B08 负责。
 
 ## Done Criteria（可测）
 
@@ -26,6 +27,7 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 | AC5 | learn 提供对话内 Cross-project candidates 格式，不落盘 | `rg "Cross-project candidates" plugins/forge/skills/learn/SKILL.md` |
 | AC6 | guide 能基于 delegation matrix 给委托建议 | `rg "delegation matrix" plugins/forge/skills/guide/SKILL.md` |
 | AC7 | 现有验证 gate 无回归 | `npm test` / `npm run validate` / `npm run eval:skills` / `npm run metrics:chars` |
+| AC8 | effectiveness report v1 能追踪单次 model × arm × fixture × repeat 的受控条件、动作、能力遥测、证据来源、结果和成本；旧 skills-suite v2 不会被静默升级为效果证据 | `node --test tests/effectiveness-report-contract.test.mjs` |
 
 ## Decisions
 
@@ -33,6 +35,8 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 - FD2：先做 contract validator，不做 scorer。理由：没有真实多轮 run report 前，评分会制造伪确定性。
 - FD3：vertical slice 只补到 detail 的 module 粒度规则，不新增阶段。理由：默认链仍应短。
 - FD4：learn cross-project candidate 只在对话输出。理由：跨项目归档需要目标 owner 和确认门。
+- FD5：effectiveness report 以一次 attempt 为原子单位，不复用 skills-suite 的异构 `cases[]` 和 `triggered_skills` 合约。理由：配对统计需要同模型、同 fixture、同受控条件的一一可比记录，能力调用只能是遥测。
+- FD6：report v1 是首个 effectiveness family；skills-suite v2 标记为 incompatible，缺失来源时要求重跑而非填充未知值。理由：模型、实验臂、workspace、budget、verifier 和证据来源无法从旧自述字段可靠恢复。
 
 ## Risks
 
@@ -41,3 +45,4 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 | contract 被误读成效果证明 | 过度宣传 | README、docs、脚本输出均声明 no effectiveness claim |
 | review lens 增加默认链字符 | token 预算压力 | 文案保持一行，metrics gate 验证 |
 | held-out fixtures 变成 oracle 泄漏 | 评测失真 | 测试禁止 fixture 出现 oracle/scoring 内部词 |
+| schema 形状通过但证据并不可信 | 错把结构有效当效果成立 | B02 只声明 wire contract；B03 校验引用，B06 校验证据，B08 才给 outcome 判定 |

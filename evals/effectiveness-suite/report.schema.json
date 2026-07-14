@@ -1,0 +1,708 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/forge/effectiveness-report.schema.json",
+  "title": "Forge effectiveness attempt report",
+  "description": "One source-qualified report for one model, arm, fixture, and repeat. Capability use is telemetry, never a success proxy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract",
+    "report_id",
+    "experiment",
+    "execution",
+    "events",
+    "evidence",
+    "final_result",
+    "costs"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "contract": {
+      "const": "forge-effectiveness-report"
+    },
+    "report_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "experiment": {
+      "$ref": "#/$defs/experiment"
+    },
+    "execution": {
+      "$ref": "#/$defs/execution"
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/actionEvent"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidenceReference"
+      }
+    },
+    "final_result": {
+      "$ref": "#/$defs/finalResult"
+    },
+    "costs": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "$ref": "#/$defs/costMeasurement"
+      },
+      "allOf": [
+        {
+          "type": "array",
+          "contains": {
+            "type": "object",
+            "required": ["metric"],
+            "properties": {
+              "metric": {
+                "const": "wall_time_ms"
+              }
+            }
+          }
+        },
+        {
+          "type": "array",
+          "contains": {
+            "type": "object",
+            "required": ["metric"],
+            "properties": {
+              "metric": {
+                "enum": [
+                  "input_tokens",
+                  "output_tokens",
+                  "cached_input_tokens",
+                  "reasoning_tokens",
+                  "context_bytes",
+                  "turns"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "digest": {
+      "type": "string",
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9+._-]*:[A-Za-z0-9._-]+$"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "utcTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\\d|3[01])T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?Z$"
+    },
+    "modelIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "id"],
+      "properties": {
+        "provider": {
+          "$ref": "#/$defs/identifier"
+        },
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "revision": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "modelCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requested", "availability", "parameters_digest"],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": ["availability"],
+            "properties": {
+              "availability": {
+                "const": "available"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "required": ["actual"],
+            "not": {
+              "type": "object",
+              "required": ["unavailable_reason"]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["availability"],
+            "properties": {
+              "availability": {
+                "const": "unavailable"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "required": ["unavailable_reason"],
+            "not": {
+              "type": "object",
+              "required": ["actual"]
+            }
+          }
+        }
+      ],
+      "properties": {
+        "requested": {
+          "$ref": "#/$defs/modelIdentity"
+        },
+        "actual": {
+          "$ref": "#/$defs/modelIdentity"
+        },
+        "availability": {
+          "enum": ["available", "unavailable"]
+        },
+        "unavailable_reason": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "parameters_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "objective": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source_ref", "digest"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "source_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "arm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "definition_digest"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "definition_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source_ref", "digest"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "source_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "reproduction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repeat_index"],
+      "properties": {
+        "repeat_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "request_fingerprint": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "anyOf": [
+        {
+          "type": "object",
+          "required": ["seed"]
+        },
+        {
+          "type": "object",
+          "required": ["request_fingerprint"]
+        }
+      ]
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_ref", "base_revision", "snapshot_digest", "isolation_id"],
+      "properties": {
+        "source_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "base_revision": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "snapshot_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "isolation_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "final_revision": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "final_snapshot_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "diff_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "controlledDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "digest"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "capabilityDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {
+          "enum": ["skill", "tool", "connector", "subagent", "other"]
+        },
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "version": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "capabilityPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "digest", "exposed"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "exposed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/capabilityDescriptor"
+          }
+        }
+      }
+    },
+    "experiment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "comparison_group_id",
+        "objective",
+        "arm",
+        "model",
+        "fixture",
+        "reproduction",
+        "workspace",
+        "budget",
+        "verifier_set",
+        "capability_policy"
+      ],
+      "properties": {
+        "comparison_group_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "objective": {
+          "$ref": "#/$defs/objective"
+        },
+        "arm": {
+          "$ref": "#/$defs/arm"
+        },
+        "model": {
+          "$ref": "#/$defs/modelCondition"
+        },
+        "fixture": {
+          "$ref": "#/$defs/fixture"
+        },
+        "reproduction": {
+          "$ref": "#/$defs/reproduction"
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "budget": {
+          "$ref": "#/$defs/controlledDefinition"
+        },
+        "verifier_set": {
+          "$ref": "#/$defs/controlledDefinition"
+        },
+        "capability_policy": {
+          "$ref": "#/$defs/capabilityPolicy"
+        }
+      }
+    },
+    "runnerIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "version": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runner", "started_at", "ended_at", "termination"],
+      "properties": {
+        "runner": {
+          "$ref": "#/$defs/runnerIdentity"
+        },
+        "started_at": {
+          "$ref": "#/$defs/utcTimestamp"
+        },
+        "ended_at": {
+          "$ref": "#/$defs/utcTimestamp"
+        },
+        "termination": {
+          "enum": [
+            "completed",
+            "timeout",
+            "process_error",
+            "infrastructure_error",
+            "cancelled"
+          ]
+        },
+        "termination_detail_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "actionEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sequence", "type", "actor", "observed_at", "status", "summary"],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "capability_activation"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "required": ["capability"]
+          }
+        }
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "type": {
+          "enum": [
+            "observation",
+            "decision",
+            "action",
+            "tool_call",
+            "command",
+            "file_change",
+            "message",
+            "capability_activation",
+            "control"
+          ]
+        },
+        "actor": {
+          "enum": ["model", "runner", "tool", "user", "system", "verifier"]
+        },
+        "observed_at": {
+          "$ref": "#/$defs/utcTimestamp"
+        },
+        "status": {
+          "enum": ["started", "succeeded", "failed", "blocked", "observed"]
+        },
+        "summary": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "capability": {
+          "$ref": "#/$defs/capabilityDescriptor"
+        },
+        "details_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        }
+      }
+    },
+    "evidenceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source_kind",
+        "locator",
+        "digest",
+        "producer_ref",
+        "event_id",
+        "objective_ref"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "source_kind": {
+          "enum": ["model_self_report", "tool_output", "independent_verifier"]
+        },
+        "locator": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "producer_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "event_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "objective_ref": {
+          "$ref": "#/$defs/identifier"
+        },
+        "envelope_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "modelClaim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "evidence_ref"],
+      "properties": {
+        "state": {
+          "enum": ["completed", "partial", "blocked", "failed", "incomplete"]
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "finalResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["submission_status", "artifact_refs", "verifier_result_refs"],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": ["submission_status"],
+            "properties": {
+              "submission_status": {
+                "const": "submitted"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "required": ["final_output_ref", "model_claim"]
+          }
+        }
+      ],
+      "properties": {
+        "submission_status": {
+          "enum": ["submitted", "blocked", "no_output"]
+        },
+        "final_output_ref": {
+          "$ref": "#/$defs/identifier"
+        },
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        },
+        "verifier_result_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "model_claim": {
+          "$ref": "#/$defs/modelClaim"
+        }
+      }
+    },
+    "acquisitionSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "source_ref", "quality"],
+      "properties": {
+        "kind": {
+          "enum": ["runner", "provider", "tool", "derived", "model_self_report"]
+        },
+        "source_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "quality": {
+          "enum": ["observed", "estimated"]
+        }
+      }
+    },
+    "costMeasurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["metric", "value", "unit", "acquisition"],
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["metric", "unit"],
+          "properties": {
+            "metric": {
+              "const": "wall_time_ms"
+            },
+            "unit": {
+              "const": "ms"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["metric", "unit"],
+          "properties": {
+            "metric": {
+              "enum": [
+                "input_tokens",
+                "output_tokens",
+                "cached_input_tokens",
+                "reasoning_tokens"
+              ]
+            },
+            "unit": {
+              "const": "tokens"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["metric", "unit"],
+          "properties": {
+            "metric": {
+              "const": "context_bytes"
+            },
+            "unit": {
+              "const": "bytes"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["metric", "unit"],
+          "properties": {
+            "metric": {
+              "enum": ["turns", "tool_calls"]
+            },
+            "unit": {
+              "const": "count"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["metric", "unit"],
+          "properties": {
+            "metric": {
+              "const": "estimated_cost_microusd"
+            },
+            "unit": {
+              "const": "microusd"
+            }
+          }
+        }
+      ],
+      "properties": {
+        "metric": {
+          "enum": [
+            "wall_time_ms",
+            "input_tokens",
+            "output_tokens",
+            "cached_input_tokens",
+            "reasoning_tokens",
+            "context_bytes",
+            "turns",
+            "tool_calls",
+            "estimated_cost_microusd"
+          ]
+        },
+        "value": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unit": {
+          "enum": ["ms", "tokens", "bytes", "count", "microusd"]
+        },
+        "acquisition": {
+          "$ref": "#/$defs/acquisitionSource"
+        }
+      }
+    }
+  }
+}

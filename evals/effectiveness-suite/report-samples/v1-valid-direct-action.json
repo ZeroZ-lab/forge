@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "contract": "forge-effectiveness-report",
+  "report_id": "direct-read-package-version.forge.0",
+  "experiment": {
+    "comparison_group_id": "direct-read-package-version.model-fixture-model.0",
+    "objective": {
+      "id": "read-package-version",
+      "source_ref": "evals/effectiveness-suite/fixtures/direct-read-package-version.md",
+      "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "arm": {
+      "id": "forge",
+      "definition_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    "model": {
+      "requested": {
+        "provider": "fixture-provider",
+        "id": "fixture-model",
+        "revision": "fixture-revision"
+      },
+      "actual": {
+        "provider": "fixture-provider",
+        "id": "fixture-model",
+        "revision": "fixture-revision"
+      },
+      "availability": "available",
+      "parameters_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    "fixture": {
+      "id": "direct-read-package-version",
+      "source_ref": "evals/effectiveness-suite/fixtures/direct-read-package-version.md",
+      "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    "reproduction": {
+      "repeat_index": 0,
+      "seed": 7
+    },
+    "workspace": {
+      "source_ref": "fixture://direct-read-package-version",
+      "base_revision": "fixture-revision-1",
+      "snapshot_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+      "isolation_id": "direct-read-package-version.forge.0"
+    },
+    "budget": {
+      "id": "fixture-budget",
+      "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666"
+    },
+    "verifier_set": {
+      "id": "fixture-verifiers",
+      "digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+    },
+    "capability_policy": {
+      "id": "forge-current",
+      "digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "exposed": [
+        {
+          "kind": "skill",
+          "id": "forge:detail",
+          "version": "0.52.0"
+        }
+      ]
+    }
+  },
+  "execution": {
+    "runner": {
+      "name": "effectiveness-fixture-runner",
+      "version": "1"
+    },
+    "started_at": "2026-07-14T12:00:00.000Z",
+    "ended_at": "2026-07-14T12:00:01.250Z",
+    "termination": "completed"
+  },
+  "events": [
+    {
+      "id": "event-read-version",
+      "sequence": 0,
+      "type": "tool_call",
+      "actor": "tool",
+      "observed_at": "2026-07-14T12:00:00.250Z",
+      "status": "succeeded",
+      "summary": "Read the authoritative package version field.",
+      "details_ref": "events.jsonl#event-read-version",
+      "evidence_refs": ["evidence-read-version"]
+    },
+    {
+      "id": "event-verify-workspace",
+      "sequence": 1,
+      "type": "command",
+      "actor": "verifier",
+      "observed_at": "2026-07-14T12:00:00.750Z",
+      "status": "succeeded",
+      "summary": "Verified that the workspace remained unchanged.",
+      "details_ref": "events.jsonl#event-verify-workspace",
+      "evidence_refs": ["evidence-workspace-unchanged"]
+    },
+    {
+      "id": "event-final-message",
+      "sequence": 2,
+      "type": "message",
+      "actor": "model",
+      "observed_at": "2026-07-14T12:00:01.000Z",
+      "status": "observed",
+      "summary": "Submitted the reported package version.",
+      "details_ref": "events.jsonl#event-final-message",
+      "evidence_refs": ["evidence-model-claim"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-read-version",
+      "source_kind": "tool_output",
+      "locator": "events.jsonl#event-read-version",
+      "digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+      "producer_ref": "tool:workspace-reader",
+      "event_id": "event-read-version",
+      "objective_ref": "read-package-version"
+    },
+    {
+      "id": "evidence-workspace-unchanged",
+      "source_kind": "independent_verifier",
+      "locator": "events.jsonl#event-verify-workspace",
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "producer_ref": "verifier:workspace-diff",
+      "event_id": "event-verify-workspace",
+      "objective_ref": "read-package-version"
+    },
+    {
+      "id": "evidence-model-claim",
+      "source_kind": "model_self_report",
+      "locator": "events.jsonl#event-final-message",
+      "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "producer_ref": "model:fixture-model",
+      "event_id": "event-final-message",
+      "objective_ref": "read-package-version"
+    }
+  ],
+  "final_result": {
+    "submission_status": "submitted",
+    "final_output_ref": "evidence-model-claim",
+    "artifact_refs": [],
+    "verifier_result_refs": ["evidence-workspace-unchanged"],
+    "model_claim": {
+      "state": "completed",
+      "evidence_ref": "evidence-model-claim"
+    }
+  },
+  "costs": [
+    {
+      "metric": "wall_time_ms",
+      "value": 1250,
+      "unit": "ms",
+      "acquisition": {
+        "kind": "runner",
+        "source_ref": "execution.started_at+execution.ended_at",
+        "quality": "observed"
+      }
+    },
+    {
+      "metric": "turns",
+      "value": 1,
+      "unit": "count",
+      "acquisition": {
+        "kind": "runner",
+        "source_ref": "events.jsonl",
+        "quality": "observed"
+      }
+    }
+  ]
+}

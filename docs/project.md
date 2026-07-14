@@ -26,6 +26,7 @@
 | Orchestrator | 协调多个 skill，并为一次持久变更汇总一个 CU |
 | Kernel | 只管理目标、权限、范围、权威事实、证据、任务状态和完成条件的外部控制边界 |
 | Direct action | 模型不调用 Skill，直接执行并验证当前目标所需动作的一等路径 |
+| Effectiveness attempt report | 一个 model × arm × fixture × repeat 的原子运行记录；只记录受控条件、可观察动作、来源化证据引用、结果声明和成本 |
 
 ## 共享决策
 
@@ -42,6 +43,7 @@
 | PD9 | 阻塞后的变更证据 | 保留变更时由 standalone 或 orchestrator 写一个部分完成 CU；完全回滚则不写 | 长程或失败任务不能丢失已发生变更、未验证项和回滚证据，同时避免 child 重复写入 | child 自写 CU；阻塞后一律不记录；无变更也写 CU |
 | PD10 | Node 支持线 | Node 22 与 24 两条 LTS major；每次发布按官方生命周期复核 | 2026-07-14 两者仍受 LTS 支持，Node 官方建议生产只用 Active/Maintenance LTS | 已 EOL 的 20；仍为 Current 的 26 |
 | PD11 | Kernel 非干扰边界 | Kernel 约束外部目标与证据，不替模型选择阶段、Skill、实现策略或内部推理；有效性以同模型 Forge/no-Forge 的 outcome、安全和证据配对比较 | 模型能力增强时仍可直接行动、跳过或拒绝无关能力，Forge 不把既有流程变成能力上限 | 固定 Skill 命中率；按模型名称假定能力全序；以阶段完成代替目标结果 |
+| PD12 | Effectiveness report 事实边界 | 每次 attempt 独立报告受控实验条件、observable events、typed evidence refs、execution/result 分离和来源化成本；Skill 使用只作遥测 | 让后续 runner、verifier、evaluator 共用一个可追溯 seam，同时不把流程当结果 | 复用 skills-suite 自述报告；静默补齐缺失来源；把模型完成声明当 evaluator 结论 |
 
 PD11 当前是评测与后续 Kernel 迁移的约束，不改变 PD1 的已发布默认入口；默认调用逻辑只能在 Forge Next B10 基线冻结并通过对应门禁后迁移。
 
@@ -82,3 +84,4 @@ npm run check:supported
 - optional artifact 若重复 goal/project，将重新产生漂移；review 必须检查单一事实源。
 - skills-suite 是固定场景的 compliance/regression harness；benchmark contract 只证明评测定义完整，run report 只证明该固定场景合规。真实 skill 效果必须由 held-out 或外部审阅的 effectiveness suite 另证。
 - effectiveness suite 必须保持动作路径中立：直接行动和可选 Skill 调用都可成功，只有可验证结果、安全与有效证据进入成功判定。
+- effectiveness report 的 schema 通过只证明结构契约成立；B03 的引用校验、B06 的证据有效性和 B08 的 outcome 判定完成前，不得把报告描述为有效性证据。

@@ -42,6 +42,15 @@ at least two repeats per case and mode, runtime evidence, and human/external
 review over goal completion, scope control, verification strength, doc drift,
 and human reviewability.
 
+Effectiveness attempt reports use the separate
+`evals/effectiveness-suite/report.schema.json` contract. One report represents
+one model × arm × fixture × repeat and distinguishes observable events,
+capability telemetry, model self-report, tool output, independent verifier
+references, execution termination, submitted result, and cost acquisition
+sources. A valid shape is not a verified outcome. Legacy skills-suite v2
+reports are explicitly incompatible because missing controlled conditions and
+provenance cannot be inferred safely.
+
 The fixed skills-suite still records expected Skill routing for compatibility
 regression. Those routing signals are not outcome evidence and must not enter
 the Kernel non-interference gate. Effectiveness compares Forge and no-Forge

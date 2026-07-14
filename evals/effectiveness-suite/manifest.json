@@ -1,10 +1,12 @@
 {
-  "version": 2,
+  "version": 3,
   "name": "forge-effectiveness-suite",
   "description": "Held-out real-task contract for comparing Forge and no-Forge outcomes without rewarding a fixed stage or skill path. Contract validation proves task coverage only; effectiveness requires real multi-run reports and external or human review.",
   "minimum_cases": 6,
   "required_repeats": 2,
   "modes": ["forge", "no-forge"],
+  "report_schema": "evals/effectiveness-suite/report.schema.json",
+  "report_compatibility": "evals/effectiveness-suite/report.compatibility.json",
   "metrics": [
     "goal_completion",
     "scope_control",

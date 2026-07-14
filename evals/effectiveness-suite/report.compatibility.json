@@ -1,0 +1,39 @@
+{
+  "contract": "forge-effectiveness-report",
+  "policy_version": 1,
+  "current_version": 1,
+  "directly_accepted_versions": [1],
+  "unknown_version": {
+    "disposition": "reject"
+  },
+  "migration_policy": {
+    "mode": "explicit_adapter_only",
+    "requirements": [
+      "preserve the source report digest and original contract version",
+      "never infer missing model, arm, workspace, budget, verifier, or evidence provenance",
+      "revalidate the complete migrated report against the current schema"
+    ]
+  },
+  "migrations": [],
+  "foreign_contracts": [
+    {
+      "contract": "forge-skills-suite",
+      "versions": [2],
+      "disposition": "incompatible",
+      "diagnostic": "rerun_required_missing_effectiveness_provenance",
+      "discriminator": {
+        "required_values": {
+          "version": 2,
+          "suite": "forge"
+        },
+        "required_fields": ["run_id", "cases"],
+        "forbidden_fields": ["schema_version", "contract", "experiment"]
+      }
+    }
+  ],
+  "samples": {
+    "valid_current": "evals/effectiveness-suite/report-samples/v1-valid-direct-action.json",
+    "missing_required": "evals/effectiveness-suite/report-samples/v1-missing-workspace.invalid.json",
+    "legacy_incompatible": "evals/effectiveness-suite/report-samples/skills-suite-v2.incompatible.json"
+  }
+}
