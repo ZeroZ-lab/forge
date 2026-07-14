@@ -139,8 +139,10 @@ test('architecture-view rejects unsafe feature identifiers before reads or write
   writeFile(root, 'docs/project.md', '# Project\n');
   writeFile(parent, 'outside-feature/goal.md', '# Outside Feature\n');
   writeFile(root, 'docs/features/sales%Q4/goal.md', '# Safe Percent Feature\n');
+  writeFile(root, 'docs/features/sales%25Q4/goal.md', '# Safe Encoded Percent Feature\n');
 
   assert.equal(buildViewModel({ root, feature: 'sales%Q4' }).feature, 'sales%Q4');
+  assert.equal(buildViewModel({ root, feature: 'sales%25Q4' }).feature, 'sales%25Q4');
 
   const traversal = '../../../outside-feature';
   const invalidFeatures = [
@@ -154,9 +156,11 @@ test('architecture-view rejects unsafe feature identifiers before reads or write
     '%2e%2e',
     'safe%2foutside',
     '%2e%2e%2foutside%Q4',
+    '%252e%252e%252foutside%Q4',
     'safe%5coutside%Q4',
     'bad%00feature%Q4',
     '.%2e%Q4',
+    'C:outside',
     'bad\0feature',
   ];
 

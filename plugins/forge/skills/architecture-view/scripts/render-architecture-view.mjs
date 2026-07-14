@@ -24,23 +24,30 @@ const STABLE_HEADINGS = {
   deployment: ['部署架构', '部署流程', '技术选型', 'Deploy 专属约束', '环境变量', '健康检查', '回滚'],
 };
 
+function percentDecodedCandidates(feature) {
+  const candidates = [];
+  let candidate = feature;
+
+  while (true) {
+    candidates.push(candidate);
+    const next = candidate.replace(/%([0-9a-f]{2})/gi, (_, hex) => (
+      String.fromCharCode(Number.parseInt(hex, 16))
+    ));
+    if (next === candidate) return candidates;
+    candidate = next;
+  }
+}
+
 function assertFeatureIdentifier(feature) {
   if (typeof feature !== 'string' || feature.length === 0) {
     throw new Error('feature must be a single path segment');
   }
 
-  let decodedFeature = feature;
-  try {
-    decodedFeature = decodeURIComponent(feature);
-  } catch {
-    // A literal percent sign is a valid filename character. Only inspect a
-    // decoded candidate when the whole identifier is valid URI encoding.
-  }
-
-  for (const candidate of [feature, decodedFeature]) {
+  for (const candidate of percentDecodedCandidates(feature)) {
     if (
       /%(?:2f|5c|00)/i.test(candidate) ||
       /(?:%2e%2e|%2e\.|\.%2e)/i.test(candidate) ||
+      /^[a-z]:/i.test(candidate) ||
       candidate === '.' ||
       candidate === '..' ||
       candidate.includes('/') ||

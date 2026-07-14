@@ -13,7 +13,8 @@
 ## Behavior Change
 
 - CLI and programmatic `buildViewModel` calls now require `feature` to be one path segment.
-- Both raw and successfully percent-decoded forms are checked so encoded traversal or separators cannot bypass the boundary without rejecting safe literal percent names.
+- Raw input and every successive valid percent-decoding layer are checked independently, so malformed literal-percent suffixes cannot hide encoded traversal while safe literal percent names remain valid.
+- Windows drive-relative prefixes such as `C:outside` are rejected in addition to absolute and separator-bearing paths.
 - Legitimate single-segment identifiers retain their existing behavior; no lowercase or kebab-case restriction was introduced.
 
 ## Affected Surface
@@ -27,6 +28,7 @@
 
 - Validate inside `buildViewModel` as well as `parseArgs`, because programmatic callers can bypass CLI parsing.
 - Treat POSIX and Windows path forms as unsafe regardless of the host platform.
+- Decode valid percent escapes token-by-token until stable instead of decoding the identifier atomically; this exposes nested encodings without rejecting unrelated malformed literal percent text.
 - Do not normalize or rewrite unsafe input; reject it before I/O.
 - Preserve non-kebab single-segment feature names for compatibility.
 
@@ -42,11 +44,12 @@
 
 - Red-capable evidence:
   - `node --test tests/architecture-view-renderer.test.mjs` initially failed because `../../../outside-feature` was accepted and read from outside the selected project root.
+  - Final review added red cases showing `%252e%252e%252foutside%Q4` and `C:outside` reached the document-read seam before the guard was strengthened.
 - Commands and results:
   - `node --test tests/architecture-view-renderer.test.mjs` → exit 0; 7 tests passed.
   - `node scripts/validate.mjs` → exit 0; `Forge validation passed (27 skills, version 0.52.0).`
-  - `node --test 'tests/*.test.mjs'` → exit 0; 98 tests passed, 0 failed.
-- Boundary cases covered: traversal, nested POSIX/Windows paths, dot segments, absolute paths, encoded traversal/separators (including a malformed-percent suffix), encoded/raw NUL, a safe literal-percent name, direct API calls, CLI calls, and absence of external output.
+  - `node --test tests/*.test.mjs` → exit 0; 109 tests passed, 0 failed after the final boundary recheck.
+- Boundary cases covered: traversal, nested POSIX/Windows paths, Windows drive-relative paths, dot segments, absolute paths, single/double encoded traversal and separators (including malformed-percent suffixes), encoded/raw NUL, safe literal and encoded-percent names, direct API calls, CLI calls, and absence of external output.
 - Not verified: symlink and explicit `--out` containment, intentionally deferred to A04.
 
 ## Rollback
