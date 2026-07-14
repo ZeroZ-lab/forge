@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Improve — 架构加深机会发现
 
-Refs: references/module-depth.md, references/html-report-format.md, ../shared/concepts/artifact-policy.md, ../shared/concepts/history-maintenance.md.
+Refs: references/module-depth.md, references/html-report-format.md, ../shared/concepts/artifact-policy.md, ../shared/concepts/history-maintenance.md, ../shared/concepts/delegation-matrix.md, ../shared/concepts/decision-presentation.md.
 
 ## 职责
 
@@ -26,7 +26,7 @@ Refs: references/module-depth.md, references/html-report-format.md, ../shared/co
 ## 流程
 
 1. **Orient**：读 `docs/project.md` 领域语言 + `docs/adr/` + 相关 `goal.md`/`modules/*.md`。用领域词命名候选（「Order intake 模块」），不造 `FooBarHandler`。
-2. **Explore**：用 `Agent(subagent_type=Explore)` 有机走查源码，记摩擦点：
+2. **Explore**：按 delegation matrix 判断是否把有边界的只读源码走查委派给独立调查者。委派时给出范围、排除项和 `{file, line, symbol}` 证据契约；没有独立委派能力时由主控本地完成，并声明独立性限制。记录这些摩擦点：
    - 理解一个概念要在多个小模块间跳来跳去；
    - 浅模块：接口几乎和实现一样复杂；
    - 纯函数为测试抽取，但 bug 藏在调用处（无 locality）；
@@ -34,7 +34,7 @@ Refs: references/module-depth.md, references/html-report-format.md, ../shared/co
    - 不可测或难通过当前接口测的部分。
    对每个疑点跑 **deletion test**（见 references/module-depth.md）：删掉它让复杂度**集中**（信号）还是只是**搬移**（不是）。
 3. **Present**：按 references/html-report-format.md 写自包含 HTML 到 `.forge/improve/<scope>/index.html`，`open` 它。每张候选卡：Files / Problem / Solution / Benefits（用 locality & leverage 表达）/ Before-After 内联 SVG / 强度徽章（Strong / Worth exploring / Speculative）/ ADR 冲突标注。结尾 Top recommendation。**不提接口设计**。
-4. **Pick**：用 `AskUserQuestion` 问用户选哪个候选深入（2-4 选项，Recommended 标记；遵循 decision-presentation）。
+4. **Pick**：呈现 2–4 个候选让用户选择，标出 Recommended 和每项 tradeoff，并保留 custom 入口；交互载体遵循 decision-presentation 的“宿主适配与降级”规则。
 5. **Handoff**：推荐 `$think` 深入选定候选，grilling agenda（约束 / 依赖 / 加深后模块形状 / seam 后面放什么 / 哪些测试存活）见 references/module-depth.md。接受的 deepening 回写由后续 `think`/`codegen`/`learn`/`technical-design` 完成。
 
 ## 文档约束

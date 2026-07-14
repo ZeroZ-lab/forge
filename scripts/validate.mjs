@@ -7,6 +7,7 @@ import process from 'node:process';
 import { loadBenchmarkContract } from './lib/benchmark-contract.mjs';
 import { loadEffectivenessContract } from './lib/effectiveness-contract.mjs';
 import { loadRegistry } from './lib/registry.mjs';
+import { findBannedSkillSyntaxTokens } from './lib/skill-portability.mjs';
 
 const root = process.cwd();
 const failures = [];
@@ -438,6 +439,13 @@ const stalePatterns = [
 
 for (const [file, pattern] of stalePatterns) {
   assert(!pattern.test(read(file)), `${file}: stale pattern still present: ${pattern}`);
+}
+
+for (const file of filesUnder('plugins/forge/skills')) {
+  if (!file.endsWith('.md')) continue;
+  for (const finding of findBannedSkillSyntaxTokens(file, read(file))) {
+    fail(`${finding.file}:${finding.line}: banned host-specific skill syntax "${finding.token}"`);
+  }
 }
 
 const removedHookFiles = [
