@@ -29,11 +29,12 @@ function assertFeatureIdentifier(feature) {
     throw new Error('feature must be a single path segment');
   }
 
-  let decodedFeature;
+  let decodedFeature = feature;
   try {
     decodedFeature = decodeURIComponent(feature);
   } catch {
-    throw new Error('feature must be a single path segment');
+    // A literal percent sign is a valid filename character. Only inspect a
+    // decoded candidate when the whole identifier is valid URI encoding.
   }
 
   for (const candidate of [feature, decodedFeature]) {

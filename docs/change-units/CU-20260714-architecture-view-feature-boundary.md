@@ -13,7 +13,7 @@
 ## Behavior Change
 
 - CLI and programmatic `buildViewModel` calls now require `feature` to be one path segment.
-- Both raw and percent-decoded forms are checked so encoded traversal or separators cannot bypass the boundary.
+- Both raw and successfully percent-decoded forms are checked so encoded traversal or separators cannot bypass the boundary without rejecting safe literal percent names.
 - Legitimate single-segment identifiers retain their existing behavior; no lowercase or kebab-case restriction was introduced.
 
 ## Affected Surface
@@ -46,7 +46,7 @@
   - `node --test tests/architecture-view-renderer.test.mjs` → exit 0; 7 tests passed.
   - `node scripts/validate.mjs` → exit 0; `Forge validation passed (27 skills, version 0.52.0).`
   - `node --test 'tests/*.test.mjs'` → exit 0; 98 tests passed, 0 failed.
-- Boundary cases covered: traversal, nested POSIX/Windows paths, dot segments, absolute paths, encoded traversal/separators, NUL, direct API calls, CLI calls, and absence of external output.
+- Boundary cases covered: traversal, nested POSIX/Windows paths, dot segments, absolute paths, encoded traversal/separators, NUL, a safe literal-percent name, direct API calls, CLI calls, and absence of external output.
 - Not verified: symlink and explicit `--out` containment, intentionally deferred to A04.
 
 ## Rollback
