@@ -39,6 +39,8 @@ function assertFeatureIdentifier(feature) {
 
   for (const candidate of [feature, decodedFeature]) {
     if (
+      /%(?:2f|5c|00)/i.test(candidate) ||
+      /(?:%2e%2e|%2e\.|\.%2e)/i.test(candidate) ||
       candidate === '.' ||
       candidate === '..' ||
       candidate.includes('/') ||

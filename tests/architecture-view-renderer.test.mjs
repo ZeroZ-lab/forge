@@ -153,6 +153,10 @@ test('architecture-view rejects unsafe feature identifiers before reads or write
     path.join(parent, 'outside-feature'),
     '%2e%2e',
     'safe%2foutside',
+    '%2e%2e%2foutside%Q4',
+    'safe%5coutside%Q4',
+    'bad%00feature%Q4',
+    '.%2e%Q4',
     'bad\0feature',
   ];
 
