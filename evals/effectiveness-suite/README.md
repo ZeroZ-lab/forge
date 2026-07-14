@@ -76,6 +76,59 @@ B02 owns this wire contract and its compatibility corpus. B03 owns the sole
 production constructor/parser and field-addressed strict validation. B06 owns
 Evidence Envelopes, and B08 owns outcome scoring and hard gates.
 
+### Runtime acceptance seam
+
+Production callers use `scripts/lib/effectiveness-report.mjs`:
+
+```js
+import {
+  createEffectivenessReport,
+  parseEffectivenessReport,
+} from '../../scripts/lib/effectiveness-report.mjs';
+```
+
+Both functions require a trusted plan that is separate from the report:
+
+```js
+const options = {
+  experimentPlan: {
+    arms: {
+      forge: {
+        definition_digest: 'sha256:...',
+        capability_policy: { id: 'forge-current', digest: 'sha256:...', exposed: [] },
+      },
+      'no-forge': {
+        definition_digest: 'sha256:...',
+        capability_policy: { id: 'no-forge', digest: 'sha256:...', exposed: [] },
+      },
+    },
+  },
+};
+
+const created = createEffectivenessReport(observed, options);
+const accepted = parseEffectivenessReport(existingReport, options);
+```
+
+The plan must define every arm named by `manifest.modes`; its definition digest
+and complete capability policy are the trusted comparison values. A report
+cannot authorize its own arm or capability exposure.
+
+`createEffectivenessReport` owns `schema_version`, `contract`, and a
+deterministic `report_id`; callers must supply all observed facts such as model
+identity, timestamps, digests, events, evidence, and costs. Supplying a
+constructor-owned field is rejected rather than silently overwritten.
+`parseEffectivenessReport` accepts an existing report without rewriting it, but
+requires its report id and controlled arm fields to agree with the same plan.
+Both functions clone their input and pass through the same fail-closed schema,
+plan-binding, and internal-reference checks. Rejections use
+`EffectivenessReportError.issues[]` with JSON Pointer paths such as
+`/evidence/0/objective_ref`.
+
+This acceptance seam proves only that the report shape, active arm, and its
+internal event/evidence/final-result graph are self-consistent. It does not read
+locators, authenticate producers, recompute digests, or decide whether evidence
+is sufficient; those remain B06 and B08 responsibilities.
+
 ## Scenarios
 
 | Scenario | What It Tests |

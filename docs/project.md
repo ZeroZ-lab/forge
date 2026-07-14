@@ -44,6 +44,7 @@
 | PD10 | Node 支持线 | Node 22 与 24 两条 LTS major；每次发布按官方生命周期复核 | 2026-07-14 两者仍受 LTS 支持，Node 官方建议生产只用 Active/Maintenance LTS | 已 EOL 的 20；仍为 Current 的 26 |
 | PD11 | Kernel 非干扰边界 | Kernel 约束外部目标与证据，不替模型选择阶段、Skill、实现策略或内部推理；有效性以同模型 Forge/no-Forge 的 outcome、安全和证据配对比较 | 模型能力增强时仍可直接行动、跳过或拒绝无关能力，Forge 不把既有流程变成能力上限 | 固定 Skill 命中率；按模型名称假定能力全序；以阶段完成代替目标结果 |
 | PD12 | Effectiveness report 事实边界 | 每次 attempt 独立报告受控实验条件、observable events、typed evidence refs、execution/result 分离和来源化成本；Skill 使用只作遥测 | 让后续 runner、verifier、evaluator 共用一个可追溯 seam，同时不把流程当结果 | 复用 skills-suite 自述报告；静默补齐缺失来源；把模型完成声明当 evaluator 结论 |
+| PD13 | Effectiveness report 接受入口 | constructor/parser 共用一条 fail-closed schema、受信 experiment plan 与内部引用校验管线；plan 绑定 arm definition 和 capability policy，constructor 不推断来源事实，旧 contract 不隐式迁移 | 消除手工拼装、自授权实验臂和测试/生产双 validator 漂移，同时为 B06 外部证据验证保留清楚边界 | 暴露 schema-only 生产捷径；由 report 自证 arm/policy；自动补时间、模型或来源；未知 schema 约束静默通过 |
 
 PD11 当前是评测与后续 Kernel 迁移的约束，不改变 PD1 的已发布默认入口；默认调用逻辑只能在 Forge Next B10 基线冻结并通过对应门禁后迁移。
 

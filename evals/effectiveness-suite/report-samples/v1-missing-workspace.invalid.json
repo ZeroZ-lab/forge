@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "forge-effectiveness-report",
-  "report_id": "direct-read-package-version.forge.missing-workspace",
+  "report_id": "direct-read-package-version.model-fixture-model.0.forge.0",
   "experiment": {
     "comparison_group_id": "direct-read-package-version.model-fixture-model.0",
     "objective": {

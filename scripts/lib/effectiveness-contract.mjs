@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { inspectJsonSchemaSupport } from './json-schema-subset.mjs';
+
 const MANIFEST_PATH = 'evals/effectiveness-suite/manifest.json';
 const REPORT_SCHEMA_PATH = 'evals/effectiveness-suite/report.schema.json';
 const REPORT_COMPATIBILITY_PATH = 'evals/effectiveness-suite/report.compatibility.json';
@@ -179,7 +181,10 @@ function validateLocalRefs(value, root, label, issues) {
   if (!value || typeof value !== 'object') return;
   if (Object.hasOwn(value, '$ref')) {
     const target = resolveLocalRef(root, value.$ref);
-    if (!target || typeof target !== 'object' || Array.isArray(target)) {
+    if (
+      target === undefined ||
+      (target !== true && target !== false && (typeof target !== 'object' || Array.isArray(target)))
+    ) {
       issues.push(`${label}: unresolved local $ref ${String(value.$ref)}`);
     }
   }
@@ -248,6 +253,9 @@ export function loadEffectivenessContract(rootDir) {
     issues.push(`${REPORT_SCHEMA_PATH}.contract must be ${REPORT_CONTRACT}`);
   }
   validateLocalRefs(reportSchema, reportSchema, REPORT_SCHEMA_PATH, issues);
+  for (const supportIssue of inspectJsonSchemaSupport(reportSchema)) {
+    issues.push(`${REPORT_SCHEMA_PATH}: ${supportIssue}`);
+  }
   requireSameStringSet(
     reportSchema.$defs?.evidenceReference?.properties?.source_kind?.enum,
     ['model_self_report', 'tool_output', 'independent_verifier'],
