@@ -11,18 +11,18 @@ const BLOCKED_MUTATION_FIELDS = [
   'rollback',
 ];
 
-export function decideChangeUnitOwnership({ mode, mutation, outcome }) {
+export function decideChangeUnitOwnership({ mode, retainedMutation, outcome }) {
   if (mode !== 'standalone' && mode !== 'child') {
     throw new Error('mode must be standalone or child');
   }
   if (outcome !== 'completed' && outcome !== 'blocked') {
     throw new Error('outcome must be completed or blocked');
   }
-  if (typeof mutation !== 'boolean') {
-    throw new Error('mutation must be boolean');
+  if (typeof retainedMutation !== 'boolean') {
+    throw new Error('retainedMutation must be boolean');
   }
 
-  if (!mutation) {
+  if (!retainedMutation) {
     return {
       currentWrites: false,
       writer: null,

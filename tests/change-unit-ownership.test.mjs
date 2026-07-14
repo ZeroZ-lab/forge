@@ -5,7 +5,7 @@ import { decideChangeUnitOwnership } from '../scripts/lib/change-unit-ownership.
 
 test('standalone mutation owns exactly one Change Unit', () => {
   assert.deepEqual(
-    decideChangeUnitOwnership({ mode: 'standalone', mutation: true, outcome: 'completed' }),
+    decideChangeUnitOwnership({ mode: 'standalone', retainedMutation: true, outcome: 'completed' }),
     {
       currentWrites: true,
       writer: 'current',
@@ -17,7 +17,7 @@ test('standalone mutation owns exactly one Change Unit', () => {
 
 test('child mutation delegates one consolidated Change Unit to its orchestrator', () => {
   assert.deepEqual(
-    decideChangeUnitOwnership({ mode: 'child', mutation: true, outcome: 'completed' }),
+    decideChangeUnitOwnership({ mode: 'child', retainedMutation: true, outcome: 'completed' }),
     {
       currentWrites: false,
       writer: 'orchestrator',
@@ -29,7 +29,19 @@ test('child mutation delegates one consolidated Change Unit to its orchestrator'
 
 test('a pre-mutation block writes no Change Unit', () => {
   assert.deepEqual(
-    decideChangeUnitOwnership({ mode: 'standalone', mutation: false, outcome: 'blocked' }),
+    decideChangeUnitOwnership({ mode: 'standalone', retainedMutation: false, outcome: 'blocked' }),
+    {
+      currentWrites: false,
+      writer: null,
+      expectedChangeUnits: 0,
+      receiptFields: [],
+    },
+  );
+});
+
+test('a fully rolled-back mutation writes no Change Unit', () => {
+  assert.deepEqual(
+    decideChangeUnitOwnership({ mode: 'child', retainedMutation: false, outcome: 'completed' }),
     {
       currentWrites: false,
       writer: null,
@@ -44,7 +56,7 @@ test('a post-mutation block preserves partial evidence for the single owner', ()
     ['standalone', 'current', true],
     ['child', 'orchestrator', false],
   ]) {
-    const decision = decideChangeUnitOwnership({ mode, mutation: true, outcome: 'blocked' });
+    const decision = decideChangeUnitOwnership({ mode, retainedMutation: true, outcome: 'blocked' });
 
     assert.equal(decision.writer, writer);
     assert.equal(decision.currentWrites, currentWrites);
@@ -63,11 +75,15 @@ test('a post-mutation block preserves partial evidence for the single owner', ()
 
 test('ownership policy rejects unknown modes and outcomes', () => {
   assert.throws(
-    () => decideChangeUnitOwnership({ mode: 'stage', mutation: true, outcome: 'completed' }),
+    () => decideChangeUnitOwnership({ mode: 'stage', retainedMutation: true, outcome: 'completed' }),
     /mode must be standalone or child/,
   );
   assert.throws(
-    () => decideChangeUnitOwnership({ mode: 'standalone', mutation: true, outcome: 'paused' }),
+    () => decideChangeUnitOwnership({ mode: 'standalone', retainedMutation: true, outcome: 'paused' }),
     /outcome must be completed or blocked/,
+  );
+  assert.throws(
+    () => decideChangeUnitOwnership({ mode: 'standalone', retainedMutation: 'yes', outcome: 'completed' }),
+    /retainedMutation must be boolean/,
   );
 });

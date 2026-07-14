@@ -16,7 +16,8 @@
 - An invocation without an explicit parent owner defaults to standalone and writes one Change Unit after a completed mutation.
 - A child invocation returns changed files, decisions, risks, and verification evidence but does not write its own Change Unit; the orchestrator owns the consolidated record.
 - Blocking before mutation produces no Change Unit; blocking after mutation preserves partial-change, unverified, and rollback evidence through the standalone caller or orchestrator.
-- The shared rule is mirrored by an executable ownership policy that returns the current writer, expected total CU count, and required receipt fields for each branch.
+- The shared rule is mirrored by an executable ownership policy that takes retained-mutation state and returns the current writer, expected total CU count, and required receipt fields for each branch.
+- A mutation that is fully rolled back is explicitly treated as no retained mutation and writes no Change Unit.
 
 ## Affected Surface
 
@@ -24,12 +25,14 @@
 - History-aware validator coverage.
 - Skill contract regression tests.
 - Executable Change Unit ownership policy and branch tests.
+- Shared project decision PD9 and shared history-maintenance rules.
 - No source-code generator, runtime state, manifest, or version change.
 
 ## Decisions
 
 - Treat `child` as an invocation with an explicit orchestrator that owns final completion and history; otherwise use standalone semantics.
 - Promote post-mutation blocking behavior to the shared project contract rather than overriding it inside fe-artifact.
+- Model retained mutation explicitly instead of using an ambiguous `mutation` boolean, so a fully rolled-back attempt cannot create a false history record.
 - Keep only fe-artifact-specific defaults and receipt fields in the skill; shared ownership branches have one owner.
 - Do not modify `codegen` until a reciprocal runtime caller contract exists; this avoids implying an orchestrator that the current implementation does not provide.
 
@@ -48,7 +51,7 @@
   - `node scripts/validate.mjs` initially failed because `fe-artifact` did not reference the shared history module.
 - Commands and results:
   - `node --test tests/skill-eval-alignment.test.mjs` → exit 0; 4 tests passed.
-  - `node --test tests/change-unit-ownership.test.mjs` → exit 0; 5 ownership branches passed, including exact CU counts and post-mutation evidence.
+  - `node --test tests/change-unit-ownership.test.mjs` → exit 0; 6 ownership branches passed, including exact CU counts, full rollback, and post-mutation evidence.
   - `node scripts/validate.mjs` → exit 0; `Forge validation passed (27 skills, version 0.52.0).`
   - `node --test 'tests/*.test.mjs'` → exit 0; 99 tests passed, 0 failed.
   - `node scripts/evaluate-skills.mjs` → exit 0; benchmark contract passed for 23 cases and 27 skills; no behavioral-effectiveness claim.
@@ -57,7 +60,9 @@
 
 ## Rollback
 
-- Remove `fe-artifact` from the history-aware validator list, remove its invocation-mode contract and regression test, then remove this CU.
+- Revert PD9 in `docs/project.md` and the retained-mutation rules in shared `history-maintenance.md`.
+- Remove `fe-artifact` from the history-aware validator list and remove its invocation-mode contract and alignment assertion.
+- Remove `scripts/lib/change-unit-ownership.mjs`, `tests/change-unit-ownership.test.mjs`, and this CU.
 - Safe stop: if a caller cannot identify an explicit parent history owner, execute as standalone rather than dropping mutation evidence.
 
 ## Docs To Sync

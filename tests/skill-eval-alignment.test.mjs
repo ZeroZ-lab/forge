@@ -84,7 +84,7 @@ test('fe-artifact assigns Change Unit ownership by invocation mode', async () =>
 
   assert.match(skill, /standalone/i);
   assert.match(skill, /child[\s\S]*does not write[\s\S]*orchestrator/i);
-  assert.match(history, /standalone run with mutation[\s\S]*one Change Unit/i);
+  assert.match(history, /standalone run with retained mutation[\s\S]*one Change Unit/i);
   assert.match(history, /child skill does not persist[\s\S]*orchestrator is the only writer/i);
   assert.match(history, /blocked before mutation[\s\S]*no Change Unit/i);
   assert.match(history, /blocked after mutation[\s\S]*partial changes[\s\S]*unverified items[\s\S]*rollback/i);

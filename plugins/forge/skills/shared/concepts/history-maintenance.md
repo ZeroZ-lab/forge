@@ -13,10 +13,10 @@ Concentrate durable change evidence behind one internal interface. Skill modules
 
 ## Rules
 
-1. No mutation means no Change Unit write.
+1. No retained mutation means no Change Unit write. A run that changed files and then fully rolled them back follows this rule.
 2. A child skill does not persist history. It returns changed files, decisions, risks, and verification evidence; its orchestrator is the only writer for the consolidated record.
-3. A standalone run with mutation writes one Change Unit when it completes or safely stops while retaining changes.
-4. An orchestrated run writes one consolidated Change Unit when it completes. If it is blocked after mutation and retains changes, the orchestrator still writes one partial record; if all changes are rolled back, the no-mutation rule applies.
+3. A standalone run with retained mutation writes one Change Unit when it completes or safely stops while retaining changes.
+4. An orchestrated run writes one consolidated Change Unit when it completes with retained mutation. If it is blocked after mutation and retains changes, the orchestrator still writes one partial record; if all changes are rolled back, the no-retained-mutation rule applies.
 5. A run blocked before mutation writes no Change Unit and reports only the blocker and recovery condition.
 6. A run blocked after mutation records partial changes, unverified items, and rollback in the single owner record.
 7. The Change Unit records intent, behavior change, affected surface, decisions, risks, verification evidence, rollback, and authoritative documents synchronized.
