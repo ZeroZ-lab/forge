@@ -24,6 +24,35 @@ const STABLE_HEADINGS = {
   deployment: ['部署架构', '部署流程', '技术选型', 'Deploy 专属约束', '环境变量', '健康检查', '回滚'],
 };
 
+function assertFeatureIdentifier(feature) {
+  if (typeof feature !== 'string' || feature.length === 0) {
+    throw new Error('feature must be a single path segment');
+  }
+
+  let decodedFeature;
+  try {
+    decodedFeature = decodeURIComponent(feature);
+  } catch {
+    throw new Error('feature must be a single path segment');
+  }
+
+  for (const candidate of [feature, decodedFeature]) {
+    if (
+      candidate === '.' ||
+      candidate === '..' ||
+      candidate.includes('/') ||
+      candidate.includes('\\') ||
+      candidate.includes('\0') ||
+      path.isAbsolute(candidate) ||
+      path.win32.isAbsolute(candidate)
+    ) {
+      throw new Error('feature must be a single path segment');
+    }
+  }
+
+  return feature;
+}
+
 export function parseArgs(argv) {
   const args = { feature: null, out: null, format: 'html', strict: false, root: process.cwd() };
   for (let index = 0; index < argv.length; index += 1) {
@@ -44,6 +73,7 @@ export function parseArgs(argv) {
     }
   }
   if (!args.feature) throw new Error('--feature is required');
+  assertFeatureIdentifier(args.feature);
   return args;
 }
 
@@ -344,8 +374,8 @@ function assertConfirmedSources(viewModel) {
 }
 
 export function buildViewModel({ root = process.cwd(), feature, generatedAt = new Date().toISOString() }) {
-  if (!feature) throw new Error('feature is required');
-  const featureDir = `docs/features/${feature}`;
+  const featureIdentifier = assertFeatureIdentifier(feature);
+  const featureDir = `docs/features/${featureIdentifier}`;
   const goalDoc = readDoc(root, `${featureDir}/goal.md`, true);
   const projectDoc = readDoc(root, 'docs/project.md');
   const deployDoc = readDoc(root, `${featureDir}/deploy/plan.md`);
@@ -379,7 +409,7 @@ export function buildViewModel({ root = process.cwd(), feature, generatedAt = ne
   }));
   const viewModel = {
     schemaVersion: 1,
-    feature,
+    feature: featureIdentifier,
     generatedAt,
     sources: collectSources([goalDoc, ...moduleDocs, deployDoc, projectDoc]),
     coverage,

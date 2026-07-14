@@ -130,3 +130,40 @@ test('architecture-view CLI writes HTML output', () => {
   assert.ok(fs.existsSync(path.join(root, out)));
   assert.match(fs.readFileSync(path.join(root, out), 'utf8'), /Coverage Matrix/);
 });
+
+test('architecture-view rejects unsafe feature identifiers before reads or writes', (t) => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'architecture-view-boundary-'));
+  const root = path.join(parent, 'project');
+  t.after(() => fs.rmSync(parent, { recursive: true, force: true }));
+
+  writeFile(root, 'docs/project.md', '# Project\n');
+  writeFile(parent, 'outside-feature/goal.md', '# Outside Feature\n');
+
+  const traversal = '../../../outside-feature';
+  const invalidFeatures = [
+    traversal,
+    '../outside-feature',
+    'nested/feature',
+    'nested\\feature',
+    '.',
+    '..',
+    path.join(parent, 'outside-feature'),
+    '%2e%2e',
+    'safe%2foutside',
+    'bad\0feature',
+  ];
+
+  for (const feature of invalidFeatures) {
+    assert.throws(
+      () => buildViewModel({ root, feature }),
+      /feature must be a single path segment/,
+      `expected ${JSON.stringify(feature)} to be rejected`,
+    );
+  }
+
+  assert.throws(
+    () => runCli(['--root', root, '--feature', traversal]),
+    /feature must be a single path segment/,
+  );
+  assert.equal(fs.existsSync(path.join(parent, 'outside-feature', 'index.html')), false);
+});
