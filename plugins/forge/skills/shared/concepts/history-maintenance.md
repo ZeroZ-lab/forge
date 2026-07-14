@@ -14,12 +14,15 @@ Concentrate durable change evidence behind one internal interface. Skill modules
 ## Rules
 
 1. No mutation means no Change Unit write.
-2. A child skill does not persist history. Its orchestrator writes one consolidated record after all child exit conditions pass.
-3. Every mutating standalone lifecycle run or completed orchestrator run creates one `docs/change-units/CU-<date>-<slug>.md`.
-4. The Change Unit records intent, behavior change, affected surface, decisions, risks, verification evidence, rollback, and authoritative documents synchronized.
-5. Do not create or update changelog, timeline, or status documents. Execution receipts (command + output evidence required by D9) are captured inside the Change Unit's Verification / Completion Evidence section, not as standalone trace files.
-6. When a durable decision changed, update its authoritative project, feature, module, ADR, test-governance, or deployment document before closing the Change Unit.
-7. Existing legacy history files are read-only historical material unless the user explicitly requests migration.
+2. A child skill does not persist history. It returns changed files, decisions, risks, and verification evidence; its orchestrator is the only writer for the consolidated record.
+3. A standalone run with mutation writes one Change Unit when it completes or safely stops while retaining changes.
+4. An orchestrated run writes one consolidated Change Unit when it completes. If it is blocked after mutation and retains changes, the orchestrator still writes one partial record; if all changes are rolled back, the no-mutation rule applies.
+5. A run blocked before mutation writes no Change Unit and reports only the blocker and recovery condition.
+6. A run blocked after mutation records partial changes, unverified items, and rollback in the single owner record.
+7. The Change Unit records intent, behavior change, affected surface, decisions, risks, verification evidence, rollback, and authoritative documents synchronized.
+8. Do not create or update changelog, timeline, or status documents. Execution receipts (command + output evidence required by D9) are captured inside the Change Unit's Verification / Completion Evidence section, not as standalone trace files.
+9. When a durable decision changed, update its authoritative project, feature, module, ADR, test-governance, or deployment document before closing the Change Unit.
+10. Existing legacy history files are read-only historical material unless the user explicitly requests migration.
 
 ## Local exceptions
 

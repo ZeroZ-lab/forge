@@ -98,10 +98,9 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 
 ## 历史维护
 
-- **standalone**：未声明由其他编排器拥有最终完成判定时按 standalone 处理；发生源码、样式或测试变更且出口条件通过后，写 one Change Unit。
-- **child**：作为 codegen 或其他明确拥有最终完成判定与历史责任的 orchestrator 子能力时，does not write Change Unit；只返回 changed files、decisions、risks 和 verification evidence，由 orchestrator 汇总一次。
-- **blocked before mutation**：尚未产生变更即阻塞时，写 no Change Unit，只报告阻塞原因和恢复条件。
-- **blocked after mutation**：已经产生变更后才阻塞时，返回 partial changes、未验证项和 rollback；由 standalone 调用或 orchestrator 负责写入一个未完成证据明确的 Change Unit。
+- 未声明由其他编排器拥有最终完成判定时，按 **standalone** 处理。
+- 作为 **child** 时，返回 changed files、decisions、risks 和 verification evidence，does not write Change Unit；由明确的 orchestrator 统一持久化。
+- 变更前/后阻塞及 retained mutation 的唯一写入者规则直接继承共享历史契约，不在本 skill 建立第二套规则。
 
 ## 运行时信号
 
