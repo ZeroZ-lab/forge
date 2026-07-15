@@ -290,7 +290,8 @@ test('one minimal fixture runs all four arms with identical controls and declare
     commonContexts.push(context.commonContext);
     return originalCreateLaunch(context);
   };
-  const result = await runEffectivenessComparisonGroup(groupSpec(t, { modelProvider: provider }));
+  const spec = groupSpec(t, { modelProvider: provider });
+  const result = await runEffectivenessComparisonGroup(spec);
   assert.deepEqual(result.runs.map((run) => run.report.experiment.arm.id), EFFECTIVENESS_ARM_IDS);
   assert.equal(new Set(result.runs.map((run) => run.report.experiment.workspace.isolation_id)).size, 4);
   assert.equal(fs.existsSync(result.sealPath), true);
@@ -321,6 +322,19 @@ test('one minimal fixture runs all four arms with identical controls and declare
 
   const adaptive = result.runs.find((run) => run.report.experiment.arm.id === 'adaptive-full');
   assert.equal(adaptive.report.events.some((event) => event.type === 'capability_activation'), false);
+
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(spec),
+    (error) => error instanceof EffectivenessExperimentError && error.code === 'EVIDENCE_COLLISION',
+  );
+  fs.rmSync(path.join(result.groupDir, 'no-forge', 'host-enforcement.json'));
+  const replacement = await runEffectivenessComparisonGroup(spec);
+  assert.equal(fs.existsSync(replacement.sealPath), true);
+  assert.equal(
+    fs.readdirSync(spec.evidenceRoot)
+      .some((name) => name.startsWith(`${spec.comparisonGroupId}.incomplete-recovered-`)),
+    true,
+  );
 });
 
 test('explicit model mismatch is rejected as unavailable without launching a fallback', async (t) => {
@@ -343,6 +357,33 @@ test('explicit model mismatch is rejected as unavailable without launching a fal
     assert.match(run.report.experiment.model.unavailable_reason, /fallback.*rejected/i);
     assert.equal(run.report.final_result.submission_status, 'no_output');
   }
+});
+
+test('resolved model identity is exact-shape validated before host preparation', async (t) => {
+  let preparations = 0;
+  const sandbox = hostSandbox();
+  const originalPrepare = sandbox.prepareLaunch;
+  sandbox.prepareLaunch = async (...args) => {
+    preparations += 1;
+    return originalPrepare(...args);
+  };
+  const provider = modelProvider({
+    availability: 'available',
+    actual: {
+      provider: 'fixture-provider',
+      id: 'fixture-model',
+      revision: 'r1',
+      extra: 'schema-invalid',
+    },
+  });
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(groupSpec(t, {
+      hostSandbox: sandbox,
+      modelProvider: provider,
+    })),
+    (error) => error instanceof EffectivenessExperimentError && error.code === 'INVALID_MODEL_SELECTION',
+  );
+  assert.equal(preparations, 0);
 });
 
 test('runtime model fallback is reported and invalidates the unsealed group', async (t) => {
@@ -648,6 +689,11 @@ test('an unsealed final directory is quarantined before a clean retry', async (t
   const abandoned = path.join(spec.evidenceRoot, spec.comparisonGroupId);
   fs.mkdirSync(abandoned, { recursive: true });
   fs.writeFileSync(path.join(abandoned, 'partial.txt'), 'interrupted publication\n');
+  fs.writeFileSync(path.join(abandoned, 'group.json'), JSON.stringify({
+    contract: 'forge-effectiveness-comparison-group',
+    version: 1,
+    comparison_group_id: spec.comparisonGroupId,
+  }));
   const result = await runEffectivenessComparisonGroup(spec);
   assert.equal(fs.existsSync(result.sealPath), true);
   const recovered = fs.readdirSync(spec.evidenceRoot)
@@ -655,6 +701,11 @@ test('an unsealed final directory is quarantined before a clean retry', async (t
   assert.equal(typeof recovered, 'string');
   assert.equal(fs.existsSync(path.join(spec.evidenceRoot, recovered, 'partial.txt')), true);
   assert.equal(fs.existsSync(path.join(spec.evidenceRoot, recovered, 'group.json')), false);
+  assert.equal(
+    fs.readdirSync(path.join(spec.evidenceRoot, recovered))
+      .some((name) => name.startsWith('rejected-group-')),
+    true,
+  );
 });
 
 test('recovery never follows a final-directory symlink outside evidence root', async (t) => {

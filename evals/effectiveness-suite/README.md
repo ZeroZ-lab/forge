@@ -298,7 +298,8 @@ observation callbacks cannot supply runtime identity.
 An available preflight selection must match the requested provider/model and
 the requested revision when one was specified. A different preflight identity
 is treated as an unavailable request with a visible `fallback ... rejected`
-reason; the provider launcher is not called. For a launched model, report
+reason; the provider launcher is not called. Requested and resolved identities
+also reject fields outside provider/id/revision before host preparation. For a launched model, report
 `actual` comes from the post-run runtime receipt rather than preflight. A
 runtime identity must exactly match the complete preflight selection, including
 revision even when the request omitted one. A fallback is retained in the
@@ -319,7 +320,9 @@ identity validation fails. Only after validation and host cleanup is
 to its final location. Failed groups receive an `.incomplete-*`
 suffix and have no seal, so they remain diagnosable but are not a complete
 comparison. A final directory left without a valid seal by an interrupted older
-publication is quarantined before the same group id is retried.
+publication is quarantined before the same group id is retried. Seal validity
+requires the exact four ordered arms, B03-accepted reports, and matching on-disk
+runtime/host receipt sizes and digests; header fields alone are insufficient.
 
 Before model resolution, B05 requires a versioned host-sandbox adapter that
 declares filesystem isolation, network policy, detached process-tree

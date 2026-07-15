@@ -4,7 +4,10 @@ import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 import { loadEffectivenessContract } from './effectiveness-contract.mjs';
-import { createEffectivenessReport } from './effectiveness-report.mjs';
+import {
+  createEffectivenessReport,
+  parseEffectivenessReport,
+} from './effectiveness-report.mjs';
 import { runIsolatedEffectivenessAttempt } from './effectiveness-runner.mjs';
 import { loadRegistry } from './registry.mjs';
 
@@ -221,14 +224,98 @@ function normalizeCapabilities(capabilities, label) {
     .sort((left, right) => compareText(capabilityKey(left), capabilityKey(right)));
 }
 
-function hasValidGroupSeal(groupDir, comparisonGroupId) {
+function validRetainedReference(armDir, reference) {
+  if (
+    !isPlainObject(reference) ||
+    !isDeepStrictEqual(Object.keys(reference).sort(compareText), ['bytes', 'digest', 'ref']) ||
+    typeof reference.ref !== 'string' ||
+    path.basename(reference.ref) !== reference.ref ||
+    !/^sha256:[0-9a-f]{64}$/.test(reference.digest) ||
+    !Number.isSafeInteger(reference.bytes) ||
+    reference.bytes < 0
+  ) {
+    return false;
+  }
+  const artifactPath = path.join(armDir, reference.ref);
+  try {
+    const stat = fs.lstatSync(artifactPath);
+    return stat.isFile() &&
+      pathIsWithin(fs.realpathSync(armDir), fs.realpathSync(artifactPath)) &&
+      stat.size === reference.bytes &&
+      digestBuffer(fs.readFileSync(artifactPath)) === reference.digest;
+  } catch {
+    return false;
+  }
+}
+
+function hasValidGroupSeal(groupDir, comparisonGroupId, rootDir, experimentPlan) {
   const sealPath = path.join(groupDir, 'group.json');
   try {
     if (!fs.lstatSync(groupDir).isDirectory() || !fs.lstatSync(sealPath).isFile()) return false;
     const seal = JSON.parse(fs.readFileSync(sealPath, 'utf8'));
-    return seal?.contract === 'forge-effectiveness-comparison-group' &&
-      seal?.version === 1 &&
-      seal?.comparison_group_id === comparisonGroupId;
+    if (
+      !isPlainObject(seal) ||
+      !isDeepStrictEqual(
+        Object.keys(seal).sort(compareText),
+        [
+          'common_context_digest',
+          'comparison_group_id',
+          'contract',
+          'host_policy_digest',
+          'reports',
+          'version',
+        ],
+      ) ||
+      seal.contract !== 'forge-effectiveness-comparison-group' ||
+      seal.version !== 1 ||
+      seal.comparison_group_id !== comparisonGroupId ||
+      !/^sha256:[0-9a-f]{64}$/.test(seal.common_context_digest) ||
+      !/^sha256:[0-9a-f]{64}$/.test(seal.host_policy_digest) ||
+      !Array.isArray(seal.reports) ||
+      seal.reports.length !== EFFECTIVENESS_ARM_IDS.length
+    ) {
+      return false;
+    }
+    for (let index = 0; index < EFFECTIVENESS_ARM_IDS.length; index += 1) {
+      const armId = EFFECTIVENESS_ARM_IDS[index];
+      const entry = seal.reports[index];
+      const armDir = path.join(groupDir, armId);
+      if (
+        !isPlainObject(entry) ||
+        entry.arm !== armId ||
+        typeof entry.report_id !== 'string' ||
+        !/^sha256:[0-9a-f]{64}$/.test(entry.digest) ||
+        !fs.lstatSync(armDir).isDirectory() ||
+        !pathIsWithin(fs.realpathSync(groupDir), fs.realpathSync(armDir))
+      ) {
+        return false;
+      }
+      const reportPath = path.join(armDir, 'report.json');
+      if (!fs.lstatSync(reportPath).isFile()) return false;
+      const report = parseEffectivenessReport(fs.readFileSync(reportPath, 'utf8'), {
+        rootDir,
+        experimentPlan,
+      });
+      const requiresRuntime = report.experiment.model.availability === 'available';
+      const expectedEntryFields = [
+        'arm',
+        'digest',
+        'host_enforcement',
+        'report_id',
+        ...(requiresRuntime ? ['runtime_receipt'] : []),
+      ].sort(compareText);
+      if (
+        !isDeepStrictEqual(Object.keys(entry).sort(compareText), expectedEntryFields) ||
+        report.report_id !== entry.report_id ||
+        report.experiment.arm.id !== armId ||
+        digestJson(report) !== entry.digest ||
+        !validRetainedReference(armDir, entry.host_enforcement) ||
+        (requiresRuntime && !validRetainedReference(armDir, entry.runtime_receipt))
+      ) {
+        return false;
+      }
+    }
+    return true;
   } catch {
     return false;
   }
@@ -357,6 +444,10 @@ export function createEffectivenessExperimentPlan({ rootDir, baseCapabilities = 
 function assertIdentity(identity, label) {
   if (
     !isPlainObject(identity) ||
+    !isDeepStrictEqual(
+      Object.keys(identity).sort(compareText),
+      ['id', 'provider', ...(identity?.revision === undefined ? [] : ['revision'])].sort(compareText),
+    ) ||
     typeof identity.provider !== 'string' ||
     identity.provider.length === 0 ||
     typeof identity.id !== 'string' ||
@@ -618,6 +709,15 @@ async function resolveModel(modelProvider, requestedModel, modelParameters) {
     throw new EffectivenessExperimentError(
       'INVALID_MODEL_SELECTION',
       'a versioned model provider with resolve and createLaunch is required',
+    );
+  }
+  try {
+    canonicalValue(modelProvider.definition);
+  } catch (error) {
+    throw new EffectivenessExperimentError(
+      'INVALID_MODEL_SELECTION',
+      `model provider definition is not auditable: ${error.message}`,
+      { cause: error },
     );
   }
   let resolved;
@@ -915,7 +1015,12 @@ export async function runEffectivenessComparisonGroup(spec) {
   fs.mkdirSync(spec.evidenceRoot, { recursive: true });
   const finalGroupDir = path.join(spec.evidenceRoot, spec.comparisonGroupId);
   if (fs.existsSync(finalGroupDir)) {
-    if (hasValidGroupSeal(finalGroupDir, spec.comparisonGroupId)) {
+    if (hasValidGroupSeal(
+      finalGroupDir,
+      spec.comparisonGroupId,
+      spec.rootDir,
+      experimentPlan,
+    )) {
       throw new EffectivenessExperimentError(
         'EVIDENCE_COLLISION',
         `comparison group evidence already exists: ${spec.comparisonGroupId}`,
