@@ -10,6 +10,10 @@ import {
   createEffectivenessReport,
   parseEffectivenessReport,
 } from './effectiveness-report.mjs';
+import {
+  createEvidenceEnvelope,
+  verifyEvidenceEnvelope,
+} from './evidence-envelope.mjs';
 
 const RECEIPT_CONTRACT = 'forge-effectiveness-run-receipt';
 const RECEIPT_VERSION = 1;
@@ -1322,7 +1326,92 @@ function createRunnerReport(receipt, reportInput, experimentPlan, contractRoot) 
     },
     { rootDir: contractRoot, experimentPlan },
   );
-  return parseEffectivenessReport(report, { rootDir: contractRoot, experimentPlan });
+  const accepted = parseEffectivenessReport(report, { rootDir: contractRoot, experimentPlan });
+  const envelopes = [];
+
+  function envelopeInput(evidenceId, kind, result, artifactReference) {
+    const evidence = accepted.evidence.find((item) => item.id === evidenceId);
+    const event = accepted.events.find((item) => item.id === evidence.event_id);
+    return {
+      issuer_ref: evidence.producer_ref,
+      source_level: evidence.source_kind,
+      target: {
+        report_id: accepted.report_id,
+        comparison_group_id: accepted.experiment.comparison_group_id,
+        arm_id: accepted.experiment.arm.id,
+        repeat_index: accepted.experiment.reproduction.repeat_index,
+        request_fingerprint: accepted.experiment.reproduction.request_fingerprint,
+        objective_ref: accepted.experiment.objective.id,
+        objective_digest: accepted.experiment.objective.digest,
+        result_ref: evidence.id,
+      },
+      action: {
+        event_id: event.id,
+        type: event.type,
+        actor: event.actor,
+        status: event.status,
+        observed_at: event.observed_at,
+      },
+      workspace: cloneData(accepted.experiment.workspace, 'envelope workspace'),
+      issued_at: accepted.execution.ended_at,
+      evidence: {
+        kind,
+        locator: artifactReference.ref,
+        digest: artifactReference.digest,
+        bytes: artifactReference.bytes,
+        result,
+      },
+    };
+  }
+
+  if (
+    /^sha256:[0-9a-f]{64}$/.test(receipt.command.stdout.observed_digest ?? '') &&
+    /^sha256:[0-9a-f]{64}$/.test(receipt.command.stderr.observed_digest ?? '')
+  ) {
+    envelopes.push({
+      artifactKey: 'command_envelope',
+      evidenceId: commandEvidenceId,
+      envelope: createEvidenceEnvelope(
+        envelopeInput(
+          commandEvidenceId,
+          'command',
+          {
+            exit_code: receipt.command.exit_code,
+            termination: receipt.command.termination,
+            stdout_digest: receipt.command.stdout.observed_digest,
+            stderr_digest: receipt.command.stderr.observed_digest,
+          },
+          receipt.artifacts.command,
+        ),
+        { rootDir: contractRoot },
+      ),
+    });
+  }
+  envelopes.push({
+    artifactKey: 'workspace_envelope',
+    evidenceId: workspaceEvidenceId,
+    envelope: createEvidenceEnvelope(
+      envelopeInput(
+        workspaceEvidenceId,
+        'artifact',
+        {
+          artifact_id: 'workspace-artifact-manifest',
+          artifact_digest: receipt.artifacts.summary.digest,
+        },
+        receipt.artifacts.summary,
+      ),
+      { rootDir: contractRoot },
+    ),
+  });
+
+  for (const item of envelopes) {
+    item.ref = `${item.envelope.content_digest.slice('sha256:'.length)}.evidence-envelope.json`;
+    accepted.evidence.find((evidence) => evidence.id === item.evidenceId).envelope_ref = item.ref;
+  }
+  return {
+    report: parseEffectivenessReport(accepted, { rootDir: contractRoot, experimentPlan }),
+    envelopes,
+  };
 }
 
 function assertSearchPathIsIsolated(searchPath, protectedRoots) {
@@ -1907,12 +1996,28 @@ export async function runIsolatedEffectivenessAttempt(rawSpec) {
         };
       }
     }
-    report = createRunnerReport(
+    const runnerReport = createRunnerReport(
       receipt,
       reportInput,
       spec.experimentPlan,
       contractRoot,
     );
+    report = runnerReport.report;
+    for (const item of runnerReport.envelopes) {
+      const envelopePath = path.join(evidenceDir, item.ref);
+      atomicWriteJson(envelopePath, item.envelope);
+      receipt.artifacts[item.artifactKey] = fileReference(envelopePath);
+    }
+    writeReceipt(evidenceDir, receipt);
+    for (const item of runnerReport.envelopes) {
+      verifyEvidenceEnvelope(receipt.artifacts[item.artifactKey], {
+        rootDir: contractRoot,
+        evidenceRoot: evidenceDir,
+        report,
+        evidenceId: item.evidenceId,
+      });
+    }
+    verifyRetainedRunnerEvidence(evidenceDir, receipt);
     atomicWriteJson(path.join(evidenceDir, 'report.json'), report);
   } catch (error) {
     fs.rmSync(path.join(evidenceDir, 'report.json'), { force: true });

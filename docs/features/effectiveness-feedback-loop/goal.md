@@ -16,7 +16,8 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 - **不在本 feature**：bump 发布版本、发布或 push。
 - **不在 B02**：生产 report 构造器、跨引用语义校验、Evidence Envelope 有效性判断或 outcome scorer；分别由 B03、B06、B08 负责。
 - **不在 B04**：四实验臂、模型选择、Evidence Envelope、外部 verifier 或 outcome 判定；分别由 B05、B06、B07、B08 负责。
-- **不在 B05**：内置跨平台 hostile-code sandbox、Evidence Envelope、外部 verifier、outcome 判定或统计结论。B05 对完整 host-sandbox adapter fail closed；具体隔离宿主由运行环境提供并审计。
+- **不在 B05**：内置跨平台 hostile-code sandbox、外部 verifier、outcome 判定或统计结论。B05 对完整 host-sandbox adapter fail closed；具体隔离宿主由运行环境提供并审计。
+- **不在 B06**：外部 verifier adapter、证据充分性或 outcome 判定、统计结论、没有 host trust policy 支撑的 issuer 密码学认证；分别由 B07、B08、B09 或未来显式 trust-root contract 负责。
 
 ## Done Criteria（可测）
 
@@ -33,6 +34,7 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 | AC9 | B03 提供唯一生产 constructor/parser；两者共用 fail-closed schema、受信 experiment plan 与 report 内引用校验，未知/伪造 arm、缺失来源、目标错绑、悬空引用和非法版本均返回字段级 JSON Pointer | `node --test tests/effectiveness-report.test.mjs` |
 | AC10 | B04 在源仓库外以 shallow workspace/private-capture clone 和独立 HOME/CODEX_HOME/TMPDIR 运行单次 attempt，启动前冻结调用方预选的中性 arm 并拒绝事后改标，主动约束 process/output/Git/diff，并以明确的 initial/final capture ceiling 保存 process、完整 workspace delta 与 artifact manifest；连续、并发、timeout、cancel、process error、final-capture/source-guard infra terminal 均隔离且只通过 B03 生成正式 report | `node --test tests/effectiveness-runner.test.mjs` |
 | AC11 | B05 生成 `no-forge`、`kernel-only`、`adaptive-full`、`legacy-chain` 四个互斥 launch policy；同一显式模型、fixture、source、预算、limits 和 verifier 展开四臂，拒绝静默模型回退和不完整 host-sandbox 保证，允许 adaptive 零 Skill 调用，并用四份正式 report 复核实际 capability exposure | `node --test tests/effectiveness-experiment.test.mjs` |
+| AC12 | B06 Evidence Envelope 严格绑定 issuer/source level、report/group/arm/repeat/request、objective id+digest、event action、时间、workspace 版本与 retained payload；command 核对 exit/output digest，artifact/claim 核对 raw digest/bytes。runner-owned envelope 在 report 首次发布前内容寻址，B05 seal 复验；篡改、错目标、旧 workspace、错来源/动作、路径逃逸和链接均 fail closed，且不产生 outcome | `node --test tests/evidence-envelope.test.mjs tests/effectiveness-runner.test.mjs tests/effectiveness-experiment.test.mjs` |
 
 ## Decisions
 
@@ -47,6 +49,7 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 - FD9：B05 由 manifest v4 生成四臂 trusted plan；`adaptive-full` 绑定当前发布 Skill tree 且所有 Skill 可选，`legacy-chain` 绑定 Forge 0.52.0 tree `516a67e49c8c5e564be1671396bad6edadaef4f2` 和 `detail → codegen → review`，旧 `forge` arm 不做歧义映射。调度器只接受显式 requested model；preflight identity 不同则记录 unavailable/fallback rejected 而不启动，正式 report 的 actual identity 必须来自 B04 保留且校验摘要的子进程 transport receipt，并与 preflight 选中的完整 identity 精确相等，否则立即终止后续臂。四臂共享的 objective/fixture/source/repeat/budget/limits/verifier/model context 与各自唯一 arm context 由 scheduler 注入实际 command environment 并进入 B04 fingerprint；runtime receipt 必须回绑这些 digest。理由：把能力暴露变成可复核实验变量，同时保留模型直接行动和零 Skill 路径。
 - FD10：B05 不用 process group、`ulimit` 或 workspace clone 冒充完整 hostile-code sandbox；调度前要求外部 host adapter 明确提供 filesystem/network/detached-process/live CPU-memory-disk 保证，每臂返回同一 applied-policy digest、固定字段的 post-run containment receipt 和 cleanup lifecycle，并把 adapter definition/policy 绑定进 launcher digest。attempt 一旦交给 B04，即使 runner/report/runtime receipt 失败也必须 finalize host 并落盘 containment receipt；缺一项整组失败。理由：跨 Darwin/Linux 的完整隔离超出当前零依赖仓库能力，fail closed 比伪安全声明可靠。
 - FD11：四臂只通过固定 B04 runner 写 scheduler-private staging，调用方不能替换执行 seam；全部正式 report、落盘的 runtime/host receipt、公平性检查和 cleanup 通过后，才在 staging 写 `group.json` completion seal 并将整个目录原子移入最终位置。consumer 只认带有效 seal 的组，任一步失败都移为无 seal 的 `.incomplete-*`；入口会隔离历史无 seal final 残留后允许重试。理由：单臂正式 report 或内存伪对象不等于有效四臂比较，同时保留失败证据并允许相同 group id 修复后重试。
+- FD12：B06 Envelope 是单 evidence 的严格绑定与完整性层，不是 outcome 或身份认证层。它记录 issuer/source level、完整 run/target/action/workspace/time 和 typed payload，以 canonical content digest 生成内容寻址 ref；B04 只为 runner-owned command/workspace 证据生成并在首次 report 发布前回链，B05 在认 seal 前从安全打开的 retained 文件重算 bytes/digest 并复验绑定。模型自述不能提升为 tool/verifier evidence，sealed report 不 retrofit。当前无 host 注入的 key registry/rotation/revocation，因此 issuer 只作 provenance，拒绝用 Envelope 自带 key 伪装认证。理由：先建立可引用、可检测篡改且不束缚动作路径的事实单元，再由 B07/B08 分别验证和判定。
 
 ## Risks
 
@@ -64,3 +67,5 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 | 旧 `forge` arm 被自动解释为 adaptive 或 legacy | 历史报告归因错误 | manifest v4 删除歧义 arm，不提供 alias；旧 effectiveness comparison 必须重跑 |
 | 运行中 capture 失败 | 伪造完整 final snapshot 或丢失失败证据 | 降级为 `infrastructure_error`，保留 command/失败 summary，不写虚假的 diff/final digest，仍经 B03 生成 `no_output` report |
 | evidence store 自身不可写或原子落盘失败 | 无法诚实发布完整 receipt/report | 返回 runner error，不把半成品称为正式 report；调用方修复存储后使用新 attempt id 重跑 |
+| Envelope shape 正确但 target/workspace/payload 已漂移 | 旧证据或错证据支持当前完成声明 | B06 同时核对 objective digest、run fingerprint、event、initial/final snapshot、content-addressed ref 和 raw payload bytes/digest；任一不一致 fail closed |
+| `issuer_ref` 被误读为已认证身份 | 把 runner 内来源声明当远端真实性 | 明确 B06 无外部 trust root、不接受自带 key 自授权；未来认证必须由 host 注入独立 trust policy |

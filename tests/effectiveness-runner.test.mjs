@@ -10,6 +10,7 @@ import {
   EffectivenessRunnerError,
   runIsolatedEffectivenessAttempt,
 } from '../scripts/lib/effectiveness-runner.mjs';
+import { verifyEvidenceEnvelope } from '../scripts/lib/evidence-envelope.mjs';
 import { parseEffectivenessReport } from '../scripts/lib/effectiveness-report.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -286,6 +287,24 @@ test('isolated attempt captures revision, complete delta, command facts, and lea
       .filter((item) => item.producer_ref.startsWith('runner:'))
       .every((item) => item.source_kind === 'tool_output'),
   );
+  const runnerEvidence = result.report.evidence
+    .filter((item) => item.producer_ref.startsWith('runner:'));
+  assert.equal(runnerEvidence.length, 2);
+  for (const evidence of runnerEvidence) {
+    assert.match(evidence.envelope_ref, /^[0-9a-f]{64}\.evidence-envelope\.json$/);
+    const reference = Object.values(result.receipt.artifacts)
+      .find((candidate) => candidate?.ref === evidence.envelope_ref);
+    assert.ok(reference, evidence.envelope_ref);
+    assert.deepEqual(
+      verifyEvidenceEnvelope(reference, {
+        rootDir: root,
+        evidenceRoot: result.evidenceDir,
+        report: result.report,
+        evidenceId: evidence.id,
+      }).target.result_ref,
+      evidence.id,
+    );
+  }
   const wallTime = result.report.costs.find((item) => item.metric === 'wall_time_ms');
   assert.equal(wallTime.value, result.receipt.execution.duration_ms);
   assert.equal(wallTime.acquisition.source_ref, 'attempt.json');

@@ -8,6 +8,7 @@ import {
   createEffectivenessReport,
   parseEffectivenessReport,
 } from './effectiveness-report.mjs';
+import { verifyEvidenceEnvelope } from './evidence-envelope.mjs';
 import { runIsolatedEffectivenessAttempt } from './effectiveness-runner.mjs';
 import { loadRegistry } from './registry.mjs';
 
@@ -313,6 +314,33 @@ function hasValidGroupSeal(groupDir, comparisonGroupId, rootDir, experimentPlan)
         (requiresRuntime && !validRetainedReference(armDir, entry.runtime_receipt))
       ) {
         return false;
+      }
+      const runnerEvidence = report.evidence.filter((evidence) =>
+        evidence.producer_ref.startsWith('runner:'));
+      if (
+        runnerEvidence.length === 0 ||
+        runnerEvidence.some((evidence) => typeof evidence.envelope_ref !== 'string')
+      ) {
+        return false;
+      }
+      for (const evidence of report.evidence.filter((item) => item.envelope_ref !== undefined)) {
+        const envelopePath = path.join(armDir, evidence.envelope_ref);
+        const envelopeStat = fs.lstatSync(envelopePath);
+        if (!envelopeStat.isFile()) return false;
+        const envelopeBytes = fs.readFileSync(envelopePath);
+        verifyEvidenceEnvelope(
+          {
+            ref: evidence.envelope_ref,
+            digest: digestBuffer(envelopeBytes),
+            bytes: envelopeBytes.length,
+          },
+          {
+            rootDir,
+            evidenceRoot: armDir,
+            report,
+            evidenceId: evidence.id,
+          },
+        );
       }
     }
     return true;

@@ -75,8 +75,9 @@ Important truth boundaries:
 - execution termination and the model's completion claim are separate. Neither
   is an evaluator verdict;
 - evidence distinguishes `model_self_report`, `tool_output`, and
-  `independent_verifier`, but B06 still owns envelope integrity, target binding,
-  and freshness;
+  `independent_verifier`; B06 validates retained Envelope integrity and exact
+  target, action, run, and workspace binding without promoting one source level
+  into another;
 - every cost measurement names its acquisition source. Reports require wall
   time plus a context or equivalent consumption measure.
 
@@ -253,17 +254,61 @@ result.
 
 The runner owns workspace and attempt execution facts, attempt wall time, and
 plan-derived arm definition/capability policy. It appends runner capture
-references as `tool_output`, then calls both B03 constructor and parser before
+references as `tool_output`, gives its retained command and workspace-manifest
+references B06 Envelopes, then calls both B03 constructor and parser before
 atomic persistence. Exit 0 means only that the top-level process completed. A
 model may still claim `failed` or `blocked`, and B08 alone determines objective
 outcome.
 
 B04 does not select a model or experiment arm, install Forge, authenticate an
-Evidence Envelope, run an external verifier, or score a task. Its active bounds
+Envelope issuer, run an external verifier, or score a task. Its active bounds
 cover process time, retained output, Git-operation time, and diff size;
 `maxCapturedWorkspace*` are initial/final capture ceilings, not live disk
 quotas. B05 must use the host workspace sandbox for live disk, CPU, memory,
 network, detached-process, and hostile-code containment.
+
+### Evidence Envelope
+
+`evidence-envelope.schema.json` and
+`scripts/lib/evidence-envelope.mjs` define the B06 boundary:
+
+```js
+import {
+  createEvidenceEnvelope,
+  parseEvidenceEnvelope,
+  verifyEvidenceEnvelope,
+} from '../../scripts/lib/evidence-envelope.mjs';
+```
+
+An Envelope binds one report evidence reference to its declared issuer and
+source level, exact report/group/arm/repeat/request target, objective id and
+digest, event action, issue/observation time, and initial/final workspace
+identity. Its typed payload is `command`, `artifact`, or `claim`. Command
+payloads include exit code, termination, and stdout/stderr digests and must
+agree with the retained command receipt. Artifact and claim summaries must
+repeat the raw retained-file digest and byte count.
+
+`createEvidenceEnvelope` owns the contract, schema version, envelope id, and
+canonical content digest. `parseEvidenceEnvelope` proves only strict shape and
+self-integrity. `verifyEvidenceEnvelope` additionally opens the content-addressed
+Envelope and payload as non-linked regular files, checks their retained byte
+counts/digests, and matches every binding against an already B03-accepted
+report. Missing, traversing, linked, tampered, wrong-target, stale-workspace,
+or summary-conflicting evidence fails closed with field-addressed issues.
+
+B04 adapters still cannot supply `envelope_ref`: the runner creates Envelopes
+only for runner-owned observations before the report is first published. B05
+revalidates them when accepting an existing group seal; it never retrofits or
+rewrites a sealed report. A model self-report can use the same wire format but
+remains `model_self_report`; B06 returns no outcome or completion eligibility.
+B07 owns independent verifier execution, and B08 owns evidence sufficiency and
+task outcome.
+
+`issuer_ref` is provenance inside the trusted runner/retained-store boundary,
+not cryptographic identity authentication. This repository has no external key
+registry, rotation, or revocation contract; embedding a key in the Envelope
+would be self-authorization. A future authenticated issuer design must receive
+its trust policy from the host and attest the outer report/Envelope digests.
 
 ### Four-arm comparison coordinator
 
@@ -321,8 +366,9 @@ to its final location. Failed groups receive an `.incomplete-*`
 suffix and have no seal, so they remain diagnosable but are not a complete
 comparison. A final directory left without a valid seal by an interrupted older
 publication is quarantined before the same group id is retried. Seal validity
-requires the exact four ordered arms, B03-accepted reports, and matching on-disk
-runtime/host receipt sizes and digests; header fields alone are insufficient.
+requires the exact four ordered arms, B03-accepted reports, valid B06 Envelopes,
+and matching on-disk runtime/host receipt sizes and digests; header fields alone
+are insufficient.
 
 Before model resolution, B05 requires a versioned host-sandbox adapter that
 declares filesystem isolation, network policy, detached process-tree

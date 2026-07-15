@@ -1,0 +1,316 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zeroz-lab.github.io/forge/schemas/evidence-envelope-v1.json",
+  "title": "Forge Evidence Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract",
+    "envelope_id",
+    "issuer_ref",
+    "source_level",
+    "target",
+    "action",
+    "workspace",
+    "issued_at",
+    "evidence",
+    "content_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "contract": {
+      "const": "forge-evidence-envelope"
+    },
+    "envelope_id": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "issuer_ref": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "source_level": {
+      "enum": ["model_self_report", "tool_output", "independent_verifier"]
+    },
+    "target": {
+      "$ref": "#/$defs/target"
+    },
+    "action": {
+      "$ref": "#/$defs/action"
+    },
+    "workspace": {
+      "$ref": "#/$defs/workspace"
+    },
+    "issued_at": {
+      "$ref": "#/$defs/utcTimestamp"
+    },
+    "evidence": {
+      "$ref": "#/$defs/evidence"
+    },
+    "content_digest": {
+      "$ref": "#/$defs/digest"
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "utcTimestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "report_id",
+        "comparison_group_id",
+        "arm_id",
+        "repeat_index",
+        "request_fingerprint",
+        "objective_ref",
+        "objective_digest",
+        "result_ref"
+      ],
+      "properties": {
+        "report_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "comparison_group_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "arm_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "repeat_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "request_fingerprint": {
+          "$ref": "#/$defs/digest"
+        },
+        "objective_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "objective_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "result_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "type", "actor", "status", "observed_at"],
+      "properties": {
+        "event_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "type": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "actor": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "status": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "observed_at": {
+          "$ref": "#/$defs/utcTimestamp"
+        }
+      }
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_ref", "base_revision", "snapshot_digest", "isolation_id"],
+      "properties": {
+        "source_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "base_revision": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "snapshot_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "isolation_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "final_revision": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "final_snapshot_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "diff_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "evidence": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/commandEvidence"
+        },
+        {
+          "$ref": "#/$defs/artifactEvidence"
+        },
+        {
+          "$ref": "#/$defs/claimEvidence"
+        }
+      ]
+    },
+    "evidenceBase": {
+      "type": "object",
+      "required": ["kind", "locator", "digest", "bytes", "result"]
+    },
+    "commandEvidence": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "locator", "digest", "bytes", "result"],
+          "properties": {
+            "kind": {
+              "const": "command"
+            },
+            "locator": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "digest": {
+              "$ref": "#/$defs/digest"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "result": {
+              "$ref": "#/$defs/commandResult"
+            }
+          }
+        }
+      ]
+    },
+    "commandResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exit_code", "termination", "stdout_digest", "stderr_digest"],
+      "properties": {
+        "exit_code": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "termination": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "stdout_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "stderr_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "artifactEvidence": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "locator", "digest", "bytes", "result"],
+          "properties": {
+            "kind": {
+              "const": "artifact"
+            },
+            "locator": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "digest": {
+              "$ref": "#/$defs/digest"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "result": {
+              "$ref": "#/$defs/artifactResult"
+            }
+          }
+        }
+      ]
+    },
+    "artifactResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "artifact_digest"],
+      "properties": {
+        "artifact_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "artifact_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "claimEvidence": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "locator", "digest", "bytes", "result"],
+          "properties": {
+            "kind": {
+              "const": "claim"
+            },
+            "locator": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "digest": {
+              "$ref": "#/$defs/digest"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "result": {
+              "$ref": "#/$defs/claimResult"
+            }
+          }
+        }
+      ]
+    },
+    "claimResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_digest"],
+      "properties": {
+        "claim_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    }
+  }
+}

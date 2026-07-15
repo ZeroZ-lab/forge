@@ -337,6 +337,31 @@ test('one minimal fixture runs all four arms with identical controls and declare
   );
 });
 
+test('a tampered Evidence Envelope invalidates the group seal without rewriting the report', async (t) => {
+  const spec = groupSpec(t);
+  const first = await runEffectivenessComparisonGroup(spec);
+  const run = first.runs[0];
+  const reportPath = path.join(run.evidenceDir, 'report.json');
+  const sealedReport = fs.readFileSync(reportPath);
+  const envelopeRef = run.report.evidence
+    .find((evidence) => evidence.producer_ref.startsWith('runner:'))
+    .envelope_ref;
+  const envelopePath = path.join(run.evidenceDir, envelopeRef);
+  const envelope = JSON.parse(fs.readFileSync(envelopePath, 'utf8'));
+  envelope.issuer_ref = 'runner:tampered';
+  fs.writeFileSync(envelopePath, `${JSON.stringify(envelope, null, 2)}\n`);
+
+  const replacement = await runEffectivenessComparisonGroup(spec);
+  assert.equal(fs.existsSync(replacement.sealPath), true);
+  const recoveredName = fs.readdirSync(spec.evidenceRoot)
+    .find((name) => name.startsWith(`${spec.comparisonGroupId}.incomplete-recovered-`));
+  assert.equal(typeof recoveredName, 'string');
+  assert.deepEqual(
+    fs.readFileSync(path.join(spec.evidenceRoot, recoveredName, 'no-forge', 'report.json')),
+    sealedReport,
+  );
+});
+
 test('explicit model mismatch is rejected as unavailable without launching a fallback', async (t) => {
   let launches = 0;
   const provider = modelProvider({
