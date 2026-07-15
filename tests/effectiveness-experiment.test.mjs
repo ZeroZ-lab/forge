@@ -12,6 +12,10 @@ import {
   createEffectivenessExperimentPlan,
   runEffectivenessComparisonGroup,
 } from '../scripts/lib/effectiveness-experiment.mjs';
+import {
+  createDiffVerifierAdapter,
+  createEffectivenessVerifierRuntime,
+} from '../scripts/lib/effectiveness-verifier.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const DIGESTS = {
@@ -204,8 +208,35 @@ function modelProvider(resolveResult = {
   };
 }
 
+function verifierRuntime() {
+  return createEffectivenessVerifierRuntime({
+    id: 'fixture-verifiers',
+    executor: {
+      id: 'fixture-verifier-host',
+      version: '1',
+      definition: {
+        boundary: 'test-double',
+        guarantees: ['timeout', 'output-bound', 'workspace-isolation'],
+      },
+      async execute({ adapter, target }) {
+        assert.equal(adapter.kind, 'diff');
+        assert.match(target.workspace.diff_digest, /^sha256:/);
+        return { kind: 'diff', status: 'passed' };
+      },
+    },
+    adapters: [
+      createDiffVerifierAdapter({
+        id: 'workspace-diff',
+        scope: { kind: 'diff', paths: ['*'] },
+        policy: { mode: 'captured-diff' },
+      }),
+    ],
+  });
+}
+
 function groupSpec(t, overrides = {}) {
   const { sourceDir, evidenceRoot } = createSource(t);
+  const runtime = verifierRuntime();
   return {
     rootDir: root,
     experimentPlan: createEffectivenessExperimentPlan({ rootDir: root }),
@@ -225,7 +256,8 @@ function groupSpec(t, overrides = {}) {
     repeatIndex: 0,
     seed: 7,
     budget: { id: 'fixture-budget', digest: DIGESTS.budget },
-    verifierSet: { id: 'fixture-verifiers', digest: DIGESTS.verifier },
+    verifierSet: runtime.verifierSet,
+    verifierRuntime: runtime,
     limits: {
       timeoutMs: 3_000,
       maxStdoutBytes: 64 * 1024,
@@ -311,7 +343,7 @@ test('one minimal fixture runs all four arms with identical controls and declare
   assert.equal(path.dirname(result.sealPath), result.groupDir);
   assert.equal(new Set(commonContexts.map((context) => JSON.stringify(context))).size, 1);
   assert.deepEqual(commonContexts[0].budget, { id: 'fixture-budget', digest: DIGESTS.budget });
-  assert.deepEqual(commonContexts[0].verifier_set, { id: 'fixture-verifiers', digest: DIGESTS.verifier });
+  assert.deepEqual(commonContexts[0].verifier_set, spec.verifierSet);
 
   for (const run of result.runs) {
     const armId = run.report.experiment.arm.id;
@@ -324,7 +356,7 @@ test('one minimal fixture runs all four arms with identical controls and declare
     });
     assert.deepEqual(run.report.experiment.model.actual, run.report.experiment.model.requested);
     assert.deepEqual(run.report.experiment.budget, { id: 'fixture-budget', digest: DIGESTS.budget });
-    assert.deepEqual(run.report.experiment.verifier_set, { id: 'fixture-verifiers', digest: DIGESTS.verifier });
+    assert.deepEqual(run.report.experiment.verifier_set, spec.verifierSet);
     assert.equal(fs.existsSync(path.join(run.evidenceDir, 'runtime-receipt.json')), true);
     assert.equal(fs.existsSync(path.join(run.evidenceDir, 'host-enforcement.json')), true);
   }
@@ -373,6 +405,56 @@ test('a tampered Evidence Envelope invalidates the group seal without rewriting 
   assert.deepEqual(
     fs.readFileSync(path.join(spec.evidenceRoot, recoveredName, 'no-forge', 'report.json')),
     sealedReport,
+  );
+});
+
+test('a verifier failure cannot be rewritten as success under a refreshed report digest', async (t) => {
+  const spec = groupSpec(t);
+  const first = await runEffectivenessComparisonGroup(spec);
+  const run = first.runs[0];
+  const reportPath = path.join(run.evidenceDir, 'report.json');
+  const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+  const verifierEvent = report.events.find((event) => event.actor === 'verifier');
+  assert.equal(verifierEvent.status, 'succeeded');
+  verifierEvent.status = 'failed';
+  fs.writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+
+  const seal = JSON.parse(fs.readFileSync(first.sealPath, 'utf8'));
+  const sealedReport = seal.reports.find((entry) => entry.arm === run.report.experiment.arm.id);
+  sealedReport.digest = digestJson(report);
+  fs.writeFileSync(first.sealPath, `${JSON.stringify(seal, null, 2)}\n`);
+
+  const replacement = await runEffectivenessComparisonGroup(spec);
+  assert.equal(fs.existsSync(replacement.sealPath), true);
+  assert.equal(
+    fs.readdirSync(spec.evidenceRoot)
+      .some((name) => name.startsWith(`${spec.comparisonGroupId}.incomplete-recovered-`)),
+    true,
+  );
+});
+
+test('a verifier result cannot outlive its retained host observation', async (t) => {
+  const spec = groupSpec(t);
+  const first = await runEffectivenessComparisonGroup(spec);
+  const run = first.runs[0];
+  const verifierEvidence = run.report.evidence.find(
+    (evidence) => evidence.source_kind === 'independent_verifier',
+  );
+  const verifierResult = JSON.parse(
+    fs.readFileSync(path.join(run.evidenceDir, verifierEvidence.locator), 'utf8'),
+  );
+  const observationPath = path.join(
+    run.evidenceDir,
+    verifierResult.evidence_refs[0].ref,
+  );
+  fs.appendFileSync(observationPath, '\n');
+
+  const replacement = await runEffectivenessComparisonGroup(spec);
+  assert.equal(fs.existsSync(replacement.sealPath), true);
+  assert.equal(
+    fs.readdirSync(spec.evidenceRoot)
+      .some((name) => name.startsWith(`${spec.comparisonGroupId}.incomplete-recovered-`)),
+    true,
   );
 });
 
@@ -608,6 +690,23 @@ test('comparison fails closed before launch without a complete host sandbox boun
       /network_policy/.test(error.message),
   );
   assert.equal(prepared, false);
+});
+
+test('comparison requires an external verifier runtime bound to the controlled verifier set', async (t) => {
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(groupSpec(t, { verifierRuntime: undefined })),
+    (error) =>
+      error instanceof EffectivenessExperimentError &&
+      error.code === 'VERIFIER_UNAVAILABLE',
+  );
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(groupSpec(t, {
+      verifierSet: { id: 'fixture-verifiers', digest: DIGESTS.verifier },
+    })),
+    (error) =>
+      error instanceof EffectivenessExperimentError &&
+      error.code === 'VERIFIER_UNAVAILABLE',
+  );
 });
 
 test('base capabilities cannot use the Forge-reserved namespace', () => {

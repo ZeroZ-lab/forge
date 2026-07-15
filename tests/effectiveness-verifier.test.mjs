@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -8,7 +9,9 @@ import test from 'node:test';
 import {
   createCommandVerifierAdapter,
   createDiffVerifierAdapter,
+  createEffectivenessVerifierRuntime,
   createHiddenAssertionVerifierAdapter,
+  parseEffectivenessVerifierResult,
   runEffectivenessVerifierSet,
 } from '../scripts/lib/effectiveness-verifier.mjs';
 
@@ -33,38 +36,79 @@ function fixture(t) {
       objective_digest: digest('objective-1'),
       workspace: {
         isolation_id: 'isolation-1',
-        snapshot_digest: digest('workspace-1'),
+        base_snapshot_digest: digest('workspace-base'),
+        final_snapshot_digest: digest('workspace-final'),
+        diff_ref: 'diff.patch',
+        diff_digest: digest('diff.patch'),
       },
-    },
-    verifierSet: {
-      id: 'fixture-verifiers',
-      digest: digest('fixture-verifiers-v1'),
     },
   };
 }
 
-function commandAdapter(id, exitCode, extra = {}) {
+function commandAdapter(id, exitCode, purpose = 'test') {
   const script = `process.stdout.write('checked\\n');process.exit(${exitCode})`;
   return createCommandVerifierAdapter({
     id,
-    purpose: 'test',
-    definitionDigest: digest(`${id}-definition`),
+    purpose,
     scope: { kind: 'workspace', paths: ['result.txt'] },
     command: {
       file: process.execPath,
       args: ['-e', script],
       env: {},
     },
-    ...extra,
   });
 }
 
-test('command verifiers distinguish pass, task failure, and missing command with retained results', async (t) => {
+function commandObservation(adapter, workspaceDir, limits) {
+  const execution = spawnSync(adapter.command.file, adapter.command.args, {
+    cwd: workspaceDir,
+    env: { ...process.env, ...adapter.command.env },
+    encoding: null,
+    timeout: limits.timeoutMs,
+    maxBuffer: limits.maxOutputBytes,
+  });
+  return {
+    kind: 'command',
+    status: execution.error?.code === 'ENOENT'
+      ? 'command_not_found'
+      : execution.error?.code === 'ETIMEDOUT'
+        ? 'timeout'
+        : execution.error?.code === 'ENOBUFS'
+          ? 'output_limit'
+          : execution.error
+            ? 'infrastructure_error'
+            : 'completed',
+    exit_code: Number.isInteger(execution.status) ? execution.status : null,
+    signal: execution.signal ?? null,
+    stdout_digest: digest(Buffer.isBuffer(execution.stdout) ? execution.stdout : Buffer.alloc(0)),
+    stderr_digest: digest(Buffer.isBuffer(execution.stderr) ? execution.stderr : Buffer.alloc(0)),
+  };
+}
+
+function runtime(adapters, behavior = {}) {
+  return createEffectivenessVerifierRuntime({
+    id: 'fixture-verifiers',
+    executor: {
+      id: 'fixture-verifier-host',
+      version: '1',
+      definition: {
+        boundary: 'test-double',
+        guarantees: ['timeout', 'output-bound', 'workspace-isolation'],
+      },
+      async execute({ adapter, workspaceDir, target, limits }) {
+        if (behavior[adapter.id]) return behavior[adapter.id]({ workspaceDir, target, limits });
+        return commandObservation(adapter, workspaceDir, limits);
+      },
+    },
+    adapters,
+  });
+}
+
+test('external command host distinguishes pass, task failure, missing command, and infrastructure failure', async (t) => {
   const value = fixture(t);
   const missing = createCommandVerifierAdapter({
     id: 'missing-tool',
     purpose: 'build',
-    definitionDigest: digest('missing-tool-definition'),
     scope: { kind: 'workspace', paths: ['package.json'] },
     command: {
       file: `forge-missing-verifier-${crypto.randomUUID()}`,
@@ -72,66 +116,139 @@ test('command verifiers distinguish pass, task failure, and missing command with
       env: {},
     },
   });
+  const timeout = createCommandVerifierAdapter({
+    id: 'typecheck-timeout',
+    purpose: 'typecheck',
+    scope: { kind: 'workspace', paths: ['src/'] },
+    command: {
+      file: process.execPath,
+      args: ['-e', 'setTimeout(() => {}, 10000)'],
+      env: {},
+    },
+  });
+  const verifierRuntime = runtime([
+    commandAdapter('tests-pass', 0),
+    commandAdapter('tests-fail', 2),
+    commandAdapter('build-pass', 0, 'build'),
+    commandAdapter('typecheck-fail', 3, 'typecheck'),
+    missing,
+    timeout,
+  ]);
 
   const run = await runEffectivenessVerifierSet({
     ...value,
-    adapters: [commandAdapter('tests-pass', 0), commandAdapter('tests-fail', 2), missing],
-    limits: { timeoutMs: 2_000, maxOutputBytes: 64 * 1024 },
+    runtime: verifierRuntime,
+    limits: { timeoutMs: 1_000, maxOutputBytes: 64 * 1024 },
   });
 
+  assert.equal(run.verifier_set.digest, verifierRuntime.verifierSet.digest);
   assert.deepEqual(
     run.results.map(({ result }) => [result.verifier.id, result.outcome, result.reason_code]),
     [
       ['tests-pass', 'passed', 'command_passed'],
       ['tests-fail', 'task_failed', 'command_failed'],
+      ['build-pass', 'passed', 'command_passed'],
+      ['typecheck-fail', 'task_failed', 'command_failed'],
       ['missing-tool', 'unavailable', 'command_not_found'],
+      ['typecheck-timeout', 'infrastructure_error', 'verifier_timeout'],
     ],
   );
   for (const entry of run.results) {
     assert.equal(entry.result.independence_level, 'independent_verifier');
     assert.deepEqual(entry.result.target, value.target);
-    assert.deepEqual(entry.result.verifier.scope, entry.result.scope);
-    assert.match(entry.reference.ref, /^[a-z0-9-]+\.verifier-result\.json$/);
-    const retained = fs.readFileSync(path.join(value.evidenceDir, entry.reference.ref));
-    assert.equal(retained.length, entry.reference.bytes);
-    assert.equal(digest(retained), entry.reference.digest);
-    assert.deepEqual(JSON.parse(retained), entry.result);
+    assert.equal(entry.result.evidence_refs.length, 1);
+    for (const reference of [entry.observation_reference, entry.reference]) {
+      const retained = fs.readFileSync(path.join(value.evidenceDir, reference.ref));
+      assert.equal(retained.length, reference.bytes);
+      assert.equal(digest(retained), reference.digest);
+    }
+    assert.deepEqual(
+      parseEffectivenessVerifierResult(JSON.stringify(entry.result), {
+        runtime: verifierRuntime,
+        target: value.target,
+      }),
+      entry.result,
+    );
   }
+
+  const promoted = structuredClone(run.results[0].result);
+  promoted.independence_level = 'model_self_report';
+  assert.throws(
+    () => parseEffectivenessVerifierResult(promoted, {
+      runtime: verifierRuntime,
+      target: value.target,
+    }),
+    /independence_level/,
+  );
+  const mismatchedPurpose = structuredClone(run.results[0].result);
+  mismatchedPurpose.verifier.purpose = 'hidden_assertion';
+  assert.throws(
+    () => parseEffectivenessVerifierResult(mismatchedPurpose),
+    /purpose/,
+  );
+  const missingObservation = structuredClone(run.results[0].result);
+  missingObservation.evidence_refs[0].role = 'self_report';
+  assert.throws(
+    () => parseEffectivenessVerifierResult(missingObservation),
+    /host_observation/,
+  );
 });
 
-test('hidden assertions and diff checks stay independent without leaking hidden failures', async (t) => {
+test('hidden assertions and diff checks retain only normalized host observations', async (t) => {
   const value = fixture(t);
   const hiddenFailure = 'hidden-oracle-secret-must-not-be-retained';
   const hidden = createHiddenAssertionVerifierAdapter({
     id: 'hidden-contract',
-    definitionDigest: digest('hidden-contract-definition'),
     scope: { kind: 'workspace', paths: ['result.txt'] },
-    verify(context) {
-      assert.equal(context.target.workspace.snapshot_digest, value.target.workspace.snapshot_digest);
-      return { passed: false, detail: hiddenFailure };
-    },
+    oracleRef: 'host-oracle://contract-v1',
+    oracleDigest: digest('hidden-contract-definition'),
   });
   const brokenHidden = createHiddenAssertionVerifierAdapter({
     id: 'hidden-broken',
-    definitionDigest: digest('hidden-broken-definition'),
     scope: { kind: 'workspace', paths: ['result.txt'] },
-    verify() {
-      throw new Error(hiddenFailure);
-    },
+    oracleRef: 'host-oracle://broken-v1',
+    oracleDigest: digest('hidden-broken-definition'),
+  });
+  const passingHidden = createHiddenAssertionVerifierAdapter({
+    id: 'hidden-pass',
+    scope: { kind: 'workspace', paths: ['result.txt'] },
+    oracleRef: 'host-oracle://passing-v1',
+    oracleDigest: digest('hidden-passing-definition'),
   });
   const diff = createDiffVerifierAdapter({
     id: 'diff-contract',
-    definitionDigest: digest('diff-contract-definition'),
     scope: { kind: 'diff', paths: ['result.txt'] },
-    verify(context) {
-      assert.equal(fs.readFileSync(path.join(context.workspaceDir, 'result.txt'), 'utf8'), 'ready\n');
-      return { passed: true };
-    },
+    policy: { allowed_paths: ['result.txt'], required_paths: ['result.txt'] },
   });
+  const failedDiff = createDiffVerifierAdapter({
+    id: 'diff-fail',
+    scope: { kind: 'diff', paths: ['result.txt'] },
+    policy: { allowed_paths: [], required_paths: ['result.txt'] },
+  });
+  const brokenDiff = createDiffVerifierAdapter({
+    id: 'diff-broken',
+    scope: { kind: 'diff', paths: ['result.txt'] },
+    policy: { allowed_paths: ['result.txt'] },
+  });
+  const verifierRuntime = runtime(
+    [hidden, brokenHidden, passingHidden, diff, failedDiff, brokenDiff],
+    {
+    'hidden-contract': () => ({ kind: 'assertion', status: 'failed' }),
+    'hidden-broken': () => { throw new Error(hiddenFailure); },
+    'hidden-pass': () => ({ kind: 'assertion', status: 'passed' }),
+    'diff-contract': ({ workspaceDir, target }) => {
+      assert.equal(target.workspace.final_snapshot_digest, value.target.workspace.final_snapshot_digest);
+      assert.equal(fs.readFileSync(path.join(workspaceDir, 'result.txt'), 'utf8'), 'ready\n');
+      return { kind: 'diff', status: 'passed' };
+    },
+    'diff-fail': () => ({ kind: 'diff', status: 'failed' }),
+    'diff-broken': () => ({ kind: 'diff', status: 'unexpected' }),
+    },
+  );
 
   const run = await runEffectivenessVerifierSet({
     ...value,
-    adapters: [hidden, brokenHidden, diff],
+    runtime: verifierRuntime,
     limits: { timeoutMs: 2_000, maxOutputBytes: 64 * 1024 },
   });
 
@@ -140,7 +257,10 @@ test('hidden assertions and diff checks stay independent without leaking hidden 
     [
       ['hidden-contract', 'task_failed', 'assertion_failed'],
       ['hidden-broken', 'infrastructure_error', 'verifier_execution_failed'],
+      ['hidden-pass', 'passed', 'assertion_passed'],
       ['diff-contract', 'passed', 'diff_passed'],
+      ['diff-fail', 'task_failed', 'diff_failed'],
+      ['diff-broken', 'infrastructure_error', 'verifier_execution_failed'],
     ],
   );
   assert.equal(
@@ -150,21 +270,26 @@ test('hidden assertions and diff checks stay independent without leaking hidden 
     false,
   );
   assert.throws(
-    () => createDiffVerifierAdapter({
+    () => createEffectivenessVerifierRuntime({
       id: 'promoted',
-      definitionDigest: digest('promoted'),
-      scope: { kind: 'diff', paths: ['result.txt'] },
-      independenceLevel: 'independent_verifier',
-      verify() { return { passed: true }; },
-    }),
-    /fields must be exactly/,
-  );
-  await assert.rejects(
-    () => runEffectivenessVerifierSet({
-      ...value,
+      executor: {
+        id: 'fake',
+        version: '1',
+        definition: {
+          guarantees: ['timeout', 'output-bound', 'workspace-isolation'],
+        },
+        async execute() { return { kind: 'diff', status: 'passed' }; },
+      },
       adapters: [{ ...diff }],
-      limits: { timeoutMs: 2_000, maxOutputBytes: 64 * 1024 },
     }),
     /trusted factory/,
+  );
+  assert.throws(
+    () => createDiffVerifierAdapter({
+      id: 'ambiguous-policy',
+      scope: { kind: 'diff', paths: ['result.txt'] },
+      policy: { allowed_paths: undefined },
+    }),
+    /JSON data/,
   );
 });

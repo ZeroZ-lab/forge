@@ -14,6 +14,10 @@ import {
   createEvidenceEnvelope,
   verifyEvidenceEnvelope,
 } from './evidence-envelope.mjs';
+import {
+  isEffectivenessVerifierRuntime,
+  runEffectivenessVerifierSet,
+} from './effectiveness-verifier.mjs';
 
 const RECEIPT_CONTRACT = 'forge-effectiveness-run-receipt';
 const RECEIPT_VERSION = 1;
@@ -346,7 +350,13 @@ function validateSpec(rawSpec) {
     fail('invalid_spec', 'buildReportInput must be a function');
   }
   const signal = rawSpec.signal;
-  const { buildReportInput: _build, signal: _signal, ...dataSpec } = rawSpec;
+  const verifierRuntime = rawSpec.verifierRuntime;
+  const {
+    buildReportInput: _build,
+    signal: _signal,
+    verifierRuntime: _verifierRuntime,
+    ...dataSpec
+  } = rawSpec;
   const spec = cloneData(dataSpec, 'runner spec');
 
   if (
@@ -416,6 +426,29 @@ function validateSpec(rawSpec) {
   if (signal !== undefined && (signal === null || typeof signal.aborted !== 'boolean' || typeof signal.addEventListener !== 'function')) {
     fail('invalid_spec', 'signal must be an AbortSignal');
   }
+  if (
+    verifierRuntime !== undefined &&
+    (!isPlainObject(spec.verifierSet) || !isPlainObject(spec.objective))
+  ) {
+    fail('invalid_spec', 'verifierSet and objective are required with verifierRuntime');
+  }
+  if (verifierRuntime !== undefined) {
+    if (
+      !isEffectivenessVerifierRuntime(verifierRuntime) ||
+      !isPlainObject(verifierRuntime.verifierSet) ||
+      verifierRuntime.verifierSet.id !== spec.verifierSet.id ||
+      verifierRuntime.verifierSet.digest !== spec.verifierSet.digest
+    ) {
+      fail('invalid_spec', 'verifierRuntime does not match verifierSet');
+    }
+    if (
+      typeof spec.objective.id !== 'string' ||
+      spec.objective.id.length === 0 ||
+      !/^sha256:[0-9a-f]{64}$/.test(spec.objective.digest ?? '')
+    ) {
+      fail('invalid_spec', 'objective id and digest are required for verification');
+    }
+  }
 
   const limits = { ...DEFAULT_LIMITS, ...(spec.limits ?? {}) };
   for (const key of Object.keys(DEFAULT_LIMITS)) validatePositiveInteger(limits[key], `limits.${key}`);
@@ -424,7 +457,7 @@ function validateSpec(rawSpec) {
   spec.limits = limits;
   spec.command.env = commandEnv;
   spec.command.sensitiveValues = sensitiveValues;
-  return { spec, buildReportInput, signal };
+  return { spec, buildReportInput, signal, verifierRuntime };
 }
 
 function symlinkEscapes(rootDir, linkPath, target) {
@@ -1178,7 +1211,7 @@ function createRunnerReport(receipt, reportInput, experimentPlan, contractRoot) 
     throw new Error('event actor runner is runner-owned');
   }
   if (input.events.some((event) => event?.actor === 'verifier')) {
-    throw new Error('verifier events are unavailable before B07');
+    throw new Error('verifier events are runner-owned');
   }
   if (input.evidence.some((item) => String(item?.producer_ref ?? '').startsWith('runner:'))) {
     throw new Error('runner evidence producer identity is runner-owned');
@@ -1187,10 +1220,10 @@ function createRunnerReport(receipt, reportInput, experimentPlan, contractRoot) 
     input.evidence.some((item) =>
       item?.source_kind === 'independent_verifier' || Object.hasOwn(item ?? {}, 'envelope_ref'))
   ) {
-    throw new Error('independent verifier and Evidence Envelope claims are unavailable in B04');
+    throw new Error('independent verifier and Evidence Envelope claims are runner-owned');
   }
   if ((input.final_result.verifier_result_refs ?? []).length > 0) {
-    throw new Error('verifier_result_refs are unavailable before B07');
+    throw new Error('verifier_result_refs are runner-owned');
   }
   if (input.costs.some((item) => item?.acquisition?.kind === 'runner')) {
     throw new Error('cost acquisition kind runner is runner-owned');
@@ -1267,6 +1300,40 @@ function createRunnerReport(receipt, reportInput, experimentPlan, contractRoot) 
       objective_ref: objectiveId,
     },
   );
+
+  const verifierEvidenceIds = [];
+  for (const [index, entry] of (receipt.verifiers ?? []).entries()) {
+    const verifierId = entry.result.verifier.id;
+    const eventId = `${receipt.attempt_id}.verifier-${verifierId}`;
+    const evidenceId = `${eventId}-evidence`;
+    const status = entry.result.outcome === 'passed'
+      ? 'succeeded'
+      : entry.result.outcome === 'unavailable'
+        ? 'blocked'
+        : 'failed';
+    input.events.push({
+      id: eventId,
+      sequence: maximumSequence + 3 + index,
+      type: entry.result.verifier.kind === 'command' ? 'command' : 'observation',
+      actor: 'verifier',
+      observed_at: entry.result.ended_at,
+      status,
+      summary: `External verifier ${verifierId} recorded ${entry.result.outcome} (${entry.result.reason_code}).`,
+      details_ref: entry.result_reference.ref,
+      evidence_refs: [evidenceId],
+    });
+    input.evidence.push({
+      id: evidenceId,
+      source_kind: 'independent_verifier',
+      locator: entry.result_reference.ref,
+      digest: entry.result_reference.digest,
+      producer_ref: `verifier:${entry.result.executor.id}@${entry.result.executor.version}/${verifierId}`,
+      event_id: eventId,
+      objective_ref: objectiveId,
+    });
+    verifierEvidenceIds.push(evidenceId);
+  }
+  input.final_result.verifier_result_refs = verifierEvidenceIds;
 
   input.final_result.artifact_refs = [
     ...new Set([
@@ -1403,6 +1470,23 @@ function createRunnerReport(receipt, reportInput, experimentPlan, contractRoot) 
       { rootDir: contractRoot },
     ),
   });
+  for (const entry of receipt.verifiers ?? []) {
+    const verifierId = entry.result.verifier.id;
+    const evidenceId = `${receipt.attempt_id}.verifier-${verifierId}-evidence`;
+    envelopes.push({
+      artifactKey: `verifier_${verifierId.replaceAll('-', '_')}_envelope`,
+      evidenceId,
+      envelope: createEvidenceEnvelope(
+        envelopeInput(
+          evidenceId,
+          'claim',
+          { claim_digest: entry.result_reference.digest },
+          entry.result_reference,
+        ),
+        { rootDir: contractRoot },
+      ),
+    });
+  }
 
   for (const item of envelopes) {
     item.ref = `${item.envelope.content_digest.slice('sha256:'.length)}.evidence-envelope.json`;
@@ -1573,6 +1657,15 @@ function createConfigurationDigest(spec, sourceGuard, commandPlan) {
       revision: sourceGuard.head,
       tree: sourceGuard.tree,
     },
+    ...(spec.verifierSet === undefined
+      ? {}
+      : {
+          verifier_set: spec.verifierSet,
+          objective: {
+            id: spec.objective.id,
+            digest: spec.objective.digest,
+          },
+        }),
   });
 }
 
@@ -1644,7 +1737,7 @@ function reportFailure(error, receipt) {
 }
 
 export async function runIsolatedEffectivenessAttempt(rawSpec) {
-  const { spec, buildReportInput, signal } = validateSpec(rawSpec);
+  const { spec, buildReportInput, signal, verifierRuntime } = validateSpec(rawSpec);
   const contractRoot = fs.realpathSync(path.resolve(spec.contractRoot));
   const sourceDir = fs.realpathSync(path.resolve(spec.source.dir));
   const evidenceRootLexical = path.resolve(spec.evidenceRoot);
@@ -1705,6 +1798,7 @@ export async function runIsolatedEffectivenessAttempt(rawSpec) {
   let commandResult;
   let delta;
   let receipt;
+  let verifierRun = null;
   let launched = false;
   try {
     cloneRepository(sourceDir, sourceBefore.head, workspaceDir, captureGitDir, spec.limits);
@@ -1871,6 +1965,54 @@ export async function runIsolatedEffectivenessAttempt(rawSpec) {
         summary: delta.summary,
       },
     };
+    if (
+      verifierRuntime !== undefined &&
+      delta.captureComplete &&
+      sourceUnchanged &&
+      receipt.artifacts.diff !== null
+    ) {
+      verifierRun = await runEffectivenessVerifierSet({
+        runtime: verifierRuntime,
+        workspaceDir,
+        evidenceDir,
+        target: {
+          attempt_id: spec.attemptId,
+          objective_ref: spec.objective.id,
+          objective_digest: spec.objective.digest,
+          workspace: {
+            isolation_id: receipt.workspace.isolation_id,
+            base_snapshot_digest: receipt.source.snapshot_digest,
+            final_snapshot_digest: receipt.workspace.final_snapshot_digest,
+            diff_ref: receipt.artifacts.diff.ref,
+            diff_digest: receipt.artifacts.diff.digest,
+          },
+        },
+        limits: {
+          timeoutMs: spec.limits.timeoutMs,
+          maxOutputBytes: Math.max(spec.limits.maxStdoutBytes, spec.limits.maxStderrBytes),
+        },
+      });
+      const afterVerifier = captureWorkspaceManifest(workspaceDir, spec.limits);
+      if (afterVerifier.digest !== receipt.workspace.final_snapshot_digest) {
+        fail(
+          'verifier_workspace_changed',
+          'external verifier host changed the captured workspace',
+          { stage: 'verifier', receipt },
+        );
+      }
+      receipt.verifiers = verifierRun.results.map((entry) => ({
+        result: entry.result,
+        result_reference: entry.reference,
+        observation_reference: entry.observation_reference,
+      }));
+      for (const entry of receipt.verifiers) {
+        const id = entry.result.verifier.id.replaceAll('-', '_');
+        receipt.artifacts[`verifier_${id}_observation`] = entry.observation_reference;
+        receipt.artifacts[`verifier_${id}_result`] = entry.result_reference;
+      }
+    } else {
+      receipt.verifiers = [];
+    }
   } catch (error) {
     if (!launched) {
       fs.rmSync(capsuleDir, { recursive: true, force: true });

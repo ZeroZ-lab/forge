@@ -11,6 +11,10 @@ import {
   runIsolatedEffectivenessAttempt,
 } from '../scripts/lib/effectiveness-runner.mjs';
 import { verifyEvidenceEnvelope } from '../scripts/lib/evidence-envelope.mjs';
+import {
+  createEffectivenessVerifierRuntime,
+  createHiddenAssertionVerifierAdapter,
+} from '../scripts/lib/effectiveness-verifier.mjs';
 import { parseEffectivenessReport } from '../scripts/lib/effectiveness-report.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -168,7 +172,9 @@ function attemptSpec({
   limits = {},
   taskState = null,
   terminal = false,
+  verifierRuntime,
 }) {
+  const objective = baseReportInput({ armId, repeatIndex }).experiment.objective;
   return {
     contractRoot: root,
     experimentPlan,
@@ -200,6 +206,13 @@ function attemptSpec({
     buildReportInput() {
       return baseReportInput({ armId, repeatIndex, taskState, terminal });
     },
+    ...(verifierRuntime === undefined
+      ? {}
+      : {
+          verifierRuntime,
+          verifierSet: verifierRuntime.verifierSet,
+          objective: { id: objective.id, digest: objective.digest },
+        }),
   };
 }
 
@@ -311,6 +324,111 @@ test('isolated attempt captures revision, complete delta, command facts, and lea
   assert.deepEqual(
     parseEffectivenessReport(result.report, { rootDir: root, experimentPlan }),
     result.report,
+  );
+});
+
+test('external verifier failure is sealed into first-published independent evidence', async (t) => {
+  const { sourceDir, evidenceRoot } = createSource(t);
+  const verifierRuntime = createEffectivenessVerifierRuntime({
+    id: 'fixture-verifiers',
+    executor: {
+      id: 'fixture-verifier-host',
+      version: '1',
+      definition: {
+        boundary: 'test-double',
+        guarantees: ['timeout', 'output-bound', 'workspace-isolation'],
+      },
+      async execute({ adapter, target, workspaceDir }) {
+        assert.equal(adapter.kind, 'hidden_assertion');
+        assert.match(target.workspace.diff_digest, /^sha256:/);
+        assert.equal(fs.readFileSync(path.join(workspaceDir, 'result.txt'), 'utf8'), 'done\n');
+        return { kind: 'assertion', status: 'failed' };
+      },
+    },
+    adapters: [
+      createHiddenAssertionVerifierAdapter({
+        id: 'hidden-contract',
+        scope: { kind: 'workspace', paths: ['result.txt'] },
+        oracleRef: 'host-oracle://contract-v1',
+        oracleDigest: digest('hidden-contract-v1'),
+      }),
+    ],
+  });
+  const result = await runIsolatedEffectivenessAttempt(attemptSpec({
+    sourceDir,
+    evidenceRoot,
+    attemptId: 'verified.adaptive-full.0',
+    script: "require('node:fs').writeFileSync('result.txt', 'done\\n')",
+    taskState: 'completed',
+    verifierRuntime,
+  }));
+
+  assert.equal(result.report.final_result.model_claim.state, 'completed');
+  assert.equal(result.receipt.verifiers[0].result.outcome, 'task_failed');
+  const verifierEvidence = result.report.evidence.filter(
+    (item) => item.source_kind === 'independent_verifier',
+  );
+  assert.equal(verifierEvidence.length, 1);
+  assert.deepEqual(result.report.final_result.verifier_result_refs, [verifierEvidence[0].id]);
+  const verifierEvent = result.report.events.find((item) => item.id === verifierEvidence[0].event_id);
+  assert.equal(verifierEvent.actor, 'verifier');
+  assert.equal(verifierEvent.status, 'failed');
+  assert.match(verifierEvidence[0].envelope_ref, /^[0-9a-f]{64}\.evidence-envelope\.json$/);
+  const reference = Object.values(result.receipt.artifacts)
+    .find((candidate) => candidate?.ref === verifierEvidence[0].envelope_ref);
+  assert.equal(
+    verifyEvidenceEnvelope(reference, {
+      rootDir: root,
+      evidenceRoot: result.evidenceDir,
+      report: result.report,
+      evidenceId: verifierEvidence[0].id,
+    }).source_level,
+    'independent_verifier',
+  );
+});
+
+test('external verifier host cannot mutate the captured workspace', async (t) => {
+  const { sourceDir, evidenceRoot } = createSource(t);
+  const verifierRuntime = createEffectivenessVerifierRuntime({
+    id: 'mutating-verifiers',
+    executor: {
+      id: 'mutating-verifier-host',
+      version: '1',
+      definition: {
+        boundary: 'test-double',
+        guarantees: ['timeout', 'output-bound', 'workspace-isolation'],
+      },
+      async execute({ workspaceDir }) {
+        fs.writeFileSync(path.join(workspaceDir, 'verifier-side-effect.txt'), 'forbidden\n');
+        return { kind: 'assertion', status: 'passed' };
+      },
+    },
+    adapters: [
+      createHiddenAssertionVerifierAdapter({
+        id: 'mutating-assertion',
+        scope: { kind: 'workspace', paths: ['result.txt'] },
+        oracleRef: 'host-oracle://mutating-v1',
+        oracleDigest: digest('mutating-v1'),
+      }),
+    ],
+  });
+
+  await assert.rejects(
+    () => runIsolatedEffectivenessAttempt(attemptSpec({
+      sourceDir,
+      evidenceRoot,
+      attemptId: 'mutating-verifier.adaptive-full.0',
+      script: "require('node:fs').writeFileSync('result.txt', 'done\\n')",
+      verifierRuntime,
+    })),
+    (error) =>
+      error instanceof EffectivenessRunnerError &&
+      error.code === 'verifier_workspace_changed' &&
+      error.stage === 'verifier',
+  );
+  assert.equal(
+    fs.existsSync(path.join(evidenceRoot, 'mutating-verifier.adaptive-full.0', 'report.json')),
+    false,
   );
 });
 

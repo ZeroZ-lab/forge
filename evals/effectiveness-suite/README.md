@@ -316,6 +316,45 @@ registry, rotation, or revocation contract; embedding a key in the Envelope
 would be self-authorization. A future authenticated issuer design must receive
 its trust policy from the host and attest the outer report/Envelope digests.
 
+### External verifier adapters
+
+`scripts/lib/effectiveness-verifier.mjs` defines the B07 seam:
+
+```js
+import {
+  createCommandVerifierAdapter,
+  createHiddenAssertionVerifierAdapter,
+  createDiffVerifierAdapter,
+  createEffectivenessVerifierRuntime,
+  parseEffectivenessVerifierResult,
+  runEffectivenessVerifierSet,
+} from '../../scripts/lib/effectiveness-verifier.mjs';
+```
+
+Command adapters cover `test`, `build`, and `typecheck`; hidden assertions carry
+only a host-private oracle reference and digest; diff adapters are bound to the
+captured base/final workspace snapshots and diff digest. The versioned external
+executor must declare timeout, output-bound, and workspace-isolation guarantees.
+Its definition and every adapter definition are included in the controlled
+verifier-set digest. The verifier module does not directly spawn project test
+commands or accept hidden callbacks in adapter definitions; the injected host
+executor owns execution, timeout, output bounds, and workspace isolation.
+
+The host returns fixed-field observations. B07 maps them to `passed`,
+`task_failed`, `unavailable`, or `infrastructure_error`, retains a normalized
+observation and result, and never stores host exception text or hidden oracle
+content. B04 runs the set before capsule cleanup, rejects verifier workspace
+side effects, then adds verifier events, `independent_verifier` evidence,
+`final_result.verifier_result_refs`, and claim Envelopes before the report's
+first publication. B05 requires the runtime to match the controlled verifier
+set and rechecks result/event/workspace semantics under the group seal.
+
+The runtime factory is a host integration seam, not identity authentication or
+proof that its declared guarantees were enforced. B05—not the model/provider
+observation—owns runtime injection. Production benchmark hosts still require
+separate audit. A verifier pass is evidence only; B08 still decides sufficiency
+and objective outcome.
+
 ### Four-arm comparison coordinator
 
 `scripts/lib/effectiveness-experiment.mjs` is the B05 plan and scheduling seam:

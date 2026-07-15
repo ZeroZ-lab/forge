@@ -12,6 +12,10 @@ import {
   referenceEvidenceEnvelope,
   verifyEvidenceEnvelope,
 } from './evidence-envelope.mjs';
+import {
+  isEffectivenessVerifierRuntime,
+  parseEffectivenessVerifierResult,
+} from './effectiveness-verifier.mjs';
 import { runIsolatedEffectivenessAttempt } from './effectiveness-runner.mjs';
 import { loadRegistry } from './registry.mjs';
 
@@ -256,9 +260,12 @@ function hasValidEvidenceEnvelopes(report, armDir, rootDir) {
   try {
     const runnerEvidence = report.evidence.filter((evidence) =>
       evidence.producer_ref.startsWith('runner:'));
+    const verifierEvidence = report.evidence.filter((evidence) =>
+      evidence.source_kind === 'independent_verifier');
     if (
       runnerEvidence.length === 0 ||
-      runnerEvidence.some((evidence) => typeof evidence.envelope_ref !== 'string')
+      runnerEvidence.some((evidence) => typeof evidence.envelope_ref !== 'string') ||
+      (report.execution.termination === 'completed' && verifierEvidence.length === 0)
     ) {
       return false;
     }
@@ -272,6 +279,52 @@ function hasValidEvidenceEnvelopes(report, armDir, rootDir) {
           evidenceId: evidence.id,
         },
       );
+      if (evidence.source_kind === 'independent_verifier') {
+        const resultPath = path.join(armDir, evidence.locator);
+        const stat = fs.lstatSync(resultPath);
+        if (
+          path.basename(evidence.locator) !== evidence.locator ||
+          !stat.isFile() ||
+          stat.size > 1024 * 1024 ||
+          !pathIsWithin(fs.realpathSync(armDir), fs.realpathSync(resultPath))
+        ) {
+          return false;
+        }
+        const result = parseEffectivenessVerifierResult(fs.readFileSync(resultPath));
+        if (
+          result.evidence_refs.some(({ role: _role, ...reference }) =>
+            !validRetainedReference(armDir, reference))
+        ) {
+          return false;
+        }
+        const event = report.events.find((item) => item.id === evidence.event_id);
+        const diffPath = path.join(armDir, result.target.workspace.diff_ref);
+        const expectedStatus = result.outcome === 'passed'
+          ? 'succeeded'
+          : result.outcome === 'unavailable'
+            ? 'blocked'
+            : 'failed';
+        if (
+          !isDeepStrictEqual(result.verifier_set, report.experiment.verifier_set) ||
+          result.target.attempt_id !== report.experiment.arm.id ||
+          result.target.objective_ref !== report.experiment.objective.id ||
+          result.target.objective_digest !== report.experiment.objective.digest ||
+          result.target.workspace.isolation_id !== report.experiment.workspace.isolation_id ||
+          result.target.workspace.base_snapshot_digest !== report.experiment.workspace.snapshot_digest ||
+          result.target.workspace.final_snapshot_digest !== report.experiment.workspace.final_snapshot_digest ||
+          result.target.workspace.diff_ref !== report.experiment.workspace.diff_ref ||
+          !fs.lstatSync(diffPath).isFile() ||
+          result.target.workspace.diff_digest !== digestBuffer(fs.readFileSync(diffPath)) ||
+          evidence.producer_ref !== `verifier:${result.executor.id}@${result.executor.version}/${result.verifier.id}` ||
+          event?.actor !== 'verifier' ||
+          event?.status !== expectedStatus ||
+          event?.observed_at !== result.ended_at ||
+          event?.details_ref !== evidence.locator ||
+          !report.final_result.verifier_result_refs.includes(evidence.id)
+        ) {
+          return false;
+        }
+      }
     }
     return true;
   } catch {
@@ -609,6 +662,19 @@ function assertGroupInputs(spec) {
     throw new EffectivenessExperimentError(
       'INVALID_EXPERIMENT',
       `limits must contain exact positive values (${missingLimit ?? unknownLimit ?? invalidLimit})`,
+    );
+  }
+}
+
+function assertVerifierRuntime(verifierRuntime, verifierSet) {
+  if (
+    !isEffectivenessVerifierRuntime(verifierRuntime) ||
+    !isPlainObject(verifierRuntime.verifierSet) ||
+    !isDeepStrictEqual(verifierRuntime.verifierSet, verifierSet)
+  ) {
+    throw new EffectivenessExperimentError(
+      'VERIFIER_UNAVAILABLE',
+      'a trusted external verifier runtime matching verifierSet is required',
     );
   }
 }
@@ -1023,6 +1089,7 @@ export async function runEffectivenessComparisonGroup(spec) {
   assertIdentity(spec.requestedModel, 'requestedModel');
   assertHostSandbox(spec.hostSandbox);
   assertGroupInputs(spec);
+  assertVerifierRuntime(spec.verifierRuntime, spec.verifierSet);
   if (!Number.isInteger(spec.repeatIndex) || spec.repeatIndex < 0) {
     throw new EffectivenessExperimentError('INVALID_EXPERIMENT', 'repeatIndex must be a non-negative integer');
   }
@@ -1372,6 +1439,12 @@ export async function runEffectivenessComparisonGroup(spec) {
           evidenceRoot: stagingRoot,
           command: item.command,
           limits: cloneData(spec.limits, 'limits'),
+          verifierRuntime: spec.verifierRuntime,
+          verifierSet: cloneData(spec.verifierSet, 'verifierSet'),
+          objective: {
+            id: spec.objective.id,
+            digest: spec.objective.digest,
+          },
           ...(spec.signal === undefined ? {} : { signal: spec.signal }),
           async buildReportInput(receipt, retainedEvidence) {
             if (resolution.availability === 'available') {
