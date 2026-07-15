@@ -42,6 +42,10 @@ function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function compareText(left, right) {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
 function canonicalValue(value, seen = new WeakSet()) {
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return value;
   if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -150,7 +154,7 @@ function digestDirectory(rootDir) {
   const hash = crypto.createHash('sha256');
   function visit(directory, relativeDirectory = '') {
     const entries = fs.readdirSync(directory, { withFileTypes: true })
-      .sort((left, right) => left.name.localeCompare(right.name));
+      .sort((left, right) => compareText(left.name, right.name));
     for (const entry of entries) {
       const relativePath = path.posix.join(relativeDirectory, entry.name);
       const fullPath = path.join(directory, entry.name);
@@ -214,7 +218,42 @@ function normalizeCapabilities(capabilities, label) {
       seen.add(key);
       return normalized;
     })
-    .sort((left, right) => capabilityKey(left).localeCompare(capabilityKey(right)));
+    .sort((left, right) => compareText(capabilityKey(left), capabilityKey(right)));
+}
+
+function hasValidGroupSeal(groupDir, comparisonGroupId) {
+  const sealPath = path.join(groupDir, 'group.json');
+  try {
+    if (!fs.lstatSync(groupDir).isDirectory() || !fs.lstatSync(sealPath).isFile()) return false;
+    const seal = JSON.parse(fs.readFileSync(sealPath, 'utf8'));
+    return seal?.contract === 'forge-effectiveness-comparison-group' &&
+      seal?.version === 1 &&
+      seal?.comparison_group_id === comparisonGroupId;
+  } catch {
+    return false;
+  }
+}
+
+function quarantineIncompleteFinal(evidenceRoot, finalGroupDir, comparisonGroupId) {
+  const root = fs.realpathSync(evidenceRoot);
+  const finalStat = fs.lstatSync(finalGroupDir);
+  if (!finalStat.isDirectory() || !pathIsWithin(root, fs.realpathSync(finalGroupDir))) {
+    throw new EffectivenessExperimentError(
+      'EVIDENCE_COLLISION',
+      `comparison group path is not a recoverable evidence directory: ${comparisonGroupId}`,
+    );
+  }
+  const suffix = crypto.randomBytes(6).toString('hex');
+  const groupFile = path.join(finalGroupDir, 'group.json');
+  if (fs.existsSync(groupFile)) {
+    fs.renameSync(groupFile, path.join(finalGroupDir, `rejected-group-${suffix}.json`));
+  }
+  const incompleteGroupDir = path.join(
+    evidenceRoot,
+    `${comparisonGroupId}.incomplete-recovered-${suffix}`,
+  );
+  fs.renameSync(finalGroupDir, incompleteGroupDir);
+  return incompleteGroupDir;
 }
 
 function makeArmPlan(armId, armDefinition, exposed) {
@@ -819,6 +858,12 @@ export async function runEffectivenessComparisonGroup(spec) {
   if (!isPlainObject(spec)) {
     throw new EffectivenessExperimentError('INVALID_EXPERIMENT', 'comparison group spec is required');
   }
+  if (Object.hasOwn(spec, 'runAttempt')) {
+    throw new EffectivenessExperimentError(
+      'INVALID_EXPERIMENT',
+      'runAttempt is scheduler-owned and cannot be replaced by callers',
+    );
+  }
   const experimentPlan = createEffectivenessExperimentPlan({
     rootDir: spec.rootDir,
     baseCapabilities: spec.baseCapabilities ?? [],
@@ -870,10 +915,13 @@ export async function runEffectivenessComparisonGroup(spec) {
   fs.mkdirSync(spec.evidenceRoot, { recursive: true });
   const finalGroupDir = path.join(spec.evidenceRoot, spec.comparisonGroupId);
   if (fs.existsSync(finalGroupDir)) {
-    throw new EffectivenessExperimentError(
-      'EVIDENCE_COLLISION',
-      `comparison group evidence already exists: ${spec.comparisonGroupId}`,
-    );
+    if (hasValidGroupSeal(finalGroupDir, spec.comparisonGroupId)) {
+      throw new EffectivenessExperimentError(
+        'EVIDENCE_COLLISION',
+        `comparison group evidence already exists: ${spec.comparisonGroupId}`,
+      );
+    }
+    quarantineIncompleteFinal(spec.evidenceRoot, finalGroupDir, spec.comparisonGroupId);
   }
 
   const resolution = await resolveModel(spec.modelProvider, spec.requestedModel, modelParameters);
@@ -941,6 +989,56 @@ export async function runEffectivenessComparisonGroup(spec) {
     return failures;
   }
 
+  async function finalizeAttempt(item, receipt, report, evidenceDir) {
+    const runnerConfigurationDigest = isPlainObject(receipt)
+      ? receipt.configuration_digest
+      : null;
+    const enforcement = await item.hostHandle.finalize({
+      receipt: receipt === null ? null : cloneData(receipt, 'receipt'),
+      report: report === null ? null : cloneData(report, 'report'),
+    });
+    const expectedFields = [
+      'appliedPolicyDigest',
+      'armContextDigest',
+      'commonContextDigest',
+      'contained',
+      'runnerConfigurationDigest',
+    ];
+    if (
+      !isPlainObject(enforcement) ||
+      !isDeepStrictEqual(Object.keys(enforcement).sort(compareText), expectedFields) ||
+      enforcement.appliedPolicyDigest !== requiredHostPolicyDigest ||
+      enforcement.contained !== true ||
+      enforcement.runnerConfigurationDigest !== runnerConfigurationDigest ||
+      enforcement.commonContextDigest !== commonContextDigest ||
+      enforcement.armContextDigest !== item.armContextDigest
+    ) {
+      throw new EffectivenessExperimentError(
+        'HOST_SANDBOX_UNAVAILABLE',
+        `host sandbox could not prove containment for ${item.armId}`,
+      );
+    }
+    if (!fs.existsSync(evidenceDir)) fs.mkdirSync(evidenceDir, { mode: 0o700 });
+    if (
+      !fs.lstatSync(evidenceDir).isDirectory() ||
+      !pathIsWithin(fs.realpathSync(stagingRoot), fs.realpathSync(evidenceDir))
+    ) {
+      throw new EffectivenessExperimentError(
+        'HOST_SANDBOX_UNAVAILABLE',
+        `host sandbox receipt has no retained attempt directory for ${item.armId}`,
+      );
+    }
+    const normalized = Object.fromEntries(
+      expectedFields.map((field) => [field, enforcement[field]]),
+    );
+    const hostReceiptPath = path.join(evidenceDir, 'host-enforcement.json');
+    atomicWriteJson(hostReceiptPath, normalized);
+    return {
+      receipt: normalized,
+      reference: fileReference(hostReceiptPath),
+    };
+  }
+
   try {
     for (const armId of EFFECTIVENESS_ARM_IDS) {
       const armContext = {
@@ -977,6 +1075,15 @@ export async function runEffectivenessComparisonGroup(spec) {
           throw new EffectivenessExperimentError(
             'INVALID_PROVIDER_LAUNCH',
             `model provider returned an invalid launch for ${armId}`,
+          );
+        }
+        try {
+          canonicalValue(launch.definition);
+        } catch (error) {
+          throw new EffectivenessExperimentError(
+            'INVALID_PROVIDER_LAUNCH',
+            `model provider launch definition is not auditable for ${armId}: ${error.message}`,
+            { cause: error },
           );
         }
         if (!isDeepStrictEqual(
@@ -1051,6 +1158,13 @@ export async function runEffectivenessComparisonGroup(spec) {
           { cause: error },
         );
       }
+      const preparedItem = {
+        armId,
+        armContextDigest,
+        hostHandle,
+        hostDisposed: false,
+      };
+      if (typeof hostHandle?.dispose === 'function') prepared.push(preparedItem);
       if (
         !isPlainObject(hostHandle) ||
         !isPlainObject(hostHandle.command) ||
@@ -1058,7 +1172,6 @@ export async function runEffectivenessComparisonGroup(spec) {
         typeof hostHandle.finalize !== 'function' ||
         typeof hostHandle.dispose !== 'function'
       ) {
-        if (typeof hostHandle?.dispose === 'function') await hostHandle.dispose();
         throw new EffectivenessExperimentError(
           'HOST_SANDBOX_UNAVAILABLE',
           `host sandbox policy or lifecycle receipt is invalid for ${armId}`,
@@ -1069,7 +1182,6 @@ export async function runEffectivenessComparisonGroup(spec) {
         Object.hasOwn(hostHandle.command.env ?? {}, CONTROL_CONTEXT_ENV) ||
         Object.hasOwn(hostHandle.command.env ?? {}, ARM_CONTEXT_ENV)
       ) {
-        await hostHandle.dispose();
         throw new EffectivenessExperimentError(
           'HOST_SANDBOX_UNAVAILABLE',
           `host sandbox attempted to own scheduler context for ${armId}`,
@@ -1090,13 +1202,9 @@ export async function runEffectivenessComparisonGroup(spec) {
         [CONTROL_CONTEXT_ENV]: commonContextJson,
         [ARM_CONTEXT_ENV]: JSON.stringify(canonicalValue(armContext)),
       };
-      prepared.push({
-        armId,
+      Object.assign(preparedItem, {
         command: { ...hostHandle.command, env: commandEnv, definitionDigest },
         observe: launch.observe,
-        armContextDigest,
-        hostHandle,
-        hostDisposed: false,
       });
     }
   } catch (error) {
@@ -1106,53 +1214,72 @@ export async function runEffectivenessComparisonGroup(spec) {
     throw error;
   }
 
-  const runAttempt = spec.runAttempt ?? runIsolatedEffectivenessAttempt;
-  if (typeof runAttempt !== 'function') {
-    await disposePrepared();
-    throw new EffectivenessExperimentError('INVALID_EXPERIMENT', 'runAttempt must be a function');
-  }
   const runs = [];
   try {
     for (const item of prepared) {
       let runtimeReceipt = null;
-      const result = await runAttempt({
-        contractRoot: spec.rootDir,
-        experimentPlan,
-        armId: item.armId,
-        attemptId: item.armId,
-        source: cloneData(spec.source, 'source'),
-        evidenceRoot: stagingRoot,
-        command: item.command,
-        limits: cloneData(spec.limits, 'limits'),
-        ...(spec.signal === undefined ? {} : { signal: spec.signal }),
-        async buildReportInput(receipt, retainedEvidence) {
-          const attemptEvidenceDir = path.join(stagingRoot, item.armId);
-          if (resolution.availability === 'available') {
-            runtimeReceipt = readRuntimeReceipt({
-              evidenceDir: attemptEvidenceDir,
-              retainedEvidence,
-              armId: item.armId,
-              expected: {
-                commonContextDigest,
-                armDefinitionDigest: experimentPlan.arms[item.armId].definition_digest,
-                capabilityPolicyDigest: experimentPlan.arms[item.armId].capability_policy.digest,
-              },
-            });
-          }
-          const observed = await item.observe(
-            cloneData(receipt, 'receipt'),
-            cloneData(retainedEvidence, 'retained evidence'),
+      const attemptEvidenceDir = path.join(stagingRoot, item.armId);
+      let result;
+      try {
+        result = await runIsolatedEffectivenessAttempt({
+          contractRoot: spec.rootDir,
+          experimentPlan,
+          armId: item.armId,
+          attemptId: item.armId,
+          source: cloneData(spec.source, 'source'),
+          evidenceRoot: stagingRoot,
+          command: item.command,
+          limits: cloneData(spec.limits, 'limits'),
+          ...(spec.signal === undefined ? {} : { signal: spec.signal }),
+          async buildReportInput(receipt, retainedEvidence) {
+            if (resolution.availability === 'available') {
+              runtimeReceipt = readRuntimeReceipt({
+                evidenceDir: attemptEvidenceDir,
+                retainedEvidence,
+                armId: item.armId,
+                expected: {
+                  commonContextDigest,
+                  armDefinitionDigest: experimentPlan.arms[item.armId].definition_digest,
+                  capabilityPolicyDigest: experimentPlan.arms[item.armId].capability_policy.digest,
+                },
+              });
+            }
+            const observed = await item.observe(
+              cloneData(receipt, 'receipt'),
+              cloneData(retainedEvidence, 'retained evidence'),
+            );
+            return controlledReportInput(
+              trustedSpec,
+              item.armId,
+              resolution,
+              parametersDigest,
+              runtimeReceipt,
+              observed,
+            );
+          },
+        });
+      } catch (attemptError) {
+        try {
+          await finalizeAttempt(
+            item,
+            isPlainObject(attemptError?.receipt) ? attemptError.receipt : null,
+            null,
+            attemptEvidenceDir,
           );
-          return controlledReportInput(
-            trustedSpec,
-            item.armId,
-            resolution,
-            parametersDigest,
-            runtimeReceipt,
-            observed,
-          );
-        },
-      });
+        } catch (finalizeError) {
+          finalizeError.attemptError = attemptError;
+          throw finalizeError;
+        }
+        throw attemptError;
+      }
+      const finalized = await finalizeAttempt(
+        item,
+        result.receipt,
+        result.report,
+        result.evidenceDir,
+      );
+      result.hostEnforcement = cloneData(finalized.receipt, 'host enforcement receipt');
+      result.hostEnforcementReference = finalized.reference;
       if (resolution.availability === 'available') {
         if (runtimeReceipt === null) {
           throw new EffectivenessExperimentError(
@@ -1161,38 +1288,17 @@ export async function runEffectivenessComparisonGroup(spec) {
           );
         }
         runtimeReceipt.runner_configuration_digest = result.receipt.configuration_digest;
+        const runtimeReceiptPath = path.join(result.evidenceDir, 'runtime-receipt.json');
+        atomicWriteJson(runtimeReceiptPath, runtimeReceipt);
+        result.runtimeReceipt = cloneData(runtimeReceipt, 'runtime receipt');
+        result.runtimeReceiptReference = fileReference(runtimeReceiptPath);
         if (!isDeepStrictEqual(runtimeReceipt.actual_model, resolution.actual)) {
           throw new EffectivenessExperimentError(
             'RUNTIME_MODEL_FALLBACK',
             `runtime model identity differs from the resolved model for ${item.armId}`,
           );
         }
-        const runtimeReceiptPath = path.join(result.evidenceDir, 'runtime-receipt.json');
-        atomicWriteJson(runtimeReceiptPath, runtimeReceipt);
-        result.runtimeReceipt = cloneData(runtimeReceipt, 'runtime receipt');
-        result.runtimeReceiptReference = fileReference(runtimeReceiptPath);
       }
-      const enforcement = await item.hostHandle.finalize({
-        receipt: cloneData(result.receipt, 'receipt'),
-        report: cloneData(result.report, 'report'),
-      });
-      if (
-        !isPlainObject(enforcement) ||
-        enforcement.appliedPolicyDigest !== requiredHostPolicyDigest ||
-        enforcement.contained !== true ||
-        enforcement.runnerConfigurationDigest !== result.receipt.configuration_digest ||
-        enforcement.commonContextDigest !== commonContextDigest ||
-        enforcement.armContextDigest !== item.armContextDigest
-      ) {
-        throw new EffectivenessExperimentError(
-          'HOST_SANDBOX_UNAVAILABLE',
-          `host sandbox could not prove containment for ${item.armId}`,
-        );
-      }
-      result.hostEnforcement = cloneData(enforcement, 'host enforcement receipt');
-      const hostReceiptPath = path.join(result.evidenceDir, 'host-enforcement.json');
-      atomicWriteJson(hostReceiptPath, result.hostEnforcement);
-      result.hostEnforcementReference = fileReference(hostReceiptPath);
       runs.push(result);
     }
 
@@ -1226,12 +1332,13 @@ export async function runEffectivenessComparisonGroup(spec) {
         `host sandbox cleanup failed: ${cleanupFailures.join('; ')}`,
       );
     }
+    const sealPathInStaging = path.join(stagingRoot, 'group.json');
+    atomicWriteJson(sealPathInStaging, seal);
     fs.renameSync(stagingRoot, finalGroupDir);
     for (const run of runs) {
       run.evidenceDir = path.join(finalGroupDir, run.report.experiment.arm.id);
     }
     const finalSealPath = path.join(finalGroupDir, 'group.json');
-    atomicWriteJson(finalSealPath, seal);
     return {
       experimentPlan: cloneData(experimentPlan, 'experimentPlan'),
       model: cloneData(runs[0].report.experiment.model, 'model condition'),

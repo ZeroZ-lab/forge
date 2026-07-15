@@ -73,7 +73,7 @@ function hostSandbox(overrides = {}) {
           return {
             appliedPolicyDigest: requiredPolicyDigest,
             contained: true,
-            runnerConfigurationDigest: receipt.configuration_digest,
+            runnerConfigurationDigest: receipt?.configuration_digest ?? null,
             commonContextDigest,
             armContextDigest,
           };
@@ -348,6 +348,7 @@ test('explicit model mismatch is rejected as unavailable without launching a fal
 test('runtime model fallback is reported and invalidates the unsealed group', async (t) => {
   const provider = modelProvider();
   const originalCreateLaunch = provider.createLaunch;
+  let observations = 0;
   provider.createLaunch = async (context) => {
     const launch = await originalCreateLaunch(context);
     const runtime = JSON.parse(launch.command.env.FIXTURE_RUNTIME_RECEIPT);
@@ -355,15 +356,14 @@ test('runtime model fallback is reported and invalidates the unsealed group', as
       provider: 'fixture-provider', id: 'fallback-model', revision: 'r2',
     };
     launch.command.env.FIXTURE_RUNTIME_RECEIPT = JSON.stringify(runtime);
+    const originalObserve = launch.observe;
+    launch.observe = async (...args) => {
+      observations += 1;
+      return originalObserve(...args);
+    };
     return launch;
   };
   const spec = groupSpec(t, { modelProvider: provider });
-  let attempts = 0;
-  spec.runAttempt = async (attemptSpec) => {
-    attempts += 1;
-    const { runIsolatedEffectivenessAttempt } = await import('../scripts/lib/effectiveness-runner.mjs');
-    return runIsolatedEffectivenessAttempt(attemptSpec);
-  };
   await assert.rejects(
     () => runEffectivenessComparisonGroup(spec),
     (error) =>
@@ -371,9 +371,10 @@ test('runtime model fallback is reported and invalidates the unsealed group', as
       error.code === 'RUNTIME_MODEL_FALLBACK' &&
       typeof error.incompleteGroupDir === 'string' &&
       error.runs.length === 0 &&
+      fs.existsSync(path.join(error.incompleteGroupDir, 'no-forge', 'host-enforcement.json')) &&
       !fs.existsSync(path.join(error.incompleteGroupDir, 'group.json')),
   );
-  assert.equal(attempts, 1);
+  assert.equal(observations, 1);
 });
 
 test('an omitted requested revision still pins every runtime to the resolved revision', async (t) => {
@@ -474,7 +475,8 @@ test('provider observation cannot self-attest runtime identity', async (t) => {
     (error) =>
       error.code === 'GROUP_EXECUTION_FAILED' &&
       error.cause?.code === 'report_rejected' &&
-      /runtime receipt/i.test(error.cause?.message ?? ''),
+      /runtime receipt/i.test(error.cause?.message ?? '') &&
+      fs.existsSync(path.join(error.incompleteGroupDir, 'no-forge', 'host-enforcement.json')),
   );
 });
 
@@ -536,25 +538,22 @@ test('schema-invalid controlled input is rejected before model resolution', asyn
   assert.equal(resolutions, 0);
 });
 
-test('comparison group rejects a run whose controlled dimension drifts', async (t) => {
-  const base = groupSpec(t);
-  let invocation = 0;
-  const runAttempt = async (spec) => {
-    const { runIsolatedEffectivenessAttempt } = await import('../scripts/lib/effectiveness-runner.mjs');
-    const result = await runIsolatedEffectivenessAttempt(spec);
-    invocation += 1;
-    if (invocation === 4) result.receipt.execution.limits.timeoutMs += 1;
-    return result;
+test('callers cannot replace the scheduler-owned B04 runner', async (t) => {
+  const spec = groupSpec(t);
+  let invoked = false;
+  spec.runAttempt = async () => {
+    invoked = true;
+    return { report: {}, receipt: {} };
   };
   await assert.rejects(
-    () => runEffectivenessComparisonGroup({ ...base, runAttempt }),
+    () => runEffectivenessComparisonGroup(spec),
     (error) =>
       error instanceof EffectivenessExperimentError &&
-      error.code === 'COMPARISON_NOT_CONTROLLED' &&
-      /limits/.test(error.message) &&
-      typeof error.incompleteGroupDir === 'string' &&
-      fs.existsSync(error.incompleteGroupDir),
+      error.code === 'INVALID_EXPERIMENT' &&
+      /scheduler-owned/.test(error.message),
   );
+  assert.equal(invoked, false);
+  assert.equal(fs.existsSync(spec.evidenceRoot), false);
 });
 
 test('host enforcement policy must be identical across all four prepared launches', async (t) => {
@@ -571,5 +570,119 @@ test('host enforcement policy must be identical across all four prepared launche
       error instanceof EffectivenessExperimentError &&
       error.code === 'HOST_SANDBOX_UNAVAILABLE' &&
       /policy/.test(error.message),
+  );
+});
+
+test('host enforcement receipts reject additional fields before persistence', async (t) => {
+  const sandbox = hostSandbox();
+  const originalPrepare = sandbox.prepareLaunch;
+  sandbox.prepareLaunch = async (context) => {
+    const handle = await originalPrepare(context);
+    const originalFinalize = handle.finalize;
+    handle.finalize = async (...args) => ({
+      ...(await originalFinalize(...args)),
+      token: 'must-not-be-persisted',
+    });
+    return handle;
+  };
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(groupSpec(t, { hostSandbox: sandbox })),
+    (error) =>
+      error instanceof EffectivenessExperimentError &&
+      error.code === 'HOST_SANDBOX_UNAVAILABLE' &&
+      typeof error.incompleteGroupDir === 'string' &&
+      !fs.existsSync(path.join(error.incompleteGroupDir, 'no-forge', 'host-enforcement.json')),
+  );
+});
+
+test('runner preflight failures still finalize and retain host containment', async (t) => {
+  let nullReceiptFinalizations = 0;
+  const sandbox = hostSandbox();
+  const originalPrepare = sandbox.prepareLaunch;
+  sandbox.prepareLaunch = async (context) => {
+    const handle = await originalPrepare(context);
+    const originalFinalize = handle.finalize;
+    handle.finalize = async ({ receipt, report }) => {
+      if (receipt === null && report === null) nullReceiptFinalizations += 1;
+      return originalFinalize({ receipt, report });
+    };
+    return handle;
+  };
+  const spec = groupSpec(t, { hostSandbox: sandbox });
+  fs.writeFileSync(path.join(spec.source.dir, 'dirty.txt'), 'uncontrolled input\n');
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(spec),
+    (error) =>
+      error.code === 'GROUP_EXECUTION_FAILED' &&
+      typeof error.incompleteGroupDir === 'string' &&
+      fs.existsSync(path.join(error.incompleteGroupDir, 'no-forge', 'host-enforcement.json')),
+  );
+  assert.equal(nullReceiptFinalizations, 1);
+});
+
+test('invalid host handles remain owned when cleanup itself fails', async (t) => {
+  let disposals = 0;
+  const sandbox = hostSandbox({
+    async prepareLaunch({ command }) {
+      return {
+        command,
+        async dispose() {
+          disposals += 1;
+          throw new Error('fixture dispose failure');
+        },
+      };
+    },
+  });
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(groupSpec(t, { hostSandbox: sandbox })),
+    (error) =>
+      error instanceof EffectivenessExperimentError &&
+      error.code === 'HOST_SANDBOX_UNAVAILABLE' &&
+      error.cleanupFailures?.some((failure) => /dispose failure/.test(failure)),
+  );
+  assert.equal(disposals, 1);
+});
+
+test('an unsealed final directory is quarantined before a clean retry', async (t) => {
+  const spec = groupSpec(t);
+  const abandoned = path.join(spec.evidenceRoot, spec.comparisonGroupId);
+  fs.mkdirSync(abandoned, { recursive: true });
+  fs.writeFileSync(path.join(abandoned, 'partial.txt'), 'interrupted publication\n');
+  const result = await runEffectivenessComparisonGroup(spec);
+  assert.equal(fs.existsSync(result.sealPath), true);
+  const recovered = fs.readdirSync(spec.evidenceRoot)
+    .find((name) => name.startsWith(`${spec.comparisonGroupId}.incomplete-recovered-`));
+  assert.equal(typeof recovered, 'string');
+  assert.equal(fs.existsSync(path.join(spec.evidenceRoot, recovered, 'partial.txt')), true);
+  assert.equal(fs.existsSync(path.join(spec.evidenceRoot, recovered, 'group.json')), false);
+});
+
+test('recovery never follows a final-directory symlink outside evidence root', async (t) => {
+  const spec = groupSpec(t);
+  fs.mkdirSync(spec.evidenceRoot, { recursive: true });
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'forge-effectiveness-outside-'));
+  t.after(() => fs.rmSync(outside, { recursive: true, force: true }));
+  const marker = path.join(outside, 'group.json');
+  fs.writeFileSync(marker, 'outside marker\n');
+  fs.symlinkSync(outside, path.join(spec.evidenceRoot, spec.comparisonGroupId));
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(spec),
+    (error) => error instanceof EffectivenessExperimentError && error.code === 'EVIDENCE_COLLISION',
+  );
+  assert.equal(fs.readFileSync(marker, 'utf8'), 'outside marker\n');
+});
+
+test('capability ordering and digests use locale-independent code-point order', () => {
+  const plan = createEffectivenessExperimentPlan({
+    rootDir: root,
+    baseCapabilities: [
+      { kind: 'other', id: 'ä' },
+      { kind: 'other', id: 'z' },
+      { kind: 'other', id: 'a' },
+    ],
+  });
+  assert.deepEqual(
+    plan.arms['no-forge'].capability_policy.exposed.map((item) => item.id),
+    ['a', 'z', 'ä'],
   );
 });

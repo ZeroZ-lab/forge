@@ -282,6 +282,8 @@ capabilities; common capabilities may not use the reserved `forge:` namespace.
 `runEffectivenessComparisonGroup` recomputes that plan rather than
 trusting caller-supplied arm digests, resolves one explicitly requested model,
 prepares all four launches, and only then invokes the B04 runner sequentially.
+The production scheduler fixes that B04 implementation; callers cannot replace
+`runAttempt` with an in-memory fake.
 The scheduler owns comparison id, objective, fixture, requested model,
 parameter digest, repeat/seed, budget, verifier set, and arm binding. Provider
 adapters can return observations but cannot rewrite those controlled fields. A
@@ -309,12 +311,15 @@ The coordinator rejects a group when an arm is missing or duplicated, a
 budget/verifier/input/model/limit/source fact drifts, capability exposure does
 not match the trusted plan, or workspace isolation ids collide. Adaptive runs
 with zero `capability_activation` events remain valid. Attempts first land under
-a private staging directory. Runtime and host-enforcement receipts are persisted
-per arm and referenced by the group seal. Only after validation and host cleanup
-is the directory moved to its final location; `group.json` is written last and
-is the completion marker. Failed groups receive an `.incomplete-*`
+a private staging directory. Runtime and fixed-field host-enforcement receipts
+are persisted per arm and referenced by the group seal. Every arm handed to B04
+is host-finalized even when runner preflight, report adaptation, or runtime
+identity validation fails. Only after validation and host cleanup is
+`group.json` written inside staging and the complete directory atomically moved
+to its final location. Failed groups receive an `.incomplete-*`
 suffix and have no seal, so they remain diagnosable but are not a complete
-comparison.
+comparison. A final directory left without a valid seal by an interrupted older
+publication is quarantined before the same group id is retried.
 
 Before model resolution, B05 requires a versioned host-sandbox adapter that
 declares filesystem isolation, network policy, detached process-tree
