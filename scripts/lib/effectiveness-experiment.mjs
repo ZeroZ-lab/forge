@@ -257,6 +257,16 @@ function validRetainedReference(armDir, reference) {
   }
 }
 
+function verifierManifest(runtime) {
+  return {
+    verifier_set: cloneData(runtime.verifierSet, 'verifier set'),
+    verifiers: runtime.adapters.map((adapter) => ({
+      id: adapter.id,
+      definition_digest: adapter.definition_digest,
+    })),
+  };
+}
+
 function hasValidEvidenceEnvelopes(report, armDir, rootDir, options = {}) {
   try {
     const runnerEvidence = report.evidence.filter((evidence) =>
@@ -274,6 +284,7 @@ function hasValidEvidenceEnvelopes(report, armDir, rootDir, options = {}) {
     ) {
       return false;
     }
+    const observedVerifiers = [];
     for (const evidence of report.evidence.filter((item) => item.envelope_ref !== undefined)) {
       verifyEvidenceEnvelope(
         referenceEvidenceEnvelope(evidence.envelope_ref, { evidenceRoot: armDir }),
@@ -310,6 +321,11 @@ function hasValidEvidenceEnvelopes(report, armDir, rootDir, options = {}) {
           fs.readFileSync(path.join(armDir, observationReference.ref)),
           { result },
         );
+        observedVerifiers.push({
+          id: result.verifier.id,
+          definition_digest: result.verifier.definition_digest,
+          evidence_id: evidence.id,
+        });
         const event = report.events.find((item) => item.id === evidence.event_id);
         const diffPath = path.join(armDir, result.target.workspace.diff_ref);
         const expectedStatus = result.outcome === 'passed'
@@ -339,13 +355,34 @@ function hasValidEvidenceEnvelopes(report, armDir, rootDir, options = {}) {
         }
       }
     }
+    if (options.requireVerifiers === true) {
+      const expectedVerifiers = options.verifierManifest.verifiers;
+      if (
+        !isDeepStrictEqual(
+          observedVerifiers.map(({ evidence_id: _evidenceId, ...verifier }) => verifier),
+          expectedVerifiers,
+        ) ||
+        !isDeepStrictEqual(
+          report.final_result.verifier_result_refs,
+          observedVerifiers.map((verifier) => verifier.evidence_id),
+        )
+      ) {
+        return false;
+      }
+    }
     return true;
   } catch {
     return false;
   }
 }
 
-function hasValidGroupSeal(groupDir, comparisonGroupId, rootDir, experimentPlan) {
+function hasValidGroupSeal(
+  groupDir,
+  comparisonGroupId,
+  rootDir,
+  experimentPlan,
+  expectedVerifierManifest,
+) {
   const sealPath = path.join(groupDir, 'group.json');
   try {
     if (!fs.lstatSync(groupDir).isDirectory() || !fs.lstatSync(sealPath).isFile()) return false;
@@ -361,7 +398,8 @@ function hasValidGroupSeal(groupDir, comparisonGroupId, rootDir, experimentPlan)
           'host_policy_digest',
           'reports',
           'version',
-        ],
+          ...(seal.version === 3 ? ['verifier_manifest'] : []),
+        ].sort(compareText),
       ) ||
       seal.contract !== 'forge-effectiveness-comparison-group' ||
       ![1, 2, 3].includes(seal.version) ||
@@ -370,6 +408,12 @@ function hasValidGroupSeal(groupDir, comparisonGroupId, rootDir, experimentPlan)
       !/^sha256:[0-9a-f]{64}$/.test(seal.host_policy_digest) ||
       !Array.isArray(seal.reports) ||
       seal.reports.length !== EFFECTIVENESS_ARM_IDS.length
+    ) {
+      return false;
+    }
+    if (
+      seal.version === 3 &&
+      !isDeepStrictEqual(seal.verifier_manifest, expectedVerifierManifest)
     ) {
       return false;
     }
@@ -418,6 +462,9 @@ function hasValidGroupSeal(groupDir, comparisonGroupId, rootDir, experimentPlan)
         seal.version >= 2 &&
         !hasValidEvidenceEnvelopes(report, armDir, rootDir, {
           requireVerifiers: seal.version >= 3,
+          ...(seal.version >= 3
+            ? { verifierManifest: expectedVerifierManifest }
+            : {}),
         })
       ) {
         return false;
@@ -1142,6 +1189,7 @@ export async function runEffectivenessComparisonGroup(spec) {
       spec.comparisonGroupId,
       spec.rootDir,
       experimentPlan,
+      verifierManifest(spec.verifierRuntime),
     )) {
       throw new EffectivenessExperimentError(
         'EVIDENCE_COLLISION',
@@ -1548,6 +1596,7 @@ export async function runEffectivenessComparisonGroup(spec) {
       comparison_group_id: spec.comparisonGroupId,
       common_context_digest: commonContextDigest,
       host_policy_digest: requiredHostPolicyDigest,
+      verifier_manifest: verifierManifest(spec.verifierRuntime),
       reports: runs.map((run) => ({
         arm: run.report.experiment.arm.id,
         report_id: run.report.report_id,
@@ -1568,6 +1617,7 @@ export async function runEffectivenessComparisonGroup(spec) {
     for (const run of runs) {
       if (!hasValidEvidenceEnvelopes(run.report, run.evidenceDir, spec.rootDir, {
         requireVerifiers: true,
+        verifierManifest: seal.verifier_manifest,
       })) {
         throw new EffectivenessExperimentError(
           'INVALID_EVIDENCE_ENVELOPE',
@@ -1577,7 +1627,13 @@ export async function runEffectivenessComparisonGroup(spec) {
     }
     const sealPathInStaging = path.join(stagingRoot, 'group.json');
     atomicWriteJson(sealPathInStaging, seal);
-    if (!hasValidGroupSeal(stagingRoot, spec.comparisonGroupId, spec.rootDir, experimentPlan)) {
+    if (!hasValidGroupSeal(
+      stagingRoot,
+      spec.comparisonGroupId,
+      spec.rootDir,
+      experimentPlan,
+      seal.verifier_manifest,
+    )) {
       fs.rmSync(sealPathInStaging, { force: true });
       throw new EffectivenessExperimentError(
         'INVALID_GROUP_SEAL',

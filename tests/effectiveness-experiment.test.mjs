@@ -25,6 +25,12 @@ const DIGESTS = {
   budget: `sha256:${'3'.repeat(64)}`,
   verifier: `sha256:${'4'.repeat(64)}`,
 };
+const VERIFIER_HOST_GUARANTEES = [
+  'cancellation', 'cpu-limit', 'disk-limit', 'memory-limit',
+  'network-isolation', 'non-blocking-bridge', 'output-bound',
+  'process-tree-cleanup', 'read-only-evidence', 'secret-isolation',
+  'timeout', 'workspace-isolation',
+];
 
 function canonicalValue(value) {
   if (Array.isArray(value)) return value.map(canonicalValue);
@@ -221,12 +227,7 @@ function verifierRuntime() {
       version: '1',
       definition: {
         boundary: 'test-double',
-        guarantees: [
-          'cancellation', 'cpu-limit', 'disk-limit', 'memory-limit',
-          'network-isolation', 'non-blocking-bridge', 'output-bound',
-          'process-tree-cleanup', 'read-only-evidence', 'secret-isolation',
-          'timeout', 'workspace-isolation',
-        ],
+        guarantees: VERIFIER_HOST_GUARANTEES,
       },
       async execute({ adapter, target, artifacts }) {
         assert.equal(adapter.kind, 'diff');
@@ -247,6 +248,39 @@ function verifierRuntime() {
         policy: { mode: 'captured-diff' },
       }),
     ],
+  });
+}
+
+function verifierRuntimeWithFailure() {
+  const adapters = [
+    createDiffVerifierAdapter({
+      id: 'diff-pass',
+      scope: { kind: 'diff', paths: ['*'] },
+      policy: { mode: 'captured-diff' },
+    }),
+    createDiffVerifierAdapter({
+      id: 'diff-fail',
+      scope: { kind: 'diff', paths: ['*'] },
+      policy: { mode: 'captured-diff' },
+    }),
+  ];
+  return createEffectivenessVerifierRuntime({
+    id: 'fixture-multi-verifiers',
+    executor: {
+      id: 'fixture-verifier-host',
+      version: '1',
+      definition: { boundary: 'test-double', guarantees: VERIFIER_HOST_GUARANTEES },
+      async execute({ adapter }) {
+        return {
+          kind: 'diff',
+          status: adapter.id === 'diff-fail' ? 'failed' : 'passed',
+        };
+      },
+      async cancel({ runId }) {
+        return { run_id: runId, status: 'cancelled' };
+      },
+    },
+    adapters,
   });
 }
 
@@ -562,6 +596,46 @@ test('comparison-group v3 requires every verifier result to keep its Envelope', 
   );
 });
 
+test('seal v3 binds the complete verifier member list', async (t) => {
+  const runtime = verifierRuntimeWithFailure();
+  const spec = groupSpec(t, {
+    verifierRuntime: runtime,
+    verifierSet: runtime.verifierSet,
+  });
+  const first = await runEffectivenessComparisonGroup(spec);
+  const run = first.runs[0];
+  const reportPath = path.join(run.evidenceDir, 'report.json');
+  const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+  const failedEvent = report.events.find(
+    (event) => event.actor === 'verifier' && event.status === 'failed',
+  );
+  const failedEvidence = report.evidence.find(
+    (evidence) => evidence.event_id === failedEvent.id,
+  );
+  report.events = report.events.filter((event) => event.id !== failedEvent.id);
+  report.evidence = report.evidence.filter((evidence) => evidence.id !== failedEvidence.id);
+  report.final_result.verifier_result_refs =
+    report.final_result.verifier_result_refs.filter((id) => id !== failedEvidence.id);
+  fs.writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+
+  const seal = JSON.parse(fs.readFileSync(first.sealPath, 'utf8'));
+  assert.deepEqual(
+    seal.verifier_manifest.verifiers.map((verifier) => verifier.id),
+    ['diff-pass', 'diff-fail'],
+  );
+  seal.reports.find((entry) => entry.arm === run.report.experiment.arm.id).digest =
+    digestJson(report);
+  fs.writeFileSync(first.sealPath, `${JSON.stringify(seal, null, 2)}\n`);
+
+  const replacement = await runEffectivenessComparisonGroup(spec);
+  assert.equal(fs.existsSync(replacement.sealPath), true);
+  assert.equal(
+    fs.readdirSync(spec.evidenceRoot)
+      .some((name) => name.startsWith(`${spec.comparisonGroupId}.incomplete-recovered-`)),
+    true,
+  );
+});
+
 test('invalid Evidence Envelopes fail before the first group seal is published', async (t) => {
   const sandbox = hostSandbox();
   const originalPrepare = sandbox.prepareLaunch;
@@ -632,6 +706,7 @@ test('legacy comparison-group v1 keeps its original seal semantics', async (t) =
   const result = await runEffectivenessComparisonGroup(spec);
   const seal = JSON.parse(fs.readFileSync(result.sealPath, 'utf8'));
   seal.version = 1;
+  delete seal.verifier_manifest;
   for (const [index, legacyRun] of result.runs.entries()) {
     for (const evidence of legacyRun.report.evidence) {
       if (evidence.envelope_ref === undefined) continue;
@@ -662,6 +737,7 @@ test('comparison-group v2 keeps B06 semantics without requiring B07 evidence', a
   const result = await runEffectivenessComparisonGroup(spec);
   const seal = JSON.parse(fs.readFileSync(result.sealPath, 'utf8'));
   seal.version = 2;
+  delete seal.verifier_manifest;
   for (const [index, run] of result.runs.entries()) {
     const verifierEvidenceIds = new Set(
       run.report.evidence

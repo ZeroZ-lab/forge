@@ -351,9 +351,10 @@ acknowledgement plus settled execution; missing cleanup acknowledgement fails
 the run. B04 runs the set before capsule cleanup, rejects verifier workspace or
 retained-input side effects, then adds verifier events, `independent_verifier` evidence,
 `final_result.verifier_result_refs`, and claim Envelopes before the report's
-first publication. B05 comparison-group seal v3 requires every verifier
-Envelope, parses the retained host observation, and derives the expected
-result/event semantics again. Seal v1 and B06 seal v2 retain their original
+first publication. B05 comparison-group seal v3 binds the complete ordered
+verifier id/definition manifest, requires each arm's final refs to cover that
+set exactly, requires every verifier Envelope, parses the retained host
+observation, and derives the expected result/event semantics again. Seal v1 and B06 seal v2 retain their original
 contracts and are not retroactively promoted to B07 evidence.
 
 The runtime factory is a host integration seam, not identity authentication or
