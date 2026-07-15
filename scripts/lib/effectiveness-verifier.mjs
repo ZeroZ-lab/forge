@@ -98,6 +98,68 @@ function digestBuffer(value) {
   return `sha256:${crypto.createHash('sha256').update(value).digest('hex')}`;
 }
 
+function digestFile(filePath) {
+  const hash = crypto.createHash('sha256');
+  const descriptor = fs.openSync(filePath, 'r');
+  const buffer = Buffer.allocUnsafe(64 * 1024);
+  try {
+    for (;;) {
+      const bytesRead = fs.readSync(descriptor, buffer, 0, buffer.length, null);
+      if (bytesRead === 0) break;
+      hash.update(buffer.subarray(0, bytesRead));
+    }
+  } finally {
+    fs.closeSync(descriptor);
+  }
+  return `sha256:${hash.digest('hex')}`;
+}
+
+function captureDirectoryDigest(rootDir, maxBytes) {
+  const hash = crypto.createHash('sha256');
+  const buffer = Buffer.allocUnsafe(64 * 1024);
+  let bytes = 0;
+  let entries = 0;
+  function visit(directory) {
+    const names = fs.readdirSync(directory).sort(compareText);
+    for (const name of names) {
+      const entryPath = path.join(directory, name);
+      const relative = path.relative(rootDir, entryPath).split(path.sep).join('/');
+      const stat = fs.lstatSync(entryPath);
+      entries += 1;
+      if (entries > 100_000) fail('invalid_run', 'base snapshot handle has too many entries');
+      if (stat.isDirectory()) {
+        hash.update(`directory\0${relative}\0${stat.mode & 0o777}\0`);
+        visit(entryPath);
+        continue;
+      }
+      if (stat.isSymbolicLink()) {
+        const target = fs.readlinkSync(entryPath);
+        bytes += Buffer.byteLength(target);
+        if (bytes > maxBytes) fail('invalid_run', 'base snapshot handle exceeds maxInputBytes');
+        hash.update(`symlink\0${relative}\0${target}\0`);
+        continue;
+      }
+      if (!stat.isFile()) fail('invalid_run', 'base snapshot handle contains a special file');
+      bytes += stat.size;
+      if (bytes > maxBytes) fail('invalid_run', 'base snapshot handle exceeds maxInputBytes');
+      hash.update(`file\0${relative}\0${stat.mode & 0o777}\0${stat.size}\0`);
+      const descriptor = fs.openSync(entryPath, 'r');
+      try {
+        for (;;) {
+          const bytesRead = fs.readSync(descriptor, buffer, 0, buffer.length, null);
+          if (bytesRead === 0) break;
+          hash.update(buffer.subarray(0, bytesRead));
+        }
+      } finally {
+        fs.closeSync(descriptor);
+      }
+      hash.update('\0');
+    }
+  }
+  visit(rootDir);
+  return { digest: `sha256:${hash.digest('hex')}`, bytes, entries };
+}
+
 function digestJson(value) {
   return digestBuffer(JSON.stringify(canonicalValue(value)));
 }
@@ -392,9 +454,11 @@ function assertRunSpec(spec) {
     !Number.isSafeInteger(spec.limits.timeoutMs) ||
     spec.limits.timeoutMs <= 0 ||
     !Number.isSafeInteger(spec.limits.maxOutputBytes) ||
-    spec.limits.maxOutputBytes <= 0
+    spec.limits.maxOutputBytes <= 0 ||
+    !Number.isSafeInteger(spec.limits.maxInputBytes) ||
+    spec.limits.maxInputBytes <= 0
   ) {
-    fail('invalid_run', 'limits must contain positive timeoutMs and maxOutputBytes');
+    fail('invalid_run', 'limits must contain positive timeoutMs, maxOutputBytes, and maxInputBytes');
   }
 }
 
@@ -418,6 +482,9 @@ function atomicWriteNew(filePath, content) {
 
 function retain(rootDir, ref, value) {
   const bytes = Buffer.from(JSON.stringify(value));
+  if (bytes.length > MAX_DOCUMENT_BYTES) {
+    fail('invalid_result', `${ref} exceeds 1 MiB`);
+  }
   atomicWriteNew(path.join(rootDir, ref), bytes);
   return { ref, digest: digestBuffer(bytes), bytes: bytes.length };
 }
@@ -825,13 +892,17 @@ export async function runEffectivenessVerifierSet(spec) {
   const evidenceRoot = fs.realpathSync(spec.evidenceDir);
   const workspaceDir = fs.realpathSync(spec.workspaceDir);
   const baseSnapshotPath = fs.realpathSync(spec.baseSnapshot.path);
+  const baseSnapshotContent = captureDirectoryDigest(
+    baseSnapshotPath,
+    spec.limits.maxInputBytes,
+  );
   const target = cloneData(spec.target, 'target');
   const diffPath = path.join(evidenceRoot, target.workspace.diff_ref);
   const diffStat = fs.lstatSync(diffPath);
   if (
     !diffStat.isFile() ||
     diffStat.isSymbolicLink() ||
-    digestBuffer(fs.readFileSync(diffPath)) !== target.workspace.diff_digest
+    digestFile(diffPath) !== target.workspace.diff_digest
   ) {
     fail('invalid_run', 'captured diff does not match target.workspace.diff_digest');
   }
@@ -840,6 +911,9 @@ export async function runEffectivenessVerifierSet(spec) {
       path: baseSnapshotPath,
       revision: spec.baseSnapshot.revision,
       digest: spec.baseSnapshot.digest,
+      content_digest: baseSnapshotContent.digest,
+      bytes: baseSnapshotContent.bytes,
+      entries: baseSnapshotContent.entries,
     },
     captured_diff: {
       path: diffPath,
@@ -872,8 +946,12 @@ export async function runEffectivenessVerifierSet(spec) {
       !retainedDiffStat.isFile() ||
       retainedDiffStat.isSymbolicLink() ||
       retainedDiffStat.size !== diffStat.size ||
-      digestBuffer(fs.readFileSync(diffPath)) !== target.workspace.diff_digest ||
-      fs.realpathSync(spec.baseSnapshot.path) !== baseSnapshotPath
+      digestFile(diffPath) !== target.workspace.diff_digest ||
+      fs.realpathSync(spec.baseSnapshot.path) !== baseSnapshotPath ||
+      !sameData(
+        captureDirectoryDigest(baseSnapshotPath, spec.limits.maxInputBytes),
+        baseSnapshotContent,
+      )
     ) {
       fail('host_evidence_changed', 'external verifier host changed retained verification input');
     }
@@ -900,6 +978,7 @@ export async function runEffectivenessVerifierSet(spec) {
       ended_at: endedAt,
       observation,
     };
+    parseEffectivenessVerifierObservation(observationDocument);
     const observationReference = retain(
       evidenceRoot,
       `${adapter.id}.verifier-observation.json`,

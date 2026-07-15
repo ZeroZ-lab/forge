@@ -1995,6 +1995,10 @@ export async function runIsolatedEffectivenessAttempt(rawSpec) {
         limits: {
           timeoutMs: spec.limits.timeoutMs,
           maxOutputBytes: Math.max(spec.limits.maxStdoutBytes, spec.limits.maxStderrBytes),
+          maxInputBytes: Math.max(
+            spec.limits.maxCapturedWorkspaceBytes,
+            spec.limits.maxDiffBytes,
+          ),
         },
       });
       const afterVerifier = captureWorkspaceManifest(workspaceDir, spec.limits);

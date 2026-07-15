@@ -101,6 +101,22 @@ function digestBuffer(value) {
   return `sha256:${crypto.createHash('sha256').update(value).digest('hex')}`;
 }
 
+function digestFile(filePath) {
+  const hash = crypto.createHash('sha256');
+  const descriptor = fs.openSync(filePath, 'r');
+  const buffer = Buffer.allocUnsafe(64 * 1024);
+  try {
+    for (;;) {
+      const bytesRead = fs.readSync(descriptor, buffer, 0, buffer.length, null);
+      if (bytesRead === 0) break;
+      hash.update(buffer.subarray(0, bytesRead));
+    }
+  } finally {
+    fs.closeSync(descriptor);
+  }
+  return `sha256:${hash.digest('hex')}`;
+}
+
 function atomicWriteJson(filePath, value) {
   const temporary = path.join(
     path.dirname(filePath),
@@ -251,7 +267,7 @@ function validRetainedReference(armDir, reference) {
     return stat.isFile() &&
       pathIsWithin(fs.realpathSync(armDir), fs.realpathSync(artifactPath)) &&
       stat.size === reference.bytes &&
-      digestBuffer(fs.readFileSync(artifactPath)) === reference.digest;
+      digestFile(artifactPath) === reference.digest;
   } catch {
     return false;
   }
@@ -343,7 +359,7 @@ function hasValidEvidenceEnvelopes(report, armDir, rootDir, options = {}) {
           result.target.workspace.final_snapshot_digest !== report.experiment.workspace.final_snapshot_digest ||
           result.target.workspace.diff_ref !== report.experiment.workspace.diff_ref ||
           !fs.lstatSync(diffPath).isFile() ||
-          result.target.workspace.diff_digest !== digestBuffer(fs.readFileSync(diffPath)) ||
+          result.target.workspace.diff_digest !== digestFile(diffPath) ||
           evidence.producer_ref !== `verifier:${result.executor.id}@${result.executor.version}/${result.verifier.id}` ||
           event?.actor !== 'verifier' ||
           event?.status !== expectedStatus ||

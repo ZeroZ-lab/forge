@@ -157,7 +157,7 @@ test('external command host distinguishes pass, task failure, missing command, a
   const run = await runEffectivenessVerifierSet({
     ...value,
     runtime: verifierRuntime,
-    limits: { timeoutMs: 1_000, maxOutputBytes: 64 * 1024 },
+    limits: { timeoutMs: 1_000, maxOutputBytes: 64 * 1024, maxInputBytes: 64 * 1024 },
   });
 
   assert.equal(run.verifier_set.digest, verifierRuntime.verifierSet.digest);
@@ -291,7 +291,7 @@ test('hidden assertions and diff checks retain only normalized host observations
   const run = await runEffectivenessVerifierSet({
     ...value,
     runtime: verifierRuntime,
-    limits: { timeoutMs: 2_000, maxOutputBytes: 64 * 1024 },
+    limits: { timeoutMs: 2_000, maxOutputBytes: 64 * 1024, maxInputBytes: 64 * 1024 },
   });
 
   assert.deepEqual(
@@ -384,7 +384,7 @@ test('the bridge deadline requires cancellation acknowledgement and settled exec
   const run = await runEffectivenessVerifierSet({
     ...value,
     runtime: supervised,
-    limits: { timeoutMs: 25, maxOutputBytes: 64 * 1024 },
+    limits: { timeoutMs: 25, maxOutputBytes: 64 * 1024, maxInputBytes: 64 * 1024 },
   });
   assert.equal(cancellations, 1);
   assert.equal(run.results[0].result.reason_code, 'verifier_timeout');
@@ -416,7 +416,7 @@ test('the bridge deadline requires cancellation acknowledgement and settled exec
     () => runEffectivenessVerifierSet({
       ...unsafeValue,
       runtime: unsafe,
-      limits: { timeoutMs: 25, maxOutputBytes: 64 * 1024 },
+      limits: { timeoutMs: 25, maxOutputBytes: 64 * 1024, maxInputBytes: 64 * 1024 },
     }),
     (error) => error.code === 'host_cleanup_failed',
   );
@@ -439,8 +439,60 @@ test('the host cannot mutate the retained diff it was asked to verify', async (t
     () => runEffectivenessVerifierSet({
       ...value,
       runtime: verifierRuntime,
-      limits: { timeoutMs: 1_000, maxOutputBytes: 64 * 1024 },
+      limits: { timeoutMs: 1_000, maxOutputBytes: 64 * 1024, maxInputBytes: 64 * 1024 },
     }),
     (error) => error.code === 'host_evidence_changed',
+  );
+});
+
+test('the host cannot mutate the base snapshot handle', async (t) => {
+  const value = fixture(t);
+  const adapter = createDiffVerifierAdapter({
+    id: 'immutable-base',
+    scope: { kind: 'diff', paths: ['result.txt'] },
+    policy: { mode: 'captured-diff' },
+  });
+  const verifierRuntime = runtime([adapter], {
+    'immutable-base': ({ artifacts }) => {
+      fs.appendFileSync(path.join(artifacts.base_snapshot.path, 'result.txt'), 'changed\n');
+      return { kind: 'diff', status: 'passed' };
+    },
+  });
+  await assert.rejects(
+    () => runEffectivenessVerifierSet({
+      ...value,
+      runtime: verifierRuntime,
+      limits: { timeoutMs: 1_000, maxOutputBytes: 64 * 1024, maxInputBytes: 64 * 1024 },
+    }),
+    (error) => error.code === 'host_evidence_changed',
+  );
+});
+
+test('oversized combined observations fail before retained publication', async (t) => {
+  const value = fixture(t);
+  value.target.objective_ref = `objective-${'o'.repeat(600_000)}`;
+  const adapter = createDiffVerifierAdapter({
+    id: 'large-observation',
+    scope: { kind: 'diff', paths: [`path-${'p'.repeat(600_000)}`] },
+    policy: { mode: 'captured-diff' },
+  });
+  const verifierRuntime = runtime([adapter], {
+    'large-observation': () => ({ kind: 'diff', status: 'passed' }),
+  });
+  await assert.rejects(
+    () => runEffectivenessVerifierSet({
+      ...value,
+      runtime: verifierRuntime,
+      limits: {
+        timeoutMs: 1_000,
+        maxOutputBytes: 64 * 1024,
+        maxInputBytes: 64 * 1024,
+      },
+    }),
+    /exceeds 1 MiB/,
+  );
+  assert.equal(
+    fs.readdirSync(value.evidenceDir).some((name) => name.endsWith('.verifier-observation.json')),
+    false,
   );
 });
