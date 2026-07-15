@@ -2048,11 +2048,20 @@ export async function runIsolatedEffectivenessAttempt(rawSpec) {
     0,
     Math.round((performance.now() - attemptStartedMonotonic) * 1000) / 1000,
   );
+  const latestVerifierEndedAt = Math.max(
+    0,
+    ...(receipt.verifiers ?? []).map((entry) => Date.parse(entry.result.ended_at)),
+  );
+  const executionEndedAt = Math.max(
+    Math.ceil(Date.parse(attemptStartedAt) + attemptDurationMs),
+    latestVerifierEndedAt,
+  );
   receipt.execution.started_at = attemptStartedAt;
-  receipt.execution.ended_at = new Date(
-    Date.parse(attemptStartedAt) + attemptDurationMs,
-  ).toISOString();
-  receipt.execution.duration_ms = attemptDurationMs;
+  receipt.execution.ended_at = new Date(executionEndedAt).toISOString();
+  receipt.execution.duration_ms = Math.max(
+    attemptDurationMs,
+    executionEndedAt - Date.parse(attemptStartedAt),
+  );
   writeAttemptAndReceipt(evidenceDir, receipt);
 
   let report;

@@ -365,6 +365,10 @@ test('external verifier failure is sealed into first-published independent evide
 
   assert.equal(result.report.final_result.model_claim.state, 'completed');
   assert.equal(result.receipt.verifiers[0].result.outcome, 'task_failed');
+  assert.ok(
+    Date.parse(result.report.execution.ended_at) >=
+      Date.parse(result.receipt.verifiers[0].result.ended_at),
+  );
   const verifierEvidence = result.report.evidence.filter(
     (item) => item.source_kind === 'independent_verifier',
   );
