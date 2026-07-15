@@ -278,35 +278,62 @@ import {
 
 `createEffectivenessExperimentPlan` derives all arm and capability-policy
 digests from the manifest, package, published Skill tree, and common base
-capabilities. `runEffectivenessComparisonGroup` recomputes that plan rather than
+capabilities; common capabilities may not use the reserved `forge:` namespace.
+`runEffectivenessComparisonGroup` recomputes that plan rather than
 trusting caller-supplied arm digests, resolves one explicitly requested model,
 prepares all four launches, and only then invokes the B04 runner sequentially.
 The scheduler owns comparison id, objective, fixture, requested model,
 parameter digest, repeat/seed, budget, verifier set, and arm binding. Provider
-adapters can return observations but cannot rewrite those controlled fields.
+adapters can return observations but cannot rewrite those controlled fields. A
+canonical common launch context containing those fields is identical across all
+arms, while a scheduler-owned arm context contains the unique definition and
+capability policy. Both contexts are injected into the actual process
+environment and bound into the B04 request fingerprint. The provider process
+must emit exactly one transport receipt into retained stdout, binding the same
+digests. The scheduler parses that retained artifact itself; provider
+observation callbacks cannot supply runtime identity.
 
-An available provider result must match the requested provider/model and the
-requested revision when one was specified. A different actual identity is
-treated as an unavailable request with a visible `fallback ... rejected`
-reason; the provider launcher is not called. A genuinely unavailable model is
-also recorded in four `no_output` reports with its reason and without an
-`actual` identity. This preserves the attempted comparison shape without
-claiming that a model ran.
+An available preflight selection must match the requested provider/model and
+the requested revision when one was specified. A different preflight identity
+is treated as an unavailable request with a visible `fallback ... rejected`
+reason; the provider launcher is not called. For a launched model, report
+`actual` comes from the post-run runtime receipt rather than preflight. A
+runtime identity must exactly match the complete preflight selection, including
+revision even when the request omitted one. A fallback is retained in the
+failed attempt evidence and immediately stops later arms. A
+genuinely unavailable model is recorded in four `no_output` reports with its
+reason and without an `actual` identity. This preserves the attempted
+comparison shape without claiming that a model ran.
 
 The coordinator rejects a group when an arm is missing or duplicated, a
 budget/verifier/input/model/limit/source fact drifts, capability exposure does
 not match the trusted plan, or workspace isolation ids collide. Adaptive runs
-with zero `capability_activation` events remain valid.
+with zero `capability_activation` events remain valid. Attempts first land under
+a private staging directory. Runtime and host-enforcement receipts are persisted
+per arm and referenced by the group seal. Only after validation and host cleanup
+is the directory moved to its final location; `group.json` is written last and
+is the completion marker. Failed groups receive an `.incomplete-*`
+suffix and have no seal, so they remain diagnosable but are not a complete
+comparison.
 
 Before model resolution, B05 requires a versioned host-sandbox adapter that
 declares filesystem isolation, network policy, detached process-tree
 containment, and live CPU/memory/disk limits. The adapter prepares all four
-commands before any attempt starts; missing guarantees or setup failure stops
-the group. This repository deliberately does not claim that POSIX process
+commands before any attempt starts. Every launch must return the same
+scheduler-derived applied-policy digest, a post-run containment receipt, and a
+cleanup lifecycle; missing guarantees or setup failure stops the group. This
+repository deliberately does not claim that POSIX process
 groups, `ulimit`, Codex workspace mode, or deprecated macOS `sandbox-exec`
 provide those guarantees. Real hostile-code runs therefore require an audited
 external container, microVM, or equivalent adapter. The adapter definition and
 guarantees are bound into the scheduler-owned launcher digest.
+
+The transport receipt proves what the captured launcher process emitted; by
+itself it does not authenticate a remote model response or prove that an adapter
+actually enforced its declared capability configuration. Production model and
+host adapters therefore remain explicit trusted boundaries. B06/B07 external
+evidence and verifier work must strengthen that boundary before any
+effectiveness claim.
 
 ## Scenarios
 

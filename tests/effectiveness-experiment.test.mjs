@@ -59,8 +59,27 @@ function hostSandbox(overrides = {}) {
       'live_disk_limit',
     ],
     definition: { implementation: 'test-double', production: false },
-    async prepareLaunch({ command }) {
-      return command;
+    resourcePolicy: { cpu: 'fixture-limit', memory: 'fixture-limit', network: 'disabled' },
+    async prepareLaunch({
+      command,
+      requiredPolicyDigest,
+      commonContextDigest,
+      armContextDigest,
+    }) {
+      return {
+        command,
+        appliedPolicyDigest: requiredPolicyDigest,
+        async finalize({ receipt }) {
+          return {
+            appliedPolicyDigest: requiredPolicyDigest,
+            contained: true,
+            runnerConfigurationDigest: receipt.configuration_digest,
+            commonContextDigest,
+            armContextDigest,
+          };
+        },
+        async dispose() {},
+      };
     },
     ...overrides,
   };
@@ -125,12 +144,29 @@ function modelProvider(resolveResult = {
     async resolve() {
       return resolveResult;
     },
-    async createLaunch({ arm, armDefinition }) {
+    async createLaunch({
+      arm,
+      armDefinition,
+      armContextDigest,
+      commonContextDigest,
+      selectedModel,
+    }) {
+      const runtimeReceipt = {
+        contract: 'forge-effectiveness-runtime-transport',
+        version: 1,
+        actual_model: selectedModel,
+        common_context_digest: commonContextDigest,
+        arm_definition_digest: arm.definition_digest,
+        capability_policy_digest: arm.capability_policy.digest,
+      };
       return {
         command: {
           file: process.execPath,
-          args: ['-e', 'process.stdout.write("fixture\\n")'],
-          env: {},
+          args: [
+            '-e',
+            'JSON.parse(process.env.FORGE_EFFECTIVENESS_COMMON_CONTEXT);JSON.parse(process.env.FORGE_EFFECTIVENESS_ARM_CONTEXT);process.stdout.write("fixture\\nFORGE_EFFECTIVENESS_RUNTIME_RECEIPT "+process.env.FIXTURE_RUNTIME_RECEIPT+"\\n")',
+          ],
+          env: { FIXTURE_RUNTIME_RECEIPT: JSON.stringify(runtimeReceipt) },
           label: 'fixture model process',
         },
         armDefinitionDigest: arm.definition_digest,
@@ -247,9 +283,21 @@ test('legacy launch must attest the pinned pre-upgrade tree and default chain', 
 });
 
 test('one minimal fixture runs all four arms with identical controls and declared exposure', async (t) => {
-  const result = await runEffectivenessComparisonGroup(groupSpec(t));
+  const provider = modelProvider();
+  const originalCreateLaunch = provider.createLaunch;
+  const commonContexts = [];
+  provider.createLaunch = async (context) => {
+    commonContexts.push(context.commonContext);
+    return originalCreateLaunch(context);
+  };
+  const result = await runEffectivenessComparisonGroup(groupSpec(t, { modelProvider: provider }));
   assert.deepEqual(result.runs.map((run) => run.report.experiment.arm.id), EFFECTIVENESS_ARM_IDS);
   assert.equal(new Set(result.runs.map((run) => run.report.experiment.workspace.isolation_id)).size, 4);
+  assert.equal(fs.existsSync(result.sealPath), true);
+  assert.equal(path.dirname(result.sealPath), result.groupDir);
+  assert.equal(new Set(commonContexts.map((context) => JSON.stringify(context))).size, 1);
+  assert.deepEqual(commonContexts[0].budget, { id: 'fixture-budget', digest: DIGESTS.budget });
+  assert.deepEqual(commonContexts[0].verifier_set, { id: 'fixture-verifiers', digest: DIGESTS.verifier });
 
   for (const run of result.runs) {
     const armId = run.report.experiment.arm.id;
@@ -263,7 +311,13 @@ test('one minimal fixture runs all four arms with identical controls and declare
     assert.deepEqual(run.report.experiment.model.actual, run.report.experiment.model.requested);
     assert.deepEqual(run.report.experiment.budget, { id: 'fixture-budget', digest: DIGESTS.budget });
     assert.deepEqual(run.report.experiment.verifier_set, { id: 'fixture-verifiers', digest: DIGESTS.verifier });
+    assert.equal(fs.existsSync(path.join(run.evidenceDir, 'runtime-receipt.json')), true);
+    assert.equal(fs.existsSync(path.join(run.evidenceDir, 'host-enforcement.json')), true);
   }
+
+  const seal = JSON.parse(fs.readFileSync(result.sealPath, 'utf8'));
+  assert.equal(seal.reports.length, 4);
+  assert.equal(seal.reports.every((entry) => entry.runtime_receipt && entry.host_enforcement), true);
 
   const adaptive = result.runs.find((run) => run.report.experiment.arm.id === 'adaptive-full');
   assert.equal(adaptive.report.events.some((event) => event.type === 'capability_activation'), false);
@@ -289,6 +343,62 @@ test('explicit model mismatch is rejected as unavailable without launching a fal
     assert.match(run.report.experiment.model.unavailable_reason, /fallback.*rejected/i);
     assert.equal(run.report.final_result.submission_status, 'no_output');
   }
+});
+
+test('runtime model fallback is reported and invalidates the unsealed group', async (t) => {
+  const provider = modelProvider();
+  const originalCreateLaunch = provider.createLaunch;
+  provider.createLaunch = async (context) => {
+    const launch = await originalCreateLaunch(context);
+    const runtime = JSON.parse(launch.command.env.FIXTURE_RUNTIME_RECEIPT);
+    runtime.actual_model = {
+      provider: 'fixture-provider', id: 'fallback-model', revision: 'r2',
+    };
+    launch.command.env.FIXTURE_RUNTIME_RECEIPT = JSON.stringify(runtime);
+    return launch;
+  };
+  const spec = groupSpec(t, { modelProvider: provider });
+  let attempts = 0;
+  spec.runAttempt = async (attemptSpec) => {
+    attempts += 1;
+    const { runIsolatedEffectivenessAttempt } = await import('../scripts/lib/effectiveness-runner.mjs');
+    return runIsolatedEffectivenessAttempt(attemptSpec);
+  };
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(spec),
+    (error) =>
+      error instanceof EffectivenessExperimentError &&
+      error.code === 'RUNTIME_MODEL_FALLBACK' &&
+      typeof error.incompleteGroupDir === 'string' &&
+      error.runs.length === 0 &&
+      !fs.existsSync(path.join(error.incompleteGroupDir, 'group.json')),
+  );
+  assert.equal(attempts, 1);
+});
+
+test('an omitted requested revision still pins every runtime to the resolved revision', async (t) => {
+  const provider = modelProvider();
+  const originalCreateLaunch = provider.createLaunch;
+  provider.createLaunch = async (context) => {
+    const launch = await originalCreateLaunch(context);
+    if (context.armId === 'kernel-only') {
+      const runtime = JSON.parse(launch.command.env.FIXTURE_RUNTIME_RECEIPT);
+      runtime.actual_model.revision = 'r2';
+      launch.command.env.FIXTURE_RUNTIME_RECEIPT = JSON.stringify(runtime);
+    }
+    return launch;
+  };
+  const spec = groupSpec(t, {
+    requestedModel: { provider: 'fixture-provider', id: 'fixture-model' },
+    modelProvider: provider,
+  });
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(spec),
+    (error) =>
+      error instanceof EffectivenessExperimentError &&
+      error.code === 'RUNTIME_MODEL_FALLBACK' &&
+      error.runs.length === 1,
+  );
 });
 
 test('unavailable model reason is retained in all four reports', async (t) => {
@@ -324,6 +434,108 @@ test('comparison fails closed before launch without a complete host sandbox boun
   assert.equal(prepared, false);
 });
 
+test('base capabilities cannot use the Forge-reserved namespace', () => {
+  assert.throws(
+    () => createEffectivenessExperimentPlan({
+      rootDir: root,
+      baseCapabilities: [{ kind: 'other', id: 'forge:future-capability' }],
+    }),
+    (error) => error instanceof EffectivenessExperimentError && /reserved Forge namespace/.test(error.message),
+  );
+});
+
+test('trusted plan rejects capability kinds outside the report contract', () => {
+  assert.throws(
+    () => createEffectivenessExperimentPlan({
+      rootDir: root,
+      baseCapabilities: [{ kind: 'banana', id: 'common' }],
+    }),
+    (error) => error instanceof EffectivenessExperimentError && /invalid capability/.test(error.message),
+  );
+});
+
+test('provider observation cannot self-attest runtime identity', async (t) => {
+  const provider = modelProvider();
+  const originalCreateLaunch = provider.createLaunch;
+  provider.createLaunch = async (context) => {
+    const launch = await originalCreateLaunch(context);
+    launch.command.args = ['-e', 'process.stdout.write("fixture\\n")'];
+    launch.observe = async () => ({
+      ...observedResult(),
+      runtime: {
+        actualModel: context.selectedModel,
+        commonContextDigest: context.commonContextDigest,
+      },
+    });
+    return launch;
+  };
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(groupSpec(t, { modelProvider: provider })),
+    (error) =>
+      error.code === 'GROUP_EXECUTION_FAILED' &&
+      error.cause?.code === 'report_rejected' &&
+      /runtime receipt/i.test(error.cause?.message ?? ''),
+  );
+});
+
+test('evidence overlap is rejected before source mutation or model resolution', async (t) => {
+  let resolutions = 0;
+  const provider = modelProvider();
+  provider.resolve = async () => {
+    resolutions += 1;
+    return {
+      availability: 'available',
+      actual: { provider: 'fixture-provider', id: 'fixture-model', revision: 'r1' },
+    };
+  };
+  const spec = groupSpec(t, { modelProvider: provider });
+  spec.evidenceRoot = path.join(spec.source.dir, 'evidence');
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(spec),
+    (error) => error instanceof EffectivenessExperimentError && /physically separate/.test(error.message),
+  );
+  assert.equal(resolutions, 0);
+  assert.equal(fs.existsSync(spec.evidenceRoot), false);
+  assert.equal(git(spec.source.dir, ['status', '--porcelain']), '');
+});
+
+test('cleanup failure quarantines the group without a completion seal', async (t) => {
+  const sandbox = hostSandbox();
+  const originalPrepare = sandbox.prepareLaunch;
+  sandbox.prepareLaunch = async (context) => {
+    const handle = await originalPrepare(context);
+    if (context.armId === 'no-forge') {
+      handle.dispose = async () => { throw new Error('fixture cleanup failure'); };
+    }
+    return handle;
+  };
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(groupSpec(t, { hostSandbox: sandbox })),
+    (error) =>
+      error instanceof EffectivenessExperimentError &&
+      error.code === 'HOST_SANDBOX_UNAVAILABLE' &&
+      typeof error.incompleteGroupDir === 'string' &&
+      !fs.existsSync(path.join(error.incompleteGroupDir, 'group.json')),
+  );
+});
+
+test('schema-invalid controlled input is rejected before model resolution', async (t) => {
+  let resolutions = 0;
+  const provider = modelProvider();
+  const originalResolve = provider.resolve;
+  provider.resolve = async (...args) => {
+    resolutions += 1;
+    return originalResolve(...args);
+  };
+  const spec = groupSpec(t, { modelProvider: provider });
+  spec.budget.extra = 'not allowed';
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(spec),
+    (error) => error instanceof EffectivenessExperimentError && error.code === 'INVALID_EXPERIMENT',
+  );
+  assert.equal(resolutions, 0);
+});
+
 test('comparison group rejects a run whose controlled dimension drifts', async (t) => {
   const base = groupSpec(t);
   let invocation = 0;
@@ -339,6 +551,25 @@ test('comparison group rejects a run whose controlled dimension drifts', async (
     (error) =>
       error instanceof EffectivenessExperimentError &&
       error.code === 'COMPARISON_NOT_CONTROLLED' &&
-      /limits/.test(error.message),
+      /limits/.test(error.message) &&
+      typeof error.incompleteGroupDir === 'string' &&
+      fs.existsSync(error.incompleteGroupDir),
+  );
+});
+
+test('host enforcement policy must be identical across all four prepared launches', async (t) => {
+  const sandbox = hostSandbox();
+  const originalPrepare = sandbox.prepareLaunch;
+  sandbox.prepareLaunch = async (context) => {
+    const prepared = await originalPrepare(context);
+    if (context.armId === 'legacy-chain') prepared.appliedPolicyDigest = `sha256:${'0'.repeat(64)}`;
+    return prepared;
+  };
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(groupSpec(t, { hostSandbox: sandbox })),
+    (error) =>
+      error instanceof EffectivenessExperimentError &&
+      error.code === 'HOST_SANDBOX_UNAVAILABLE' &&
+      /policy/.test(error.message),
   );
 });

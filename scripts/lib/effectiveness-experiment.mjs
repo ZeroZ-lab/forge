@@ -4,6 +4,7 @@ import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 import { loadEffectivenessContract } from './effectiveness-contract.mjs';
+import { createEffectivenessReport } from './effectiveness-report.mjs';
 import { runIsolatedEffectivenessAttempt } from './effectiveness-runner.mjs';
 import { loadRegistry } from './registry.mjs';
 
@@ -21,6 +22,20 @@ const REQUIRED_HOST_GUARANTEES = Object.freeze([
   'live_cpu_limit',
   'live_memory_limit',
   'live_disk_limit',
+]);
+const CONTROL_CONTEXT_ENV = 'FORGE_EFFECTIVENESS_COMMON_CONTEXT';
+const ARM_CONTEXT_ENV = 'FORGE_EFFECTIVENESS_ARM_CONTEXT';
+const RUNTIME_RECEIPT_PREFIX = 'FORGE_EFFECTIVENESS_RUNTIME_RECEIPT ';
+const CAPABILITY_KINDS = new Set(['skill', 'tool', 'connector', 'subagent', 'other']);
+const LIMIT_FIELDS = Object.freeze([
+  'timeoutMs',
+  'maxStdoutBytes',
+  'maxStderrBytes',
+  'maxCapturedWorkspaceBytes',
+  'maxCapturedWorkspaceEntries',
+  'maxDiffBytes',
+  'gitOperationTimeoutMs',
+  'killGraceMs',
 ]);
 
 function isPlainObject(value) {
@@ -66,6 +81,71 @@ function digestJson(value) {
   return `sha256:${crypto.createHash('sha256').update(canonical).digest('hex')}`;
 }
 
+function digestBuffer(value) {
+  return `sha256:${crypto.createHash('sha256').update(value).digest('hex')}`;
+}
+
+function atomicWriteJson(filePath, value) {
+  const temporary = path.join(
+    path.dirname(filePath),
+    `.${path.basename(filePath)}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`,
+  );
+  let descriptor;
+  try {
+    descriptor = fs.openSync(temporary, 'wx', 0o600);
+    fs.writeFileSync(descriptor, `${JSON.stringify(value, null, 2)}\n`);
+    fs.fsyncSync(descriptor);
+    fs.closeSync(descriptor);
+    descriptor = undefined;
+    fs.renameSync(temporary, filePath);
+  } finally {
+    if (descriptor !== undefined) fs.closeSync(descriptor);
+    fs.rmSync(temporary, { force: true });
+  }
+}
+
+function fileReference(filePath) {
+  const content = fs.readFileSync(filePath);
+  return {
+    ref: path.basename(filePath),
+    digest: digestBuffer(content),
+    bytes: content.length,
+  };
+}
+
+function pathIsWithin(parent, candidate) {
+  const relative = path.relative(parent, candidate);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+function resolvePhysicalCandidate(candidate) {
+  let existing = path.resolve(candidate);
+  const missing = [];
+  while (!fs.existsSync(existing)) {
+    const parent = path.dirname(existing);
+    if (parent === existing) {
+      throw new EffectivenessExperimentError(
+        'INVALID_EXPERIMENT',
+        `no existing ancestor for ${candidate}`,
+      );
+    }
+    missing.unshift(path.basename(existing));
+    existing = parent;
+  }
+  return path.resolve(fs.realpathSync(existing), ...missing);
+}
+
+function assertSeparateEvidenceRoot(sourceDir, evidenceRoot) {
+  const source = fs.realpathSync(sourceDir);
+  const evidence = resolvePhysicalCandidate(evidenceRoot);
+  if (pathIsWithin(source, evidence) || pathIsWithin(evidence, source)) {
+    throw new EffectivenessExperimentError(
+      'INVALID_EXPERIMENT',
+      'evidence root and source repository must be physically separate',
+    );
+  }
+}
+
 function digestDirectory(rootDir) {
   const hash = crypto.createHash('sha256');
   function visit(directory, relativeDirectory = '') {
@@ -108,7 +188,7 @@ function normalizeCapabilities(capabilities, label) {
     .map((capability) => {
       if (
         !isPlainObject(capability) ||
-        typeof capability.kind !== 'string' ||
+        !CAPABILITY_KINDS.has(capability.kind) ||
         typeof capability.id !== 'string' ||
         capability.id.length === 0 ||
         (capability.version !== undefined &&
@@ -196,6 +276,13 @@ export function createEffectivenessExperimentPlan({ rootDir, baseCapabilities = 
 
   const packageJson = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
   const base = normalizeCapabilities(baseCapabilities, 'baseCapabilities');
+  const reservedBase = base.find((capability) => /^forge:/i.test(capability.id));
+  if (reservedBase) {
+    throw new EffectivenessExperimentError(
+      'INVALID_EXPERIMENT',
+      `baseCapabilities cannot use the reserved Forge namespace: ${reservedBase.id}`,
+    );
+  }
   const kernel = { kind: 'other', id: 'forge:kernel', version: armDefinitions['kernel-only'].kernel_version };
   const adaptiveSkills = loadRegistry(rootDir).skills.map((skill) => ({
     kind: 'skill',
@@ -257,7 +344,8 @@ function assertHostSandbox(hostSandbox) {
     typeof hostSandbox.id !== 'string' ||
     typeof hostSandbox.version !== 'string' ||
     typeof hostSandbox.prepareLaunch !== 'function' ||
-    !isPlainObject(hostSandbox.definition)
+    !isPlainObject(hostSandbox.definition) ||
+    !isPlainObject(hostSandbox.resourcePolicy)
   ) {
     throw new EffectivenessExperimentError(
       'HOST_SANDBOX_UNAVAILABLE',
@@ -274,6 +362,7 @@ function assertHostSandbox(hostSandbox) {
   }
   try {
     canonicalValue(hostSandbox.definition);
+    canonicalValue(hostSandbox.resourcePolicy);
   } catch (error) {
     throw new EffectivenessExperimentError(
       'HOST_SANDBOX_UNAVAILABLE',
@@ -332,6 +421,29 @@ function assertGroupInputs(spec) {
       'source, evidenceRoot, and limits are required',
     );
   }
+  const allowedSourceFields = new Set(['dir', 'ref', 'revision']);
+  const extraSource = Object.keys(spec.source).find((field) => !allowedSourceFields.has(field));
+  if (
+    extraSource ||
+    spec.source.dir.length === 0 ||
+    spec.source.ref.length === 0 ||
+    (spec.source.revision !== undefined &&
+      (typeof spec.source.revision !== 'string' || spec.source.revision.length === 0))
+  ) {
+    throw new EffectivenessExperimentError('INVALID_EXPERIMENT', 'source shape is invalid');
+  }
+  const limitKeys = Object.keys(spec.limits);
+  const missingLimit = LIMIT_FIELDS.find((field) => !Object.hasOwn(spec.limits, field));
+  const unknownLimit = limitKeys.find((field) => !LIMIT_FIELDS.includes(field));
+  const invalidLimit = LIMIT_FIELDS.find(
+    (field) => !Number.isSafeInteger(spec.limits[field]) || spec.limits[field] <= 0,
+  );
+  if (missingLimit || unknownLimit || invalidLimit) {
+    throw new EffectivenessExperimentError(
+      'INVALID_EXPERIMENT',
+      `limits must contain exact positive values (${missingLimit ?? unknownLimit ?? invalidLimit})`,
+    );
+  }
 }
 
 function unavailableObservation() {
@@ -371,6 +483,88 @@ function assertObservedResult(observed) {
       'provider observation must contain events, evidence, final_result, and costs',
     );
   }
+  if (Object.hasOwn(observed, 'runtime')) {
+    throw new EffectivenessExperimentError(
+      'INVALID_PROVIDER_OBSERVATION',
+      'runtime identity must come from retained process evidence, not provider observation',
+    );
+  }
+}
+
+function readRuntimeReceipt({ evidenceDir, retainedEvidence, armId, expected }) {
+  const reference = retainedEvidence?.artifacts?.stdout;
+  if (
+    !isPlainObject(reference) ||
+    reference.ref !== 'stdout.log' ||
+    typeof reference.digest !== 'string' ||
+    !Number.isSafeInteger(reference.bytes)
+  ) {
+    throw new EffectivenessExperimentError(
+      'INVALID_RUNTIME_RECEIPT',
+      `retained stdout evidence is required for ${armId}`,
+    );
+  }
+  const canonicalEvidenceDir = fs.realpathSync(evidenceDir);
+  const receiptSourcePath = path.join(evidenceDir, reference.ref);
+  const stat = fs.lstatSync(receiptSourcePath);
+  if (
+    !stat.isFile() ||
+    !pathIsWithin(canonicalEvidenceDir, fs.realpathSync(receiptSourcePath))
+  ) {
+    throw new EffectivenessExperimentError(
+      'INVALID_RUNTIME_RECEIPT',
+      `runtime receipt source escaped retained evidence for ${armId}`,
+    );
+  }
+  const content = fs.readFileSync(receiptSourcePath);
+  if (content.length !== reference.bytes || digestBuffer(content) !== reference.digest) {
+    throw new EffectivenessExperimentError(
+      'INVALID_RUNTIME_RECEIPT',
+      `runtime receipt source failed digest verification for ${armId}`,
+    );
+  }
+  const receiptLines = content.toString('utf8')
+    .split(/\r?\n/u)
+    .filter((line) => line.startsWith(RUNTIME_RECEIPT_PREFIX));
+  if (receiptLines.length !== 1) {
+    throw new EffectivenessExperimentError(
+      'INVALID_RUNTIME_RECEIPT',
+      `exactly one process-emitted runtime receipt is required for ${armId}`,
+    );
+  }
+  let runtime;
+  try {
+    runtime = JSON.parse(receiptLines[0].slice(RUNTIME_RECEIPT_PREFIX.length));
+  } catch (error) {
+    throw new EffectivenessExperimentError(
+      'INVALID_RUNTIME_RECEIPT',
+      `runtime receipt is not valid JSON for ${armId}`,
+      { cause: error },
+    );
+  }
+  assertIdentity(runtime?.actual_model, 'runtime actual model');
+  if (
+    runtime?.contract !== 'forge-effectiveness-runtime-transport' ||
+    runtime?.version !== 1 ||
+    runtime.common_context_digest !== expected.commonContextDigest ||
+    runtime.arm_definition_digest !== expected.armDefinitionDigest ||
+    runtime.capability_policy_digest !== expected.capabilityPolicyDigest
+  ) {
+    throw new EffectivenessExperimentError(
+      'INVALID_RUNTIME_RECEIPT',
+      `process-emitted runtime receipt does not match the launched context for ${armId}`,
+    );
+  }
+  return {
+    contract: 'forge-effectiveness-runtime-receipt',
+    version: 1,
+    arm_id: armId,
+    actual_model: cloneData(runtime.actual_model, 'runtime actual model'),
+    common_context_digest: runtime.common_context_digest,
+    arm_definition_digest: runtime.arm_definition_digest,
+    capability_policy_digest: runtime.capability_policy_digest,
+    source: cloneData(reference, 'runtime receipt source'),
+  };
 }
 
 async function resolveModel(modelProvider, requestedModel, modelParameters) {
@@ -436,14 +630,131 @@ function modelCondition(requestedModel, resolution, parametersDigest) {
   };
 }
 
-function controlledReportInput(spec, armId, condition, parametersDigest, observed) {
+function validateControlledReportInputs(spec, experimentPlan, parametersDigest) {
+  const armId = EFFECTIVENESS_ARM_IDS[0];
+  createEffectivenessReport(
+    {
+      experiment: {
+        comparison_group_id: spec.comparisonGroupId,
+        objective: cloneData(spec.objective, 'objective'),
+        arm: {
+          id: armId,
+          definition_digest: experimentPlan.arms[armId].definition_digest,
+        },
+        model: modelCondition(
+          spec.requestedModel,
+          { availability: 'unavailable', unavailable_reason: 'preflight validation only' },
+          parametersDigest,
+        ),
+        fixture: cloneData(spec.fixture, 'fixture'),
+        reproduction: {
+          repeat_index: spec.repeatIndex,
+          ...(spec.seed === undefined ? {} : { seed: spec.seed }),
+        },
+        workspace: {
+          source_ref: spec.source.ref,
+          base_revision: 'preflight-revision',
+          snapshot_digest: `sha256:${'0'.repeat(64)}`,
+          isolation_id: 'preflight-isolation',
+        },
+        budget: cloneData(spec.budget, 'budget'),
+        verifier_set: cloneData(spec.verifierSet, 'verifierSet'),
+        capability_policy: cloneData(
+          experimentPlan.arms[armId].capability_policy,
+          'capability policy',
+        ),
+      },
+      execution: {
+        runner: { name: 'forge-effectiveness-preflight', version: '1' },
+        started_at: '2000-01-01T00:00:00.000Z',
+        ended_at: '2000-01-01T00:00:00.001Z',
+        termination: 'infrastructure_error',
+        termination_detail_ref: 'preflight-only',
+      },
+      events: [
+        {
+          id: 'preflight-event',
+          sequence: 0,
+          type: 'observation',
+          actor: 'tool',
+          observed_at: '2000-01-01T00:00:00.000Z',
+          status: 'observed',
+          summary: 'Validated controlled comparison input without launching a model.',
+          details_ref: 'preflight-only',
+          evidence_refs: ['preflight-evidence'],
+        },
+      ],
+      evidence: [
+        {
+          id: 'preflight-evidence',
+          source_kind: 'tool_output',
+          locator: 'preflight-only',
+          digest: `sha256:${'1'.repeat(64)}`,
+          producer_ref: 'tool:forge-effectiveness-preflight',
+          event_id: 'preflight-event',
+          objective_ref: spec.objective.id,
+        },
+      ],
+      final_result: {
+        submission_status: 'no_output',
+        artifact_refs: [],
+        verifier_result_refs: [],
+      },
+      costs: [
+        {
+          metric: 'wall_time_ms',
+          value: 0,
+          unit: 'ms',
+          acquisition: {
+            kind: 'runner',
+            source_ref: 'preflight-only',
+            quality: 'observed',
+          },
+        },
+        {
+          metric: 'turns',
+          value: 0,
+          unit: 'count',
+          acquisition: {
+            kind: 'tool',
+            source_ref: 'preflight-only',
+            quality: 'observed',
+          },
+        },
+      ],
+    },
+    { rootDir: spec.rootDir, experimentPlan },
+  );
+}
+
+function controlledReportInput(
+  spec,
+  armId,
+  condition,
+  parametersDigest,
+  runtimeReceipt,
+  observed,
+) {
   assertObservedResult(observed);
+  let reportCondition = condition;
+  if (condition.availability === 'available') {
+    if (!isPlainObject(runtimeReceipt)) {
+      throw new EffectivenessExperimentError(
+        'INVALID_RUNTIME_RECEIPT',
+        `runtime receipt is required for ${armId}`,
+      );
+    }
+    reportCondition = {
+      availability: 'available',
+      actual: cloneData(runtimeReceipt.actual_model, 'runtime actual model'),
+    };
+  }
   return {
     experiment: {
       comparison_group_id: spec.comparisonGroupId,
       objective: cloneData(spec.objective, 'objective'),
       arm: { id: armId },
-      model: modelCondition(spec.requestedModel, condition, parametersDigest),
+      model: modelCondition(spec.requestedModel, reportCondition, parametersDigest),
       fixture: cloneData(spec.fixture, 'fixture'),
       reproduction: {
         repeat_index: spec.repeatIndex,
@@ -533,8 +844,11 @@ export async function runEffectivenessComparisonGroup(spec) {
   if (!Number.isInteger(spec.repeatIndex) || spec.repeatIndex < 0) {
     throw new EffectivenessExperimentError('INVALID_EXPERIMENT', 'repeatIndex must be a non-negative integer');
   }
-  if (typeof spec.comparisonGroupId !== 'string' || spec.comparisonGroupId.length === 0) {
-    throw new EffectivenessExperimentError('INVALID_EXPERIMENT', 'comparisonGroupId is required');
+  if (
+    typeof spec.comparisonGroupId !== 'string' ||
+    !/^[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(spec.comparisonGroupId)
+  ) {
+    throw new EffectivenessExperimentError('INVALID_EXPERIMENT', 'comparisonGroupId is unsafe');
   }
   const modelParameters = spec.modelParameters ?? {};
   const parametersDigest = digestJson({
@@ -542,6 +856,26 @@ export async function runEffectivenessComparisonGroup(spec) {
     version: 1,
     parameters: modelParameters,
   });
+  try {
+    validateControlledReportInputs(trustedSpec, experimentPlan, parametersDigest);
+  } catch (error) {
+    throw new EffectivenessExperimentError(
+      'INVALID_EXPERIMENT',
+      `controlled report input is invalid: ${error.message}`,
+      { cause: error },
+    );
+  }
+
+  assertSeparateEvidenceRoot(spec.source.dir, spec.evidenceRoot);
+  fs.mkdirSync(spec.evidenceRoot, { recursive: true });
+  const finalGroupDir = path.join(spec.evidenceRoot, spec.comparisonGroupId);
+  if (fs.existsSync(finalGroupDir)) {
+    throw new EffectivenessExperimentError(
+      'EVIDENCE_COLLISION',
+      `comparison group evidence already exists: ${spec.comparisonGroupId}`,
+    );
+  }
+
   const resolution = await resolveModel(spec.modelProvider, spec.requestedModel, modelParameters);
   const hostDefinitionDigest = digestJson({
     contract: 'forge-effectiveness-host-sandbox',
@@ -550,6 +884,14 @@ export async function runEffectivenessComparisonGroup(spec) {
     adapter_version: spec.hostSandbox.version,
     guarantees: [...spec.hostSandbox.guarantees].sort(),
     definition: spec.hostSandbox.definition,
+    resource_policy: spec.hostSandbox.resourcePolicy,
+  });
+  const requiredHostPolicyDigest = digestJson({
+    contract: 'forge-effectiveness-host-policy',
+    version: 1,
+    host_definition_digest: hostDefinitionDigest,
+    resource_policy: spec.hostSandbox.resourcePolicy,
+    limits: spec.limits,
   });
   const providerDefinitionDigest = digestJson({
     contract: 'forge-effectiveness-model-provider',
@@ -558,158 +900,372 @@ export async function runEffectivenessComparisonGroup(spec) {
     adapter_version: spec.modelProvider.version,
     definition: spec.modelProvider.definition,
   });
+  const commonContext = {
+    contract: 'forge-effectiveness-common-launch-context',
+    version: 1,
+    comparison_group_id: spec.comparisonGroupId,
+    objective: cloneData(spec.objective, 'objective'),
+    fixture: cloneData(spec.fixture, 'fixture'),
+    source: {
+      ref: spec.source.ref,
+      ...(spec.source.revision === undefined ? {} : { revision: spec.source.revision }),
+    },
+    reproduction: {
+      repeat_index: spec.repeatIndex,
+      ...(spec.seed === undefined ? {} : { seed: spec.seed }),
+    },
+    budget: cloneData(spec.budget, 'budget'),
+    verifier_set: cloneData(spec.verifierSet, 'verifierSet'),
+    limits: cloneData(spec.limits, 'limits'),
+    requested_model: cloneData(spec.requestedModel, 'requestedModel'),
+    model_parameters_digest: parametersDigest,
+    host_policy_digest: requiredHostPolicyDigest,
+  };
+  const commonContextDigest = digestJson(commonContext);
+  const commonContextJson = JSON.stringify(canonicalValue(commonContext));
+  const stagingRoot = fs.mkdtempSync(path.join(spec.evidenceRoot, '.comparison-staging-'));
+  const stagingSuffix = path.basename(stagingRoot).slice('.comparison-staging-'.length);
 
   const prepared = [];
-  for (const armId of EFFECTIVENESS_ARM_IDS) {
-    let launch;
-    if (resolution.availability === 'available') {
-      launch = await spec.modelProvider.createLaunch({
-        armId,
-        arm: cloneData(experimentPlan.arms[armId], 'arm plan'),
-        armDefinition: cloneData(armDefinitions[armId], 'arm definition'),
-        requestedModel: cloneData(spec.requestedModel, 'requestedModel'),
-        actualModel: cloneData(resolution.actual, 'actual model'),
-        parameters: cloneData(modelParameters, 'modelParameters'),
-      });
-      if (
-        !isPlainObject(launch) ||
-        !isPlainObject(launch.command) ||
-        !isPlainObject(launch.definition) ||
-        typeof launch.observe !== 'function'
-      ) {
-        throw new EffectivenessExperimentError(
-          'INVALID_PROVIDER_LAUNCH',
-          `model provider returned an invalid launch for ${armId}`,
-        );
+  async function disposePrepared() {
+    const failures = [];
+    for (const item of [...prepared].reverse()) {
+      if (item.hostDisposed || typeof item.hostHandle?.dispose !== 'function') continue;
+      try {
+        await item.hostHandle.dispose();
+        item.hostDisposed = true;
+      } catch (error) {
+        failures.push(`${item.armId}: ${error.message}`);
       }
-      if (!isDeepStrictEqual(
-        launch.capabilityPolicy,
-        experimentPlan.arms[armId].capability_policy,
-      )) {
-        throw new EffectivenessExperimentError(
-          'CAPABILITY_EXPOSURE_MISMATCH',
-          `model provider did not configure the declared capability exposure for ${armId}`,
-        );
-      }
-      if (launch.armDefinitionDigest !== experimentPlan.arms[armId].definition_digest) {
-        throw new EffectivenessExperimentError(
-          'ARM_DEFINITION_MISMATCH',
-          `model provider did not configure the trusted arm definition for ${armId}`,
-        );
-      }
-      if (armId === 'legacy-chain') {
-        const legacyDefinition = manifestArmDefinitions['legacy-chain'];
-        const expectedBaseline = {
-          version: legacyDefinition.baseline_version,
-          tree: legacyDefinition.baseline_tree,
-          default_chain: legacyDefinition.default_chain,
-        };
-        if (!isDeepStrictEqual(launch.definition.legacy_baseline, expectedBaseline)) {
-          throw new EffectivenessExperimentError(
-            'LEGACY_BASELINE_MISMATCH',
-            'legacy-chain launcher must attest the pinned pre-upgrade tree and default chain',
-          );
-        }
-      }
-    } else {
-      launch = {
-        command: {
-          file: process.execPath,
-          args: ['-e', ''],
-          env: {},
-          label: 'model availability record',
-        },
-        definition: { kind: 'unavailable-model-record' },
-        async observe() {
-          return unavailableObservation();
-        },
-      };
     }
-    if (Object.hasOwn(launch.command, 'definitionDigest')) {
-      throw new EffectivenessExperimentError(
-        'INVALID_PROVIDER_LAUNCH',
-        'launcher definitionDigest is scheduler-owned',
-      );
-    }
-    let sandboxedCommand;
-    try {
-      sandboxedCommand = await spec.hostSandbox.prepareLaunch({
-        command: cloneData(launch.command, 'provider command'),
-        armId,
-        capabilityPolicy: cloneData(
+    return failures;
+  }
+
+  try {
+    for (const armId of EFFECTIVENESS_ARM_IDS) {
+      const armContext = {
+        contract: 'forge-effectiveness-arm-launch-context',
+        version: 1,
+        definition: cloneData(armDefinitions[armId], 'arm definition'),
+        definition_digest: experimentPlan.arms[armId].definition_digest,
+        capability_policy: cloneData(
           experimentPlan.arms[armId].capability_policy,
           'capability policy',
         ),
-        limits: cloneData(spec.limits, 'limits'),
+      };
+      const armContextDigest = digestJson(armContext);
+      let launch;
+      if (resolution.availability === 'available') {
+        launch = await spec.modelProvider.createLaunch({
+          armId,
+          arm: cloneData(experimentPlan.arms[armId], 'arm plan'),
+          armDefinition: cloneData(armDefinitions[armId], 'arm definition'),
+          armContext: cloneData(armContext, 'arm context'),
+          armContextDigest,
+          commonContext: cloneData(commonContext, 'common context'),
+          commonContextDigest,
+          requestedModel: cloneData(spec.requestedModel, 'requestedModel'),
+          selectedModel: cloneData(resolution.actual, 'selected model'),
+          parameters: cloneData(modelParameters, 'modelParameters'),
+        });
+        if (
+          !isPlainObject(launch) ||
+          !isPlainObject(launch.command) ||
+          !isPlainObject(launch.definition) ||
+          typeof launch.observe !== 'function'
+        ) {
+          throw new EffectivenessExperimentError(
+            'INVALID_PROVIDER_LAUNCH',
+            `model provider returned an invalid launch for ${armId}`,
+          );
+        }
+        if (!isDeepStrictEqual(
+          launch.capabilityPolicy,
+          experimentPlan.arms[armId].capability_policy,
+        )) {
+          throw new EffectivenessExperimentError(
+            'CAPABILITY_EXPOSURE_MISMATCH',
+            `model provider did not configure the declared capability exposure for ${armId}`,
+          );
+        }
+        if (launch.armDefinitionDigest !== experimentPlan.arms[armId].definition_digest) {
+          throw new EffectivenessExperimentError(
+            'ARM_DEFINITION_MISMATCH',
+            `model provider did not configure the trusted arm definition for ${armId}`,
+          );
+        }
+        if (armId === 'legacy-chain') {
+          const legacyDefinition = manifestArmDefinitions['legacy-chain'];
+          const expectedBaseline = {
+            version: legacyDefinition.baseline_version,
+            tree: legacyDefinition.baseline_tree,
+            default_chain: legacyDefinition.default_chain,
+          };
+          if (!isDeepStrictEqual(launch.definition.legacy_baseline, expectedBaseline)) {
+            throw new EffectivenessExperimentError(
+              'LEGACY_BASELINE_MISMATCH',
+              'legacy-chain launcher must attest the pinned pre-upgrade tree and default chain',
+            );
+          }
+        }
+      } else {
+        launch = {
+          command: {
+            file: process.execPath,
+            args: ['-e', ''],
+            env: {},
+            label: 'model availability record',
+          },
+          definition: { kind: 'unavailable-model-record' },
+          async observe() {
+            return unavailableObservation();
+          },
+        };
+      }
+      if (
+        Object.hasOwn(launch.command, 'definitionDigest') ||
+        Object.hasOwn(launch.command.env ?? {}, CONTROL_CONTEXT_ENV) ||
+        Object.hasOwn(launch.command.env ?? {}, ARM_CONTEXT_ENV)
+      ) {
+        throw new EffectivenessExperimentError(
+          'INVALID_PROVIDER_LAUNCH',
+          'launcher digest and effectiveness context are scheduler-owned',
+        );
+      }
+      let hostHandle;
+      try {
+        hostHandle = await spec.hostSandbox.prepareLaunch({
+          command: cloneData(launch.command, 'provider command'),
+          armId,
+          armContext: cloneData(armContext, 'arm context'),
+          armContextDigest,
+          commonContext: cloneData(commonContext, 'common context'),
+          commonContextDigest,
+          requiredPolicyDigest: requiredHostPolicyDigest,
+          limits: cloneData(spec.limits, 'limits'),
+        });
+      } catch (error) {
+        throw new EffectivenessExperimentError(
+          'HOST_SANDBOX_UNAVAILABLE',
+          `host sandbox could not prepare ${armId}: ${error.message}`,
+          { cause: error },
+        );
+      }
+      if (
+        !isPlainObject(hostHandle) ||
+        !isPlainObject(hostHandle.command) ||
+        hostHandle.appliedPolicyDigest !== requiredHostPolicyDigest ||
+        typeof hostHandle.finalize !== 'function' ||
+        typeof hostHandle.dispose !== 'function'
+      ) {
+        if (typeof hostHandle?.dispose === 'function') await hostHandle.dispose();
+        throw new EffectivenessExperimentError(
+          'HOST_SANDBOX_UNAVAILABLE',
+          `host sandbox policy or lifecycle receipt is invalid for ${armId}`,
+        );
+      }
+      if (
+        Object.hasOwn(hostHandle.command, 'definitionDigest') ||
+        Object.hasOwn(hostHandle.command.env ?? {}, CONTROL_CONTEXT_ENV) ||
+        Object.hasOwn(hostHandle.command.env ?? {}, ARM_CONTEXT_ENV)
+      ) {
+        await hostHandle.dispose();
+        throw new EffectivenessExperimentError(
+          'HOST_SANDBOX_UNAVAILABLE',
+          `host sandbox attempted to own scheduler context for ${armId}`,
+        );
+      }
+      const definitionDigest = digestJson({
+        contract: 'forge-effectiveness-launcher',
+        version: 1,
+        common_context_digest: commonContextDigest,
+        arm_context_digest: armContextDigest,
+        provider_definition_digest: providerDefinitionDigest,
+        host_definition_digest: hostDefinitionDigest,
+        host_policy_digest: requiredHostPolicyDigest,
+        launch_definition: launch.definition,
       });
-    } catch (error) {
-      throw new EffectivenessExperimentError(
-        'HOST_SANDBOX_UNAVAILABLE',
-        `host sandbox could not prepare ${armId}: ${error.message}`,
-        { cause: error },
-      );
+      const commandEnv = {
+        ...(hostHandle.command.env ?? {}),
+        [CONTROL_CONTEXT_ENV]: commonContextJson,
+        [ARM_CONTEXT_ENV]: JSON.stringify(canonicalValue(armContext)),
+      };
+      prepared.push({
+        armId,
+        command: { ...hostHandle.command, env: commandEnv, definitionDigest },
+        observe: launch.observe,
+        armContextDigest,
+        hostHandle,
+        hostDisposed: false,
+      });
     }
-    if (!isPlainObject(sandboxedCommand) || Object.hasOwn(sandboxedCommand, 'definitionDigest')) {
-      throw new EffectivenessExperimentError(
-        'HOST_SANDBOX_UNAVAILABLE',
-        `host sandbox returned an invalid command for ${armId}`,
-      );
-    }
-    const definitionDigest = digestJson({
-      contract: 'forge-effectiveness-launcher',
-      version: 1,
-      arm_definition_digest: experimentPlan.arms[armId].definition_digest,
-      capability_policy_digest: experimentPlan.arms[armId].capability_policy.digest,
-      requested_model: spec.requestedModel,
-      model_parameters_digest: parametersDigest,
-      provider_definition_digest: providerDefinitionDigest,
-      host_definition_digest: hostDefinitionDigest,
-      launch_definition: launch.definition,
-    });
-    prepared.push({
-      armId,
-      command: { ...sandboxedCommand, definitionDigest },
-      observe: launch.observe,
-    });
+  } catch (error) {
+    const cleanupFailures = await disposePrepared();
+    if (cleanupFailures.length > 0) error.cleanupFailures = cleanupFailures;
+    fs.rmSync(stagingRoot, { recursive: true, force: true });
+    throw error;
   }
 
   const runAttempt = spec.runAttempt ?? runIsolatedEffectivenessAttempt;
   if (typeof runAttempt !== 'function') {
+    await disposePrepared();
     throw new EffectivenessExperimentError('INVALID_EXPERIMENT', 'runAttempt must be a function');
   }
   const runs = [];
-  for (const item of prepared) {
-    const result = await runAttempt({
-      contractRoot: spec.rootDir,
-      experimentPlan,
-      armId: item.armId,
-      attemptId: `${spec.comparisonGroupId}.${item.armId}`,
-      source: cloneData(spec.source, 'source'),
-      evidenceRoot: spec.evidenceRoot,
-      command: item.command,
-      limits: cloneData(spec.limits, 'limits'),
-      ...(spec.signal === undefined ? {} : { signal: spec.signal }),
-      async buildReportInput(receipt, retainedEvidence) {
-        const observed = await item.observe(
-          cloneData(receipt, 'receipt'),
-          cloneData(retainedEvidence, 'retained evidence'),
+  try {
+    for (const item of prepared) {
+      let runtimeReceipt = null;
+      const result = await runAttempt({
+        contractRoot: spec.rootDir,
+        experimentPlan,
+        armId: item.armId,
+        attemptId: item.armId,
+        source: cloneData(spec.source, 'source'),
+        evidenceRoot: stagingRoot,
+        command: item.command,
+        limits: cloneData(spec.limits, 'limits'),
+        ...(spec.signal === undefined ? {} : { signal: spec.signal }),
+        async buildReportInput(receipt, retainedEvidence) {
+          const attemptEvidenceDir = path.join(stagingRoot, item.armId);
+          if (resolution.availability === 'available') {
+            runtimeReceipt = readRuntimeReceipt({
+              evidenceDir: attemptEvidenceDir,
+              retainedEvidence,
+              armId: item.armId,
+              expected: {
+                commonContextDigest,
+                armDefinitionDigest: experimentPlan.arms[item.armId].definition_digest,
+                capabilityPolicyDigest: experimentPlan.arms[item.armId].capability_policy.digest,
+              },
+            });
+          }
+          const observed = await item.observe(
+            cloneData(receipt, 'receipt'),
+            cloneData(retainedEvidence, 'retained evidence'),
+          );
+          return controlledReportInput(
+            trustedSpec,
+            item.armId,
+            resolution,
+            parametersDigest,
+            runtimeReceipt,
+            observed,
+          );
+        },
+      });
+      if (resolution.availability === 'available') {
+        if (runtimeReceipt === null) {
+          throw new EffectivenessExperimentError(
+            'INVALID_RUNTIME_RECEIPT',
+            `runtime receipt was not retained for ${item.armId}`,
+          );
+        }
+        runtimeReceipt.runner_configuration_digest = result.receipt.configuration_digest;
+        if (!isDeepStrictEqual(runtimeReceipt.actual_model, resolution.actual)) {
+          throw new EffectivenessExperimentError(
+            'RUNTIME_MODEL_FALLBACK',
+            `runtime model identity differs from the resolved model for ${item.armId}`,
+          );
+        }
+        const runtimeReceiptPath = path.join(result.evidenceDir, 'runtime-receipt.json');
+        atomicWriteJson(runtimeReceiptPath, runtimeReceipt);
+        result.runtimeReceipt = cloneData(runtimeReceipt, 'runtime receipt');
+        result.runtimeReceiptReference = fileReference(runtimeReceiptPath);
+      }
+      const enforcement = await item.hostHandle.finalize({
+        receipt: cloneData(result.receipt, 'receipt'),
+        report: cloneData(result.report, 'report'),
+      });
+      if (
+        !isPlainObject(enforcement) ||
+        enforcement.appliedPolicyDigest !== requiredHostPolicyDigest ||
+        enforcement.contained !== true ||
+        enforcement.runnerConfigurationDigest !== result.receipt.configuration_digest ||
+        enforcement.commonContextDigest !== commonContextDigest ||
+        enforcement.armContextDigest !== item.armContextDigest
+      ) {
+        throw new EffectivenessExperimentError(
+          'HOST_SANDBOX_UNAVAILABLE',
+          `host sandbox could not prove containment for ${item.armId}`,
         );
-        return controlledReportInput(trustedSpec, item.armId, resolution, parametersDigest, observed);
-      },
-    });
-    runs.push(result);
-  }
+      }
+      result.hostEnforcement = cloneData(enforcement, 'host enforcement receipt');
+      const hostReceiptPath = path.join(result.evidenceDir, 'host-enforcement.json');
+      atomicWriteJson(hostReceiptPath, result.hostEnforcement);
+      result.hostEnforcementReference = fileReference(hostReceiptPath);
+      runs.push(result);
+    }
 
-  const issues = comparisonIssues(runs, trustedSpec);
-  if (issues.length > 0) {
-    throw new EffectivenessExperimentError(
-      'COMPARISON_NOT_CONTROLLED',
-      `comparison group is not controlled: ${issues.join(', ')}`,
-    );
+    const issues = comparisonIssues(runs, trustedSpec);
+    if (issues.length > 0) {
+      throw new EffectivenessExperimentError(
+        'COMPARISON_NOT_CONTROLLED',
+        `comparison group is not controlled: ${issues.join(', ')}`,
+      );
+    }
+    const seal = {
+      contract: 'forge-effectiveness-comparison-group',
+      version: 1,
+      comparison_group_id: spec.comparisonGroupId,
+      common_context_digest: commonContextDigest,
+      host_policy_digest: requiredHostPolicyDigest,
+      reports: runs.map((run) => ({
+        arm: run.report.experiment.arm.id,
+        report_id: run.report.report_id,
+        digest: digestJson(run.report),
+        ...(run.runtimeReceiptReference === undefined
+          ? {}
+          : { runtime_receipt: run.runtimeReceiptReference }),
+        host_enforcement: run.hostEnforcementReference,
+      })),
+    };
+    const cleanupFailures = await disposePrepared();
+    if (cleanupFailures.length > 0) {
+      throw new EffectivenessExperimentError(
+        'HOST_SANDBOX_UNAVAILABLE',
+        `host sandbox cleanup failed: ${cleanupFailures.join('; ')}`,
+      );
+    }
+    fs.renameSync(stagingRoot, finalGroupDir);
+    for (const run of runs) {
+      run.evidenceDir = path.join(finalGroupDir, run.report.experiment.arm.id);
+    }
+    const finalSealPath = path.join(finalGroupDir, 'group.json');
+    atomicWriteJson(finalSealPath, seal);
+    return {
+      experimentPlan: cloneData(experimentPlan, 'experimentPlan'),
+      model: cloneData(runs[0].report.experiment.model, 'model condition'),
+      commonContext: cloneData(commonContext, 'common context'),
+      groupDir: finalGroupDir,
+      sealPath: finalSealPath,
+      runs,
+    };
+  } catch (caught) {
+    const error = caught instanceof EffectivenessExperimentError
+      ? caught
+      : new EffectivenessExperimentError(
+          'GROUP_EXECUTION_FAILED',
+          `comparison group execution failed: ${caught.message}`,
+          { cause: caught },
+        );
+    const cleanupFailures = await disposePrepared();
+    if (cleanupFailures.length > 0) error.cleanupFailures = cleanupFailures;
+    error.runs = runs;
+    const failedGroupDir = fs.existsSync(stagingRoot)
+      ? stagingRoot
+      : (fs.existsSync(finalGroupDir) ? finalGroupDir : null);
+    if (failedGroupDir !== null) {
+      fs.rmSync(path.join(failedGroupDir, 'group.json'), { force: true });
+      const incompleteGroupDir = path.join(
+        spec.evidenceRoot,
+        `${spec.comparisonGroupId}.incomplete-${stagingSuffix}`,
+      );
+      fs.renameSync(failedGroupDir, incompleteGroupDir);
+      error.incompleteGroupDir = incompleteGroupDir;
+      for (const run of runs) {
+        run.evidenceDir = path.join(incompleteGroupDir, run.report.experiment.arm.id);
+      }
+    }
+    throw error;
   }
-  return {
-    experimentPlan: cloneData(experimentPlan, 'experimentPlan'),
-    model: modelCondition(spec.requestedModel, resolution, parametersDigest),
-    runs,
-  };
 }
