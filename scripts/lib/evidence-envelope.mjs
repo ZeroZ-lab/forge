@@ -9,6 +9,9 @@ import { validateJsonSchema } from './json-schema-subset.mjs';
 const CONTRACT = 'forge-evidence-envelope';
 const SCHEMA_VERSION = 1;
 const CONSTRUCTOR_OWNED_FIELDS = ['schema_version', 'contract', 'envelope_id', 'content_digest'];
+const MAX_ENVELOPE_BYTES = 1024 * 1024;
+const MAX_COMMAND_RECEIPT_BYTES = 16 * 1024 * 1024;
+const READ_BUFFER_BYTES = 64 * 1024;
 
 function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -168,7 +171,7 @@ function isSafeRetainedBasename(value) {
   );
 }
 
-function readRetainedBasename(ref, evidenceRoot, label) {
+function readRetainedBasename(ref, evidenceRoot, label, options = {}) {
   if (!isSafeRetainedBasename(ref)) {
     throw new EvidenceEnvelopeError(
       'INVALID_REFERENCE',
@@ -220,13 +223,38 @@ function readRetainedBasename(ref, evidenceRoot, label) {
         [issue('/ref', 'retained_identity_changed', `${label} file identity changed while opening`)],
       );
     }
-    const bytes = fs.readFileSync(descriptor);
+    const maximum = options.maxBytes ?? Number.MAX_SAFE_INTEGER;
+    if (opened.size > BigInt(maximum)) {
+      throw new EvidenceEnvelopeError(
+        'INVALID_REFERENCE',
+        [
+          issue(
+            '/bytes',
+            'retained_evidence_too_large',
+            `${label} exceeds the ${maximum}-byte verification limit`,
+          ),
+        ],
+      );
+    }
+    const hash = crypto.createHash('sha256');
+    const chunks = options.capture ? [] : undefined;
+    const buffer = Buffer.allocUnsafe(READ_BUFFER_BYTES);
+    let bytesRead = 0;
+    for (;;) {
+      const count = fs.readSync(descriptor, buffer, 0, buffer.length, null);
+      if (count === 0) break;
+      const chunk = buffer.subarray(0, count);
+      hash.update(chunk);
+      if (chunks) chunks.push(Buffer.from(chunk));
+      bytesRead += count;
+    }
     const after = fs.fstatSync(descriptor, { bigint: true });
     const pathAfter = fs.lstatSync(retainedPath, { bigint: true });
     if (
       after.dev !== opened.dev ||
       after.ino !== opened.ino ||
       after.size !== opened.size ||
+      BigInt(bytesRead) !== opened.size ||
       pathAfter.dev !== opened.dev ||
       pathAfter.ino !== opened.ino ||
       pathAfter.nlink !== 1n
@@ -236,13 +264,17 @@ function readRetainedBasename(ref, evidenceRoot, label) {
         [issue('/ref', 'retained_identity_changed', `${label} file changed while being read`)],
       );
     }
-    return bytes;
+    return {
+      buffer: chunks ? Buffer.concat(chunks, bytesRead) : undefined,
+      bytes: bytesRead,
+      digest: `sha256:${hash.digest('hex')}`,
+    };
   } finally {
     fs.closeSync(descriptor);
   }
 }
 
-function readRetainedFile(reference, evidenceRoot, label) {
+function readRetainedFile(reference, evidenceRoot, label, options = {}) {
   const issues = [];
   if (!isPlainObject(reference)) {
     throw new EvidenceEnvelopeError(
@@ -260,19 +292,21 @@ function readRetainedFile(reference, evidenceRoot, label) {
     issues.push(issue('/bytes', 'invalid_reference', `${label} reference byte count is invalid`));
   }
   if (issues.length > 0) throw new EvidenceEnvelopeError('INVALID_REFERENCE', issues);
-  const bytes = readRetainedBasename(reference.ref, evidenceRoot, label);
-  if (bytes.length !== reference.bytes || sha256Buffer(bytes) !== reference.digest) {
+  const observed = readRetainedBasename(reference.ref, evidenceRoot, label, options);
+  if (observed.bytes !== reference.bytes || observed.digest !== reference.digest) {
     throw new EvidenceEnvelopeError(
       'INVALID_REFERENCE',
       [issue('', 'retained_integrity_mismatch', `${label} file does not match its retained reference`)],
     );
   }
-  return bytes;
+  return observed;
 }
 
 export function referenceEvidenceEnvelope(ref, options = {}) {
-  const bytes = readRetainedBasename(ref, options.evidenceRoot, 'envelope');
-  return { ref, digest: sha256Buffer(bytes), bytes: bytes.length };
+  const observed = readRetainedBasename(ref, options.evidenceRoot, 'envelope', {
+    maxBytes: MAX_ENVELOPE_BYTES,
+  });
+  return { ref, digest: observed.digest, bytes: observed.bytes };
 }
 
 function bindingIssue(pathname, code, message, expected, actual) {
@@ -381,8 +415,11 @@ function bindingIssues(envelope, report, evidenceId) {
 
 export function verifyEvidenceEnvelope(reference, options = {}) {
   const rootDir = options.rootDir ?? process.cwd();
-  const bytes = readRetainedFile(reference, options.evidenceRoot, 'envelope');
-  const envelope = parseEvidenceEnvelope(bytes, { rootDir });
+  const observedEnvelope = readRetainedFile(reference, options.evidenceRoot, 'envelope', {
+    capture: true,
+    maxBytes: MAX_ENVELOPE_BYTES,
+  });
+  const envelope = parseEvidenceEnvelope(observedEnvelope.buffer, { rootDir });
   const issues = bindingIssues(envelope, options.report, options.evidenceId);
   const expectedEnvelopeRef = `${envelope.content_digest.slice('sha256:'.length)}.evidence-envelope.json`;
   if (reference.ref !== expectedEnvelopeRef) {
@@ -410,23 +447,36 @@ export function verifyEvidenceEnvelope(reference, options = {}) {
     digest: envelope.evidence.digest,
     bytes: envelope.evidence.bytes,
   };
-  let payloadBytes;
+  let observedPayload;
   try {
-    payloadBytes = readRetainedFile(payloadReference, options.evidenceRoot, 'payload');
+    observedPayload = readRetainedFile(payloadReference, options.evidenceRoot, 'payload', {
+      capture: envelope.evidence.kind === 'command',
+      maxBytes:
+        envelope.evidence.kind === 'command'
+          ? MAX_COMMAND_RECEIPT_BYTES
+          : Number.MAX_SAFE_INTEGER,
+    });
   } catch (error) {
     const unsafe = error.issues?.some((item) => item.code === 'unsafe_locator');
     const missing = error.issues?.some((item) =>
       item.code === 'retained_evidence_missing' || item.code === 'retained_evidence_not_regular');
     const integrity = error.issues?.some((item) => item.code === 'retained_integrity_mismatch');
+    const tooLarge = error.issues?.some((item) => item.code === 'retained_evidence_too_large');
     throw new EvidenceEnvelopeError(
       'INVALID_BINDING',
       [
         issue(
-          unsafe || missing ? '/evidence/locator' : '/evidence/digest',
+          unsafe || missing
+            ? '/evidence/locator'
+            : tooLarge
+              ? '/evidence/bytes'
+              : '/evidence/digest',
           unsafe
             ? 'unsafe_locator'
             : missing
               ? 'payload_missing'
+              : tooLarge
+                ? 'payload_too_large'
               : integrity
                 ? 'payload_integrity_mismatch'
                 : 'payload_read_failed',
@@ -434,6 +484,8 @@ export function verifyEvidenceEnvelope(reference, options = {}) {
             ? 'payload locator is unsafe'
             : missing
               ? 'payload file is unavailable or not a retained regular file'
+              : tooLarge
+                ? 'command evidence payload exceeds the bounded verification limit'
               : integrity
                 ? 'payload file does not match envelope bytes and digest'
                 : 'payload file could not be verified',
@@ -445,7 +497,7 @@ export function verifyEvidenceEnvelope(reference, options = {}) {
   if (envelope.evidence.kind === 'command') {
     let command;
     try {
-      command = JSON.parse(String(payloadBytes));
+      command = JSON.parse(String(observedPayload.buffer));
     } catch (error) {
       throw new EvidenceEnvelopeError(
         'INVALID_BINDING',

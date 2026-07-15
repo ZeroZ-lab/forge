@@ -1451,14 +1451,6 @@ export async function runEffectivenessComparisonGroup(spec) {
         `comparison group is not controlled: ${issues.join(', ')}`,
       );
     }
-    for (const run of runs) {
-      if (!hasValidEvidenceEnvelopes(run.report, run.evidenceDir, spec.rootDir)) {
-        throw new EffectivenessExperimentError(
-          'INVALID_EVIDENCE_ENVELOPE',
-          `comparison group has invalid retained Evidence Envelopes for ${run.report.experiment.arm.id}`,
-        );
-      }
-    }
     const seal = {
       contract: 'forge-effectiveness-comparison-group',
       version: 2,
@@ -1482,8 +1474,23 @@ export async function runEffectivenessComparisonGroup(spec) {
         `host sandbox cleanup failed: ${cleanupFailures.join('; ')}`,
       );
     }
+    for (const run of runs) {
+      if (!hasValidEvidenceEnvelopes(run.report, run.evidenceDir, spec.rootDir)) {
+        throw new EffectivenessExperimentError(
+          'INVALID_EVIDENCE_ENVELOPE',
+          `comparison group has invalid retained Evidence Envelopes for ${run.report.experiment.arm.id}`,
+        );
+      }
+    }
     const sealPathInStaging = path.join(stagingRoot, 'group.json');
     atomicWriteJson(sealPathInStaging, seal);
+    if (!hasValidGroupSeal(stagingRoot, spec.comparisonGroupId, spec.rootDir, experimentPlan)) {
+      fs.rmSync(sealPathInStaging, { force: true });
+      throw new EffectivenessExperimentError(
+        'INVALID_GROUP_SEAL',
+        `comparison group failed final retained-evidence validation: ${spec.comparisonGroupId}`,
+      );
+    }
     fs.renameSync(stagingRoot, finalGroupDir);
     for (const run of runs) {
       run.evidenceDir = path.join(finalGroupDir, run.report.experiment.arm.id);

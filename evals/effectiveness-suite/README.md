@@ -295,6 +295,10 @@ Envelope and payload as non-linked regular files, checks their retained byte
 counts/digests, and matches every binding against an already B03-accepted
 report. Missing, traversing, linked, tampered, wrong-target, stale-workspace,
 or summary-conflicting evidence fails closed with field-addressed issues.
+Envelope JSON is capped at 1 MiB and command-receipt JSON at 16 MiB before
+capture and parsing. Artifact and claim payloads are hashed in 64 KiB chunks
+through the checked file descriptor, so their verification does not require
+loading the retained file into memory.
 
 B04 adapters still cannot supply `envelope_ref`: the runner creates Envelopes
 only for runner-owned observations before the report is first published. B05

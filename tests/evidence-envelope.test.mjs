@@ -9,6 +9,7 @@ import {
   EvidenceEnvelopeError,
   createEvidenceEnvelope,
   parseEvidenceEnvelope,
+  referenceEvidenceEnvelope,
   verifyEvidenceEnvelope,
 } from '../scripts/lib/evidence-envelope.mjs';
 
@@ -326,4 +327,54 @@ test('retained references reject mismatched names, traversal, and symlinks', (t)
     ),
     hasIssue('retained_evidence_not_regular'),
   );
+});
+
+test('oversized envelopes and command receipts fail before unbounded capture', (t) => {
+  const oversizedEnvelope = fixture(t);
+  const envelopePath = path.join(oversizedEnvelope.evidenceRoot, 'oversized-envelope.json');
+  fs.writeFileSync(envelopePath, '{}');
+  fs.truncateSync(envelopePath, (1024 * 1024) + 1);
+  assert.throws(
+    () => referenceEvidenceEnvelope('oversized-envelope.json', {
+      evidenceRoot: oversizedEnvelope.evidenceRoot,
+    }),
+    hasIssue('retained_evidence_too_large'),
+  );
+
+  const oversizedCommand = fixture(t);
+  const commandBytes = (16 * 1024 * 1024) + 1;
+  fs.truncateSync(oversizedCommand.payloadPath, commandBytes);
+  oversizedCommand.evidence.digest = digest(fs.readFileSync(oversizedCommand.payloadPath));
+  oversizedCommand.envelopeInput.evidence = {
+    ...oversizedCommand.envelopeInput.evidence,
+    digest: oversizedCommand.evidence.digest,
+    bytes: commandBytes,
+  };
+  const retained = oversizedCommand.retainEnvelope();
+  assert.throws(
+    () => verifyEvidenceEnvelope(retained.reference, bindingOptions(oversizedCommand)),
+    hasIssue('payload_too_large'),
+  );
+});
+
+test('large artifact payloads are verified by digest without a command-size limit', (t) => {
+  const value = fixture(t);
+  const artifactBytes = (16 * 1024 * 1024) + 1;
+  fs.truncateSync(value.payloadPath, artifactBytes);
+  const artifactDigest = digest(fs.readFileSync(value.payloadPath));
+  value.evidence.digest = artifactDigest;
+  value.envelopeInput.evidence = {
+    kind: 'artifact',
+    locator: value.evidence.locator,
+    digest: artifactDigest,
+    bytes: artifactBytes,
+    result: {
+      artifact_id: 'large-workspace-artifact',
+      artifact_digest: artifactDigest,
+    },
+  };
+  const retained = value.retainEnvelope();
+
+  const accepted = verifyEvidenceEnvelope(retained.reference, bindingOptions(value));
+  assert.equal(accepted.evidence.bytes, artifactBytes);
 });

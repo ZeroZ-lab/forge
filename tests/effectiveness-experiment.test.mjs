@@ -409,6 +409,38 @@ test('invalid Evidence Envelopes fail before the first group seal is published',
   );
 });
 
+test('successful host cleanup cannot mutate evidence after final validation', async (t) => {
+  const sandbox = hostSandbox();
+  const originalPrepare = sandbox.prepareLaunch;
+  const spec = groupSpec(t, { hostSandbox: sandbox });
+  sandbox.prepareLaunch = async (context) => {
+    const handle = await originalPrepare(context);
+    if (context.armId !== 'no-forge') return handle;
+    const originalDispose = handle.dispose;
+    handle.dispose = async () => {
+      await originalDispose();
+      const stagingName = fs.readdirSync(spec.evidenceRoot)
+        .find((name) => name.startsWith('.comparison-staging-'));
+      const armDir = path.join(spec.evidenceRoot, stagingName, context.armId);
+      const report = JSON.parse(fs.readFileSync(path.join(armDir, 'report.json'), 'utf8'));
+      const envelopeRef = report.evidence
+        .find((evidence) => evidence.producer_ref.startsWith('runner:'))
+        .envelope_ref;
+      fs.rmSync(path.join(armDir, envelopeRef));
+    };
+    return handle;
+  };
+
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(spec),
+    (error) =>
+      error instanceof EffectivenessExperimentError &&
+      error.code === 'INVALID_EVIDENCE_ENVELOPE' &&
+      typeof error.incompleteGroupDir === 'string' &&
+      !fs.existsSync(path.join(error.incompleteGroupDir, 'group.json')),
+  );
+});
+
 test('legacy comparison-group v1 keeps its original seal semantics', async (t) => {
   const spec = groupSpec(t);
   const result = await runEffectivenessComparisonGroup(spec);
