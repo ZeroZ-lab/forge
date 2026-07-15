@@ -168,32 +168,20 @@ function isSafeRetainedBasename(value) {
   );
 }
 
-function readRetainedFile(reference, evidenceRoot, label) {
-  const issues = [];
-  if (!isPlainObject(reference)) {
+function readRetainedBasename(ref, evidenceRoot, label) {
+  if (!isSafeRetainedBasename(ref)) {
     throw new EvidenceEnvelopeError(
       'INVALID_REFERENCE',
-      [issue('', 'invalid_reference', `${label} reference must be an object`)],
+      [issue('/ref', 'unsafe_locator', `${label} reference must be a safe ASCII basename`)],
     );
   }
-  if (!isSafeRetainedBasename(reference.ref)) {
-    issues.push(issue('/ref', 'unsafe_locator', `${label} reference must be a basename`));
-  }
-  if (!/^sha256:[0-9a-f]{64}$/.test(reference.digest ?? '')) {
-    issues.push(issue('/digest', 'invalid_reference', `${label} reference digest is invalid`));
-  }
-  if (!Number.isInteger(reference.bytes) || reference.bytes < 0) {
-    issues.push(issue('/bytes', 'invalid_reference', `${label} reference byte count is invalid`));
-  }
-  if (issues.length > 0) throw new EvidenceEnvelopeError('INVALID_REFERENCE', issues);
-
   let canonicalRoot;
   let before;
   let retainedPath;
   let descriptor;
   try {
     canonicalRoot = fs.realpathSync(evidenceRoot);
-    retainedPath = path.join(canonicalRoot, reference.ref);
+    retainedPath = path.join(canonicalRoot, ref);
     before = fs.lstatSync(retainedPath, { bigint: true });
     if (!before.isFile() || before.nlink !== 1n) {
       throw new EvidenceEnvelopeError(
@@ -248,16 +236,43 @@ function readRetainedFile(reference, evidenceRoot, label) {
         [issue('/ref', 'retained_identity_changed', `${label} file changed while being read`)],
       );
     }
-    if (Number(opened.size) !== reference.bytes || sha256Buffer(bytes) !== reference.digest) {
-      throw new EvidenceEnvelopeError(
-        'INVALID_REFERENCE',
-        [issue('', 'retained_integrity_mismatch', `${label} file does not match its retained reference`)],
-      );
-    }
     return bytes;
   } finally {
     fs.closeSync(descriptor);
   }
+}
+
+function readRetainedFile(reference, evidenceRoot, label) {
+  const issues = [];
+  if (!isPlainObject(reference)) {
+    throw new EvidenceEnvelopeError(
+      'INVALID_REFERENCE',
+      [issue('', 'invalid_reference', `${label} reference must be an object`)],
+    );
+  }
+  if (!isSafeRetainedBasename(reference.ref)) {
+    issues.push(issue('/ref', 'unsafe_locator', `${label} reference must be a basename`));
+  }
+  if (!/^sha256:[0-9a-f]{64}$/.test(reference.digest ?? '')) {
+    issues.push(issue('/digest', 'invalid_reference', `${label} reference digest is invalid`));
+  }
+  if (!Number.isSafeInteger(reference.bytes) || reference.bytes < 0) {
+    issues.push(issue('/bytes', 'invalid_reference', `${label} reference byte count is invalid`));
+  }
+  if (issues.length > 0) throw new EvidenceEnvelopeError('INVALID_REFERENCE', issues);
+  const bytes = readRetainedBasename(reference.ref, evidenceRoot, label);
+  if (bytes.length !== reference.bytes || sha256Buffer(bytes) !== reference.digest) {
+    throw new EvidenceEnvelopeError(
+      'INVALID_REFERENCE',
+      [issue('', 'retained_integrity_mismatch', `${label} file does not match its retained reference`)],
+    );
+  }
+  return bytes;
+}
+
+export function referenceEvidenceEnvelope(ref, options = {}) {
+  const bytes = readRetainedBasename(ref, options.evidenceRoot, 'envelope');
+  return { ref, digest: sha256Buffer(bytes), bytes: bytes.length };
 }
 
 function bindingIssue(pathname, code, message, expected, actual) {

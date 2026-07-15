@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -19,6 +20,18 @@ const DIGESTS = {
   budget: `sha256:${'3'.repeat(64)}`,
   verifier: `sha256:${'4'.repeat(64)}`,
 };
+
+function canonicalValue(value) {
+  if (Array.isArray(value)) return value.map(canonicalValue);
+  if (value === null || typeof value !== 'object') return value;
+  return Object.fromEntries(
+    Object.keys(value).sort().map((key) => [key, canonicalValue(value[key])]),
+  );
+}
+
+function digestJson(value) {
+  return `sha256:${crypto.createHash('sha256').update(JSON.stringify(canonicalValue(value))).digest('hex')}`;
+}
 
 function git(cwd, args) {
   const result = spawnSync('git', args, {
@@ -317,6 +330,7 @@ test('one minimal fixture runs all four arms with identical controls and declare
   }
 
   const seal = JSON.parse(fs.readFileSync(result.sealPath, 'utf8'));
+  assert.equal(seal.version, 2);
   assert.equal(seal.reports.length, 4);
   assert.equal(seal.reports.every((entry) => entry.runtime_receipt && entry.host_enforcement), true);
 
@@ -359,6 +373,69 @@ test('a tampered Evidence Envelope invalidates the group seal without rewriting 
   assert.deepEqual(
     fs.readFileSync(path.join(spec.evidenceRoot, recoveredName, 'no-forge', 'report.json')),
     sealedReport,
+  );
+});
+
+test('invalid Evidence Envelopes fail before the first group seal is published', async (t) => {
+  const sandbox = hostSandbox();
+  const originalPrepare = sandbox.prepareLaunch;
+  const spec = groupSpec(t, { hostSandbox: sandbox });
+  sandbox.prepareLaunch = async (context) => {
+    const handle = await originalPrepare(context);
+    if (context.armId !== 'no-forge') return handle;
+    const originalFinalize = handle.finalize;
+    handle.finalize = async (...args) => {
+      const enforcement = await originalFinalize(...args);
+      const stagingName = fs.readdirSync(spec.evidenceRoot)
+        .find((name) => name.startsWith('.comparison-staging-'));
+      const armDir = path.join(spec.evidenceRoot, stagingName, context.armId);
+      const report = JSON.parse(fs.readFileSync(path.join(armDir, 'report.json'), 'utf8'));
+      const envelopeRef = report.evidence
+        .find((evidence) => evidence.producer_ref.startsWith('runner:'))
+        .envelope_ref;
+      fs.rmSync(path.join(armDir, envelopeRef));
+      return enforcement;
+    };
+    return handle;
+  };
+
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(spec),
+    (error) =>
+      error instanceof EffectivenessExperimentError &&
+      error.code === 'INVALID_EVIDENCE_ENVELOPE' &&
+      typeof error.incompleteGroupDir === 'string' &&
+      !fs.existsSync(path.join(error.incompleteGroupDir, 'group.json')),
+  );
+});
+
+test('legacy comparison-group v1 keeps its original seal semantics', async (t) => {
+  const spec = groupSpec(t);
+  const result = await runEffectivenessComparisonGroup(spec);
+  const seal = JSON.parse(fs.readFileSync(result.sealPath, 'utf8'));
+  seal.version = 1;
+  for (const [index, legacyRun] of result.runs.entries()) {
+    for (const evidence of legacyRun.report.evidence) {
+      if (evidence.envelope_ref === undefined) continue;
+      fs.rmSync(path.join(legacyRun.evidenceDir, evidence.envelope_ref));
+      delete evidence.envelope_ref;
+    }
+    fs.writeFileSync(
+      path.join(legacyRun.evidenceDir, 'report.json'),
+      `${JSON.stringify(legacyRun.report, null, 2)}\n`,
+    );
+    seal.reports[index].digest = digestJson(legacyRun.report);
+  }
+  fs.writeFileSync(result.sealPath, `${JSON.stringify(seal, null, 2)}\n`);
+
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(spec),
+    (error) => error instanceof EffectivenessExperimentError && error.code === 'EVIDENCE_COLLISION',
+  );
+  assert.equal(
+    fs.readdirSync(spec.evidenceRoot)
+      .some((name) => name.startsWith(`${spec.comparisonGroupId}.incomplete-recovered-`)),
+    false,
   );
 });
 

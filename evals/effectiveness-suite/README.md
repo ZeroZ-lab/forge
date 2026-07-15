@@ -299,7 +299,9 @@ or summary-conflicting evidence fails closed with field-addressed issues.
 B04 adapters still cannot supply `envelope_ref`: the runner creates Envelopes
 only for runner-owned observations before the report is first published. B05
 revalidates them when accepting an existing group seal; it never retrofits or
-rewrites a sealed report. A model self-report can use the same wire format but
+rewrites a sealed report. Comparison-group seal v2 requires this validation;
+historical v1 keeps its original B05 semantics and is not relabeled as B06
+evidence. A model self-report can use the same wire format but
 remains `model_self_report`; B06 returns no outcome or completion eligibility.
 B07 owns independent verifier execution, and B08 owns evidence sufficiency and
 task outcome.

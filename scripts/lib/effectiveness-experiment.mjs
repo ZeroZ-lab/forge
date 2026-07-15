@@ -8,7 +8,10 @@ import {
   createEffectivenessReport,
   parseEffectivenessReport,
 } from './effectiveness-report.mjs';
-import { verifyEvidenceEnvelope } from './evidence-envelope.mjs';
+import {
+  referenceEvidenceEnvelope,
+  verifyEvidenceEnvelope,
+} from './evidence-envelope.mjs';
 import { runIsolatedEffectivenessAttempt } from './effectiveness-runner.mjs';
 import { loadRegistry } from './registry.mjs';
 
@@ -249,6 +252,33 @@ function validRetainedReference(armDir, reference) {
   }
 }
 
+function hasValidEvidenceEnvelopes(report, armDir, rootDir) {
+  try {
+    const runnerEvidence = report.evidence.filter((evidence) =>
+      evidence.producer_ref.startsWith('runner:'));
+    if (
+      runnerEvidence.length === 0 ||
+      runnerEvidence.some((evidence) => typeof evidence.envelope_ref !== 'string')
+    ) {
+      return false;
+    }
+    for (const evidence of report.evidence.filter((item) => item.envelope_ref !== undefined)) {
+      verifyEvidenceEnvelope(
+        referenceEvidenceEnvelope(evidence.envelope_ref, { evidenceRoot: armDir }),
+        {
+          rootDir,
+          evidenceRoot: armDir,
+          report,
+          evidenceId: evidence.id,
+        },
+      );
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function hasValidGroupSeal(groupDir, comparisonGroupId, rootDir, experimentPlan) {
   const sealPath = path.join(groupDir, 'group.json');
   try {
@@ -268,7 +298,7 @@ function hasValidGroupSeal(groupDir, comparisonGroupId, rootDir, experimentPlan)
         ],
       ) ||
       seal.contract !== 'forge-effectiveness-comparison-group' ||
-      seal.version !== 1 ||
+      ![1, 2].includes(seal.version) ||
       seal.comparison_group_id !== comparisonGroupId ||
       !/^sha256:[0-9a-f]{64}$/.test(seal.common_context_digest) ||
       !/^sha256:[0-9a-f]{64}$/.test(seal.host_policy_digest) ||
@@ -315,32 +345,11 @@ function hasValidGroupSeal(groupDir, comparisonGroupId, rootDir, experimentPlan)
       ) {
         return false;
       }
-      const runnerEvidence = report.evidence.filter((evidence) =>
-        evidence.producer_ref.startsWith('runner:'));
-      if (
-        runnerEvidence.length === 0 ||
-        runnerEvidence.some((evidence) => typeof evidence.envelope_ref !== 'string')
-      ) {
+      if (seal.version === 1 && report.evidence.some((evidence) => evidence.envelope_ref !== undefined)) {
         return false;
       }
-      for (const evidence of report.evidence.filter((item) => item.envelope_ref !== undefined)) {
-        const envelopePath = path.join(armDir, evidence.envelope_ref);
-        const envelopeStat = fs.lstatSync(envelopePath);
-        if (!envelopeStat.isFile()) return false;
-        const envelopeBytes = fs.readFileSync(envelopePath);
-        verifyEvidenceEnvelope(
-          {
-            ref: evidence.envelope_ref,
-            digest: digestBuffer(envelopeBytes),
-            bytes: envelopeBytes.length,
-          },
-          {
-            rootDir,
-            evidenceRoot: armDir,
-            report,
-            evidenceId: evidence.id,
-          },
-        );
+      if (seal.version === 2 && !hasValidEvidenceEnvelopes(report, armDir, rootDir)) {
+        return false;
       }
     }
     return true;
@@ -1442,9 +1451,17 @@ export async function runEffectivenessComparisonGroup(spec) {
         `comparison group is not controlled: ${issues.join(', ')}`,
       );
     }
+    for (const run of runs) {
+      if (!hasValidEvidenceEnvelopes(run.report, run.evidenceDir, spec.rootDir)) {
+        throw new EffectivenessExperimentError(
+          'INVALID_EVIDENCE_ENVELOPE',
+          `comparison group has invalid retained Evidence Envelopes for ${run.report.experiment.arm.id}`,
+        );
+      }
+    }
     const seal = {
       contract: 'forge-effectiveness-comparison-group',
-      version: 1,
+      version: 2,
       comparison_group_id: spec.comparisonGroupId,
       common_context_digest: commonContextDigest,
       host_policy_digest: requiredHostPolicyDigest,
