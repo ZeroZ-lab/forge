@@ -330,6 +330,21 @@ test('retained references reject mismatched names, traversal, and symlinks', (t)
 });
 
 test('oversized envelopes and command receipts fail before unbounded capture', (t) => {
+  const oversizedPublicInput = fixture(t);
+  assert.throws(
+    () => createEvidenceEnvelope({
+      ...oversizedPublicInput.envelopeInput,
+      issuer_ref: 'x'.repeat((1024 * 1024) + 1),
+    }, { rootDir: root }),
+    hasIssue('envelope_too_large'),
+  );
+  assert.throws(
+    () => parseEvidenceEnvelope(`{"padding":"${'x'.repeat(1024 * 1024)}"}`, {
+      rootDir: root,
+    }),
+    hasIssue('envelope_too_large'),
+  );
+
   const oversizedEnvelope = fixture(t);
   const envelopePath = path.join(oversizedEnvelope.evidenceRoot, 'oversized-envelope.json');
   fs.writeFileSync(envelopePath, '{}');

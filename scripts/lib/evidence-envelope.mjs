@@ -56,6 +56,24 @@ function stableIssues(issues) {
   );
 }
 
+function assertEnvelopeByteLimit(bytes) {
+  if (bytes <= MAX_ENVELOPE_BYTES) return;
+  throw new EvidenceEnvelopeError(
+    'INVALID_ENVELOPE',
+    [
+      issue(
+        '',
+        'envelope_too_large',
+        `envelope exceeds the ${MAX_ENVELOPE_BYTES}-byte parsing limit`,
+      ),
+    ],
+  );
+}
+
+function assertCanonicalEnvelopeByteLimit(envelope) {
+  assertEnvelopeByteLimit(Buffer.byteLength(JSON.stringify(stableValue(envelope))));
+}
+
 export class EvidenceEnvelopeError extends Error {
   constructor(code, issues, options = {}) {
     const normalized = stableIssues(issues);
@@ -85,6 +103,7 @@ function cloneInput(value) {
 
 function decodeInput(input) {
   if (typeof input !== 'string' && !Buffer.isBuffer(input)) return cloneInput(input);
+  assertEnvelopeByteLimit(Buffer.isBuffer(input) ? input.length : Buffer.byteLength(input));
   try {
     return JSON.parse(String(input));
   } catch (error) {
@@ -119,14 +138,17 @@ function acceptEnvelope(input, options) {
   const envelope = decodeInput(input);
   const schema = loadSchema(options.rootDir);
   const issues = validateJsonSchema(envelope, schema);
-  if (issues.length === 0 && envelope.content_digest !== expectedContentDigest(envelope)) {
-    issues.push(
-      issue(
-        '/content_digest',
-        'content_digest_mismatch',
-        'envelope content digest does not match its canonical content',
-      ),
-    );
+  if (issues.length === 0) {
+    assertCanonicalEnvelopeByteLimit(envelope);
+    if (envelope.content_digest !== expectedContentDigest(envelope)) {
+      issues.push(
+        issue(
+          '/content_digest',
+          'content_digest_mismatch',
+          'envelope content digest does not match its canonical content',
+        ),
+      );
+    }
   }
   if (issues.length > 0) throw new EvidenceEnvelopeError('INVALID_ENVELOPE', issues);
   return envelope;
@@ -158,6 +180,7 @@ export function createEvidenceEnvelope(input, options = {}) {
     envelope_id: `${observed.target?.result_ref ?? 'unbound'}.envelope`,
     ...observed,
   };
+  assertCanonicalEnvelopeByteLimit(envelope);
   envelope.content_digest = expectedContentDigest(envelope);
   return acceptEnvelope(envelope, { rootDir: process.cwd(), ...options });
 }
