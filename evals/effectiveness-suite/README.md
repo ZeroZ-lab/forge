@@ -129,6 +129,123 @@ internal event/evidence/final-result graph are self-consistent. It does not read
 locators, authenticate producers, recompute digests, or decide whether evidence
 is sufficient; those remain B06 and B08 responsibilities.
 
+### Isolated attempt runner
+
+`scripts/lib/effectiveness-runner.mjs` exposes one high-level B04 entry point:
+
+```js
+import { runIsolatedEffectivenessAttempt } from '../../scripts/lib/effectiveness-runner.mjs';
+
+const result = await runIsolatedEffectivenessAttempt({
+  contractRoot,
+  experimentPlan,
+  armId: preselectedArmId,
+  attemptId: 'fixture.forge.0',
+  source: { dir: cleanRepository, ref: 'fixture://project' },
+  evidenceRoot: externalEvidenceDirectory,
+  command: {
+    file: executable,
+    args,
+    env: {},
+    label: 'model process',
+    definitionDigest: launcherDefinitionDigest,
+  },
+  limits: {
+    timeoutMs: 600000,
+    maxStdoutBytes: 8388608,
+    maxStderrBytes: 2097152,
+    maxCapturedWorkspaceBytes: 536870912,
+    maxCapturedWorkspaceEntries: 50000,
+    maxDiffBytes: 67108864,
+    gitOperationTimeoutMs: 120000,
+    killGraceMs: 1000,
+  },
+  buildReportInput(receipt, retainedEvidence) {
+    return observedModelAndTaskFields;
+  },
+});
+```
+
+The source must be a clean Git repository and the evidence root must be outside
+it. Each call creates shallow non-local workspace and capture clones plus
+isolated `HOME`, `CODEX_HOME`, and temporary directories. A repo-relative
+executable is resolved inside the clone; source/evidence executables, arguments,
+environment values, and `PATH` entries fail closed. B05 preselects a neutral
+arm id; B04 freezes it against the trusted plan before launch, records the
+binding in the receipt, and rejects any adapter relabeling without choosing an
+arm itself. The child does not receive the attempt or arm id. Attempt ids
+allocate evidence directories exclusively, while a random runner-owned
+isolation id prevents cross-store identity collisions.
+
+`command.definitionDigest` is required and must be computed before launch over
+the adapter/launcher definition, including interpreted script or configuration
+files whose contents are not represented by the executable bytes or argument
+strings. B05 owns that computation over a credential-redacted definition; a
+static label or a digest of raw credential material is not a valid substitute.
+
+Timeout, abort, and output-limit cancellation terminate the POSIX process group;
+normal completion also removes surviving members. Git operations have their own
+timeout. The runner attempts temporary-capsule removal before report
+construction; cleanup failure is published as an `infrastructure_error` with
+`capsule_removed: false` so the caller can remove the recorded path. This is not
+a Windows job-object implementation, and a process that deliberately escapes
+its group still requires B05's host sandbox.
+
+After a reported post-launch terminal, the retained bundle always contains
+`events.jsonl`, `command.json`, `attempt.json`, `artifacts.json`, and the raw
+`receipt.json`. Bounded `stdout.log` and `stderr.log` exist only when their
+streams pass retention checks; binary `diff.patch` exists only when final
+capture succeeds; `report.json` exists only after accepted atomic publication.
+A private capture repository pins the original revision, forces
+ignored and untracked files into the final tree, and excludes root or nested
+`.git` metadata; commits made by the command therefore cannot hide artifact
+content. The manifest also records empty directories that Git cannot represent.
+
+Snapshot and configuration digests ignore timestamps and temporary paths. The
+request fingerprint binds the pre-launch executable bytes, source revision,
+caller-computed launcher definition, effective non-secret environment and
+arguments, limits, source reference, and the preselected arm id, definition,
+and capability-policy digest;
+credential literals are replaced while their surrounding non-secret context is
+preserved. A final-capture, post-run source-guard, or post-adapter source-guard
+failure keeps the process facts, omits unknown claims where necessary, and becomes an
+`infrastructure_error` report. Failure to persist the evidence store itself is
+returned as a runner error because no honest report can be published there.
+
+Process output is first captured inside the temporary capsule. Literal values
+from credential-like explicit environment variables, plus caller-declared
+`command.sensitiveValues`, are scanned across retained streams, final workspace
+files and paths, and report input. The initial workspace is scanned before the
+child launches, so a configured credential in the baseline cannot become a
+retained snapshot digest. A later match immediately removes both raw streams,
+omits secret-derived stream digests, and classifies the run as
+`credential_material_detected`. If a configured-credential stream is truncated,
+its retained prefix is rejected as unverifiable. Configured credential literals
+are therefore not promoted into the persistent bundle; encoded or transformed
+secrets remain the caller sandbox's responsibility.
+
+`buildReportInput` is a trusted, non-model-controlled adapter seam for B05. It
+receives cloned receipt/artifact references, not a writable evidence path.
+Retained runner artifacts are rehashed and unexpected bundle entries are
+rejected before publication. The adapter supplies observed model identity,
+model/tool events, its claim, and provider/tool costs; it cannot claim the
+runner identity, an Evidence Envelope, an independent verifier, or a verifier
+result.
+
+The runner owns workspace and attempt execution facts, attempt wall time, and
+plan-derived arm definition/capability policy. It appends runner capture
+references as `tool_output`, then calls both B03 constructor and parser before
+atomic persistence. Exit 0 means only that the top-level process completed. A
+model may still claim `failed` or `blocked`, and B08 alone determines objective
+outcome.
+
+B04 does not select a model or experiment arm, install Forge, authenticate an
+Evidence Envelope, run an external verifier, or score a task. Its active bounds
+cover process time, retained output, Git-operation time, and diff size;
+`maxCapturedWorkspace*` are initial/final capture ceilings, not live disk
+quotas. B05 must use the host workspace sandbox for live disk, CPU, memory,
+network, detached-process, and hostile-code containment.
+
 ## Scenarios
 
 | Scenario | What It Tests |

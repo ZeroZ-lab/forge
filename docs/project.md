@@ -27,6 +27,7 @@
 | Kernel | 只管理目标、权限、范围、权威事实、证据、任务状态和完成条件的外部控制边界 |
 | Direct action | 模型不调用 Skill，直接执行并验证当前目标所需动作的一等路径 |
 | Effectiveness attempt report | 一个 model × arm × fixture × repeat 的原子运行记录；只记录受控条件、可观察动作、来源化证据引用、结果声明和成本 |
+| Effectiveness run receipt | B04 runner 对一次隔离执行直接观察的 revision、process、输出、workspace delta、artifact 摘要、资源终止原因和清理结果；它是 report 的原始输入，不是 outcome verdict |
 
 ## 共享决策
 
@@ -45,6 +46,7 @@
 | PD11 | Kernel 非干扰边界 | Kernel 约束外部目标与证据，不替模型选择阶段、Skill、实现策略或内部推理；有效性以同模型 Forge/no-Forge 的 outcome、安全和证据配对比较 | 模型能力增强时仍可直接行动、跳过或拒绝无关能力，Forge 不把既有流程变成能力上限 | 固定 Skill 命中率；按模型名称假定能力全序；以阶段完成代替目标结果 |
 | PD12 | Effectiveness report 事实边界 | 每次 attempt 独立报告受控实验条件、observable events、typed evidence refs、execution/result 分离和来源化成本；Skill 使用只作遥测 | 让后续 runner、verifier、evaluator 共用一个可追溯 seam，同时不把流程当结果 | 复用 skills-suite 自述报告；静默补齐缺失来源；把模型完成声明当 evaluator 结论 |
 | PD13 | Effectiveness report 接受入口 | constructor/parser 共用一条 fail-closed schema、受信 experiment plan 与内部引用校验管线；plan 绑定 arm definition 和 capability policy，constructor 不推断来源事实，旧 contract 不隐式迁移 | 消除手工拼装、自授权实验臂和测试/生产双 validator 漂移，同时为 B06 外部证据验证保留清楚边界 | 暴露 schema-only 生产捷径；由 report 自证 arm/policy；自动补时间、模型或来源；未知 schema 约束静默通过 |
+| PD14 | Effectiveness attempt 隔离 | 每个 attempt 从 clean source commit 建 shallow non-local workspace clone、runner-private capture Git 与临时 HOME/CODEX_HOME/TMPDIR；B05 预选中性 arm，runner 在 launch 前冻结其 plan binding 且不把 arm 暴露给 child；runner 保存有界原始输出、强制纳入 ignored/untracked 的 pinned-base diff、稳定 artifact manifest、attempt/process 分层时间、失败分类和两次 source guard，并要求预先计算 launcher definition digest；runner 记录 capsule cleanup 结果并校验 artifact 完整性，再经 B03 原子发布 report，cleanup 失败则发布 `infrastructure_error` 并留下可清理路径 | 防止顺序/并发/Git 元数据串扰、事后 arm 改标和旧 runner 自述事实回流；相同受控 source/launcher/env/limits/arm binding 有稳定比较指纹，task claim 与 process termination 保持分离 | 复用空目录 skills runner；`git worktree` 共享元数据；普通 diff 漏 ignored/untracked；只 hash interpreter 不 hash launcher；由 adapter 事后选择 arm；模型填 execution/diff；把 exit 0 当目标成功 |
 
 PD11 当前是评测与后续 Kernel 迁移的约束，不改变 PD1 的已发布默认入口；默认调用逻辑只能在 Forge Next B10 基线冻结并通过对应门禁后迁移。
 
@@ -86,3 +88,4 @@ npm run check:supported
 - skills-suite 是固定场景的 compliance/regression harness；benchmark contract 只证明评测定义完整，run report 只证明该固定场景合规。真实 skill 效果必须由 held-out 或外部审阅的 effectiveness suite 另证。
 - effectiveness suite 必须保持动作路径中立：直接行动和可选 Skill 调用都可成功，只有可验证结果、安全与有效证据进入成功判定。
 - effectiveness report 的 schema 通过只证明结构契约成立；B03 的引用校验、B06 的证据有效性和 B08 的 outcome 判定完成前，不得把报告描述为有效性证据。
+- B04 run receipt 只证明 runner 捕获了隔离执行事实；其 command/diff/artifact 引用仍是 `tool_output`，不能在 B06/B07 前自称独立证据，也不能在 B08 前推出目标完成。

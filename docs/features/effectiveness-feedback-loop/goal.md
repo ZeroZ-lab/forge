@@ -15,6 +15,7 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 - **不在本 feature**：自动写跨项目 memory、其他仓库或用户全局配置。
 - **不在本 feature**：bump 发布版本、发布或 push。
 - **不在 B02**：生产 report 构造器、跨引用语义校验、Evidence Envelope 有效性判断或 outcome scorer；分别由 B03、B06、B08 负责。
+- **不在 B04**：四实验臂、模型选择、Evidence Envelope、外部 verifier 或 outcome 判定；分别由 B05、B06、B07、B08 负责。
 
 ## Done Criteria（可测）
 
@@ -29,6 +30,7 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 | AC7 | 现有验证 gate 无回归 | `npm test` / `npm run validate` / `npm run eval:skills` / `npm run metrics:chars` |
 | AC8 | effectiveness report v1 能追踪单次 model × arm × fixture × repeat 的受控条件、动作、能力遥测、证据来源、结果和成本；旧 skills-suite v2 不会被静默升级为效果证据 | `node --test tests/effectiveness-report-contract.test.mjs` |
 | AC9 | B03 提供唯一生产 constructor/parser；两者共用 fail-closed schema、受信 experiment plan 与 report 内引用校验，未知/伪造 arm、缺失来源、目标错绑、悬空引用和非法版本均返回字段级 JSON Pointer | `node --test tests/effectiveness-report.test.mjs` |
+| AC10 | B04 在源仓库外以 shallow workspace/private-capture clone 和独立 HOME/CODEX_HOME/TMPDIR 运行单次 attempt，启动前冻结调用方预选的中性 arm 并拒绝事后改标，主动约束 process/output/Git/diff，并以明确的 initial/final capture ceiling 保存 process、完整 workspace delta 与 artifact manifest；连续、并发、timeout、cancel、process error、final-capture/source-guard infra terminal 均隔离且只通过 B03 生成正式 report | `node --test tests/effectiveness-runner.test.mjs` |
 
 ## Decisions
 
@@ -39,6 +41,7 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 - FD5：effectiveness report 以一次 attempt 为原子单位，不复用 skills-suite 的异构 `cases[]` 和 `triggered_skills` 合约。理由：配对统计需要同模型、同 fixture、同受控条件的一一可比记录，能力调用只能是遥测。
 - FD6：report v1 是首个 effectiveness family；skills-suite v2 标记为 incompatible，缺失来源时要求重跑而非填充未知值。理由：模型、实验臂、workspace、budget、verifier 和证据来源无法从旧自述字段可靠恢复。
 - FD7：生产入口只暴露 `createEffectivenessReport` 与 `parseEffectivenessReport`，并共用 schema、受信 experiment plan 与语义接受管线。plan 必须为 manifest 中每个 arm 固定 definition digest 和 capability policy；constructor 只生成 contract/version/report id 和无事实含义的空引用数组，不推断时间、模型、digest 或证据来源；schema 使用未实现关键字、非法 operand 或循环引用时 fail closed。理由：避免手工拼装伪造 arm/能力暴露或绕过引用检查，也避免测试 validator 与运行时 validator 漂移。
+- FD8：B04 接受 clean source commit，以 shallow non-local workspace clone 和 runner-private capture Git 建立临时 capsule；B05 预选中性 arm，B04 只在 launch 前冻结其 plan definition/capability policy 并拒绝 adapter 改标，不选择具体实验臂；runner 独占 workspace/attempt execution/wall-time/arm-policy 注入，要求 launcher definition digest，并只把 command 与 workspace capture 标为 `tool_output`。正式 report 先校验 runner artifact 完整性，再经 B03 严格构造并原子落盘。理由：让相同受控配置可比较、并发不串状态，同时不把进程成功或模型 claim 提升为目标成功。
 
 ## Risks
 
@@ -49,3 +52,6 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 | held-out fixtures 变成 oracle 泄漏 | 评测失真 | 测试禁止 fixture 出现 oracle/scoring 内部词 |
 | schema 形状通过但证据并不可信 | 错把结构有效当效果成立 | B02 只声明 wire contract；B03 校验引用，B06 校验证据，B08 才给 outcome 判定 |
 | schema 演进超出运行时解释能力 | 新约束被静默忽略 | contract loader 拒绝未支持的 schema keyword、format、type 与失效本地引用 |
+| capture ceiling 被误解为运行期 quota 或完整 OS sandbox | 进程可瞬时耗盘、主动脱离 process group 或访问其他宿主资源 | B04 字段明确命名为 `maxCapturedWorkspace*`；B05 必须启用宿主 sandbox 承担 live disk、CPU、内存、network、detached process 和 hostile-code containment |
+| 运行中 capture 失败 | 伪造完整 final snapshot 或丢失失败证据 | 降级为 `infrastructure_error`，保留 command/失败 summary，不写虚假的 diff/final digest，仍经 B03 生成 `no_output` report |
+| evidence store 自身不可写或原子落盘失败 | 无法诚实发布完整 receipt/report | 返回 runner error，不把半成品称为正式 report；调用方修复存储后使用新 attempt id 重跑 |
