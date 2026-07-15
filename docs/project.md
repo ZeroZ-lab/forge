@@ -28,6 +28,8 @@
 | Direct action | 模型不调用 Skill，直接执行并验证当前目标所需动作的一等路径 |
 | Effectiveness attempt report | 一个 model × arm × fixture × repeat 的原子运行记录；只记录受控条件、可观察动作、来源化证据引用、结果声明和成本 |
 | Effectiveness run receipt | B04 runner 对一次隔离执行直接观察的 revision、process、输出、workspace delta、artifact 摘要、资源终止原因和清理结果；它是 report 的原始输入，不是 outcome verdict |
+| Effectiveness comparison group | 同一 requested model、fixture、source revision、repeat、预算、limits 和 verifier 下的 `no-forge` / `kernel-only` / `adaptive-full` / `legacy-chain` 四份 attempt；arm 是唯一实验变量 |
+| Host-sandbox adapter | 由 benchmark 运行环境提供的受信执行边界；必须可审计地承担 filesystem、network、detached process tree 与 live CPU/memory/disk 限制，Forge 只验证 seam 并绑定定义，不把普通 process group 当完整 sandbox |
 
 ## 共享决策
 
@@ -43,10 +45,11 @@
 | PD8 | 图表技术 | Mermaid 优先，PlantUML 兜底；图内联进权威文档，不建独立散图 | GitHub 原生渲染零依赖符合 D4，单一兜底避免工具栈膨胀，内联避免图与文档漂移 | 引入 D2/Structurizr/Kroki；用 Excalidraw/draw.io 存二进制 |
 | PD9 | 阻塞后的变更证据 | 保留变更时由 standalone 或 orchestrator 写一个部分完成 CU；完全回滚则不写 | 长程或失败任务不能丢失已发生变更、未验证项和回滚证据，同时避免 child 重复写入 | child 自写 CU；阻塞后一律不记录；无变更也写 CU |
 | PD10 | Node 支持线 | Node 22 与 24 两条 LTS major；每次发布按官方生命周期复核 | 2026-07-14 两者仍受 LTS 支持，Node 官方建议生产只用 Active/Maintenance LTS | 已 EOL 的 20；仍为 Current 的 26 |
-| PD11 | Kernel 非干扰边界 | Kernel 约束外部目标与证据，不替模型选择阶段、Skill、实现策略或内部推理；有效性以同模型 Forge/no-Forge 的 outcome、安全和证据配对比较 | 模型能力增强时仍可直接行动、跳过或拒绝无关能力，Forge 不把既有流程变成能力上限 | 固定 Skill 命中率；按模型名称假定能力全序；以阶段完成代替目标结果 |
+| PD11 | Kernel 非干扰边界 | Kernel 约束外部目标与证据，不替模型选择阶段、Skill、实现策略或内部推理；有效性以同一显式模型的四臂 outcome、安全和证据受控比较 | 模型能力增强时仍可直接行动、跳过或拒绝无关能力，Forge 不把既有流程变成能力上限 | 固定 Skill 命中率；按模型名称假定能力全序；以阶段完成代替目标结果 |
 | PD12 | Effectiveness report 事实边界 | 每次 attempt 独立报告受控实验条件、observable events、typed evidence refs、execution/result 分离和来源化成本；Skill 使用只作遥测 | 让后续 runner、verifier、evaluator 共用一个可追溯 seam，同时不把流程当结果 | 复用 skills-suite 自述报告；静默补齐缺失来源；把模型完成声明当 evaluator 结论 |
 | PD13 | Effectiveness report 接受入口 | constructor/parser 共用一条 fail-closed schema、受信 experiment plan 与内部引用校验管线；plan 绑定 arm definition 和 capability policy，constructor 不推断来源事实，旧 contract 不隐式迁移 | 消除手工拼装、自授权实验臂和测试/生产双 validator 漂移，同时为 B06 外部证据验证保留清楚边界 | 暴露 schema-only 生产捷径；由 report 自证 arm/policy；自动补时间、模型或来源；未知 schema 约束静默通过 |
 | PD14 | Effectiveness attempt 隔离 | 每个 attempt 从 clean source commit 建 shallow non-local workspace clone、runner-private capture Git 与临时 HOME/CODEX_HOME/TMPDIR；B05 预选中性 arm，runner 在 launch 前冻结其 plan binding 且不把 arm 暴露给 child；runner 保存有界原始输出、强制纳入 ignored/untracked 的 pinned-base diff、稳定 artifact manifest、attempt/process 分层时间、失败分类，并对 HEAD/tree/refs/index 和含 ignored 文件的完整 source worktree 做前后 guard；runner 要求预先计算 launcher definition digest，记录 capsule cleanup 结果并校验 artifact 完整性，再经 B03 原子发布 report，cleanup 失败则发布 `infrastructure_error` 并留下可清理路径 | 防止顺序/并发/Git 元数据串扰、事后 arm 改标和旧 runner 自述事实回流；相同受控 source/launcher/env/limits/arm binding 有稳定比较指纹，外部 source 写入会被检测但不被危险地自动回滚，task claim 与 process termination 保持分离 | 复用空目录 skills runner；`git worktree` 共享元数据；普通 diff 漏 ignored/untracked；只 hash interpreter 不 hash launcher；由 adapter 事后选择 arm；自动回滚可能属于用户的并发 source 修改；模型填 execution/diff；把 exit 0 当目标成功 |
+| PD15 | 四臂计划与模型调度 | manifest v4 固定 `no-forge`、`kernel-only`、`adaptive-full`、`legacy-chain` 四种唯一 launch policy；adaptive 绑定当前发布 Skill tree 且允许零调用，legacy 绑定 Forge 0.52.0 tree 和升级前默认链；B05 统一注入同组输入/预算/limits/verifier，只接受显式 model，拒绝 silent fallback，并在完整 host-sandbox adapter 缺失时整组 fail closed | 将能力暴露限定为唯一实验变量，既能测 Kernel/自适应增益又不束缚更强模型；旧链保留可复现实验对照，运行宿主的安全责任不被 Node process group 伪装 | 继续使用歧义 `forge` arm；由 report 自报 exposure；按 arm 改预算或 verifier；默认/回退模型；把 `ulimit`、workspace clone 或 deprecated `sandbox-exec` 宣称为完整隔离 |
 
 PD11 当前是评测与后续 Kernel 迁移的约束，不改变 PD1 的已发布默认入口；默认调用逻辑只能在 Forge Next B10 基线冻结并通过对应门禁后迁移。
 

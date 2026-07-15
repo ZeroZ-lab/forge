@@ -22,20 +22,36 @@ const samplePath = path.join(
 );
 const experimentPlan = {
   arms: {
-    forge: {
-      definition_digest: 'sha256:2222222222222222222222222222222222222222222222222222222222222222',
-      capability_policy: {
-        id: 'forge-current',
-        digest: 'sha256:8888888888888888888888888888888888888888888888888888888888888888',
-        exposed: [{ kind: 'skill', id: 'forge:detail', version: '0.52.0' }],
-      },
-    },
     'no-forge': {
       definition_digest: 'sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
       capability_policy: {
         id: 'no-forge',
         digest: 'sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
         exposed: [],
+      },
+    },
+    'kernel-only': {
+      definition_digest: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      capability_policy: {
+        id: 'kernel-only',
+        digest: 'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+        exposed: [{ kind: 'other', id: 'forge:kernel', version: '1' }],
+      },
+    },
+    'adaptive-full': {
+      definition_digest: 'sha256:2222222222222222222222222222222222222222222222222222222222222222',
+      capability_policy: {
+        id: 'adaptive-full',
+        digest: 'sha256:8888888888888888888888888888888888888888888888888888888888888888',
+        exposed: [{ kind: 'skill', id: 'forge:detail', version: '0.52.0' }],
+      },
+    },
+    'legacy-chain': {
+      definition_digest: 'sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+      capability_policy: {
+        id: 'legacy-chain',
+        digest: 'sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        exposed: [{ kind: 'other', id: 'forge:legacy-chain', version: '0.52.0' }],
       },
     },
   },
@@ -95,7 +111,7 @@ function sourceState(sourceDir) {
 }
 
 function baseReportInput({
-  armId = 'forge',
+  armId = 'adaptive-full',
   repeatIndex = 0,
   taskState = null,
   terminal = false,
@@ -140,7 +156,7 @@ function baseReportInput({
 }
 
 function attemptSpec({
-  armId = 'forge',
+  armId = 'adaptive-full',
   sourceDir,
   evidenceRoot,
   attemptId,
@@ -207,17 +223,17 @@ test('isolated attempt captures revision, complete delta, command facts, and lea
   const result = await runIsolatedEffectivenessAttempt(attemptSpec({
     sourceDir,
     evidenceRoot,
-    attemptId: 'direct.forge.0',
+    attemptId: 'direct.adaptive-full.0',
     script,
     taskState: 'failed',
   }));
 
   assert.equal(result.receipt.contract, 'forge-effectiveness-run-receipt');
   assert.equal(result.receipt.schema_version, 1);
-  assert.equal(result.receipt.experiment_arm.id, 'forge');
+  assert.equal(result.receipt.experiment_arm.id, 'adaptive-full');
   assert.equal(
     result.receipt.experiment_arm.definition_digest,
-    experimentPlan.arms.forge.definition_digest,
+    experimentPlan.arms['adaptive-full'].definition_digest,
   );
   assert.equal(result.receipt.source.base_revision, before.head);
   assert.match(result.receipt.source.snapshot_digest, /^sha256:/);
@@ -285,14 +301,14 @@ test('sequential repeats use fresh workspaces and stable controlled fingerprints
   const first = await runIsolatedEffectivenessAttempt(attemptSpec({
     sourceDir,
     evidenceRoot,
-    attemptId: 'repeat.forge.0',
+    attemptId: 'repeat.adaptive-full.0',
     script,
     repeatIndex: 0,
   }));
   const second = await runIsolatedEffectivenessAttempt(attemptSpec({
     sourceDir,
     evidenceRoot,
-    attemptId: 'repeat.forge.1',
+    attemptId: 'repeat.adaptive-full.1',
     script,
     repeatIndex: 1,
   }));
@@ -319,10 +335,10 @@ test('the caller-selected arm is bound before launch and cannot be relabeled by 
   const { sourceDir, evidenceRoot } = createSource(t);
   const script = "require('node:fs').writeFileSync('arm.txt', 'same-command\\n')";
   const forge = await runIsolatedEffectivenessAttempt(attemptSpec({
-    armId: 'forge',
+    armId: 'adaptive-full',
     sourceDir,
     evidenceRoot,
-    attemptId: 'arm.forge',
+    attemptId: 'arm.adaptive-full',
     script,
   }));
   const noForge = await runIsolatedEffectivenessAttempt(attemptSpec({
@@ -333,14 +349,14 @@ test('the caller-selected arm is bound before launch and cannot be relabeled by 
     script,
   }));
 
-  assert.equal(forge.receipt.experiment_arm.id, 'forge');
+  assert.equal(forge.receipt.experiment_arm.id, 'adaptive-full');
   assert.equal(noForge.receipt.experiment_arm.id, 'no-forge');
-  assert.equal(forge.report.experiment.arm.id, 'forge');
+  assert.equal(forge.report.experiment.arm.id, 'adaptive-full');
   assert.equal(noForge.report.experiment.arm.id, 'no-forge');
   assert.notEqual(forge.receipt.configuration_digest, noForge.receipt.configuration_digest);
 
   const relabeled = attemptSpec({
-    armId: 'forge',
+    armId: 'adaptive-full',
     sourceDir,
     evidenceRoot,
     attemptId: 'arm.relabeled',
@@ -352,7 +368,7 @@ test('the caller-selected arm is bound before launch and cannot be relabeled by 
     (error) =>
       error instanceof EffectivenessRunnerError &&
       error.code === 'report_rejected' &&
-      error.receipt?.experiment_arm?.id === 'forge',
+      error.receipt?.experiment_arm?.id === 'adaptive-full',
   );
 });
 

@@ -16,6 +16,7 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 - **不在本 feature**：bump 发布版本、发布或 push。
 - **不在 B02**：生产 report 构造器、跨引用语义校验、Evidence Envelope 有效性判断或 outcome scorer；分别由 B03、B06、B08 负责。
 - **不在 B04**：四实验臂、模型选择、Evidence Envelope、外部 verifier 或 outcome 判定；分别由 B05、B06、B07、B08 负责。
+- **不在 B05**：内置跨平台 hostile-code sandbox、Evidence Envelope、外部 verifier、outcome 判定或统计结论。B05 对完整 host-sandbox adapter fail closed；具体隔离宿主由运行环境提供并审计。
 
 ## Done Criteria（可测）
 
@@ -31,6 +32,7 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 | AC8 | effectiveness report v1 能追踪单次 model × arm × fixture × repeat 的受控条件、动作、能力遥测、证据来源、结果和成本；旧 skills-suite v2 不会被静默升级为效果证据 | `node --test tests/effectiveness-report-contract.test.mjs` |
 | AC9 | B03 提供唯一生产 constructor/parser；两者共用 fail-closed schema、受信 experiment plan 与 report 内引用校验，未知/伪造 arm、缺失来源、目标错绑、悬空引用和非法版本均返回字段级 JSON Pointer | `node --test tests/effectiveness-report.test.mjs` |
 | AC10 | B04 在源仓库外以 shallow workspace/private-capture clone 和独立 HOME/CODEX_HOME/TMPDIR 运行单次 attempt，启动前冻结调用方预选的中性 arm 并拒绝事后改标，主动约束 process/output/Git/diff，并以明确的 initial/final capture ceiling 保存 process、完整 workspace delta 与 artifact manifest；连续、并发、timeout、cancel、process error、final-capture/source-guard infra terminal 均隔离且只通过 B03 生成正式 report | `node --test tests/effectiveness-runner.test.mjs` |
+| AC11 | B05 生成 `no-forge`、`kernel-only`、`adaptive-full`、`legacy-chain` 四个互斥 launch policy；同一显式模型、fixture、source、预算、limits 和 verifier 展开四臂，拒绝静默模型回退和不完整 host-sandbox 保证，允许 adaptive 零 Skill 调用，并用四份正式 report 复核实际 capability exposure | `node --test tests/effectiveness-experiment.test.mjs` |
 
 ## Decisions
 
@@ -42,6 +44,8 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 - FD6：report v1 是首个 effectiveness family；skills-suite v2 标记为 incompatible，缺失来源时要求重跑而非填充未知值。理由：模型、实验臂、workspace、budget、verifier 和证据来源无法从旧自述字段可靠恢复。
 - FD7：生产入口只暴露 `createEffectivenessReport` 与 `parseEffectivenessReport`，并共用 schema、受信 experiment plan 与语义接受管线。plan 必须为 manifest 中每个 arm 固定 definition digest 和 capability policy；constructor 只生成 contract/version/report id 和无事实含义的空引用数组，不推断时间、模型、digest 或证据来源；schema 使用未实现关键字、非法 operand 或循环引用时 fail closed。理由：避免手工拼装伪造 arm/能力暴露或绕过引用检查，也避免测试 validator 与运行时 validator 漂移。
 - FD8：B04 接受 clean source commit，以 shallow non-local workspace clone 和 runner-private capture Git 建立临时 capsule；B05 预选中性 arm，B04 只在 launch 前冻结其 plan definition/capability policy 并拒绝 adapter 改标，不选择具体实验臂；runner 独占 workspace/attempt execution/wall-time/arm-policy 注入，要求 launcher definition digest，并只把 command 与 workspace capture 标为 `tool_output`。正式 report 先校验 runner artifact 完整性，再经 B03 严格构造并原子落盘。理由：让相同受控配置可比较、并发不串状态，同时不把进程成功或模型 claim 提升为目标成功。
+- FD9：B05 由 manifest v4 生成四臂 trusted plan；`adaptive-full` 绑定当前发布 Skill tree 且所有 Skill 可选，`legacy-chain` 绑定 Forge 0.52.0 tree `516a67e49c8c5e564be1671396bad6edadaef4f2` 和 `detail → codegen → review`，旧 `forge` arm 不做歧义映射。调度器只接受显式 requested model，实际 identity 不同则记录 unavailable/fallback rejected 而不启动 provider；四臂共享输入、source、预算、limits 和 verifier，arm-specific launcher digest 只反映能力条件。理由：把能力暴露变成可复核实验变量，同时保留模型直接行动和零 Skill 路径。
+- FD10：B05 不用 process group、`ulimit` 或 workspace clone 冒充完整 hostile-code sandbox；调度前要求外部 host adapter 明确提供 filesystem/network/detached-process/live CPU-memory-disk 保证，并把 adapter definition 绑定进 launcher digest，缺一项整组不启动。理由：跨 Darwin/Linux 的完整隔离超出当前零依赖仓库能力，fail closed 比伪安全声明可靠。
 
 ## Risks
 
@@ -54,5 +58,7 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 | schema 演进超出运行时解释能力 | 新约束被静默忽略 | contract loader 拒绝未支持的 schema keyword、format、type 与失效本地引用 |
 | capture ceiling 被误解为运行期 quota 或完整 OS sandbox | 进程可瞬时耗盘、主动脱离 process group 或访问其他宿主资源 | B04 字段明确命名为 `maxCapturedWorkspace*`；B05 必须启用宿主 sandbox 承担 live disk、CPU、内存、network、detached process 和 hostile-code containment |
 | 外部并发写或恶意进程绕过 clone 修改 source | source 不再等于受控输入 | B04 对 HEAD/tree/refs/index 和含 ignored 文件的完整 worktree 做前后 guard 并降级为 `infrastructure_error`；不自动回滚以免删除用户并发修改，B05 host sandbox 负责阻止 hostile filesystem escape |
+| host adapter 只声明、未真实提供隔离 | 恶意 launcher 可越过 source/resource 边界 | B05 只接受受信且可审计的 adapter seam，并绑定其 definition；仓库测试 double 只验证协议，不构成生产隔离证据，真实 benchmark 必须另验宿主 |
+| 旧 `forge` arm 被自动解释为 adaptive 或 legacy | 历史报告归因错误 | manifest v4 删除歧义 arm，不提供 alias；旧 effectiveness comparison 必须重跑 |
 | 运行中 capture 失败 | 伪造完整 final snapshot 或丢失失败证据 | 降级为 `infrastructure_error`，保留 command/失败 summary，不写虚假的 diff/final digest，仍经 B03 生成 `no_output` report |
 | evidence store 自身不可写或原子落盘失败 | 无法诚实发布完整 receipt/report | 返回 runner error，不把半成品称为正式 report；调用方修复存储后使用新 attempt id 重跑 |

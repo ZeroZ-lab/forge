@@ -19,20 +19,36 @@ const samplePath = path.join(
 );
 const experimentPlan = {
   arms: {
-    forge: {
-      definition_digest: 'sha256:2222222222222222222222222222222222222222222222222222222222222222',
-      capability_policy: {
-        id: 'forge-current',
-        digest: 'sha256:8888888888888888888888888888888888888888888888888888888888888888',
-        exposed: [{ kind: 'skill', id: 'forge:detail', version: '0.52.0' }],
-      },
-    },
     'no-forge': {
       definition_digest: 'sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
       capability_policy: {
         id: 'no-forge',
         digest: 'sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
         exposed: [],
+      },
+    },
+    'kernel-only': {
+      definition_digest: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      capability_policy: {
+        id: 'kernel-only',
+        digest: 'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+        exposed: [{ kind: 'other', id: 'forge:kernel', version: '1' }],
+      },
+    },
+    'adaptive-full': {
+      definition_digest: 'sha256:2222222222222222222222222222222222222222222222222222222222222222',
+      capability_policy: {
+        id: 'adaptive-full',
+        digest: 'sha256:8888888888888888888888888888888888888888888888888888888888888888',
+        exposed: [{ kind: 'skill', id: 'forge:detail', version: '0.52.0' }],
+      },
+    },
+    'legacy-chain': {
+      definition_digest: 'sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+      capability_policy: {
+        id: 'legacy-chain',
+        digest: 'sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        exposed: [{ kind: 'other', id: 'forge:legacy-chain', version: '0.52.0' }],
       },
     },
   },
@@ -79,10 +95,10 @@ test('constructor owns constants, deterministic report id, cloning, and the shar
   assert.deepEqual(inspect(created), { ok: true, issues: [], report: created });
 
   input.experiment.arm.id = 'mutated-after-construction';
-  assert.equal(created.experiment.arm.id, 'forge');
+  assert.equal(created.experiment.arm.id, 'kernel-only');
   assert.equal(schema_version, 1);
   assert.equal(contract, 'forge-effectiveness-report');
-  assert.equal(report_id, 'direct-read-package-version.model-fixture-model.0.forge.0');
+  assert.equal(report_id, 'direct-read-package-version.model-fixture-model.0.kernel-only.0');
   assert.deepEqual(created.final_result.artifact_refs, []);
   assert.deepEqual(created.final_result.verifier_result_refs, []);
 
@@ -184,7 +200,7 @@ test('strict schema errors identify missing provenance and unsupported fields', 
 
 test('schema-valid but undeclared experiment arms are rejected at the manifest seam', () => {
   const report = validReport();
-  report.experiment.arm.id = 'adaptive-full';
+  report.experiment.arm.id = 'unknown-arm';
 
   const result = inspect(report);
   assert.equal(result.ok, false);

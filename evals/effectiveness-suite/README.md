@@ -1,8 +1,9 @@
 # Forge effectiveness-suite contract
 
-This suite defines held-out real-task scenarios for comparing Forge against a
-no-Forge baseline. It is separate from `evals/skills-suite`, which remains the
-fixed compliance/regression harness.
+This suite defines held-out real-task scenarios for comparing four controlled
+conditions: `no-forge`, `kernel-only`, `adaptive-full`, and `legacy-chain`. It
+is separate from `evals/skills-suite`, which remains the fixed
+compliance/regression harness.
 
 Run the contract check:
 
@@ -11,16 +12,16 @@ npm run eval:effectiveness
 ```
 
 The command only proves that the held-out task contract is complete: fixtures
-exist, all six scenarios are covered, both `forge` and `no-forge` modes are in
-scope, repeated samples are required, and the report schema and compatibility
-policy are present. It does not run Codex or validate a produced run report. A
-passing contract does not claim real-world effectiveness.
+exist, all six scenarios and four experiment arms are covered, repeated samples
+are required, and the report schema and compatibility policy are present. It
+does not run Codex or validate a produced run report. A passing contract does not claim real-world effectiveness.
 
 ## Kernel Boundary
 
 Manifest v2 introduced the machine-validated `kernel_contract`; manifest v3
-adds the versioned report-contract pointers. Older manifest versions are
-rejected rather than silently receiving new semantics. The Kernel boundary is:
+added the versioned report-contract pointers; manifest v4 pins the four-arm
+comparison contract. Older manifest versions are rejected rather than silently
+receiving new semantics. The Kernel boundary is:
 
 - the Kernel owns the objective, permissions, scope, authoritative facts,
   evidence, task state, and completion conditions;
@@ -32,13 +33,28 @@ rejected rather than silently receiving new semantics. The Kernel boundary is:
   Skill hit rate, stage completion, or model-name ranking is not a success
   proxy.
 
-Non-interference is a paired comparison between Forge and no-Forge arms for
-the same model, fixture, workspace revision, budget, and verifier. Models are
-reported separately; their names are not treated as a total capability order.
+Non-interference is a four-way comparison for the same explicitly requested
+model, fixture, workspace revision, budget, and verifier. Models are reported
+separately; their names are not treated as a total capability order.
 The validator rejects unknown scoring fields and pins the forbidden success
 proxies. Free-form fixture and review text is review input, not an executable
 scoring rule; static validation cannot prove the semantic neutrality of
 arbitrary prose. B08 owns the external outcome evaluator.
+
+The four policies are exclusive launch modes: one attempt receives exactly one
+complete policy and no alias or policy union.
+
+| Arm | Forge capability surface | Action policy |
+|-----|--------------------------|---------------|
+| `no-forge` | no Forge capability | model acts directly |
+| `kernel-only` | goal/evidence Kernel only | model chooses the action |
+| `adaptive-full` | Kernel plus the complete published Skill registry | every Skill is optional, including zero activations |
+| `legacy-chain` | one pinned legacy capsule for Forge 0.52.0, Git tree `516a67e49c8c5e564be1671396bad6edadaef4f2` | preserves `detail → codegen → review` as the pre-upgrade control |
+
+Common non-Forge tools, when present, are passed as `baseCapabilities` and
+copied into all four policies. The adaptive arm definition also binds a digest
+of the live published Skill tree; the legacy arm stays bound to the pinned
+pre-upgrade tree instead of drifting with future adaptive changes.
 
 ## Attempt Report Contract
 
@@ -87,31 +103,27 @@ import {
 } from '../../scripts/lib/effectiveness-report.mjs';
 ```
 
-Both functions require a trusted plan that is separate from the report:
+Both functions require a trusted plan that is separate from the report. B05 is
+the production plan owner:
 
 ```js
+import { createEffectivenessExperimentPlan } from '../../scripts/lib/effectiveness-experiment.mjs';
+
 const options = {
-  experimentPlan: {
-    arms: {
-      forge: {
-        definition_digest: 'sha256:...',
-        capability_policy: { id: 'forge-current', digest: 'sha256:...', exposed: [] },
-      },
-      'no-forge': {
-        definition_digest: 'sha256:...',
-        capability_policy: { id: 'no-forge', digest: 'sha256:...', exposed: [] },
-      },
-    },
-  },
+  experimentPlan: createEffectivenessExperimentPlan({
+    rootDir,
+    baseCapabilities: commonProviderTools,
+  }),
 };
 
 const created = createEffectivenessReport(observed, options);
 const accepted = parseEffectivenessReport(existingReport, options);
 ```
 
-The plan must define every arm named by `manifest.modes`; its definition digest
-and complete capability policy are the trusted comparison values. A report
-cannot authorize its own arm or capability exposure.
+The plan defines every arm named by `manifest.modes`; its definition digest and
+complete capability policy are the trusted comparison values. Callers cannot
+supply their own digests. A report cannot authorize its own arm or capability
+exposure.
 
 `createEffectivenessReport` owns `schema_version`, `contract`, and a
 deterministic `report_id`; callers must supply all observed facts such as model
@@ -140,7 +152,7 @@ const result = await runIsolatedEffectivenessAttempt({
   contractRoot,
   experimentPlan,
   armId: preselectedArmId,
-  attemptId: 'fixture.forge.0',
+  attemptId: 'fixture.adaptive-full.0',
   source: { dir: cleanRepository, ref: 'fixture://project' },
   evidenceRoot: externalEvidenceDirectory,
   command: {
@@ -253,6 +265,49 @@ cover process time, retained output, Git-operation time, and diff size;
 quotas. B05 must use the host workspace sandbox for live disk, CPU, memory,
 network, detached-process, and hostile-code containment.
 
+### Four-arm comparison coordinator
+
+`scripts/lib/effectiveness-experiment.mjs` is the B05 plan and scheduling seam:
+
+```js
+import {
+  createEffectivenessExperimentPlan,
+  runEffectivenessComparisonGroup,
+} from '../../scripts/lib/effectiveness-experiment.mjs';
+```
+
+`createEffectivenessExperimentPlan` derives all arm and capability-policy
+digests from the manifest, package, published Skill tree, and common base
+capabilities. `runEffectivenessComparisonGroup` recomputes that plan rather than
+trusting caller-supplied arm digests, resolves one explicitly requested model,
+prepares all four launches, and only then invokes the B04 runner sequentially.
+The scheduler owns comparison id, objective, fixture, requested model,
+parameter digest, repeat/seed, budget, verifier set, and arm binding. Provider
+adapters can return observations but cannot rewrite those controlled fields.
+
+An available provider result must match the requested provider/model and the
+requested revision when one was specified. A different actual identity is
+treated as an unavailable request with a visible `fallback ... rejected`
+reason; the provider launcher is not called. A genuinely unavailable model is
+also recorded in four `no_output` reports with its reason and without an
+`actual` identity. This preserves the attempted comparison shape without
+claiming that a model ran.
+
+The coordinator rejects a group when an arm is missing or duplicated, a
+budget/verifier/input/model/limit/source fact drifts, capability exposure does
+not match the trusted plan, or workspace isolation ids collide. Adaptive runs
+with zero `capability_activation` events remain valid.
+
+Before model resolution, B05 requires a versioned host-sandbox adapter that
+declares filesystem isolation, network policy, detached process-tree
+containment, and live CPU/memory/disk limits. The adapter prepares all four
+commands before any attempt starts; missing guarantees or setup failure stops
+the group. This repository deliberately does not claim that POSIX process
+groups, `ulimit`, Codex workspace mode, or deprecated macOS `sandbox-exec`
+provide those guarantees. Real hostile-code runs therefore require an audited
+external container, microVM, or equivalent adapter. The adapter definition and
+guarantees are bound into the scheduler-owned launcher digest.
+
 ## Scenarios
 
 | Scenario | What It Tests |
@@ -266,7 +321,8 @@ network, detached-process, and hostile-code containment.
 
 ## Required Comparison Shape
 
-- Run every case in `forge` and `no-forge` modes.
+- Run every case in `no-forge`, `kernel-only`, `adaptive-full`, and
+  `legacy-chain` modes.
 - Use at least two repeats per case and per mode.
 - Keep task prompts answer-free; do not include oracle scoring hints.
 - Keep each case route-neutral: neither calling nor skipping a Skill is itself

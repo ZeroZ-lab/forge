@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "forge-effectiveness-report",
-  "report_id": "direct-read-package-version.model-fixture-model.0.forge.0",
+  "report_id": "direct-read-package-version.model-fixture-model.0.kernel-only.0",
   "experiment": {
     "comparison_group_id": "direct-read-package-version.model-fixture-model.0",
     "objective": {
@@ -10,8 +10,8 @@
       "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
     },
     "arm": {
-      "id": "forge",
-      "definition_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      "id": "kernel-only",
+      "definition_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     },
     "model": {
       "requested": {
@@ -43,9 +43,15 @@
       "digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
     },
     "capability_policy": {
-      "id": "forge-current",
-      "digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
-      "exposed": []
+      "id": "kernel-only",
+      "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "exposed": [
+        {
+          "kind": "other",
+          "id": "forge:kernel",
+          "version": "1"
+        }
+      ]
     }
   },
   "execution": {

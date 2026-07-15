@@ -77,6 +77,39 @@ const REQUIRED_CONTROLLED_DIMENSIONS = [
   'budget',
   'verifier',
 ];
+const REQUIRED_ARM_IDS = [
+  'no-forge',
+  'kernel-only',
+  'adaptive-full',
+  'legacy-chain',
+];
+const REQUIRED_ARM_DEFINITIONS = {
+  'no-forge': {
+    capability_mode: 'no-forge',
+    model_action_policy: 'autonomous',
+    skill_activation: 'forbidden',
+  },
+  'kernel-only': {
+    capability_mode: 'kernel-only',
+    model_action_policy: 'autonomous',
+    skill_activation: 'forbidden',
+    kernel_version: '1',
+  },
+  'adaptive-full': {
+    capability_mode: 'kernel-and-published-skills',
+    model_action_policy: 'autonomous',
+    skill_activation: 'optional',
+    kernel_version: '1',
+  },
+  'legacy-chain': {
+    capability_mode: 'legacy-capsule',
+    model_action_policy: 'pinned-default-chain',
+    skill_activation: 'legacy-controlled',
+    baseline_version: '0.52.0',
+    baseline_tree: 'git-tree-sha1:516a67e49c8c5e564be1671396bad6edadaef4f2',
+    default_chain: ['detail', 'codegen', 'review'],
+  },
+};
 const ALLOWED_MANIFEST_FIELDS = new Set([
   'version',
   'name',
@@ -84,6 +117,7 @@ const ALLOWED_MANIFEST_FIELDS = new Set([
   'minimum_cases',
   'required_repeats',
   'modes',
+  'arm_definitions',
   'report_schema',
   'report_compatibility',
   'metrics',
@@ -212,7 +246,7 @@ export function loadEffectivenessContract(rootDir) {
   const scenarios = new Set();
 
   requireExactFields(manifest, ALLOWED_MANIFEST_FIELDS, 'manifest', issues);
-  if (manifest.version !== 3) issues.push('manifest.version must be 3');
+  if (manifest.version !== 4) issues.push('manifest.version must be 4');
   if (manifest.name !== 'forge-effectiveness-suite') {
     issues.push('manifest.name must be forge-effectiveness-suite');
   }
@@ -225,7 +259,10 @@ export function loadEffectivenessContract(rootDir) {
   if (!Number.isInteger(manifest.required_repeats) || manifest.required_repeats < 2) {
     issues.push('manifest.required_repeats must be at least 2');
   }
-  requireExactList(manifest.modes, ['forge', 'no-forge'], 'manifest.modes', issues);
+  requireExactList(manifest.modes, REQUIRED_ARM_IDS, 'manifest.modes', issues);
+  if (JSON.stringify(manifest.arm_definitions) !== JSON.stringify(REQUIRED_ARM_DEFINITIONS)) {
+    issues.push('manifest.arm_definitions must pin the four mutually exclusive arm definitions');
+  }
   if (manifest.report_schema !== REPORT_SCHEMA_PATH) {
     issues.push(`manifest.report_schema must be ${REPORT_SCHEMA_PATH}`);
   }
@@ -395,7 +432,7 @@ export function loadEffectivenessContract(rootDir) {
       }
       requireExactList(
         nonInterference.arms,
-        ['forge', 'no-forge'],
+        REQUIRED_ARM_IDS,
         'manifest.kernel_contract.non_interference.arms',
         issues,
       );
@@ -468,6 +505,7 @@ export function loadEffectivenessContract(rootDir) {
   return {
     manifest,
     kernelContract,
+    armDefinitions: manifest.arm_definitions,
     coveredScenarios: scenarios,
     reportContract: {
       schema: reportSchema,

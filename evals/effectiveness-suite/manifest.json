@@ -1,10 +1,37 @@
 {
-  "version": 3,
+  "version": 4,
   "name": "forge-effectiveness-suite",
-  "description": "Held-out real-task contract for comparing Forge and no-Forge outcomes without rewarding a fixed stage or skill path. Contract validation proves task coverage only; effectiveness requires real multi-run reports and external or human review.",
+  "description": "Held-out real-task contract for comparing no-Forge, Kernel-only, adaptive Forge, and the pinned legacy chain without rewarding a fixed stage or skill path. Contract validation proves task coverage only; effectiveness requires real multi-run reports and external or human review.",
   "minimum_cases": 6,
   "required_repeats": 2,
-  "modes": ["forge", "no-forge"],
+  "modes": ["no-forge", "kernel-only", "adaptive-full", "legacy-chain"],
+  "arm_definitions": {
+    "no-forge": {
+      "capability_mode": "no-forge",
+      "model_action_policy": "autonomous",
+      "skill_activation": "forbidden"
+    },
+    "kernel-only": {
+      "capability_mode": "kernel-only",
+      "model_action_policy": "autonomous",
+      "skill_activation": "forbidden",
+      "kernel_version": "1"
+    },
+    "adaptive-full": {
+      "capability_mode": "kernel-and-published-skills",
+      "model_action_policy": "autonomous",
+      "skill_activation": "optional",
+      "kernel_version": "1"
+    },
+    "legacy-chain": {
+      "capability_mode": "legacy-capsule",
+      "model_action_policy": "pinned-default-chain",
+      "skill_activation": "legacy-controlled",
+      "baseline_version": "0.52.0",
+      "baseline_tree": "git-tree-sha1:516a67e49c8c5e564be1671396bad6edadaef4f2",
+      "default_chain": ["detail", "codegen", "review"]
+    }
+  },
   "report_schema": "evals/effectiveness-suite/report.schema.json",
   "report_compatibility": "evals/effectiveness-suite/report.compatibility.json",
   "metrics": [
@@ -49,7 +76,7 @@
     ],
     "non_interference": {
       "comparison_unit": "paired_same_model",
-      "arms": ["forge", "no-forge"],
+      "arms": ["no-forge", "kernel-only", "adaptive-full", "legacy-chain"],
       "controlled_dimensions": [
         "model",
         "fixture",

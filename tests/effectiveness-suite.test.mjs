@@ -27,7 +27,7 @@ function withMutatedContract(mutate, check) {
 }
 
 test('effectiveness suite contract covers the six held-out scenarios', () => {
-  assert.equal(manifest.version, 3);
+  assert.equal(manifest.version, 4);
   assert.equal(manifest.name, 'forge-effectiveness-suite');
   assert.equal(manifest.cases.length, manifest.minimum_cases);
   assert.equal(manifest.required_repeats, 2);
@@ -76,10 +76,32 @@ test('kernel contract constrains state and evidence without choosing the model a
   ]);
   assert.deepEqual(kernelContract.non_interference, {
     comparison_unit: 'paired_same_model',
-    arms: ['forge', 'no-forge'],
+    arms: ['no-forge', 'kernel-only', 'adaptive-full', 'legacy-chain'],
     controlled_dimensions: ['model', 'fixture', 'workspace_revision', 'budget', 'verifier'],
     model_capability_ordering: 'none',
     judged_by: ['verified_outcome', 'safety', 'valid_evidence'],
+  });
+});
+
+test('four arm definitions are explicit, exclusive, and keep adaptive skill use optional', () => {
+  assert.deepEqual(manifest.modes, [
+    'no-forge',
+    'kernel-only',
+    'adaptive-full',
+    'legacy-chain',
+  ]);
+  assert.deepEqual(
+    Object.values(manifest.arm_definitions).map((arm) => arm.capability_mode),
+    ['no-forge', 'kernel-only', 'kernel-and-published-skills', 'legacy-capsule'],
+  );
+  assert.equal(manifest.arm_definitions['adaptive-full'].skill_activation, 'optional');
+  assert.deepEqual(manifest.arm_definitions['legacy-chain'], {
+    capability_mode: 'legacy-capsule',
+    model_action_policy: 'pinned-default-chain',
+    skill_activation: 'legacy-controlled',
+    baseline_version: '0.52.0',
+    baseline_tree: 'git-tree-sha1:516a67e49c8c5e564be1671396bad6edadaef4f2',
+    default_chain: ['detail', 'codegen', 'review'],
   });
 });
 
