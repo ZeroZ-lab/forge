@@ -326,28 +326,35 @@ import {
   createHiddenAssertionVerifierAdapter,
   createDiffVerifierAdapter,
   createEffectivenessVerifierRuntime,
+  parseEffectivenessVerifierObservation,
   parseEffectivenessVerifierResult,
   runEffectivenessVerifierSet,
 } from '../../scripts/lib/effectiveness-verifier.mjs';
 ```
 
 Command adapters cover `test`, `build`, and `typecheck`; hidden assertions carry
-only a host-private oracle reference and digest; diff adapters are bound to the
-captured base/final workspace snapshots and diff digest. The versioned external
-executor must declare timeout, output-bound, and workspace-isolation guarantees.
-Its definition and every adapter definition are included in the controlled
-verifier-set digest. The verifier module does not directly spawn project test
-commands or accept hidden callbacks in adapter definitions; the injected host
-executor owns execution, timeout, output bounds, and workspace isolation.
+only a host-private oracle reference and digest; diff adapters receive the
+digest-checked retained patch and base snapshot handle and remain bound to the
+captured base/final workspace digests. The versioned external executor must
+declare timeout/output bounds, CPU/memory/disk limits, network and secret
+isolation, workspace/evidence isolation, process-tree cleanup, a non-blocking
+bridge, and cancellation. Its definition and every adapter definition are
+included in the controlled verifier-set digest. The verifier module does not
+directly spawn project test commands or accept hidden callbacks in adapter
+definitions; the injected host executor owns hostile-code execution.
 
 The host returns fixed-field observations. B07 maps them to `passed`,
 `task_failed`, `unavailable`, or `infrastructure_error`, retains a normalized
 observation and result, and never stores host exception text or hidden oracle
-content. B04 runs the set before capsule cleanup, rejects verifier workspace
-side effects, then adds verifier events, `independent_verifier` evidence,
+content. A Forge-side deadline aborts the bridge and requires bounded cancel
+acknowledgement plus settled execution; missing cleanup acknowledgement fails
+the run. B04 runs the set before capsule cleanup, rejects verifier workspace or
+retained-input side effects, then adds verifier events, `independent_verifier` evidence,
 `final_result.verifier_result_refs`, and claim Envelopes before the report's
-first publication. B05 requires the runtime to match the controlled verifier
-set and rechecks result/event/workspace semantics under the group seal.
+first publication. B05 comparison-group seal v3 requires every verifier
+Envelope, parses the retained host observation, and derives the expected
+result/event semantics again. Seal v1 and B06 seal v2 retain their original
+contracts and are not retroactively promoted to B07 evidence.
 
 The runtime factory is a host integration seam, not identity authentication or
 proof that its declared guarantees were enforced. B05—not the model/provider

@@ -14,6 +14,7 @@ import {
 } from './evidence-envelope.mjs';
 import {
   isEffectivenessVerifierRuntime,
+  parseEffectivenessVerifierObservation,
   parseEffectivenessVerifierResult,
 } from './effectiveness-verifier.mjs';
 import { runIsolatedEffectivenessAttempt } from './effectiveness-runner.mjs';
@@ -256,7 +257,7 @@ function validRetainedReference(armDir, reference) {
   }
 }
 
-function hasValidEvidenceEnvelopes(report, armDir, rootDir) {
+function hasValidEvidenceEnvelopes(report, armDir, rootDir, options = {}) {
   try {
     const runnerEvidence = report.evidence.filter((evidence) =>
       evidence.producer_ref.startsWith('runner:'));
@@ -265,7 +266,11 @@ function hasValidEvidenceEnvelopes(report, armDir, rootDir) {
     if (
       runnerEvidence.length === 0 ||
       runnerEvidence.some((evidence) => typeof evidence.envelope_ref !== 'string') ||
-      (report.execution.termination === 'completed' && verifierEvidence.length === 0)
+      (options.requireVerifiers === true &&
+        report.execution.termination === 'completed' &&
+        verifierEvidence.length === 0) ||
+      (options.requireVerifiers === true &&
+        verifierEvidence.some((evidence) => typeof evidence.envelope_ref !== 'string'))
     ) {
       return false;
     }
@@ -279,7 +284,10 @@ function hasValidEvidenceEnvelopes(report, armDir, rootDir) {
           evidenceId: evidence.id,
         },
       );
-      if (evidence.source_kind === 'independent_verifier') {
+      if (
+        options.requireVerifiers === true &&
+        evidence.source_kind === 'independent_verifier'
+      ) {
         const resultPath = path.join(armDir, evidence.locator);
         const stat = fs.lstatSync(resultPath);
         if (
@@ -297,6 +305,11 @@ function hasValidEvidenceEnvelopes(report, armDir, rootDir) {
         ) {
           return false;
         }
+        const observationReference = result.evidence_refs[0];
+        parseEffectivenessVerifierObservation(
+          fs.readFileSync(path.join(armDir, observationReference.ref)),
+          { result },
+        );
         const event = report.events.find((item) => item.id === evidence.event_id);
         const diffPath = path.join(armDir, result.target.workspace.diff_ref);
         const expectedStatus = result.outcome === 'passed'
@@ -351,7 +364,7 @@ function hasValidGroupSeal(groupDir, comparisonGroupId, rootDir, experimentPlan)
         ],
       ) ||
       seal.contract !== 'forge-effectiveness-comparison-group' ||
-      ![1, 2].includes(seal.version) ||
+      ![1, 2, 3].includes(seal.version) ||
       seal.comparison_group_id !== comparisonGroupId ||
       !/^sha256:[0-9a-f]{64}$/.test(seal.common_context_digest) ||
       !/^sha256:[0-9a-f]{64}$/.test(seal.host_policy_digest) ||
@@ -401,7 +414,12 @@ function hasValidGroupSeal(groupDir, comparisonGroupId, rootDir, experimentPlan)
       if (seal.version === 1 && report.evidence.some((evidence) => evidence.envelope_ref !== undefined)) {
         return false;
       }
-      if (seal.version === 2 && !hasValidEvidenceEnvelopes(report, armDir, rootDir)) {
+      if (
+        seal.version >= 2 &&
+        !hasValidEvidenceEnvelopes(report, armDir, rootDir, {
+          requireVerifiers: seal.version >= 3,
+        })
+      ) {
         return false;
       }
     }
@@ -1526,7 +1544,7 @@ export async function runEffectivenessComparisonGroup(spec) {
     }
     const seal = {
       contract: 'forge-effectiveness-comparison-group',
-      version: 2,
+      version: 3,
       comparison_group_id: spec.comparisonGroupId,
       common_context_digest: commonContextDigest,
       host_policy_digest: requiredHostPolicyDigest,
@@ -1548,7 +1566,9 @@ export async function runEffectivenessComparisonGroup(spec) {
       );
     }
     for (const run of runs) {
-      if (!hasValidEvidenceEnvelopes(run.report, run.evidenceDir, spec.rootDir)) {
+      if (!hasValidEvidenceEnvelopes(run.report, run.evidenceDir, spec.rootDir, {
+        requireVerifiers: true,
+      })) {
         throw new EffectivenessExperimentError(
           'INVALID_EVIDENCE_ENVELOPE',
           `comparison group has invalid retained Evidence Envelopes for ${run.report.experiment.arm.id}`,

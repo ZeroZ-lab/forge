@@ -11,9 +11,17 @@ import {
   createDiffVerifierAdapter,
   createEffectivenessVerifierRuntime,
   createHiddenAssertionVerifierAdapter,
+  parseEffectivenessVerifierObservation,
   parseEffectivenessVerifierResult,
   runEffectivenessVerifierSet,
 } from '../scripts/lib/effectiveness-verifier.mjs';
+
+const VERIFIER_HOST_GUARANTEES = [
+  'cancellation', 'cpu-limit', 'disk-limit', 'memory-limit',
+  'network-isolation', 'non-blocking-bridge', 'output-bound',
+  'process-tree-cleanup', 'read-only-evidence', 'secret-isolation',
+  'timeout', 'workspace-isolation',
+];
 
 function digest(value) {
   return `sha256:${crypto.createHash('sha256').update(value).digest('hex')}`;
@@ -27,9 +35,15 @@ function fixture(t) {
   fs.mkdirSync(workspaceDir);
   fs.mkdirSync(evidenceDir);
   fs.writeFileSync(path.join(workspaceDir, 'result.txt'), 'ready\n');
+  fs.writeFileSync(path.join(evidenceDir, 'diff.patch'), 'diff.patch');
   return {
     workspaceDir,
     evidenceDir,
+    baseSnapshot: {
+      path: workspaceDir,
+      revision: 'fixture-base',
+      digest: digest('workspace-base'),
+    },
     target: {
       attempt_id: 'attempt-1',
       objective_ref: 'objective-1',
@@ -93,11 +107,16 @@ function runtime(adapters, behavior = {}) {
       version: '1',
       definition: {
         boundary: 'test-double',
-        guarantees: ['timeout', 'output-bound', 'workspace-isolation'],
+        guarantees: VERIFIER_HOST_GUARANTEES,
       },
-      async execute({ adapter, workspaceDir, target, limits }) {
-        if (behavior[adapter.id]) return behavior[adapter.id]({ workspaceDir, target, limits });
+      async execute({ adapter, workspaceDir, target, limits, artifacts }) {
+        if (behavior[adapter.id]) {
+          return behavior[adapter.id]({ workspaceDir, target, limits, artifacts });
+        }
         return commandObservation(adapter, workspaceDir, limits);
+      },
+      async cancel({ runId }) {
+        return { run_id: runId, status: 'cancelled' };
       },
     },
     adapters,
@@ -169,6 +188,13 @@ test('external command host distinguishes pass, task failure, missing command, a
       }),
       entry.result,
     );
+    assert.deepEqual(
+      parseEffectivenessVerifierObservation(
+        fs.readFileSync(path.join(value.evidenceDir, entry.observation_reference.ref)),
+        { result: entry.result },
+      ).target,
+      value.target,
+    );
   }
 
   const promoted = structuredClone(run.results[0].result);
@@ -191,6 +217,22 @@ test('external command host distinguishes pass, task failure, missing command, a
   assert.throws(
     () => parseEffectivenessVerifierResult(missingObservation),
     /host_observation/,
+  );
+  const contradictoryObservation = JSON.parse(
+    fs.readFileSync(path.join(value.evidenceDir, run.results[0].observation_reference.ref)),
+  );
+  contradictoryObservation.observation.exit_code = 2;
+  assert.throws(
+    () => parseEffectivenessVerifierObservation(contradictoryObservation, {
+      result: run.results[0].result,
+    }),
+    /does not support/,
+  );
+  const impossibleCompletion = structuredClone(contradictoryObservation);
+  impossibleCompletion.observation.exit_code = null;
+  assert.throws(
+    () => parseEffectivenessVerifierObservation(impossibleCompletion),
+    /invariants/,
   );
 });
 
@@ -276,9 +318,10 @@ test('hidden assertions and diff checks retain only normalized host observations
         id: 'fake',
         version: '1',
         definition: {
-          guarantees: ['timeout', 'output-bound', 'workspace-isolation'],
+          guarantees: VERIFIER_HOST_GUARANTEES,
         },
         async execute() { return { kind: 'diff', status: 'passed' }; },
+        async cancel({ runId }) { return { run_id: runId, status: 'cancelled' }; },
       },
       adapters: [{ ...diff }],
     }),
@@ -291,5 +334,113 @@ test('hidden assertions and diff checks retain only normalized host observations
       policy: { allowed_paths: undefined },
     }),
     /JSON data/,
+  );
+  assert.throws(
+    () => createEffectivenessVerifierRuntime({
+      id: 'missing-network-isolation',
+      executor: {
+        id: 'incomplete-host',
+        version: '1',
+        definition: {
+          guarantees: VERIFIER_HOST_GUARANTEES.filter(
+            (guarantee) => guarantee !== 'network-isolation',
+          ),
+        },
+        async execute() { return { kind: 'diff', status: 'passed' }; },
+        async cancel({ runId }) { return { run_id: runId, status: 'cancelled' }; },
+      },
+      adapters: [diff],
+    }),
+    /network-isolation/,
+  );
+});
+
+test('the bridge deadline requires cancellation acknowledgement and settled execution', async (t) => {
+  const value = fixture(t);
+  const adapter = commandAdapter('supervised-timeout', 0);
+  let cancellations = 0;
+  const supervised = createEffectivenessVerifierRuntime({
+    id: 'supervised-verifiers',
+    executor: {
+      id: 'supervised-host',
+      version: '1',
+      definition: { boundary: 'test-double', guarantees: VERIFIER_HOST_GUARANTEES },
+      execute({ signal }) {
+        return new Promise((resolve) => {
+          signal.addEventListener('abort', () => resolve(commandObservation(
+            adapter,
+            value.workspaceDir,
+            { timeoutMs: 1_000, maxOutputBytes: 64 * 1024 },
+          )), { once: true });
+        });
+      },
+      async cancel({ runId }) {
+        cancellations += 1;
+        return { run_id: runId, status: 'cancelled' };
+      },
+    },
+    adapters: [adapter],
+  });
+  const run = await runEffectivenessVerifierSet({
+    ...value,
+    runtime: supervised,
+    limits: { timeoutMs: 25, maxOutputBytes: 64 * 1024 },
+  });
+  assert.equal(cancellations, 1);
+  assert.equal(run.results[0].result.reason_code, 'verifier_timeout');
+
+  const unsafeValue = fixture(t);
+  const unsafe = createEffectivenessVerifierRuntime({
+    id: 'unsafe-verifiers',
+    executor: {
+      id: 'unsafe-host',
+      version: '1',
+      definition: { boundary: 'test-double', guarantees: VERIFIER_HOST_GUARANTEES },
+      execute({ signal }) {
+        return new Promise((resolve) => {
+          signal.addEventListener('abort', () => resolve({
+            kind: 'command',
+            status: 'timeout',
+            exit_code: null,
+            signal: null,
+            stdout_digest: digest(''),
+            stderr_digest: digest(''),
+          }), { once: true });
+        });
+      },
+      async cancel() { return { status: 'unknown' }; },
+    },
+    adapters: [adapter],
+  });
+  await assert.rejects(
+    () => runEffectivenessVerifierSet({
+      ...unsafeValue,
+      runtime: unsafe,
+      limits: { timeoutMs: 25, maxOutputBytes: 64 * 1024 },
+    }),
+    (error) => error.code === 'host_cleanup_failed',
+  );
+});
+
+test('the host cannot mutate the retained diff it was asked to verify', async (t) => {
+  const value = fixture(t);
+  const adapter = createDiffVerifierAdapter({
+    id: 'immutable-diff',
+    scope: { kind: 'diff', paths: ['result.txt'] },
+    policy: { mode: 'captured-diff' },
+  });
+  const verifierRuntime = runtime([adapter], {
+    'immutable-diff': ({ artifacts }) => {
+      fs.appendFileSync(artifacts.captured_diff.path, '\nchanged');
+      return { kind: 'diff', status: 'passed' };
+    },
+  });
+  await assert.rejects(
+    () => runEffectivenessVerifierSet({
+      ...value,
+      runtime: verifierRuntime,
+      limits: { timeoutMs: 1_000, maxOutputBytes: 64 * 1024 },
+    }),
+    (error) => error.code === 'host_evidence_changed',
   );
 });

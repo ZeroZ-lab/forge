@@ -16,6 +16,7 @@ import {
   createDiffVerifierAdapter,
   createEffectivenessVerifierRuntime,
 } from '../scripts/lib/effectiveness-verifier.mjs';
+import { createEvidenceEnvelope } from '../scripts/lib/evidence-envelope.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const DIGESTS = {
@@ -35,6 +36,10 @@ function canonicalValue(value) {
 
 function digestJson(value) {
   return `sha256:${crypto.createHash('sha256').update(JSON.stringify(canonicalValue(value))).digest('hex')}`;
+}
+
+function digestBuffer(value) {
+  return `sha256:${crypto.createHash('sha256').update(value).digest('hex')}`;
 }
 
 function git(cwd, args) {
@@ -216,12 +221,23 @@ function verifierRuntime() {
       version: '1',
       definition: {
         boundary: 'test-double',
-        guarantees: ['timeout', 'output-bound', 'workspace-isolation'],
+        guarantees: [
+          'cancellation', 'cpu-limit', 'disk-limit', 'memory-limit',
+          'network-isolation', 'non-blocking-bridge', 'output-bound',
+          'process-tree-cleanup', 'read-only-evidence', 'secret-isolation',
+          'timeout', 'workspace-isolation',
+        ],
       },
-      async execute({ adapter, target }) {
+      async execute({ adapter, target, artifacts }) {
         assert.equal(adapter.kind, 'diff');
         assert.match(target.workspace.diff_digest, /^sha256:/);
+        assert.equal(artifacts.captured_diff.digest, target.workspace.diff_digest);
+        assert.equal(fs.lstatSync(artifacts.captured_diff.path).isFile(), true);
+        assert.equal(artifacts.base_snapshot.digest, target.workspace.base_snapshot_digest);
         return { kind: 'diff', status: 'passed' };
+      },
+      async cancel({ runId }) {
+        return { run_id: runId, status: 'cancelled' };
       },
     },
     adapters: [
@@ -362,7 +378,7 @@ test('one minimal fixture runs all four arms with identical controls and declare
   }
 
   const seal = JSON.parse(fs.readFileSync(result.sealPath, 'utf8'));
-  assert.equal(seal.version, 2);
+  assert.equal(seal.version, 3);
   assert.equal(seal.reports.length, 4);
   assert.equal(seal.reports.every((entry) => entry.runtime_receipt && entry.host_enforcement), true);
 
@@ -458,6 +474,94 @@ test('a verifier result cannot outlive its retained host observation', async (t)
   );
 });
 
+test('seal v3 rejects a passed result backed by a failed host observation', async (t) => {
+  const spec = groupSpec(t);
+  const first = await runEffectivenessComparisonGroup(spec);
+  const run = first.runs[0];
+  const reportPath = path.join(run.evidenceDir, 'report.json');
+  const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+  const verifierEvidence = report.evidence.find(
+    (evidence) => evidence.source_kind === 'independent_verifier',
+  );
+  const resultPath = path.join(run.evidenceDir, verifierEvidence.locator);
+  const verifierResult = JSON.parse(fs.readFileSync(resultPath, 'utf8'));
+  assert.equal(verifierResult.outcome, 'passed');
+  const observationReference = verifierResult.evidence_refs[0];
+  const observationPath = path.join(run.evidenceDir, observationReference.ref);
+  const observation = JSON.parse(fs.readFileSync(observationPath, 'utf8'));
+  observation.observation.status = 'failed';
+  const observationBytes = Buffer.from(JSON.stringify(observation));
+  fs.writeFileSync(observationPath, observationBytes);
+  observationReference.digest = digestBuffer(observationBytes);
+  observationReference.bytes = observationBytes.length;
+
+  const resultBytes = Buffer.from(JSON.stringify(verifierResult));
+  fs.writeFileSync(resultPath, resultBytes);
+  verifierEvidence.digest = digestBuffer(resultBytes);
+
+  const oldEnvelopePath = path.join(run.evidenceDir, verifierEvidence.envelope_ref);
+  const oldEnvelope = JSON.parse(fs.readFileSync(oldEnvelopePath, 'utf8'));
+  const {
+    schema_version: _schemaVersion,
+    contract: _contract,
+    envelope_id: _envelopeId,
+    content_digest: _contentDigest,
+    ...envelopeInput
+  } = oldEnvelope;
+  envelopeInput.evidence.digest = verifierEvidence.digest;
+  envelopeInput.evidence.bytes = resultBytes.length;
+  envelopeInput.evidence.result.claim_digest = verifierEvidence.digest;
+  const replacementEnvelope = createEvidenceEnvelope(envelopeInput, { rootDir: root });
+  const replacementEnvelopeRef =
+    `${replacementEnvelope.content_digest.slice('sha256:'.length)}.evidence-envelope.json`;
+  fs.writeFileSync(
+    path.join(run.evidenceDir, replacementEnvelopeRef),
+    `${JSON.stringify(replacementEnvelope, null, 2)}\n`,
+  );
+  fs.rmSync(oldEnvelopePath);
+  verifierEvidence.envelope_ref = replacementEnvelopeRef;
+  fs.writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+
+  const seal = JSON.parse(fs.readFileSync(first.sealPath, 'utf8'));
+  seal.reports.find((entry) => entry.arm === run.report.experiment.arm.id).digest =
+    digestJson(report);
+  fs.writeFileSync(first.sealPath, `${JSON.stringify(seal, null, 2)}\n`);
+
+  const replacement = await runEffectivenessComparisonGroup(spec);
+  assert.equal(fs.existsSync(replacement.sealPath), true);
+  assert.equal(
+    fs.readdirSync(spec.evidenceRoot)
+      .some((name) => name.startsWith(`${spec.comparisonGroupId}.incomplete-recovered-`)),
+    true,
+  );
+});
+
+test('comparison-group v3 requires every verifier result to keep its Envelope', async (t) => {
+  const spec = groupSpec(t);
+  const first = await runEffectivenessComparisonGroup(spec);
+  const run = first.runs[0];
+  const reportPath = path.join(run.evidenceDir, 'report.json');
+  const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+  const verifierEvidence = report.evidence.find(
+    (evidence) => evidence.source_kind === 'independent_verifier',
+  );
+  delete verifierEvidence.envelope_ref;
+  fs.writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+
+  const seal = JSON.parse(fs.readFileSync(first.sealPath, 'utf8'));
+  seal.reports.find((entry) => entry.arm === run.report.experiment.arm.id).digest =
+    digestJson(report);
+  fs.writeFileSync(first.sealPath, `${JSON.stringify(seal, null, 2)}\n`);
+
+  const replacement = await runEffectivenessComparisonGroup(spec);
+  assert.equal(fs.existsSync(replacement.sealPath), true);
+  assert.equal(
+    fs.readdirSync(spec.evidenceRoot)
+      .some((name) => name.startsWith(`${spec.comparisonGroupId}.incomplete-recovered-`)),
+    true,
+  );
+});
+
 test('invalid Evidence Envelopes fail before the first group seal is published', async (t) => {
   const sandbox = hostSandbox();
   const originalPrepare = sandbox.prepareLaunch;
@@ -539,6 +643,46 @@ test('legacy comparison-group v1 keeps its original seal semantics', async (t) =
       `${JSON.stringify(legacyRun.report, null, 2)}\n`,
     );
     seal.reports[index].digest = digestJson(legacyRun.report);
+  }
+  fs.writeFileSync(result.sealPath, `${JSON.stringify(seal, null, 2)}\n`);
+
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(spec),
+    (error) => error instanceof EffectivenessExperimentError && error.code === 'EVIDENCE_COLLISION',
+  );
+  assert.equal(
+    fs.readdirSync(spec.evidenceRoot)
+      .some((name) => name.startsWith(`${spec.comparisonGroupId}.incomplete-recovered-`)),
+    false,
+  );
+});
+
+test('comparison-group v2 keeps B06 semantics without requiring B07 evidence', async (t) => {
+  const spec = groupSpec(t);
+  const result = await runEffectivenessComparisonGroup(spec);
+  const seal = JSON.parse(fs.readFileSync(result.sealPath, 'utf8'));
+  seal.version = 2;
+  for (const [index, run] of result.runs.entries()) {
+    const verifierEvidenceIds = new Set(
+      run.report.evidence
+        .filter((evidence) => evidence.source_kind === 'independent_verifier')
+        .map((evidence) => evidence.id),
+    );
+    const verifierEventIds = new Set(
+      run.report.evidence
+        .filter((evidence) => verifierEvidenceIds.has(evidence.id))
+        .map((evidence) => evidence.event_id),
+    );
+    run.report.evidence = run.report.evidence
+      .filter((evidence) => !verifierEvidenceIds.has(evidence.id));
+    run.report.events = run.report.events
+      .filter((event) => !verifierEventIds.has(event.id));
+    run.report.final_result.verifier_result_refs = [];
+    fs.writeFileSync(
+      path.join(run.evidenceDir, 'report.json'),
+      `${JSON.stringify(run.report, null, 2)}\n`,
+    );
+    seal.reports[index].digest = digestJson(run.report);
   }
   fs.writeFileSync(result.sealPath, `${JSON.stringify(seal, null, 2)}\n`);
 

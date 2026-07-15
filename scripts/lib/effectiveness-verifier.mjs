@@ -7,8 +7,22 @@ const RESULT_CONTRACT = 'forge-effectiveness-verifier-result';
 const OBSERVATION_CONTRACT = 'forge-effectiveness-verifier-observation';
 const RUN_CONTRACT = 'forge-effectiveness-verifier-run';
 const SCHEMA_VERSION = 1;
+const MAX_DOCUMENT_BYTES = 1024 * 1024;
 const COMMAND_PURPOSES = new Set(['test', 'build', 'typecheck']);
-const HOST_GUARANTEES = ['output-bound', 'timeout', 'workspace-isolation'];
+const HOST_GUARANTEES = [
+  'cancellation',
+  'cpu-limit',
+  'disk-limit',
+  'memory-limit',
+  'network-isolation',
+  'non-blocking-bridge',
+  'output-bound',
+  'process-tree-cleanup',
+  'read-only-evidence',
+  'secret-isolation',
+  'timeout',
+  'workspace-isolation',
+];
 const registeredAdapters = new WeakSet();
 const registeredRuntimes = new WeakSet();
 
@@ -30,7 +44,7 @@ function isPlainObject(value) {
   return prototype === Object.prototype || prototype === null;
 }
 
-function assertJsonData(value, label, ancestors = new Set()) {
+function assertJsonData(value, label, ancestors = new Set(), code = 'invalid_verifier') {
   if (
     value === null ||
     typeof value === 'string' ||
@@ -40,26 +54,29 @@ function assertJsonData(value, label, ancestors = new Set()) {
     return;
   }
   if (!Array.isArray(value) && !isPlainObject(value)) {
-    fail('invalid_verifier', `${label} must contain only JSON data`);
+    fail(code, `${label} must contain only JSON data`);
   }
   if (ancestors.has(value)) {
-    fail('invalid_verifier', `${label} must not contain cycles`);
+    fail(code, `${label} must not contain cycles`);
   }
   ancestors.add(value);
   for (const item of Array.isArray(value) ? value : Object.values(value)) {
-    assertJsonData(item, label, ancestors);
+    assertJsonData(item, label, ancestors, code);
   }
   ancestors.delete(value);
 }
 
-function cloneData(value, label) {
+function cloneData(value, label, code = 'invalid_verifier') {
   let cloned;
   try {
     cloned = structuredClone(value);
   } catch (error) {
-    fail('invalid_verifier', `${label} must contain only cloneable JSON data`, { cause: error });
+    fail(code, `${label} must contain only cloneable JSON data`, { cause: error });
   }
-  assertJsonData(cloned, label);
+  assertJsonData(cloned, label, new Set(), code);
+  if (Buffer.byteLength(JSON.stringify(cloned)) > MAX_DOCUMENT_BYTES) {
+    fail(code, `${label} exceeds 1 MiB`);
+  }
   return cloned;
 }
 
@@ -234,15 +251,30 @@ export function createEffectivenessVerifierRuntime(input) {
   assertExactKeys(input, ['id', 'executor', 'adapters'], 'verifier runtime');
   assertId(input.id, 'verifier runtime id');
   if (!isPlainObject(input.executor)) fail('invalid_runtime', 'executor must be an object');
-  assertExactKeys(input.executor, ['id', 'version', 'definition', 'execute'], 'executor');
+  assertExactKeys(
+    input.executor,
+    ['id', 'version', 'definition', 'execute', 'cancel'],
+    'executor',
+  );
   assertId(input.executor.id, 'executor id');
   if (typeof input.executor.version !== 'string' || input.executor.version.length === 0) {
     fail('invalid_runtime', 'executor version is required');
   }
-  if (!isPlainObject(input.executor.definition) || typeof input.executor.execute !== 'function') {
-    fail('invalid_runtime', 'executor definition and execute are required');
+  if (
+    !isPlainObject(input.executor.definition) ||
+    typeof input.executor.execute !== 'function' ||
+    typeof input.executor.cancel !== 'function'
+  ) {
+    fail('invalid_runtime', 'executor definition, execute, and cancel are required');
   }
   const definition = cloneData(input.executor.definition, 'executor definition');
+  if (
+    !Array.isArray(definition.guarantees) ||
+    definition.guarantees.some((item) => typeof item !== 'string') ||
+    new Set(definition.guarantees).size !== definition.guarantees.length
+  ) {
+    fail('invalid_runtime', 'executor guarantees must be unique strings');
+  }
   const guarantees = new Set(definition.guarantees ?? []);
   const missingGuarantee = HOST_GUARANTEES.find((item) => !guarantees.has(item));
   if (missingGuarantee) {
@@ -263,6 +295,7 @@ export function createEffectivenessVerifierRuntime(input) {
     ...publicExecutor({ ...input.executor, definition }),
     definition,
     execute: input.executor.execute,
+    cancel: input.executor.cancel,
   };
   deepFreeze(executor.definition);
   const adapterDefinitions = input.adapters.map((adapter) => cloneData(adapter, 'adapter'));
@@ -339,6 +372,21 @@ function assertRunSpec(spec) {
     }
   }
   assertTarget(spec.target);
+  if (!isPlainObject(spec.baseSnapshot)) {
+    fail('invalid_run', 'baseSnapshot is required');
+  }
+  assertExactKeys(spec.baseSnapshot, ['path', 'revision', 'digest'], 'baseSnapshot');
+  if (
+    typeof spec.baseSnapshot.path !== 'string' ||
+    !fs.existsSync(spec.baseSnapshot.path) ||
+    !fs.lstatSync(spec.baseSnapshot.path).isDirectory() ||
+    fs.lstatSync(spec.baseSnapshot.path).isSymbolicLink() ||
+    typeof spec.baseSnapshot.revision !== 'string' ||
+    spec.baseSnapshot.revision.length === 0
+  ) {
+    fail('invalid_run', 'baseSnapshot must identify an existing non-linked directory and revision');
+  }
+  assertDigest(spec.baseSnapshot.digest, 'baseSnapshot.digest');
   if (
     !isPlainObject(spec.limits) ||
     !Number.isSafeInteger(spec.limits.timeoutMs) ||
@@ -387,6 +435,68 @@ function safeInfrastructureObservation(adapter) {
     : { kind: adapter.kind === 'diff' ? 'diff' : 'assertion', status: 'infrastructure_error' };
 }
 
+function timeoutObservation(adapter) {
+  if (adapter.kind !== 'command') return safeInfrastructureObservation(adapter);
+  return {
+    ...safeInfrastructureObservation(adapter),
+    status: 'timeout',
+  };
+}
+
+async function executeWithSupervision(runtime, context, adapter, timeoutMs) {
+  const runId = `${context.target.attempt_id}.${adapter.id}.${crypto.randomUUID()}`;
+  const controller = new AbortController();
+  let timeoutHandle;
+  const execution = Promise.resolve()
+    .then(() => runtime.executor.execute(Object.freeze({
+      ...context,
+      runId,
+      signal: controller.signal,
+    })))
+    .then(
+      (value) => ({ kind: 'value', value }),
+      () => ({ kind: 'error' }),
+    );
+  const deadline = new Promise((resolve) => {
+    timeoutHandle = setTimeout(() => resolve({ kind: 'timeout' }), timeoutMs);
+  });
+  const completed = await Promise.race([execution, deadline]);
+  clearTimeout(timeoutHandle);
+  if (completed.kind === 'value') return completed.value;
+
+  controller.abort();
+  const cleanupTimeoutMs = Math.min(5_000, Math.max(250, timeoutMs));
+  let cleanupHandle;
+  const cleanup = Promise.resolve()
+    .then(() => runtime.executor.cancel(Object.freeze({
+      runId,
+      reason: completed.kind === 'timeout' ? 'timeout' : 'execution_error',
+    })))
+    .then(
+      (acknowledgement) => ({ kind: 'acknowledgement', acknowledgement }),
+      () => ({ kind: 'error' }),
+    );
+  const cleanupDeadline = new Promise((resolve) => {
+    cleanupHandle = setTimeout(() => resolve({ kind: 'timeout' }), cleanupTimeoutMs);
+  });
+  const [cancelled, settled] = await Promise.all([
+    Promise.race([cleanup, cleanupDeadline]),
+    Promise.race([execution, cleanupDeadline]),
+  ]);
+  clearTimeout(cleanupHandle);
+  if (
+    cancelled.kind !== 'acknowledgement' ||
+    !isPlainObject(cancelled.acknowledgement) ||
+    !sameData(cancelled.acknowledgement, { run_id: runId, status: 'cancelled' }) ||
+    settled.kind === 'timeout'
+  ) {
+    fail('host_cleanup_failed', 'external verifier host did not acknowledge bounded cleanup');
+  }
+  return completed.kind === 'timeout'
+    ? timeoutObservation(adapter)
+    : safeInfrastructureObservation(adapter);
+}
+
 function normalizeObservation(adapter, input) {
   if (!isPlainObject(input)) return safeInfrastructureObservation(adapter);
   if (adapter.kind === 'command') {
@@ -407,12 +517,22 @@ function normalizeObservation(adapter, input) {
         input.kind !== 'command' ||
         !statuses.has(input.status) ||
         (input.exit_code !== null && !Number.isInteger(input.exit_code)) ||
-        (input.signal !== null && typeof input.signal !== 'string')
+        (input.signal !== null &&
+          (typeof input.signal !== 'string' || input.signal.length > 64))
       ) {
         return safeInfrastructureObservation(adapter);
       }
       assertDigest(input.stdout_digest, 'stdout_digest');
       assertDigest(input.stderr_digest, 'stderr_digest');
+      if (
+        (input.status === 'completed' &&
+          (!Number.isInteger(input.exit_code) || input.signal !== null)) ||
+        (input.status === 'command_not_found' &&
+          (input.exit_code !== null || input.signal !== null)) ||
+        (['timeout', 'output_limit'].includes(input.status) && input.exit_code !== null)
+      ) {
+        return safeInfrastructureObservation(adapter);
+      }
       return cloneData(input, 'command observation');
     } catch {
       return safeInfrastructureObservation(adapter);
@@ -468,19 +588,21 @@ function sameData(left, right) {
   return JSON.stringify(canonicalValue(left)) === JSON.stringify(canonicalValue(right));
 }
 
-function decodeResult(input) {
-  if (typeof input !== 'string' && !Buffer.isBuffer(input)) return cloneData(input, 'result');
+function decodeDocument(input, label, code) {
+  if (typeof input !== 'string' && !Buffer.isBuffer(input)) {
+    return cloneData(input, label, code);
+  }
   const bytes = Buffer.isBuffer(input) ? input.length : Buffer.byteLength(input);
-  if (bytes > 1024 * 1024) fail('invalid_result', 'verifier result exceeds 1 MiB');
+  if (bytes > MAX_DOCUMENT_BYTES) fail(code, `${label} exceeds 1 MiB`);
   try {
     return JSON.parse(String(input));
   } catch (error) {
-    fail('invalid_result', 'verifier result is not valid JSON', { cause: error });
+    fail(code, `${label} is not valid JSON`, { cause: error });
   }
 }
 
 export function parseEffectivenessVerifierResult(input, options = {}) {
-  const result = decodeResult(input);
+  const result = decodeDocument(input, 'verifier result', 'invalid_result');
   if (!isPlainObject(result)) fail('invalid_result', 'verifier result must be an object');
   assertExactKeys(
     result,
@@ -578,7 +700,8 @@ export function parseEffectivenessVerifierResult(input, options = {}) {
       typeof reference.ref !== 'string' ||
       path.basename(reference.ref) !== reference.ref ||
       !Number.isSafeInteger(reference.bytes) ||
-      reference.bytes < 0
+      reference.bytes < 0 ||
+      reference.bytes > MAX_DOCUMENT_BYTES
     ) {
       fail('invalid_result', 'evidence reference fields are invalid');
     }
@@ -614,25 +737,145 @@ export function parseEffectivenessVerifierResult(input, options = {}) {
   return result;
 }
 
+export function parseEffectivenessVerifierObservation(input, options = {}) {
+  const document = decodeDocument(
+    input,
+    'verifier observation',
+    'invalid_observation',
+  );
+  if (!isPlainObject(document)) {
+    fail('invalid_observation', 'verifier observation must be an object');
+  }
+  assertExactKeys(
+    document,
+    [
+      'schema_version',
+      'contract',
+      'verifier_set',
+      'executor',
+      'verifier',
+      'target',
+      'started_at',
+      'ended_at',
+      'observation',
+    ],
+    'verifier observation',
+  );
+  if (
+    document.schema_version !== SCHEMA_VERSION ||
+    document.contract !== OBSERVATION_CONTRACT
+  ) {
+    fail('invalid_observation', 'verifier observation contract or version is unsupported');
+  }
+  if (!isPlainObject(document.verifier)) {
+    fail('invalid_observation', 'verifier is required');
+  }
+  const normalized = normalizeObservation(
+    { kind: document.verifier.kind },
+    document.observation,
+  );
+  if (!sameData(normalized, document.observation)) {
+    fail('invalid_observation', 'host observation fields or status invariants are invalid');
+  }
+  const [outcome, reasonCode] = outcomeFor(
+    { kind: document.verifier.kind },
+    normalized,
+  );
+  const syntheticResult = parseEffectivenessVerifierResult({
+    schema_version: SCHEMA_VERSION,
+    contract: RESULT_CONTRACT,
+    result_id: 'observation-validation',
+    verifier_set: document.verifier_set,
+    executor: document.executor,
+    verifier: document.verifier,
+    target: document.target,
+    scope: document.verifier.scope,
+    independence_level: 'independent_verifier',
+    outcome,
+    reason_code: reasonCode,
+    started_at: document.started_at,
+    ended_at: document.ended_at,
+    evidence_refs: [{
+      role: 'host_observation',
+      ref: 'observation.json',
+      digest: digestBuffer(''),
+      bytes: 0,
+    }],
+  });
+  if (options.result !== undefined) {
+    const result = parseEffectivenessVerifierResult(options.result);
+    if (
+      !sameData(result.verifier_set, syntheticResult.verifier_set) ||
+      !sameData(result.executor, syntheticResult.executor) ||
+      !sameData(result.verifier, syntheticResult.verifier) ||
+      !sameData(result.target, syntheticResult.target) ||
+      result.started_at !== syntheticResult.started_at ||
+      result.ended_at !== syntheticResult.ended_at ||
+      result.outcome !== syntheticResult.outcome ||
+      result.reason_code !== syntheticResult.reason_code
+    ) {
+      fail('invalid_observation', 'host observation does not support verifier result');
+    }
+  }
+  return document;
+}
+
 export async function runEffectivenessVerifierSet(spec) {
   assertRunSpec(spec);
   const evidenceRoot = fs.realpathSync(spec.evidenceDir);
   const workspaceDir = fs.realpathSync(spec.workspaceDir);
+  const baseSnapshotPath = fs.realpathSync(spec.baseSnapshot.path);
   const target = cloneData(spec.target, 'target');
+  const diffPath = path.join(evidenceRoot, target.workspace.diff_ref);
+  const diffStat = fs.lstatSync(diffPath);
+  if (
+    !diffStat.isFile() ||
+    diffStat.isSymbolicLink() ||
+    digestBuffer(fs.readFileSync(diffPath)) !== target.workspace.diff_digest
+  ) {
+    fail('invalid_run', 'captured diff does not match target.workspace.diff_digest');
+  }
+  const artifacts = deepFreeze({
+    base_snapshot: {
+      path: baseSnapshotPath,
+      revision: spec.baseSnapshot.revision,
+      digest: spec.baseSnapshot.digest,
+    },
+    captured_diff: {
+      path: diffPath,
+      ref: target.workspace.diff_ref,
+      digest: target.workspace.diff_digest,
+      bytes: diffStat.size,
+    },
+  });
   const results = [];
   for (const adapter of spec.runtime.adapters) {
     const startedAt = new Date().toISOString();
     const startedMonotonic = performance.now();
     let rawObservation;
     try {
-      rawObservation = await spec.runtime.executor.execute(Object.freeze({
+      rawObservation = await executeWithSupervision(spec.runtime, Object.freeze({
         adapter,
         workspaceDir,
         target: cloneData(target, 'target'),
         limits: cloneData(spec.limits, 'limits'),
-      }));
-    } catch {
+        artifacts,
+      }), adapter, spec.limits.timeoutMs);
+    } catch (error) {
+      if (error instanceof EffectivenessVerifierError && error.code === 'host_cleanup_failed') {
+        throw error;
+      }
       rawObservation = safeInfrastructureObservation(adapter);
+    }
+    const retainedDiffStat = fs.lstatSync(diffPath);
+    if (
+      !retainedDiffStat.isFile() ||
+      retainedDiffStat.isSymbolicLink() ||
+      retainedDiffStat.size !== diffStat.size ||
+      digestBuffer(fs.readFileSync(diffPath)) !== target.workspace.diff_digest ||
+      fs.realpathSync(spec.baseSnapshot.path) !== baseSnapshotPath
+    ) {
+      fail('host_evidence_changed', 'external verifier host changed retained verification input');
     }
     const observation = normalizeObservation(adapter, rawObservation);
     const [outcome, reasonCode] = outcomeFor(adapter, observation);

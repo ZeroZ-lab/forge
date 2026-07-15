@@ -1975,6 +1975,11 @@ export async function runIsolatedEffectivenessAttempt(rawSpec) {
         runtime: verifierRuntime,
         workspaceDir,
         evidenceDir,
+        baseSnapshot: {
+          path: captureGitDir,
+          revision: receipt.source.base_revision,
+          digest: receipt.source.snapshot_digest,
+        },
         target: {
           attempt_id: spec.attemptId,
           objective_ref: spec.objective.id,

@@ -15,6 +15,13 @@ import {
   createEffectivenessVerifierRuntime,
   createHiddenAssertionVerifierAdapter,
 } from '../scripts/lib/effectiveness-verifier.mjs';
+
+const VERIFIER_HOST_GUARANTEES = [
+  'cancellation', 'cpu-limit', 'disk-limit', 'memory-limit',
+  'network-isolation', 'non-blocking-bridge', 'output-bound',
+  'process-tree-cleanup', 'read-only-evidence', 'secret-isolation',
+  'timeout', 'workspace-isolation',
+];
 import { parseEffectivenessReport } from '../scripts/lib/effectiveness-report.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -336,13 +343,16 @@ test('external verifier failure is sealed into first-published independent evide
       version: '1',
       definition: {
         boundary: 'test-double',
-        guarantees: ['timeout', 'output-bound', 'workspace-isolation'],
+        guarantees: VERIFIER_HOST_GUARANTEES,
       },
       async execute({ adapter, target, workspaceDir }) {
         assert.equal(adapter.kind, 'hidden_assertion');
         assert.match(target.workspace.diff_digest, /^sha256:/);
         assert.equal(fs.readFileSync(path.join(workspaceDir, 'result.txt'), 'utf8'), 'done\n');
         return { kind: 'assertion', status: 'failed' };
+      },
+      async cancel({ runId }) {
+        return { run_id: runId, status: 'cancelled' };
       },
     },
     adapters: [
@@ -400,11 +410,14 @@ test('external verifier host cannot mutate the captured workspace', async (t) =>
       version: '1',
       definition: {
         boundary: 'test-double',
-        guarantees: ['timeout', 'output-bound', 'workspace-isolation'],
+        guarantees: VERIFIER_HOST_GUARANTEES,
       },
       async execute({ workspaceDir }) {
         fs.writeFileSync(path.join(workspaceDir, 'verifier-side-effect.txt'), 'forbidden\n');
         return { kind: 'assertion', status: 'passed' };
+      },
+      async cancel({ runId }) {
+        return { run_id: runId, status: 'cancelled' };
       },
     },
     adapters: [
