@@ -177,6 +177,13 @@ arm itself. The child does not receive the attempt or arm id. Attempt ids
 allocate evidence directories exclusively, while a random runner-owned
 isolation id prevents cross-store identity collisions.
 
+The runner itself only reads the source and runs the child in the clone. Source
+guards bind HEAD/tree/refs/index plus the complete non-`.git` worktree,
+including ignored files, before launch and after execution/report adaptation.
+An external or concurrent source change becomes `infrastructure_error`; the
+runner does not destructively restore it because that could erase unrelated
+user work. B05's host sandbox owns prevention of deliberate filesystem escape.
+
 `command.definitionDigest` is required and must be computed before launch over
 the adapter/launcher definition, including interpreted script or configuration
 files whose contents are not represented by the executable bytes or argument
@@ -214,7 +221,7 @@ returned as a runner error because no honest report can be published there.
 
 Process output is first captured inside the temporary capsule. Literal values
 from credential-like explicit environment variables, plus caller-declared
-`command.sensitiveValues`, are scanned across retained streams, final workspace
+`command.sensitiveValues`, are scanned across retained streams, source guards, final workspace
 files and paths, and report input. The initial workspace is scanned before the
 child launches, so a configured credential in the baseline cannot become a
 retained snapshot digest. A later match immediately removes both raw streams,

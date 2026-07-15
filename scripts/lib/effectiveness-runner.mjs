@@ -14,17 +14,20 @@ import {
 const RECEIPT_CONTRACT = 'forge-effectiveness-run-receipt';
 const RECEIPT_VERSION = 1;
 const RUNNER_IDENTITY = Object.freeze({ name: 'forge-effectiveness-runner', version: '1' });
+const GIT_ISOLATION_POLICY = Object.freeze({
+  GIT_CONFIG_GLOBAL: 'os.devNull',
+  GIT_CONFIG_NOSYSTEM: '1',
+  GIT_OPTIONAL_LOCKS: '0',
+  GIT_TERMINAL_PROMPT: '0',
+  GIT_NO_REPLACE_OBJECTS: '1',
+});
 const RESERVED_ENV = new Set([
   'CODEX_HOME',
   'FORGE_ATTEMPT_ID',
-  'GIT_CONFIG_GLOBAL',
-  'GIT_CONFIG_NOSYSTEM',
   'GIT_DIR',
   'GIT_INDEX_FILE',
-  'GIT_NO_REPLACE_OBJECTS',
-  'GIT_OPTIONAL_LOCKS',
-  'GIT_TERMINAL_PROMPT',
   'GIT_WORK_TREE',
+  ...Object.keys(GIT_ISOLATION_POLICY),
   'HOME',
   'OLDPWD',
   'PWD',
@@ -56,6 +59,13 @@ const DEFAULT_LIMITS = Object.freeze({
   gitOperationTimeoutMs: 2 * 60 * 1000,
   killGraceMs: 1_000,
 });
+
+function gitIsolationEnvironment() {
+  return {
+    ...GIT_ISOLATION_POLICY,
+    GIT_CONFIG_GLOBAL: os.devNull,
+  };
+}
 
 export class EffectivenessRunnerError extends Error {
   constructor(code, message, { stage = 'preflight', receipt = null, cause = null } = {}) {
@@ -206,11 +216,7 @@ function runGit(
         INHERITED_ENV.filter((name) => process.env[name] !== undefined)
           .map((name) => [name, process.env[name]]),
       ),
-      GIT_CONFIG_NOSYSTEM: '1',
-      GIT_CONFIG_GLOBAL: os.devNull,
-      GIT_OPTIONAL_LOCKS: '0',
-      GIT_TERMINAL_PROMPT: '0',
-      GIT_NO_REPLACE_OBJECTS: '1',
+      ...gitIsolationEnvironment(),
     },
     maxBuffer,
     timeout,
@@ -243,8 +249,8 @@ function runGit(
   return result;
 }
 
-function captureSourceGuard(sourceDir, gitOperationTimeoutMs) {
-  const gitOptions = { timeout: gitOperationTimeoutMs };
+function captureSourceGuard(sourceDir, limits, command) {
+  const gitOptions = { timeout: limits.gitOperationTimeoutMs };
   const head = runGit(sourceDir, ['rev-parse', 'HEAD'], gitOptions).stdout.trim();
   const tree = runGit(sourceDir, ['rev-parse', 'HEAD^{tree}'], gitOptions).stdout.trim();
   const status = runGit(
@@ -262,6 +268,13 @@ function captureSourceGuard(sourceDir, gitOperationTimeoutMs) {
     ['ls-files', '--stage', '-z'],
     { encoding: null, ...gitOptions },
   ).stdout;
+  const worktree = captureWorkspaceManifest(sourceDir, limits);
+  const sensitiveMaterialDetected = workspaceContainsSensitiveMaterial(
+    sourceDir,
+    worktree,
+    command,
+  );
+  const worktreeDigest = sensitiveMaterialDetected ? null : worktree.digest;
   return {
     head,
     tree,
@@ -269,18 +282,21 @@ function captureSourceGuard(sourceDir, gitOperationTimeoutMs) {
     status_digest: sha256Buffer(status),
     refs_digest: sha256Buffer(refs),
     index_digest: sha256Buffer(index),
+    worktree_digest: worktreeDigest,
+    sensitive_material_detected: sensitiveMaterialDetected,
     digest: sha256Json({
       head,
       tree,
       status: sha256Buffer(status),
       refs: sha256Buffer(refs),
       index: sha256Buffer(index),
+      worktree: worktreeDigest ?? 'credential_material_detected',
     }),
   };
 }
 
-function assertSourceRepository(sourceDir, expectedRevision, gitOperationTimeoutMs) {
-  const gitOptions = { timeout: gitOperationTimeoutMs };
+function assertSourceRepository(sourceDir, expectedRevision, limits, command) {
+  const gitOptions = { timeout: limits.gitOperationTimeoutMs };
   const topLevel = runGit(
     sourceDir,
     ['rev-parse', '--show-toplevel'],
@@ -289,7 +305,13 @@ function assertSourceRepository(sourceDir, expectedRevision, gitOperationTimeout
   if (fs.realpathSync(topLevel) !== sourceDir) {
     fail('invalid_source', 'source.dir must be the Git repository root');
   }
-  const guard = captureSourceGuard(sourceDir, gitOperationTimeoutMs);
+  const guard = captureSourceGuard(sourceDir, limits, command);
+  if (guard.sensitive_material_detected) {
+    fail(
+      'credential_material_detected',
+      'source repository contains configured credential material',
+    );
+  }
   if (guard.dirty) {
     fail('dirty_source', 'source repository must have no tracked or untracked changes');
   }
@@ -540,11 +562,7 @@ function isolatedEnvironment(runtimeDir, commandEnv, inheritedEnvironment) {
     ...inheritedEnvironment,
     ...commandEnv,
     CODEX_HOME: codexHome,
-    GIT_CONFIG_GLOBAL: os.devNull,
-    GIT_CONFIG_NOSYSTEM: '1',
-    GIT_OPTIONAL_LOCKS: '0',
-    GIT_TERMINAL_PROMPT: '0',
-    GIT_NO_REPLACE_OBJECTS: '1',
+    ...gitIsolationEnvironment(),
     HOME: homeDir,
     TEMP: tempDir,
     TMP: tempDir,
@@ -1450,13 +1468,7 @@ function createConfigurationDigest(spec, sourceGuard, commandPlan) {
       effective_environment_digest: sha256Json({
         values: commandConfiguration.effective_environment,
         isolated_paths: ['CODEX_HOME', 'HOME', 'TEMP', 'TMP', 'TMPDIR', 'XDG_CACHE_HOME', 'XDG_CONFIG_HOME', 'XDG_DATA_HOME'],
-        fixed_policy: {
-          GIT_CONFIG_GLOBAL: 'os.devNull',
-          GIT_CONFIG_NOSYSTEM: '1',
-          GIT_OPTIONAL_LOCKS: '0',
-          GIT_TERMINAL_PROMPT: '0',
-          GIT_NO_REPLACE_OBJECTS: '1',
-        },
+        fixed_policy: GIT_ISOLATION_POLICY,
       }),
       sensitive_policy: commandConfiguration.sensitive_policy,
       label: spec.command.label ?? null,
@@ -1552,7 +1564,8 @@ export async function runIsolatedEffectivenessAttempt(rawSpec) {
   const sourceBefore = assertSourceRepository(
     sourceDir,
     spec.source.revision,
-    spec.limits.gitOperationTimeoutMs,
+    spec.limits,
+    spec.command,
   );
   const protectedRoots = [
     sourceDir,
@@ -1697,7 +1710,7 @@ export async function runIsolatedEffectivenessAttempt(rawSpec) {
     let sourceAfter = null;
     let sourceGuardError = null;
     try {
-      sourceAfter = captureSourceGuard(sourceDir, spec.limits.gitOperationTimeoutMs);
+      sourceAfter = captureSourceGuard(sourceDir, spec.limits, spec.command);
     } catch (error) {
       sourceGuardError = {
         code: error instanceof EffectivenessRunnerError ? error.code : 'source_guard_failed',
@@ -1842,7 +1855,8 @@ export async function runIsolatedEffectivenessAttempt(rawSpec) {
       try {
         sourceAfterAdapter = captureSourceGuard(
           sourceDir,
-          spec.limits.gitOperationTimeoutMs,
+          spec.limits,
+          spec.command,
         );
       } catch (error) {
         sourceAdapterFailure = {

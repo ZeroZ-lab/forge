@@ -633,8 +633,14 @@ test('unsafe ids, dirty sources, external symlinks, and evidence collisions fail
   git(sourceDir, ['commit', '-qm', 'external symlink']);
   await assert.rejects(
     runIsolatedEffectivenessAttempt(basic('external.symlink')),
-    (error) => error instanceof EffectivenessRunnerError && error.code === 'external_symlink',
+    (error) => {
+      assert.ok(error instanceof EffectivenessRunnerError);
+      assert.equal(error.code, 'external_symlink');
+      return true;
+    },
   );
+  git(sourceDir, ['rm', '-q', 'external-link']);
+  git(sourceDir, ['commit', '-qm', 'remove external symlink']);
 
   fs.mkdirSync(evidenceRoot, { recursive: true });
   fs.mkdirSync(path.join(evidenceRoot, 'collision'));
@@ -1125,6 +1131,39 @@ test('a source change during report adaptation updates raw facts and publishes a
   assert.equal(fs.existsSync(path.join(evidenceDir, 'report.json')), true);
 });
 
+test('source guard detects ignored worktree changes without destructively restoring them', async (t) => {
+  const { sourceDir, evidenceRoot } = createSource(t, {
+    '.gitignore': 'ignored-cache.txt\n',
+  });
+  const ignoredPath = path.join(sourceDir, 'ignored-cache.txt');
+  const before = sourceState(sourceDir);
+  const spec = attemptSpec({
+    sourceDir,
+    evidenceRoot,
+    attemptId: 'source.guard.ignored-change',
+    script: '',
+  });
+  spec.buildReportInput = () => {
+    fs.writeFileSync(ignoredPath, 'external ignored change\n');
+    return baseReportInput();
+  };
+
+  let result;
+  try {
+    result = await runIsolatedEffectivenessAttempt(spec);
+    assert.equal(fs.existsSync(ignoredPath), true);
+  } finally {
+    fs.rmSync(ignoredPath, { force: true });
+  }
+  assert.equal(result.receipt.execution.termination, 'infrastructure_error');
+  assert.equal(result.receipt.source_guard.unchanged, false);
+  assert.notEqual(
+    result.receipt.source_guard.before,
+    result.receipt.source_guard.after,
+  );
+  assert.deepEqual(sourceState(sourceDir), before);
+});
+
 test('runner identity, event namespace, and acquisition source are adapter-inaccessible', async (t) => {
   const { sourceDir, evidenceRoot } = createSource(t);
   for (const [suffix, mutate] of [
@@ -1312,7 +1351,7 @@ test('configured credentials already present in the source never produce retaine
     (error) =>
       error instanceof EffectivenessRunnerError &&
       error.code === 'credential_material_detected' &&
-      error.stage === 'isolation',
+      error.stage === 'preflight',
   );
   assert.equal(fs.existsSync(path.join(evidenceRoot, attemptId)), false);
 });

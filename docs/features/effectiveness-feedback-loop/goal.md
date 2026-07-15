@@ -53,5 +53,6 @@ Forge 目前有稳定的 compliance/regression suite，但它明确不证明真�
 | schema 形状通过但证据并不可信 | 错把结构有效当效果成立 | B02 只声明 wire contract；B03 校验引用，B06 校验证据，B08 才给 outcome 判定 |
 | schema 演进超出运行时解释能力 | 新约束被静默忽略 | contract loader 拒绝未支持的 schema keyword、format、type 与失效本地引用 |
 | capture ceiling 被误解为运行期 quota 或完整 OS sandbox | 进程可瞬时耗盘、主动脱离 process group 或访问其他宿主资源 | B04 字段明确命名为 `maxCapturedWorkspace*`；B05 必须启用宿主 sandbox 承担 live disk、CPU、内存、network、detached process 和 hostile-code containment |
+| 外部并发写或恶意进程绕过 clone 修改 source | source 不再等于受控输入 | B04 对 HEAD/tree/refs/index 和含 ignored 文件的完整 worktree 做前后 guard 并降级为 `infrastructure_error`；不自动回滚以免删除用户并发修改，B05 host sandbox 负责阻止 hostile filesystem escape |
 | 运行中 capture 失败 | 伪造完整 final snapshot 或丢失失败证据 | 降级为 `infrastructure_error`，保留 command/失败 summary，不写虚假的 diff/final digest，仍经 B03 生成 `no_output` report |
 | evidence store 自身不可写或原子落盘失败 | 无法诚实发布完整 receipt/report | 返回 runner error，不把半成品称为正式 report；调用方修复存储后使用新 attempt id 重跑 |
