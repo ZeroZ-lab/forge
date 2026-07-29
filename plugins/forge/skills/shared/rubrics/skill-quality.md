@@ -17,6 +17,10 @@ Evaluate a Forge skill by its runtime role, not by whether it contains every con
 | Progressive disclosure | Common-path actions stay inline; branch-specific detail is loaded through a direct reference pointer. |
 | Premature-completion resistance | Later steps do not encourage the agent to rush an unresolved current step; split sequences when observed. |
 | Invocation cost | A separately discoverable skill has independent trigger value worth its metadata and context cost. |
+| Activation neutrality | Direct action and zero Skill use remain legal; activation is telemetry, not completion evidence. |
+| Skip / no-op boundary | The skill states when its marginal value is absent and exits without creating progress theater. |
+| No implicit successor | Its output is advisory to the Chain Owner and does not force another top-level Skill. |
+| Metadata discipline | Description and when-to-use expose unique value without anchoring generic model work. |
 
 ## Review order
 
@@ -24,4 +28,5 @@ Evaluate a Forge skill by its runtime role, not by whether it contains every con
 2. Sharpen completion criteria before adding more process.
 3. Move branch-only detail to a direct reference.
 4. Split a skill only when it needs independent invocation or sequence isolation.
-5. Re-run token and behavioral gates; prose quality alone is not evidence.
+5. Remove generic triggers and mandatory successors.
+6. Re-run metadata, selected-body, total-context, and behavioral gates; prose quality alone is not evidence.

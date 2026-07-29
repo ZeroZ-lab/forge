@@ -1,6 +1,6 @@
 ---
 name: architecture-view
-description: Generates a local derived architecture view from Forge authoritative docs when the user explicitly asks for an architecture view, derived system map, module/data/interface/runtime/deployment overview, or HTML relationship preview; use as a sidecar only, not for map data structures, geographic maps, source maps, roadmaps, or ordinary implementation work.
+description: Explicitly generates a source-traceable HTML architecture sidecar from authoritative Forge docs; not for implementation or architecture decisions.
 disable-model-invocation: true
 ---
 

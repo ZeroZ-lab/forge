@@ -1,0 +1,29 @@
+{
+  "id": "small-feature-vertical-slice-outcome",
+  "objective": { "id": "small-feature-vertical-slice", "digest": "sha256:b34ba41e8f21f939e14724354a01f24a8c1784fd7ddaac81dfa11575703c1422" },
+  "fixture": { "id": "small-feature-vertical-slice", "digest": "sha256:b34ba41e8f21f939e14724354a01f24a8c1784fd7ddaac81dfa11575703c1422" },
+  "verifier_manifest": [
+    { "id": "goal-outcome", "definition_digest": "sha256:36a6522246f5c7264b608ada5549432ada53886e291ac058d9199aa44878ec98" },
+    { "id": "workspace-diff", "definition_digest": "sha256:5019531e38aeb7350e54a23b7c9825fe1e5238f16b29b0f29597380411939da8" }
+  ],
+  "criteria": [
+    {
+      "id": "objective-working-vertical-slice",
+      "requirement_kind": "objective",
+      "requirement_ref": { "source_ref": "evals/effectiveness-suite/fixtures/small-feature-vertical-slice.md", "digest": "sha256:b34ba41e8f21f939e14724354a01f24a8c1784fd7ddaac81dfa11575703c1422" },
+      "required": true,
+      "task_failure_gate": true,
+      "verifier_ids": ["goal-outcome"]
+    }
+  ],
+  "constraints": [
+    {
+      "id": "constraint-minimal-authoritative-change",
+      "kind": "scope",
+      "requirement_ref": { "source_ref": "evals/effectiveness-suite/fixtures/small-feature-vertical-slice.md", "digest": "sha256:b34ba41e8f21f939e14724354a01f24a8c1784fd7ddaac81dfa11575703c1422" },
+      "severity": "hard",
+      "verifier_ids": ["workspace-diff"]
+    }
+  ],
+  "blockage_policy": { "rules": [] }
+}

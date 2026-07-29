@@ -1,7 +1,7 @@
 ---
 name: db-design
-description: Reviews and designs data models, schemas, indexes, migrations, ID strategy, soft delete, query patterns, and storage boundaries.
-when_to_use: Use when designing or reviewing database schema, storage model, ID strategy, indexes, migrations, soft delete, data constraints, or persistence tradeoffs.
+description: Optional data-contract design/review for explicit schema, migration, indexing, or persistence trade-offs.
+when_to_use: Use when the user asks for database design/review or an unresolved schema, migration, index, deletion, query, or persistence invariant blocks safe implementation.
 ---
 
 # DB Design — 数据库详设
@@ -64,4 +64,4 @@ schema 版本、up/down、回填、兼容窗口、回滚和验证。
 
 ## 历史维护（自动）
 
-遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。standalone 且产生变更时持久化；作为 `detail` 子阶段时不单独写，由 orchestrator 汇总一次。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。standalone 且产生变更时持久化；作为 `detail` 子能力时不单独写，由当前用户目标的 Chain Owner 汇总一次。

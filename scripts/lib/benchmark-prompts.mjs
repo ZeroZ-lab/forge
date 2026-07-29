@@ -36,7 +36,7 @@ export function forgePromptForCase(testCase, fixture, publishedSkillNames = []) 
     ? publishedSkillNames.filter((name) => typeof name === 'string' && name.length > 0)
     : [];
   const skillList = skillNames.length > 0 ? skillNames.join(', ') : '(none published)';
-  return `你正在运行 Forge skills-suite benchmark。必须真实使用已安装的 Forge skills，而不是只做静态判断。
+  return `你正在运行 Forge skills-suite legacy capability compliance benchmark。这个 harness 会显式要求并盲评已发布能力，不能据此推断生产默认路由。必须真实使用 fixture 所要求的已安装 Forge skills，而不是只做静态判断。
 
 工作边界：
 - 只在当前临时工作目录内创建或修改文件。

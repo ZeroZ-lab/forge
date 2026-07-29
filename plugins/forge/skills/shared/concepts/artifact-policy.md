@@ -7,11 +7,11 @@ Keep durable project knowledge small, authoritative, and independently useful. A
 ## Default durable sources
 
 1. `docs/project.md` — shared project decisions, constraints, and domain language.
-2. `docs/features/<feature>/goal.md` — feature goal, boundary, completion criteria, and feature decisions.
+2. `docs/features/<feature>/goal.md` — feature goal, boundary, completion criteria, and feature decisions when the task changes behavior or needs a durable shared contract; clear implementation-only L0/L1 work does not create one merely to enter a Skill.
 3. `docs/features/<feature>/modules/*.md` — optional module interfaces and invariants when `goal.md` is not enough.
 4. `docs/change-units/CU-<date>-<slug>.md` — one evidence record for each completed mutation.
 
-`AGENTS.md` is a runtime adapter projected from these sources. `CLAUDE.md` is an optional pointer to `AGENTS.md`.
+`AGENTS.md` is the always-loaded Kernel runtime adapter projected from these sources. `CLAUDE.md` is an optional pointer to `AGENTS.md`. A Skill-only installation without this adapter is best-effort and must not claim host-enforced Kernel guarantees.
 
 ## Independent-artifact gate
 

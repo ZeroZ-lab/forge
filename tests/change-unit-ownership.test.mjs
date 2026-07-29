@@ -3,87 +3,84 @@ import test from 'node:test';
 
 import { decideChangeUnitOwnership } from '../scripts/lib/change-unit-ownership.mjs';
 
-test('standalone mutation owns exactly one Change Unit', () => {
-  assert.deepEqual(
-    decideChangeUnitOwnership({ mode: 'standalone', retainedMutation: true, outcome: 'completed' }),
-    {
-      currentWrites: true,
-      writer: 'current',
-      expectedChangeUnits: 1,
-      receiptFields: ['changed_files', 'decisions', 'risks', 'verification_evidence'],
-    },
-  );
+const baseReceipt = [
+  'changed_files',
+  'decisions',
+  'risks',
+  'verification_evidence',
+  'unresolved_items',
+  'recommended_next_action',
+];
+
+test('direct and standalone mutation are written once by the current Chain Owner', () => {
+  for (const mode of ['direct', 'standalone']) {
+    assert.deepEqual(
+      decideChangeUnitOwnership({ mode, retainedMutation: true, outcome: 'completed' }),
+      {
+        currentWrites: true,
+        writer: 'chain_owner',
+        expectedChangeUnits: 1,
+        receiptFields: baseReceipt,
+      },
+    );
+  }
 });
 
-test('child mutation delegates one consolidated Change Unit to its orchestrator', () => {
+test('child mutation delegates one consolidated Change Unit to the Chain Owner', () => {
   assert.deepEqual(
     decideChangeUnitOwnership({ mode: 'child', retainedMutation: true, outcome: 'completed' }),
     {
       currentWrites: false,
-      writer: 'orchestrator',
+      writer: 'chain_owner',
       expectedChangeUnits: 1,
-      receiptFields: ['changed_files', 'decisions', 'risks', 'verification_evidence'],
+      receiptFields: baseReceipt,
     },
   );
 });
 
-test('a pre-mutation block writes no Change Unit', () => {
-  assert.deepEqual(
-    decideChangeUnitOwnership({ mode: 'standalone', retainedMutation: false, outcome: 'blocked' }),
-    {
-      currentWrites: false,
-      writer: null,
-      expectedChangeUnits: 0,
-      receiptFields: [],
-    },
-  );
-});
-
-test('a fully rolled-back mutation writes no Change Unit', () => {
-  assert.deepEqual(
-    decideChangeUnitOwnership({ mode: 'child', retainedMutation: false, outcome: 'completed' }),
-    {
-      currentWrites: false,
-      writer: null,
-      expectedChangeUnits: 0,
-      receiptFields: [],
-    },
-  );
-});
-
-test('a post-mutation block preserves partial evidence for the single owner', () => {
-  for (const [mode, writer, currentWrites] of [
-    ['standalone', 'current', true],
-    ['child', 'orchestrator', false],
-  ]) {
-    const decision = decideChangeUnitOwnership({ mode, retainedMutation: true, outcome: 'blocked' });
-
-    assert.equal(decision.writer, writer);
-    assert.equal(decision.currentWrites, currentWrites);
-    assert.equal(decision.expectedChangeUnits, 1);
-    assert.deepEqual(decision.receiptFields, [
-      'changed_files',
-      'decisions',
-      'risks',
-      'verification_evidence',
-      'partial_changes',
-      'unverified_items',
-      'rollback',
-    ]);
+test('pre-mutation blocks and fully rolled-back changes write no Change Unit', () => {
+  for (const mode of ['direct', 'standalone', 'child']) {
+    assert.deepEqual(
+      decideChangeUnitOwnership({ mode, retainedMutation: false, outcome: 'blocked' }),
+      {
+        currentWrites: false,
+        writer: null,
+        expectedChangeUnits: 0,
+        receiptFields: [],
+      },
+    );
   }
 });
 
-test('ownership policy rejects unknown modes and outcomes', () => {
+test('partial and blocked retained mutation preserve recovery evidence for one owner', () => {
+  for (const outcome of ['partial', 'blocked']) {
+    for (const mode of ['direct', 'standalone', 'child']) {
+      const decision = decideChangeUnitOwnership({ mode, retainedMutation: true, outcome });
+
+      assert.equal(decision.writer, 'chain_owner');
+      assert.equal(decision.currentWrites, mode !== 'child');
+      assert.equal(decision.expectedChangeUnits, 1);
+      assert.deepEqual(decision.receiptFields, [
+        ...baseReceipt,
+        'partial_changes',
+        'unverified_items',
+        'rollback',
+      ]);
+    }
+  }
+});
+
+test('ownership policy rejects unknown modes, outcomes, and mutation flags', () => {
   assert.throws(
     () => decideChangeUnitOwnership({ mode: 'stage', retainedMutation: true, outcome: 'completed' }),
-    /mode must be standalone or child/,
+    /mode must be direct, standalone, or child/,
   );
   assert.throws(
-    () => decideChangeUnitOwnership({ mode: 'standalone', retainedMutation: true, outcome: 'paused' }),
-    /outcome must be completed or blocked/,
+    () => decideChangeUnitOwnership({ mode: 'direct', retainedMutation: true, outcome: 'paused' }),
+    /outcome must be completed, partial, or blocked/,
   );
   assert.throws(
-    () => decideChangeUnitOwnership({ mode: 'standalone', retainedMutation: 'yes', outcome: 'completed' }),
+    () => decideChangeUnitOwnership({ mode: 'direct', retainedMutation: 'yes', outcome: 'completed' }),
     /retainedMutation must be boolean/,
   );
 });

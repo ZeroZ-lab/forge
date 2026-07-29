@@ -1,6 +1,6 @@
 ---
 name: fe-accept
-description: Reviews frontend implementation quality across behavior, visual fidelity, responsiveness, accessibility, and performance evidence. Use for lightweight page checks or full frontend acceptance review.
+description: Independently checks frontend behavior, visual fidelity, responsiveness, accessibility, and performance evidence.
 when_to_use: Use when the user asks to accept frontend work, inspect a page, compare implementation with design, check visual quality, responsive behavior, accessibility, performance, or frontend release readiness.
 ---
 
@@ -22,7 +22,7 @@ when_to_use: Use when the user asks to accept frontend work, inspect a page, com
 
 **上游**：`DESIGN.md`、interaction-spec、goal.md（前端决策）、modules/*.md、实际前端代码和测试。
 
-**下游**：对话中的验收结论、缺陷清单、证据和豁免记录，交给 codegen 修复或 review 审查。
+**输出**：对话中的验收结论、缺陷清单、证据和豁免记录，交给 Chain Owner 决定直接修复或追加能力。
 
 ## 何时不使用
 - 无前端实现（没有代码可验收）
@@ -71,13 +71,6 @@ when_to_use: Use when the user asks to accept frontend work, inspect a page, com
 
 **出口**：验收结论已给出，P0/P1 问题明确，豁免项有理由和责任人。
 
-## 运行时信号
-
-- 输入：frontend artifact ready
-- 输出：P0/P1/P2 frontend issues、acceptance status
-- 路由：详见本文件 frontmatter.signal_routes
-- 升级：无法运行或预览却要求通过 · P0/P1 未修复
-
 ## 红旗清单
 - 只看截图不操作真实路径 → 强制启动预览做真实验证
 - 只检查桌面不检查移动端 → 强制补充移动端验证
@@ -105,8 +98,5 @@ when_to_use: Use when the user asks to accept frontend work, inspect a page, com
 ```
 前端验收完成：结论、证据、阻塞项和豁免项已列出。
 
-下一步：
-  - 修复阻塞项
-  - 做独立审查
-  - 规划发布
+下一动作只向 Chain Owner 建议：根据阻塞项、风险和发布目标决定直接修复、追加独立审查或准备发布；不自动触发后继 Skill。
 ```

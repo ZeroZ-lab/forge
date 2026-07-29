@@ -1,6 +1,6 @@
 interface:
   display_name: "Forge Guide"
-  short_description: "推荐最短 Forge skill 链、复杂度与调用深度"
-  default_prompt: "Use $guide to recommend the shortest Forge skill chain for this task."
+  short_description: "推荐 direct action、零 Skill 或最小可选能力集合"
+  default_prompt: "Use $guide to recommend direct action, zero Skill, or the smallest optional capability set without executing work."
 policy:
   allow_implicit_invocation: false

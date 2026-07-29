@@ -1,17 +1,17 @@
 {
   "name": "forge",
-  "description": "文档是目标约束。目标是什么、边界在哪、怎么算完成。",
+  "description": "Kernel-first 自适应开发协议：直接行动合法，Skill 按边际价值可选。",
   "author": {
     "name": "ZeroZ-lab",
     "url": "https://github.com/ZeroZ-lab/forge"
   },
-  "version": "0.52.0",
+  "version": "0.53.0",
   "homepage": "https://github.com/ZeroZ-lab/forge",
   "skills": "./skills",
   "interface": {
     "displayName": "Forge",
-    "shortDescription": "目标约束驱动的 AI 开发决策协议",
-    "longDescription": "Forge 默认服务已有项目的小功能迭代：先明确目标和约束，再自主实现，最后验证结果是否达标。0.28 引入 Change Unit，使每次变更可追溯。",
+    "shortDescription": "Kernel-first、Skill 可选的 AI 开发决策协议",
+    "longDescription": "Forge 用项目 Kernel 约束目标、权限、范围、状态与证据；模型可直接行动或按边际价值使用任意、多个或零个 Skill。Skill-only 安装是 best-effort，always-on Kernel 需要项目 AGENTS.md 或 host policy。",
     "developerName": "ZeroZ-lab",
     "category": "Engineering",
     "capabilities": [
@@ -21,9 +21,9 @@
     ],
     "websiteURL": "https://github.com/ZeroZ-lab/forge",
     "defaultPrompt": [
-      "用 Forge 为已有 feature 补 detail 目标",
-      "按 goal 生成这个 feature 的实现",
-      "review 当前修改是否偏离 goal"
+      "直接完成最小已验证变更；只在有边际价值时使用 Forge Skill",
+      "边界不清时使用 Forge detail 补共享合同",
+      "对 L2/L3 或 P0/P1 修改做独立 Forge review"
     ]
   }
 }

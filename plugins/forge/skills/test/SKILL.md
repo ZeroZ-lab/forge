@@ -17,7 +17,7 @@ when_to_use: Use when the user asks for the full test stage, coordinated risk co
 - codegen/review 暴露的测试缺口
 - gated `testing/strategy.md`（如存在）
 
-缺少可测试完成标准时回到 define/detail。
+缺少可测试完成标准时交给 Chain Owner 重开目标，可按缺口选择 define/detail。
 
 ## 流程
 
@@ -40,7 +40,7 @@ when_to_use: Use when the user asks for the full test stage, coordinated risk co
 - 风险与场景覆盖无冲突；
 - 自动化与手工边界清楚；
 - 已执行验证有证据，未验证部分显式列出；
-- 有持久变更时由本 orchestrator 写一个 Change Unit。
+- 有持久变更时由 Chain Owner 汇总一个 Change Unit。
 
 ## 历史维护
 

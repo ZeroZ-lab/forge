@@ -3,6 +3,8 @@ const BASE_RECEIPT_FIELDS = [
   'decisions',
   'risks',
   'verification_evidence',
+  'unresolved_items',
+  'recommended_next_action',
 ];
 
 const BLOCKED_MUTATION_FIELDS = [
@@ -12,11 +14,11 @@ const BLOCKED_MUTATION_FIELDS = [
 ];
 
 export function decideChangeUnitOwnership({ mode, retainedMutation, outcome }) {
-  if (mode !== 'standalone' && mode !== 'child') {
-    throw new Error('mode must be standalone or child');
+  if (!['direct', 'standalone', 'child'].includes(mode)) {
+    throw new Error('mode must be direct, standalone, or child');
   }
-  if (outcome !== 'completed' && outcome !== 'blocked') {
-    throw new Error('outcome must be completed or blocked');
+  if (!['completed', 'partial', 'blocked'].includes(outcome)) {
+    throw new Error('outcome must be completed, partial, or blocked');
   }
   if (typeof retainedMutation !== 'boolean') {
     throw new Error('retainedMutation must be boolean');
@@ -31,12 +33,13 @@ export function decideChangeUnitOwnership({ mode, retainedMutation, outcome }) {
     };
   }
 
+  const currentWrites = mode !== 'child';
   return {
-    currentWrites: mode === 'standalone',
-    writer: mode === 'standalone' ? 'current' : 'orchestrator',
+    currentWrites,
+    writer: 'chain_owner',
     expectedChangeUnits: 1,
-    receiptFields: outcome === 'blocked'
-      ? [...BASE_RECEIPT_FIELDS, ...BLOCKED_MUTATION_FIELDS]
-      : [...BASE_RECEIPT_FIELDS],
+    receiptFields: outcome === 'completed'
+      ? [...BASE_RECEIPT_FIELDS]
+      : [...BASE_RECEIPT_FIELDS, ...BLOCKED_MUTATION_FIELDS],
   };
 }

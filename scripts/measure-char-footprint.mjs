@@ -1,105 +1,74 @@
 #!/usr/bin/env node
 
-import fs from 'node:fs';
-import path from 'node:path';
 import process from 'node:process';
 
+import {
+  measureRuntimeFootprint,
+  RUNTIME_FOOTPRINT_BUDGETS,
+  runtimeFootprintFailures,
+} from './lib/runtime-footprint.mjs';
+
 const root = process.cwd();
-const skillRoot = path.join(root, 'plugins/forge/skills');
-const defaultChain = ['detail', 'codegen', 'review'];
-// chars-per-proxy-token: a rough English-text sketch only. This is NOT a tokenizer.
-// For CJK-heavy corpora (Forge skills are bilingual) it undercounts real tokens ~2.6x.
-// All budgets and gates use `chars` (the measured quantity), never this proxy.
-const proxyCharPerToken = 3.2;
-
-function readSkill(skillName) {
-  const relativePath = `plugins/forge/skills/${skillName}/SKILL.md`;
-  const absolutePath = path.join(root, relativePath);
-  return {
-    name: skillName,
-    path: relativePath,
-    text: fs.readFileSync(absolutePath, 'utf8'),
-  };
-}
-
-function measure(skill) {
-  return {
-    name: skill.name,
-    path: skill.path,
-    chars: skill.text.length,
-    lines: skill.text.replace(/\r?\n$/, '').split(/\r?\n/).length,
-    token_proxy: Math.ceil(skill.text.length / proxyCharPerToken),
-  };
+const json = process.argv.includes('--json');
+const knownArgs = new Set([
+  '--json',
+  '--max-kernel-adapter-chars',
+  '--max-project-agents-chars',
+  '--max-metadata-chars',
+  '--max-platform-metadata-chars',
+  '--max-selected-skill-chars',
+  '--max-selected-bundle-chars',
+  '--max-total-chars',
+]);
+for (const arg of process.argv.slice(2)) {
+  const name = arg.split('=', 1)[0];
+  if (name === '--max-default-chain-chars' || name === '--max-skill-chars') {
+    throw new Error(
+      `${name} was removed: the fixed chain is legacy-only. Use adaptive Kernel, metadata, selected-skill, selected-bundle, and total budgets.`,
+    );
+  }
+  if (!knownArgs.has(name)) throw new Error(`Unknown argument: ${name}`);
 }
 
 function parseNumberArg(name) {
   const prefix = `--${name}=`;
   const value = process.argv.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
   if (value === undefined) return undefined;
-
   const number = Number(value);
-  if (!Number.isFinite(number) || number < 0) {
-    throw new Error(`Invalid --${name}: ${value}`);
-  }
+  if (!Number.isFinite(number) || number < 0) throw new Error(`Invalid --${name}: ${value}`);
   return number;
 }
 
-const json = process.argv.includes('--json');
-const maxDefaultChainChars = parseNumberArg('max-default-chain-chars');
-const maxTotalChars = parseNumberArg('max-total-chars');
-const maxSkillChars = parseNumberArg('max-skill-chars');
-
-const skillNames = fs
-  .readdirSync(skillRoot, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(skillRoot, entry.name, 'SKILL.md')))
-  .map((entry) => entry.name)
-  .sort();
-
-const skills = skillNames.map((skillName) => measure(readSkill(skillName)));
-const total = {
-  chars: skills.reduce((sum, skill) => sum + skill.chars, 0),
-  lines: skills.reduce((sum, skill) => sum + skill.lines, 0),
-  token_proxy: skills.reduce((sum, skill) => sum + skill.token_proxy, 0),
+const budgets = {
+  kernel_adapter_chars:
+    parseNumberArg('max-kernel-adapter-chars') ?? RUNTIME_FOOTPRINT_BUDGETS.kernel_adapter_chars,
+  project_agents_chars:
+    parseNumberArg('max-project-agents-chars') ?? RUNTIME_FOOTPRINT_BUDGETS.project_agents_chars,
+  registry_metadata_chars:
+    parseNumberArg('max-metadata-chars') ?? RUNTIME_FOOTPRINT_BUDGETS.registry_metadata_chars,
+  platform_metadata_chars:
+    parseNumberArg('max-platform-metadata-chars') ?? RUNTIME_FOOTPRINT_BUDGETS.platform_metadata_chars,
+  max_selected_skill_chars:
+    parseNumberArg('max-selected-skill-chars') ?? RUNTIME_FOOTPRINT_BUDGETS.max_selected_skill_chars,
+  max_selected_bundle_chars:
+    parseNumberArg('max-selected-bundle-chars') ?? RUNTIME_FOOTPRINT_BUDGETS.max_selected_bundle_chars,
+  total_skill_chars:
+    parseNumberArg('max-total-chars') ?? RUNTIME_FOOTPRINT_BUDGETS.total_skill_chars,
 };
-const defaultChainSkills = skills.filter((skill) => defaultChain.includes(skill.name));
-const defaultChainTotal = {
-  chars: defaultChainSkills.reduce((sum, skill) => sum + skill.chars, 0),
-  lines: defaultChainSkills.reduce((sum, skill) => sum + skill.lines, 0),
-  token_proxy: defaultChainSkills.reduce((sum, skill) => sum + skill.token_proxy, 0),
-};
-
-const result = {
-  unit_note:
-    'chars is the measured metric and the basis for all budgets. token_proxy = chars/3.2 is a rough English-text sketch, NOT a real tokenizer; for CJK-heavy bilingual content it undercounts real tokens ~2.6x. Do not treat token_proxy as an accurate cost estimate.',
-  token_proxy_basis: proxyCharPerToken,
-  default_chain: defaultChain,
-  default_chain_total: defaultChainTotal,
-  total,
-  skills: [...skills].sort((a, b) => b.chars - a.chars),
-};
-
-const failures = [];
-if (maxDefaultChainChars !== undefined && defaultChainTotal.chars > maxDefaultChainChars) {
-  failures.push(`default chain chars ${defaultChainTotal.chars} exceeds ${maxDefaultChainChars}`);
-}
-if (maxTotalChars !== undefined && total.chars > maxTotalChars) {
-  failures.push(`total SKILL.md chars ${total.chars} exceeds ${maxTotalChars}`);
-}
-if (maxSkillChars !== undefined) {
-  for (const skill of skills) {
-    if (skill.chars > maxSkillChars) {
-      failures.push(`${skill.path} chars ${skill.chars} exceeds ${maxSkillChars}`);
-    }
-  }
-}
+const result = measureRuntimeFootprint(root);
+const failures = runtimeFootprintFailures(result, budgets);
 
 if (json) {
-  console.log(JSON.stringify(result, null, 2));
+  console.log(JSON.stringify({ ...result, budgets }, null, 2));
 } else {
-  console.log(
-    `Default chain (${defaultChain.join(' -> ')}): ${defaultChainTotal.chars} chars (rough proxy ~${defaultChainTotal.token_proxy} tokens at chars/3.2 — NOT a real tokenizer, undercounts CJK ~2.6x)`,
-  );
-  console.log(`All SKILL.md files: ${total.chars} chars (rough proxy ~${total.token_proxy} tokens)`);
+  console.log(`Generated AGENTS Kernel template: ${result.kernel_adapter.chars} chars`);
+  console.log(`Current project AGENTS adapter: ${result.project_agents.chars} chars`);
+  console.log(`Initial registry metadata: ${result.registry_metadata.chars} chars across ${result.registry_metadata.entries.length} Skills`);
+  console.log(`Platform skill metadata adapters: ${result.platform_metadata.chars} chars across ${result.platform_metadata.entries.length} files`);
+  console.log(`Largest selected Skill body: ${result.max_selected_skill.name} ${result.max_selected_skill.chars} chars`);
+  console.log(`Largest selected capability bundle: ${result.max_selected_bundle.name} ${result.max_selected_bundle.chars} chars (${result.max_selected_bundle.references.length} linked Markdown references, recursive upper bound)`);
+  console.log(`Legacy compatibility chain (${result.legacy_chain.join(' -> ')}): ${result.legacy_chain_total.chars} chars (reference only, not the production default)`);
+  console.log(`All SKILL.md files: ${result.total.chars} chars`);
   console.log('\nTop SKILL.md files by size:');
   for (const skill of result.skills.slice(0, 10)) {
     console.log(`- ${skill.name}: ${skill.chars} chars, ${skill.lines} lines`);
@@ -107,9 +76,7 @@ if (json) {
 }
 
 if (failures.length > 0) {
-  console.error('\nSkill char budget exceeded:');
-  for (const failure of failures) {
-    console.error(`- ${failure}`);
-  }
+  console.error('\nAdaptive runtime footprint budget exceeded:');
+  for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }

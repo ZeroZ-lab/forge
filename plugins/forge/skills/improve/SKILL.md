@@ -1,6 +1,6 @@
 ---
 name: improve
-description: Scan source code for shallow-module refactor (deepening) opportunities and render a self-contained HTML candidate report with before/after visuals; hand off the chosen candidate to $think for design-tree grilling. Use only on explicit request for an architecture deepening review — not for derived doc views ($architecture-view), not for implementation ($codegen), not for architecture decisions→ADR ($technical-design), not for ordinary bugfix seams ($codegen bugfix-protocol).
+description: Explicitly scans for shallow-module deepening candidates and renders an HTML report; not for implementation, ordinary bugfixes, or architecture decisions.
 disable-model-invocation: true
 ---
 

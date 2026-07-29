@@ -1,7 +1,7 @@
 ---
 name: test-strategy
-description: Designs how to test a feature through test types, risk coverage, data strategy, mocking, isolation, CI gates, and release confidence.
-when_to_use: Use when deciding test strategy, coverage expectations, risk-based testing, CI gates, mock boundaries, test data design, or release confidence before deriving concrete test cases.
+description: Optional risk-based test governance for explicit strategy, CI-gate, isolation, or release-confidence decisions.
+when_to_use: Use when the user asks for test strategy or risk, data, mock, isolation, CI, or release-confidence trade-offs need an independently reviewable plan.
 ---
 
 # Test Strategy — 测试策略

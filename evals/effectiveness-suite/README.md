@@ -19,8 +19,9 @@ does not run Codex or validate a produced run report. A passing contract does no
 ## Kernel Boundary
 
 Manifest v2 introduced the machine-validated `kernel_contract`; manifest v3
-added the versioned report-contract pointers; manifest v4 pins the four-arm
-comparison contract. Older manifest versions are rejected rather than silently
+added the versioned report-contract pointers; manifest v4 pinned the four-arm
+comparison contract; manifest v5 preserves those arms and pins one B08 outcome
+contract per case. Older manifest versions are rejected rather than silently
 receiving new semantics. The Kernel boundary is:
 
 - the Kernel owns the objective, permissions, scope, authoritative facts,
@@ -363,6 +364,64 @@ observation—owns runtime injection. Production benchmark hosts still require
 separate audit. A verifier pass is evidence only; B08 still decides sufficiency
 and objective outcome.
 
+### Outcome evaluator and hard gates
+
+`scripts/lib/effectiveness-outcome.mjs` is the B08 outcome module:
+
+```js
+import {
+  createEffectivenessOutcomeContract,
+  parseEffectivenessOutcomeContract,
+  deriveEffectivenessOutcome,
+} from '../../scripts/lib/effectiveness-outcome.mjs';
+```
+
+Manifest v5 pins one outcome-contract ref/digest per case. Each contract binds
+the objective and fixture, every requirement source ref/digest, the complete
+B07 verifier id/definition manifest, required or optional objective/acceptance
+criteria, hard permission/scope/safety/evidence-integrity constraints, and exact
+allowed blocker verifier/outcome/reason triples. The strict contract rejects
+fields for a required Skill, lifecycle stage, action path, arm, or model.
+Capability activation remains report telemetry and is never passed into a
+success rule.
+
+`deriveEffectivenessOutcome` is a bounded pure derivation and is not an
+admission or authority interface by itself. It consumes an attempt view produced after B03 report
+acceptance, B06 Envelope verification, and B07 result/observation replay. It
+returns `success`, `partial`, `correct_block`, `infrastructure_error`, or
+`fail`, plus per-rule status, claim alignment, and exact verifier evidence,
+Envelope, result, and host-observation references. It does not execute project
+code and does not infer acceptance semantics from fixture prose or a model
+self-report.
+
+Hard gates run before disposition. Evidence-integrity and authorization,
+scope, or safety violations outrank required hidden-verifier failures, which
+outrank a false `completed` claim. All triggered gates are retained even though
+the stable priority selects one primary reason. There is no compensating total
+score. A correct block requires an allowed independent reason for every unmet
+required criterion and passing hard constraints; an unrelated unknown or unsafe
+side effect cannot hide behind a blocked claim. Missing or unavailable required
+facts remain distinct from task failure. A hard constraint that cannot be
+verified, or a non-completed runner termination, cannot become partial/success.
+
+When `runEffectivenessComparisonGroup` receives the manifest-pinned outcome contract, it
+puts only its id/digest in the shared launch context, writes one content-addressed
+outcome sidecar per immutable report after host cleanup and evidence replay, and
+publishes comparison-group seal v4. The v4 seal binds the contract, complete
+verifier manifest, reports, receipts, and sidecars.
+`openSealedEffectivenessComparisonGroup` requires the expected verifier runtime
+and outcome contract, replays all retained validation, recomputes each outcome,
+and returns a frozen snapshot captured from the same no-follow, bounded regular
+file descriptors used for validation. Hard-linked, missing, tampered, stale,
+wrong-policy, or forged members are rejected before B09 can consume them.
+Historical v1–v3 seals
+retain their original meanings and never acquire B08 outcome semantics.
+
+The suite manifest, external verifier host, and retained store remain trusted
+integration inputs. Digest binding detects inconsistency but is not an
+external signature or identity proof. Real benchmark claims still require an
+audited host and storage/trust policy, and B09 still owns paired statistics.
+
 ### Four-arm comparison coordinator
 
 `scripts/lib/effectiveness-experiment.mjs` is the B05 plan and scheduling seam:
@@ -370,6 +429,7 @@ and objective outcome.
 ```js
 import {
   createEffectivenessExperimentPlan,
+  openSealedEffectivenessComparisonGroup,
   runEffectivenessComparisonGroup,
 } from '../../scripts/lib/effectiveness-experiment.mjs';
 ```

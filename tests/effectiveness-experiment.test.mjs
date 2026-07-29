@@ -10,18 +10,22 @@ import {
   EFFECTIVENESS_ARM_IDS,
   EffectivenessExperimentError,
   createEffectivenessExperimentPlan,
+  openSealedEffectivenessComparisonGroup,
   runEffectivenessComparisonGroup,
 } from '../scripts/lib/effectiveness-experiment.mjs';
 import {
   createDiffVerifierAdapter,
   createEffectivenessVerifierRuntime,
+  createHiddenAssertionVerifierAdapter,
 } from '../scripts/lib/effectiveness-verifier.mjs';
 import { createEvidenceEnvelope } from '../scripts/lib/evidence-envelope.mjs';
+import { loadEffectivenessContract } from '../scripts/lib/effectiveness-contract.mjs';
+import { createEffectivenessOutcomeContract } from '../scripts/lib/effectiveness-outcome.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const DIGESTS = {
-  objective: `sha256:${'1'.repeat(64)}`,
-  fixture: `sha256:${'2'.repeat(64)}`,
+  objective: 'sha256:e0657d2acfc2cd323a8cac3732a81be597db5c1c88d7b3cbb53efb617e795370',
+  fixture: 'sha256:e0657d2acfc2cd323a8cac3732a81be597db5c1c88d7b3cbb53efb617e795370',
   budget: `sha256:${'3'.repeat(64)}`,
   verifier: `sha256:${'4'.repeat(64)}`,
 };
@@ -284,6 +288,43 @@ function verifierRuntimeWithFailure() {
   });
 }
 
+function outcomeContract() {
+  return loadEffectivenessContract(root).outcomeContracts.get('direct-read-package-version');
+}
+
+function outcomeVerifierRuntime() {
+  return createEffectivenessVerifierRuntime({
+    id: 'fixture-outcome-verifiers',
+    executor: {
+      id: 'fixture-verifier-host',
+      version: '1',
+      definition: { boundary: 'test-double', guarantees: VERIFIER_HOST_GUARANTEES },
+      async execute({ adapter }) {
+        return {
+          kind: adapter.kind === 'hidden_assertion' ? 'assertion' : 'diff',
+          status: 'passed',
+        };
+      },
+      async cancel({ runId }) {
+        return { run_id: runId, status: 'cancelled' };
+      },
+    },
+    adapters: [
+      createHiddenAssertionVerifierAdapter({
+        id: 'declared-version',
+        scope: { kind: 'workspace', paths: ['package.json'] },
+        oracleRef: 'oracle://forge-effectiveness/direct-read-package-version/goal-outcome',
+        oracleDigest: DIGESTS.fixture,
+      }),
+      createDiffVerifierAdapter({
+        id: 'workspace-diff',
+        scope: { kind: 'diff', paths: ['*'] },
+        policy: { mode: 'captured-diff' },
+      }),
+    ],
+  });
+}
+
 function groupSpec(t, overrides = {}) {
   const { sourceDir, evidenceRoot } = createSource(t);
   const runtime = verifierRuntime();
@@ -324,6 +365,15 @@ function groupSpec(t, overrides = {}) {
     hostSandbox: hostSandbox(),
     ...overrides,
   };
+}
+
+function outcomeGroupSpec(t) {
+  const runtime = outcomeVerifierRuntime();
+  return groupSpec(t, {
+    verifierSet: runtime.verifierSet,
+    verifierRuntime: runtime,
+    outcomeContract: outcomeContract(),
+  });
 }
 
 test('trusted plan exposes four exact and mutually exclusive Forge arm policies', () => {
@@ -430,6 +480,136 @@ test('one minimal fixture runs all four arms with identical controls and declare
     fs.readdirSync(spec.evidenceRoot)
       .some((name) => name.startsWith(`${spec.comparisonGroupId}.incomplete-recovered-`)),
     true,
+  );
+});
+
+test('outcome-enabled groups publish immutable traced sidecars under a v4 seal', async (t) => {
+  const spec = outcomeGroupSpec(t);
+  const result = await runEffectivenessComparisonGroup(spec);
+  const seal = JSON.parse(fs.readFileSync(result.sealPath, 'utf8'));
+
+  assert.equal(seal.version, 4);
+  assert.deepEqual(seal.outcome_contract, {
+    id: spec.outcomeContract.id,
+    digest: spec.outcomeContract.digest,
+  });
+  assert.equal(seal.reports.every((entry) => entry.outcome), true);
+  const comparable = [];
+  for (const entry of seal.reports) {
+    const sidecar = JSON.parse(fs.readFileSync(
+      path.join(result.groupDir, entry.arm, entry.outcome.ref),
+      'utf8',
+    ));
+    assert.equal(sidecar.verdict, 'success');
+    assert.equal(sidecar.target.report_id, entry.report_id);
+    assert.equal(sidecar.outcome_contract.digest, spec.outcomeContract.digest);
+    assert.equal(sidecar.criteria[0].evidence_refs[0].envelope_ref.endsWith('.json'), true);
+    comparable.push({
+      verdict: sidecar.verdict,
+      criteria: sidecar.criteria.map(({ id, status, reason_code }) => ({ id, status, reason_code })),
+      constraints: sidecar.constraints.map(({ id, status, reason_code }) => ({ id, status, reason_code })),
+      hard_gates: {
+        triggered: sidecar.hard_gates.triggered,
+        primary: sidecar.hard_gates.primary,
+        codes: sidecar.hard_gates.all.map((gate) => gate.code),
+      },
+    });
+  }
+  assert.equal(new Set(comparable.map((value) => JSON.stringify(value))).size, 1);
+
+  const opened = openSealedEffectivenessComparisonGroup({
+    rootDir: root,
+    groupDir: result.groupDir,
+    comparisonGroupId: spec.comparisonGroupId,
+    verifierRuntime: spec.verifierRuntime,
+    outcomeContract: spec.outcomeContract,
+  });
+  assert.equal(Object.isFrozen(opened), true);
+  assert.equal(opened.attempts.length, 4);
+  assert.equal(opened.attempts.every((attempt) => attempt.outcome.verdict === 'success'), true);
+
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(spec),
+    (error) => error instanceof EffectivenessExperimentError && error.code === 'EVIDENCE_COLLISION',
+  );
+});
+
+test('tampered v4 outcome sidecars invalidate the group instead of being trusted', async (t) => {
+  const spec = outcomeGroupSpec(t);
+  const first = await runEffectivenessComparisonGroup(spec);
+  const seal = JSON.parse(fs.readFileSync(first.sealPath, 'utf8'));
+  const entry = seal.reports[0];
+  const outcomePath = path.join(first.groupDir, entry.arm, entry.outcome.ref);
+  const sidecar = JSON.parse(fs.readFileSync(outcomePath, 'utf8'));
+  sidecar.verdict = 'partial';
+  fs.writeFileSync(outcomePath, `${JSON.stringify(sidecar, null, 2)}\n`);
+
+  assert.throws(
+    () => openSealedEffectivenessComparisonGroup({
+      rootDir: root,
+      groupDir: first.groupDir,
+      comparisonGroupId: spec.comparisonGroupId,
+      verifierRuntime: spec.verifierRuntime,
+      outcomeContract: spec.outcomeContract,
+    }),
+    (error) => error instanceof EffectivenessExperimentError && error.code === 'INVALID_GROUP_SEAL',
+  );
+
+  const replacement = await runEffectivenessComparisonGroup(spec);
+  assert.equal(fs.existsSync(replacement.sealPath), true);
+  assert.equal(
+    fs.readdirSync(spec.evidenceRoot)
+      .some((name) => name.startsWith(`${spec.comparisonGroupId}.incomplete-recovered-`)),
+    true,
+  );
+});
+
+test('v4 rejects caller-substituted policies and verifier manifests before launch', async (t) => {
+  const spec = outcomeGroupSpec(t);
+  const trusted = spec.outcomeContract;
+  const {
+    schema_version: _schemaVersion,
+    contract: _contract,
+    digest: _digest,
+    ...definition
+  } = trusted;
+  spec.outcomeContract = createEffectivenessOutcomeContract({
+    ...definition,
+    constraints: [],
+  });
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(spec),
+    (error) => error instanceof EffectivenessExperimentError &&
+      error.code === 'INVALID_OUTCOME_CONTRACT' &&
+      /suite-pinned/.test(error.message),
+  );
+
+  const wrongRuntimeSpec = groupSpec(t, { outcomeContract: outcomeContract() });
+  await assert.rejects(
+    () => runEffectivenessComparisonGroup(wrongRuntimeSpec),
+    (error) => error instanceof EffectivenessExperimentError &&
+      error.code === 'INVALID_OUTCOME_CONTRACT' &&
+      /verifier manifest/.test(error.message),
+  );
+});
+
+test('trusted open rejects hard-linked outcome members', async (t) => {
+  const spec = outcomeGroupSpec(t);
+  const result = await runEffectivenessComparisonGroup(spec);
+  const seal = JSON.parse(fs.readFileSync(result.sealPath, 'utf8'));
+  const entry = seal.reports[0];
+  const outcomePath = path.join(result.groupDir, entry.arm, entry.outcome.ref);
+  fs.linkSync(outcomePath, path.join(result.groupDir, entry.arm, 'outcome-hardlink.json'));
+
+  assert.throws(
+    () => openSealedEffectivenessComparisonGroup({
+      rootDir: root,
+      groupDir: result.groupDir,
+      comparisonGroupId: spec.comparisonGroupId,
+      verifierRuntime: spec.verifierRuntime,
+      outcomeContract: spec.outcomeContract,
+    }),
+    (error) => error instanceof EffectivenessExperimentError && error.code === 'INVALID_GROUP_SEAL',
   );
 });
 

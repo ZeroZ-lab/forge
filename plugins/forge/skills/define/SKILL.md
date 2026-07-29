@@ -1,6 +1,6 @@
 ---
 name: define
-description: Defines requirements, constraints, user stories, scope exclusions, and testable acceptance criteria. Use for lightweight requirement clarification or full PRD creation before detail/codegen.
+description: Clarifies ambiguous requirements, constraints, scope exclusions, and testable acceptance criteria when direct action lacks a safe objective contract.
 when_to_use: Use when the user describes a feature with unclear scope, asks to define requirements, write a PRD, clarify acceptance criteria, decide in/out of scope, or turn a rough idea into testable product constraints.
 ---
 
@@ -58,7 +58,7 @@ when_to_use: Use when the user describes a feature with unclear scope, asks to d
 
 ## 入口/出口条件
 
-入口：需求边界不清或用户要求定义。出口：goal（或 gated PRD）可被 detail 读取，且没有阻塞性 `[NEEDS CLARIFICATION]`。若出现实时、搜索、推荐、优化、媒体、加密等技术信号，建议 research。
+入口：需求边界不清或用户要求定义。出口：goal（或 gated PRD）足以让 Chain Owner 直接行动或选择可选能力，且没有阻塞性 `[NEEDS CLARIFICATION]`。若出现实时、搜索、推荐、优化、媒体、加密等技术信号，建议 research。
 
 ## 轻量模式
 

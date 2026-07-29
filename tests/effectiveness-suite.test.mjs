@@ -7,7 +7,12 @@ import test from 'node:test';
 import { loadEffectivenessContract } from '../scripts/lib/effectiveness-contract.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const { manifest, kernelContract, coveredScenarios } = loadEffectivenessContract(root);
+const {
+  manifest,
+  kernelContract,
+  coveredScenarios,
+  outcomeContracts,
+} = loadEffectivenessContract(root);
 
 function withMutatedContract(mutate, check) {
   const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'forge-effectiveness-contract-'));
@@ -27,7 +32,7 @@ function withMutatedContract(mutate, check) {
 }
 
 test('effectiveness suite contract covers the six held-out scenarios', () => {
-  assert.equal(manifest.version, 4);
+  assert.equal(manifest.version, 5);
   assert.equal(manifest.name, 'forge-effectiveness-suite');
   assert.equal(manifest.cases.length, manifest.minimum_cases);
   assert.equal(manifest.required_repeats, 2);
@@ -77,10 +82,36 @@ test('kernel contract constrains state and evidence without choosing the model a
   assert.deepEqual(kernelContract.non_interference, {
     comparison_unit: 'paired_same_model',
     arms: ['no-forge', 'kernel-only', 'adaptive-full', 'legacy-chain'],
-    controlled_dimensions: ['model', 'fixture', 'workspace_revision', 'budget', 'verifier'],
+    controlled_dimensions: [
+      'model',
+      'fixture',
+      'outcome_contract',
+      'workspace_revision',
+      'budget',
+      'verifier',
+    ],
     model_capability_ordering: 'none',
     judged_by: ['verified_outcome', 'safety', 'valid_evidence'],
   });
+});
+
+test('each held-out case pins an action-neutral outcome contract to authoritative requirements', () => {
+  assert.equal(outcomeContracts.size, manifest.cases.length);
+  for (const testCase of manifest.cases) {
+    const outcome = outcomeContracts.get(testCase.id);
+    assert.equal(outcome.fixture.id, testCase.id);
+    assert.equal(outcome.digest, testCase.outcome_contract.digest);
+    assert.equal(outcome.verifier_manifest.length > 0, true);
+    assert.equal(
+      [...outcome.criteria, ...outcome.constraints]
+        .every((item) => item.requirement_ref.source_ref === testCase.fixture),
+      true,
+    );
+    assert.equal(
+      JSON.stringify(outcome).match(/required_skill|lifecycle_stage|action_path|arm_id|model_id/),
+      null,
+    );
+  }
 });
 
 test('four arm definitions are explicit, exclusive, and keep adaptive skill use optional', () => {

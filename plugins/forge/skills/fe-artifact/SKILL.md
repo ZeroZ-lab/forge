@@ -1,14 +1,14 @@
 ---
 name: fe-artifact
-description: Implements DESIGN.md, interaction specs, frontend specifications, and modules into pages, components, hooks, and styles.
-when_to_use: Use by direct invocation or from codegen when documented frontend tasks need page, component, hook, style, or frontend test implementation from Forge specifications and design system goals.
+description: Optional implementation of explicit, documented frontend goals into verifiable pages, components, hooks, styles, and tests.
+when_to_use: Use when the user explicitly requests Forge frontend artifact implementation or documented UI constraints need a specialized five-layer translation.
 ---
 
 # Fe Artifact — 前端实现
 
 ## 职责
 
-把前端目标实现为可运行、可验证的前端代码。它是 codegen 的前端子协议，负责把设计系统、交互规格、API 合约和组件规格落到页面与组件；实现是否 `verified` 由实际 verifier 回执决定，是否 `accepted` 只由后续 fe-accept 决定。
+把前端目标实现为可运行、可验证的前端代码。它可 standalone，也可作为当前目标的 child，负责把设计系统、交互规格、API 合约和组件规格落到页面与组件；实现是否 `verified` 只由实际 verifier 回执决定。独立体验验收是另一种按风险选择的能力，不是固定后继。
 
 历史证据统一遵循 `../shared/concepts/history-maintenance.md`。
 
@@ -22,7 +22,7 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 
 **上游**：按需存在的 `DESIGN.md`、interaction-spec，以及 goal.md、modules/*.md 和当前执行任务序列。
 
-**下游**：前端源码、样式、hooks、基础测试，交给 fe-accept 和 review。
+**输出**：前端源码、样式、hooks、基础测试和验证回执，交给 Chain Owner 集成；是否追加独立 fe-accept/review 由目标与风险决定。
 
 不重新做产品决策，不改 API 合约，不绕过 `DESIGN.md` 自行发明视觉语言。
 
@@ -30,7 +30,7 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 - 无前端规格（goal.md 无前端决策且无 modules/）
 - 无任何权威视觉约束
 - 纯后端 API（无前端代码需要生成）
-- codegen 未处理前端任务时不单独调用
+- 没有显式前端实现目标，或 direct action 已能在同等验证地板下更小成本完成
 
 ## 核心方法论
 
@@ -92,14 +92,14 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 
 ## 入口/出口条件
 
-**入口**：已有前端规格或 codegen 正在处理前端任务。
+**入口**：已有显式前端实现目标与足够的权威约束；standalone 与 child 都合法。
 
-**出口**：相关前端文件已生成，并输出下述三态结果回执。只有 `verified` 可交给 fe-accept；其他状态保留未验证项或失败证据后停止完成声明。
+**出口**：相关前端文件已生成，并输出下述三态结果回执。只有 `verified` 可供 Chain Owner 作为已验证实现证据；其他状态保留未验证项或失败证据后停止完成声明。
 
 ## 历史维护
 
-- 未声明由其他编排器拥有最终完成判定时，按 **standalone** 处理。
-- 作为 **child** 时，返回 changed files、decisions、risks 和 verification evidence，does not write Change Unit；由明确的 orchestrator 统一持久化。
+- 未声明由当前用户目标的 Chain Owner 拥有最终完成判定时，按 **standalone** 处理。
+- 作为 **child** 时，返回 changed files、decisions、risks 和 verification evidence，does not write Change Unit；由明确的 Chain Owner 统一持久化。
 - 变更前/后阻塞及 retained mutation 的唯一写入者规则直接继承共享历史契约，不在本 skill 建立第二套规则。
 
 ## 实现结果协议
@@ -108,7 +108,7 @@ when_to_use: Use by direct invocation or from codegen when documented frontend t
 - `verification_failed`：实际 verifier 返回 failed。保留实现事实、失败 evidence、未验证项和 rollback，不得声称 verified 或完成。
 - `verified`：只有实际 verifier 返回 passed 且存在可引用 evidence 时成立；它表示对应实现验证通过，不表示 `accepted`。
 
-preview 与上述 result 正交：回执必须单独报告 `preview_status` 和 `preview_evidence`，不能用 preview available 提升 result。`accepted` 不属于 fe-artifact 回执，只能由后续 fe-accept 基于独立验收证据给出。唯一 canonical receipt 字段见 `references/fe-artifact-protocol.md`。
+preview 与上述 result 正交：回执必须单独报告 `preview_status` 和 `preview_evidence`，不能用 preview available 提升 result。`accepted` 不属于 fe-artifact 回执；只有任务确实调用独立验收能力时，才可由其证据给出。唯一 canonical receipt 字段见 `references/fe-artifact-protocol.md`。
 
 ## 红旗清单
 - 没读 DESIGN.md 就写样式 → 停止，先读 DESIGN.md 提取 Token
@@ -129,4 +129,4 @@ preview 与上述 result 正交：回执必须单独报告 `preview_status` 和 
 
 ## 结果提示
 
-报告 `result`、changed files、preview status/evidence、verifier/target/outcome/evidence、unverified items 和 rollback。只有 `result: verified` 可写“实现已验证”并建议进入 fe-accept；其余状态按事实写“已实现但未验证”或“验证失败”。
+报告 `result`、changed files、preview status/evidence、verifier/target/outcome/evidence、unverified items 和 rollback。只有 `result: verified` 可写“实现已验证”；其余状态按事实写“已实现但未验证”或“验证失败”。下一动作只向 Chain Owner 建议，不自动触发 fe-accept、review 或其他 Skill。

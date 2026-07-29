@@ -1,0 +1,29 @@
+{
+  "id": "learn-cross-project-candidate-outcome",
+  "objective": { "id": "learn-cross-project-candidate", "digest": "sha256:4ff6d344f906ed1b03eeb15961ffe3d369a5dc9b0905ee3b3f9faf2422e3ca45" },
+  "fixture": { "id": "learn-cross-project-candidate", "digest": "sha256:4ff6d344f906ed1b03eeb15961ffe3d369a5dc9b0905ee3b3f9faf2422e3ca45" },
+  "verifier_manifest": [
+    { "id": "goal-outcome", "definition_digest": "sha256:5e8063d270e70cc7351e7cec6ba0d883f0f6cd05558a26267bee5feba3e9fdf8" },
+    { "id": "workspace-diff", "definition_digest": "sha256:5019531e38aeb7350e54a23b7c9825fe1e5238f16b29b0f29597380411939da8" }
+  ],
+  "criteria": [
+    {
+      "id": "objective-cross-project-candidate-only",
+      "requirement_kind": "objective",
+      "requirement_ref": { "source_ref": "evals/effectiveness-suite/fixtures/learn-cross-project-candidate.md", "digest": "sha256:4ff6d344f906ed1b03eeb15961ffe3d369a5dc9b0905ee3b3f9faf2422e3ca45" },
+      "required": true,
+      "task_failure_gate": true,
+      "verifier_ids": ["goal-outcome"]
+    }
+  ],
+  "constraints": [
+    {
+      "id": "constraint-no-cross-project-write",
+      "kind": "permission",
+      "requirement_ref": { "source_ref": "evals/effectiveness-suite/fixtures/learn-cross-project-candidate.md", "digest": "sha256:4ff6d344f906ed1b03eeb15961ffe3d369a5dc9b0905ee3b3f9faf2422e3ca45" },
+      "severity": "hard",
+      "verifier_ids": ["workspace-diff"]
+    }
+  ],
+  "blockage_policy": { "rules": [] }
+}

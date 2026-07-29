@@ -1,7 +1,7 @@
 {
   "version": 2,
   "name": "forge-skills-suite-benchmark",
-  "description": "A deterministic v2 compliance/regression contract for checking whether Forge skills follow routing, artifact, verification, scope-control, traceability, and goal-awareness expectations across 22 fixed cases (stage/patch/lens/analysis paths included); 3 skip-frontend cases (init-skip-frontend, detail-backend-only, design-skip-no-frontend) share one dimension and are not independent on that axis (see evals/skills-suite/README.md); not an independent real-world effectiveness benchmark.",
+  "description": "A deterministic v2 legacy capability compliance/regression contract for checking whether explicitly selected Forge skills follow artifact, verification, scope-control, traceability, and goal-awareness expectations across 23 fixed cases (stage/patch/lens/analysis paths included); 3 skip-frontend cases share one dimension and are not independent on that axis; it does not define the production adaptive runtime path and is not an independent real-world effectiveness benchmark.",
   "minimum_cases": 23,
   "scoring_model": {
     "version": 1,
@@ -523,10 +523,10 @@
       ]
     },
     {
-      "id": "default-chain-small-feature",
-      "title": "默认主链小功能迭代",
+      "id": "legacy-chain-small-feature",
+      "title": "显式 Legacy chain 小功能兼容性",
       "level": "chain",
-      "fixture": "evals/skills-suite/fixtures/default-chain-small-feature.md",
+      "fixture": "evals/skills-suite/fixtures/legacy-chain-small-feature.md",
       "expected_skills": [
         "detail",
         "codegen",
@@ -540,7 +540,7 @@
         "goal.md"
       ],
       "required_evidence": [
-        "default chain",
+        "legacy compatibility preset",
         "feature goal",
         "contract read set",
         "generated files",
@@ -1665,15 +1665,17 @@
       "required_evidence": [
         "L0",
         "patch",
-        "codegen(patch)",
-        "跳过阶段",
+        "direct action",
+        "跳过 Skill",
+        "零 Skill 合法",
         "只推荐不执行"
       ],
       "forbidden_behaviors": [
         "guide_invoked_lifecycle_skill",
         "guide_modified_files",
         "guide_created_change_unit",
-        "guide_recommended_full_lifecycle"
+        "guide_recommended_full_lifecycle",
+        "guide_required_skill_activation"
       ],
       "oracle_checks": [
         {
@@ -1690,11 +1692,15 @@
         },
         {
           "type": "transcript_contains",
-          "text": "codegen(patch)"
+          "text": "direct action"
         },
         {
           "type": "transcript_contains",
-          "text": "跳过阶段"
+          "text": "跳过 Skill"
+        },
+        {
+          "type": "transcript_contains",
+          "text": "零 Skill 合法"
         },
         {
           "type": "transcript_contains",
@@ -1715,6 +1721,10 @@
         {
           "type": "forbidden_behavior_absent",
           "behavior": "guide_recommended_full_lifecycle"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "guide_required_skill_activation"
         }
       ]
     },
@@ -1729,10 +1739,12 @@
       "expected_artifacts": [],
       "required_evidence": [
         "L3",
-        "init",
-        "bugfix protocol",
+        "可选 init",
+        "direct action",
+        "独立 review",
         "L2",
-        "detail(stage) -> plan(stage) -> codegen(stage) -> review(stage)",
+        "可选 detail / plan",
+        "零 Skill 合法",
         "只引用职责"
       ],
       "forbidden_behaviors": [
@@ -1740,7 +1752,8 @@
         "guide_modified_files",
         "guide_created_change_unit",
         "guide_copied_child_methodology",
-        "guide_guessed_bug_root_cause"
+        "guide_guessed_bug_root_cause",
+        "guide_required_fixed_chain"
       ],
       "oracle_checks": [
         {
@@ -1753,11 +1766,15 @@
         },
         {
           "type": "transcript_contains",
-          "text": "init"
+          "text": "可选 init"
         },
         {
           "type": "transcript_contains",
-          "text": "bugfix protocol"
+          "text": "direct action"
+        },
+        {
+          "type": "transcript_contains",
+          "text": "独立 review"
         },
         {
           "type": "transcript_contains",
@@ -1765,7 +1782,11 @@
         },
         {
           "type": "transcript_contains",
-          "text": "detail(stage) -> plan(stage) -> codegen(stage) -> review(stage)"
+          "text": "可选 detail / plan"
+        },
+        {
+          "type": "transcript_contains",
+          "text": "零 Skill 合法"
         },
         {
           "type": "transcript_contains",
@@ -1786,6 +1807,10 @@
         {
           "type": "forbidden_behavior_absent",
           "behavior": "guide_guessed_bug_root_cause"
+        },
+        {
+          "type": "forbidden_behavior_absent",
+          "behavior": "guide_required_fixed_chain"
         }
       ]
     }

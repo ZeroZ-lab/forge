@@ -1,0 +1,29 @@
+{
+  "id": "frontend-standard-piece-choice-outcome",
+  "objective": { "id": "frontend-standard-piece-choice", "digest": "sha256:4c95047acf50aaa599272307b95e56e63c8e8e2916ce9d9bdc93a67718aacf01" },
+  "fixture": { "id": "frontend-standard-piece-choice", "digest": "sha256:4c95047acf50aaa599272307b95e56e63c8e8e2916ce9d9bdc93a67718aacf01" },
+  "verifier_manifest": [
+    { "id": "goal-outcome", "definition_digest": "sha256:4ace80117bb7603c3a209316f77fbfaa9ca080280837b2a96568071c7a27b1f7" },
+    { "id": "workspace-diff", "definition_digest": "sha256:5019531e38aeb7350e54a23b7c9825fe1e5238f16b29b0f29597380411939da8" }
+  ],
+  "criteria": [
+    {
+      "id": "objective-reviewable-buy-build-decision",
+      "requirement_kind": "objective",
+      "requirement_ref": { "source_ref": "evals/effectiveness-suite/fixtures/frontend-standard-piece-choice.md", "digest": "sha256:4c95047acf50aaa599272307b95e56e63c8e8e2916ce9d9bdc93a67718aacf01" },
+      "required": true,
+      "task_failure_gate": true,
+      "verifier_ids": ["goal-outcome"]
+    }
+  ],
+  "constraints": [
+    {
+      "id": "constraint-no-unjustified-commodity-reimplementation",
+      "kind": "scope",
+      "requirement_ref": { "source_ref": "evals/effectiveness-suite/fixtures/frontend-standard-piece-choice.md", "digest": "sha256:4c95047acf50aaa599272307b95e56e63c8e8e2916ce9d9bdc93a67718aacf01" },
+      "severity": "hard",
+      "verifier_ids": ["workspace-diff"]
+    }
+  ],
+  "blockage_policy": { "rules": [] }
+}

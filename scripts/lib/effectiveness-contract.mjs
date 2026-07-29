@@ -1,7 +1,10 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 
 import { inspectJsonSchemaSupport } from './json-schema-subset.mjs';
+import { parseEffectivenessOutcomeContract } from './effectiveness-outcome.mjs';
 
 const MANIFEST_PATH = 'evals/effectiveness-suite/manifest.json';
 const REPORT_SCHEMA_PATH = 'evals/effectiveness-suite/report.schema.json';
@@ -73,6 +76,7 @@ const REQUIRED_FORBIDDEN_PROXIES = [
 const REQUIRED_CONTROLLED_DIMENSIONS = [
   'model',
   'fixture',
+  'outcome_contract',
   'workspace_revision',
   'budget',
   'verifier',
@@ -145,6 +149,7 @@ const ALLOWED_CASE_FIELDS = new Set([
   'title',
   'scenario',
   'fixture',
+  'outcome_contract',
   'success_signals',
   'failure_signals',
   'human_review_prompts',
@@ -196,6 +201,10 @@ function readJson(filePath, issues, label) {
   }
 }
 
+function digestFile(filePath) {
+  return `sha256:${crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex')}`;
+}
+
 function resolveLocalRef(root, reference) {
   if (typeof reference !== 'string' || !reference.startsWith('#/')) return undefined;
   let value = root;
@@ -244,9 +253,10 @@ export function loadEffectivenessContract(rootDir) {
   const kernelContract = manifest.kernel_contract;
   const caseIds = new Set();
   const scenarios = new Set();
+  const outcomeContracts = new Map();
 
   requireExactFields(manifest, ALLOWED_MANIFEST_FIELDS, 'manifest', issues);
-  if (manifest.version !== 4) issues.push('manifest.version must be 4');
+  if (manifest.version !== 5) issues.push('manifest.version must be 5');
   if (manifest.name !== 'forge-effectiveness-suite') {
     issues.push('manifest.name must be forge-effectiveness-suite');
   }
@@ -482,6 +492,50 @@ export function loadEffectivenessContract(rootDir) {
     ) {
       issues.push(`${testCase.id}: fixture is missing`);
     }
+    const outcomeReference = testCase.outcome_contract;
+    if (
+      !outcomeReference ||
+      typeof outcomeReference !== 'object' ||
+      Array.isArray(outcomeReference) ||
+      JSON.stringify(Object.keys(outcomeReference).sort()) !== JSON.stringify(['digest', 'ref']) ||
+      typeof outcomeReference.ref !== 'string' ||
+      !/^sha256:[0-9a-f]{64}$/.test(outcomeReference.digest) ||
+      path.isAbsolute(outcomeReference.ref) ||
+      outcomeReference.ref.split(/[\\/]/).includes('..')
+    ) {
+      issues.push(`${testCase.id}: outcome_contract must be a safe ref and sha256 digest`);
+    } else {
+      const outcomePath = path.join(rootDir, outcomeReference.ref);
+      try {
+        const outcomeContract = parseEffectivenessOutcomeContract(
+          fs.readFileSync(outcomePath, 'utf8'),
+        );
+        const fixtureDigest = digestFile(path.join(rootDir, testCase.fixture));
+        if (outcomeContract.digest !== outcomeReference.digest) {
+          issues.push(`${testCase.id}: outcome_contract digest does not match its definition`);
+        }
+        if (!isDeepStrictEqual(outcomeContract.fixture, {
+          id: testCase.id,
+          digest: fixtureDigest,
+        })) {
+          issues.push(`${testCase.id}: outcome_contract fixture binding is stale or wrong`);
+        }
+        if (outcomeContract.objective.digest !== fixtureDigest) {
+          issues.push(`${testCase.id}: outcome_contract objective must bind the fixture contract`);
+        }
+        for (const item of [...outcomeContract.criteria, ...outcomeContract.constraints]) {
+          if (
+            item.requirement_ref.source_ref !== testCase.fixture ||
+            item.requirement_ref.digest !== fixtureDigest
+          ) {
+            issues.push(`${testCase.id}: ${item.id} is not bound to the authoritative fixture`);
+          }
+        }
+        outcomeContracts.set(testCase.id, outcomeContract);
+      } catch (error) {
+        issues.push(`${testCase.id}: outcome_contract is invalid (${error.message})`);
+      }
+    }
     for (const field of ['success_signals', 'failure_signals', 'human_review_prompts']) {
       if (!stringArray(testCase[field])) issues.push(`${testCase.id}: ${field} must contain only non-empty strings`);
     }
@@ -507,6 +561,7 @@ export function loadEffectivenessContract(rootDir) {
     kernelContract,
     armDefinitions: manifest.arm_definitions,
     coveredScenarios: scenarios,
+    outcomeContracts,
     reportContract: {
       schema: reportSchema,
       compatibility: reportCompatibility,

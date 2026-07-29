@@ -1,7 +1,7 @@
 ---
 name: test-cases
-description: Derives concrete test scenarios from acceptance criteria, business rules, normal paths, boundaries, errors, permissions, and test data needs.
-when_to_use: Use when acceptance criteria need scenario coverage, regression cases, boundary/error paths, test data, or a coverage gap analysis before or during implementation.
+description: Optional scenario derivation for explicit coverage matrices or unresolved acceptance, boundary, error, and permission cases.
+when_to_use: Use when the user asks for test cases/coverage analysis or material scenario gaps cannot be closed safely by direct test implementation.
 ---
 
 # Test Cases — 场景推导

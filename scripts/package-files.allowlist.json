@@ -61,6 +61,7 @@
     "plugins/forge/skills/shared/adr-template.md",
     "plugins/forge/skills/shared/agents/openai.yaml",
     "plugins/forge/skills/shared/change-unit-template.md",
+    "plugins/forge/skills/shared/concepts/adaptive-runtime.md",
     "plugins/forge/skills/shared/concepts/artifact-policy.md",
     "plugins/forge/skills/shared/concepts/control-loop.md",
     "plugins/forge/skills/shared/concepts/decision-presentation.md",

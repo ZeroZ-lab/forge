@@ -27,8 +27,9 @@
 
 - subagent 结论必须带来源文件、命令输出或可复查证据。
 - 证据冲突时主控裁决；不能裁决时交人类。
-- 高风险任务不得让 subagent 单独提交最终 patch 或发布动作。
-- 无 subagent 能力时，主控可自审，但必须说明残余独立性风险。
+- 高风险任务不得让 subagent 单独提交最终 patch 或发布动作；它提供独立 findings/evidence，Chain Owner 决策和集成。
+- L2/L3 或 P0/P1 在宣称 complete/release-ready 前必须有独立 reviewer/verifier。无独立能力时只能保持 partial/正确阻塞并说明残余风险；主控 self-check 不得冒充独立证据。
+- 独立 reviewer 必须未参与实现并使用分离 context/actor；独立 verifier 必须是预声明或 host-private，且实现上下文不能改写其输入和留存观察。主控自跑普通测试只算 verification。
 
 ## D3 边界
 

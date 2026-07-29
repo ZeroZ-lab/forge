@@ -1,51 +1,14 @@
 ---
 name: learn
-description: Archives review findings into durable project knowledge — updates specs, AGENTS.md, regression tests when review finds skill-methodology gaps.
-when_to_use: Use after review completes with skill-methodology attributions, or when the user asks to archive findings, update long-term specs, or consolidate review lessons.
-phase: post-review
-type: governance
-role: knowledge-archivist
-triggers:
-  - "归档"
-  - "沉淀"
-  - "learn"
-avoid_when:
-  - "没有 review report"
-  - "没有 skill 方法论层归因"
-consumes:
-  - "review report"
-  - "deviation attribution"
-  - "goal.md"
-  - "docs/project.md"
-  - "AGENTS.md"
-  - "docs/change-units/CU-*.md"
-produces:
-  - "archive decision report"
-  - "docs/change-units/CU-*.md"
-signals_in:
-  - "review.completed"
-signals_out:
-  - "knowledge.archived"
-  - "project_state.updated"
-escalates_when:
-  - "归档目标不明确"
-  - "长期规则与现有文档冲突"
-output_contract:
-  - "archive decisions"
-  - "updated documents"
-  - "discarded items with reasons"
-maturity: experimental
-stage_next: []
-feedback_to:
-  - detail
-  - codegen
+description: Explicitly archives user-approved methodology findings into durable project knowledge.
+when_to_use: Use only when the user asks to archive/consolidate lessons or confirms a specific review finding should update long-term specs, instructions, or regression tests.
 ---
 
 # Learn — 知识归档
 
 ## 职责
 
-从 review report 的 skill 方法论层归因中提取可沉淀知识，判断归档或丢弃，写入当前项目的长期文档。
+从用户明确选择的 review finding 或方法论归因中提取可沉淀知识，判断归档或丢弃，写入当前项目的长期文档。
 
 learn 不产生新代码、不做架构决策、不修改 skill 方法论本身。它只做知识路由：判断哪些发现应该进入当前项目知识库，写入哪里。
 
@@ -113,7 +76,7 @@ learn 不产生新代码、不做架构决策、不修改 skill 方法论本身�
 
 ## 入口/出口条件
 
-**入口**：review report 存在 · 有 skill 方法论层归因 · 用户确认执行归档
+**入口**：存在可引用的 review finding/方法论归因 · 用户明确要求并确认执行归档
 
 **缺失处理**：review report 无 skill 方法论层归因 → 输出"无可归档内容"，结束
 

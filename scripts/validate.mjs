@@ -7,6 +7,11 @@ import process from 'node:process';
 import { loadBenchmarkContract } from './lib/benchmark-contract.mjs';
 import { loadEffectivenessContract } from './lib/effectiveness-contract.mjs';
 import { loadRegistry } from './lib/registry.mjs';
+import {
+  measureRuntimeFootprint,
+  RUNTIME_FOOTPRINT_BUDGETS,
+  runtimeFootprintFailures,
+} from './lib/runtime-footprint.mjs';
 import { findBannedSkillSyntaxTokens } from './lib/skill-portability.mjs';
 
 const root = process.cwd();
@@ -196,23 +201,19 @@ assert(exists('docs/skill-invocation-policy.md'), 'docs/skill-invocation-policy.
 assertIncludes('docs/skill-invocation-policy.md', [
   'disable-model-invocation: true',
   'allow_implicit_invocation: false',
-  '保留生命周期 Skill 的隐式触发',
+  '保留生命周期 Skill 的隐式发现',
+  '零调用合法',
+  'Kernel 不进入 Skill registry',
+  'Legacy chain 只显式选择',
 ]);
 
-const defaultRuntimeChain = ['detail', 'codegen', 'review'];
-const defaultRuntimeChainChars = defaultRuntimeChain.reduce((sum, skillName) => {
-  return sum + read(`plugins/forge/skills/${skillName}/SKILL.md`).length;
-}, 0);
-const totalSkillChars = skillDirs.reduce((sum, skillName) => {
-  return sum + read(`plugins/forge/skills/${skillName}/SKILL.md`).length;
-}, read('plugins/forge/skills/shared/SKILL.md').length);
+const runtimeFootprint = measureRuntimeFootprint(root);
+for (const issue of runtimeFootprintFailures(runtimeFootprint, RUNTIME_FOOTPRINT_BUDGETS)) {
+  fail(`adaptive runtime footprint: ${issue}`);
+}
 assert(
-  defaultRuntimeChainChars <= 4500,
-  `default runtime chain char budget exceeded: ${defaultRuntimeChainChars} chars > 4500 chars`,
-);
-assert(
-  totalSkillChars <= 56000,
-  `total SKILL.md char budget exceeded: ${totalSkillChars} chars > 56000 chars`,
+  JSON.stringify(runtimeFootprint.legacy_chain) === JSON.stringify(['detail', 'codegen', 'review']),
+  'adaptive runtime footprint: legacy compatibility chain must stay pinned to detail -> codegen -> review',
 );
 
 assert(exists('docs/skill-architecture-audit.md'), 'docs/skill-architecture-audit.md: missing');
@@ -224,6 +225,10 @@ assertIncludes('plugins/forge/skills/shared/rubrics/skill-quality.md', [
   'Progressive disclosure',
   'Premature-completion resistance',
   'Invocation cost',
+  'Activation neutrality',
+  'Skip / no-op boundary',
+  'No implicit successor',
+  'Metadata discipline',
 ]);
 assertIncludes('experiments/skills/README.md', [
   'must not appear in either plugin manifest',
@@ -242,6 +247,7 @@ assertIncludes('docs/skill-suite-evaluation.md', [
 ]);
 
 const sharedKnowledgeFiles = [
+  'plugins/forge/skills/shared/concepts/adaptive-runtime.md',
   'plugins/forge/skills/shared/concepts/control-loop.md',
   'plugins/forge/skills/shared/concepts/document-as-goal.md',
   'plugins/forge/skills/shared/concepts/execution-discipline.md',
@@ -394,7 +400,12 @@ for (const [skillName, protocol] of Object.entries(requiredProtocols)) {
 }
 
 const feArtifactSkill = read('plugins/forge/skills/fe-artifact/SKILL.md');
-assert(!feArtifactSkill.includes('frontmatter.signal_routes'), 'fe-artifact: stale signal_routes reference');
+for (const skillName of skillDirs) {
+  assert(
+    !read(`plugins/forge/skills/${skillName}/SKILL.md`).includes('frontmatter.signal_routes'),
+    `${skillName}: stale signal_routes reference`,
+  );
+}
 for (const result of ['implemented_unverified', 'verification_failed', 'verified']) {
   assert(feArtifactSkill.includes(result), `fe-artifact: missing result state ${result}`);
 }
@@ -418,7 +429,7 @@ assertIncludes('plugins/forge/skills/shared/goal-template.md', [
 const marketplaceDescription = claudeMarketplace.plugins?.find((plugin) => plugin.name === 'forge')?.description ?? '';
 assert(
   marketplaceDescription.includes(`${skillCount} 个已发布 skill`) &&
-    marketplaceDescription.includes(`${protocolSkillCount} 个决策协议`) &&
+    marketplaceDescription.includes(`${protocolSkillCount} 个可选决策能力`) &&
     marketplaceDescription.includes(`${derivedViewCount} 个派生视图 skill`) &&
     marketplaceDescription.includes(`${discoveryCount} 个架构发现 skill`),
   `plugins/forge/.claude-plugin/marketplace.json: forge description must mention ${skillCount} published skills, ${protocolSkillCount} protocol skills, ${derivedViewCount} derived-view skills, and ${discoveryCount} discovery skills`,
@@ -432,7 +443,48 @@ assert(
   `AGENTS.md: must document ${protocolSkillCount} protocol skills + ${derivedViewCount} derived-view skills + ${discoveryCount} discovery skills + ${guideCount} guide`,
 );
 assertIncludes('AGENTS.md', ['## 执行协议', '最小变更', '不引入未要求的抽象']);
-assertIncludes('plugins/forge/skills/init/references/agents-template.md', ['## 执行纪律', '权威文档', '最窄有效验证']);
+assertIncludes('AGENTS.md', [
+  'Kernel-first',
+  '任意、多个或零个 Skill',
+  '唯一 Chain Owner',
+  'L2/L3 或 P0/P1',
+]);
+assertIncludes('plugins/forge/skills/init/references/agents-template.md', [
+  '## Kernel 运行契约',
+  '任意、多个或零个 Skill',
+  'Chain Owner',
+  'L2/L3 或 P0/P1',
+  '## 执行纪律',
+  '权威文档',
+  '最窄有效验证',
+]);
+assertIncludes('plugins/forge/skills/shared/concepts/adaptive-runtime.md', [
+  'Objective',
+  'Authority',
+  'Scope',
+  'State',
+  'Evidence',
+  'Outcome',
+  'any, multiple, or zero Skills',
+  'Chain Owner',
+  'L2/L3 or P0/P1',
+]);
+assertIncludes('AGENTS.md', ['仅保留为显式 legacy compatibility preset']);
+assertIncludes('README.md', [
+  '不再是生产完成条件',
+  '不定义 Kernel-first 生产路由',
+]);
+assertIncludes('docs/skill-invocation-policy.md', ['不能从普通自然语言任务静默切换到 legacy']);
+assertIncludes('docs/skill-suite-evaluation.md', [
+  'does not define the Kernel-first production action path',
+  'not recommendations for production routing',
+]);
+for (const skillName of ['detail', 'codegen', 'review']) {
+  assert(
+    read(`plugins/forge/skills/${skillName}/SKILL.md`).includes('shared/concepts/adaptive-runtime.md'),
+    `plugins/forge/skills/${skillName}/SKILL.md: adaptive runtime must be referenced`,
+  );
+}
 assertIncludes('plugins/forge/skills/shared/concepts/execution-discipline.md', [
   '# Execution discipline',
   '## Runtime meaning',

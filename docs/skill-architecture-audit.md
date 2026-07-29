@@ -1,21 +1,33 @@
 # Forge Skills Suite 架构审计
 
-> 审计日期：2026-05-25（更新于 2026-06-09）
-> 审计目标：判断 Forge 这套 skills 作为决策协议是否覆盖完整生命周期、职责切分是否清晰、方法论是否稳定。审计对象是协议节点的方法论质量和阶段编排，不是 skill 文件是否长成运行时控制系统。
+> 审计日期：2026-05-25（运行架构更新于 2026-07-29）
+> 审计目标：判断 Forge 能力协议的职责、方法论和兼容覆盖。本文逐 Skill 扫描保留 0.52 生命周期视角作为历史基线；当前生产运行契约以 `shared/concepts/adaptive-runtime.md` 和项目 `AGENTS.md` 为准。
+
+## 0. 2026-07-29 运行架构迁移
+
+Forge 生产入口已从固定生命周期主链迁移为 Kernel-first：
+
+- 始终加载的 Kernel 只管理目标、权限、范围、状态、证据和完成条件。
+- 模型可直接行动，也可使用任意、多个或零个 Skill；Skill 激活和顺序不参与完成判定。
+- 根代理是唯一 Chain Owner；child Skill 只返回局部证据，Chain Owner 汇总唯一 Change Unit。
+- L0/L1 允许 self-check；L2/L3 或 P0/P1 在 complete/release-ready 前需要独立 reviewer/verifier。
+- 0.52.0 `detail → codegen → review` 仅作为显式 legacy compatibility preset、Skills Suite 能力合同和 effectiveness 对照。
+
+因此，下文出现的“阶段”“链”“下游”描述的是能力接口与历史兼容关系，不是生产默认路由，也不要求智能模型按固定路径思考。
 
 ## 1. 基线
 
 当前仓库基线：
 
-- `node scripts/validate.mjs` 通过：`Forge validation passed (23 skills, ...)`。
-- 当前 suite 发布 26 个一级 `plugins/forge/skills/*` skill：24 个生命周期协议 + 1 个派生视图 skill + 1 个显式 `guide`；`shared` 是不进入 registry 的内部知识包。
+- `node scripts/validate.mjs` 通过：`Forge validation passed (27 skills, ...)`。
+- 当前 suite 发布 27 个一级用户能力 skill：24 个可选决策能力 + 1 个派生视图 skill + 1 个架构发现 skill + 1 个显式 `guide`；`shared` 是不进入 registry 的内部知识包。
 - `plugins/forge/.claude-plugin/plugin.json` 显式枚举 `skills/*`，`scripts/validate.mjs` 校验 manifest 与目录一致。
 - `plugins/forge/skills/shared/` 已从产物模板扩展出 concepts、rubrics、red-flags、output-contracts 四类 Knowledge 文件。
 
 不改 flat 结构的原因：
 
 - Claude Code 只发现 `plugins/forge/skills/` 一级子目录的 `SKILL.md`，当前 flat list 是安装和发现边界。
-- Validator 已经把 26 个发布 skill、frontmatter 短名、manifest 枚举、调用策略和行数上限作为稳定约束。
+- Validator 已经把 27 个发布 skill、frontmatter 短名、manifest 枚举、调用策略和行数上限作为稳定约束。
 - 嵌套分类目录会破坏现有 plugin discovery 和 validator 约束；分类应留在文档说明里，不进入物理目录。
 
 审计标准来源：

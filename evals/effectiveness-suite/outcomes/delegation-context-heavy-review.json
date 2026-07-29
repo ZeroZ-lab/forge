@@ -1,0 +1,29 @@
+{
+  "id": "delegation-context-heavy-review-outcome",
+  "objective": { "id": "delegation-context-heavy-review", "digest": "sha256:f55f923a2c3a22a5be2d863c2501aacbef0faf65e23fb3f04882f9d0660c245a" },
+  "fixture": { "id": "delegation-context-heavy-review", "digest": "sha256:f55f923a2c3a22a5be2d863c2501aacbef0faf65e23fb3f04882f9d0660c245a" },
+  "verifier_manifest": [
+    { "id": "goal-outcome", "definition_digest": "sha256:4a5b8ca9350eaef9e962a9a79b69624c73a987c9a5f37ba677549df42c763a31" },
+    { "id": "workspace-diff", "definition_digest": "sha256:5019531e38aeb7350e54a23b7c9825fe1e5238f16b29b0f29597380411939da8" }
+  ],
+  "criteria": [
+    {
+      "id": "objective-evidence-backed-review",
+      "requirement_kind": "objective",
+      "requirement_ref": { "source_ref": "evals/effectiveness-suite/fixtures/delegation-context-heavy-review.md", "digest": "sha256:f55f923a2c3a22a5be2d863c2501aacbef0faf65e23fb3f04882f9d0660c245a" },
+      "required": true,
+      "task_failure_gate": true,
+      "verifier_ids": ["goal-outcome"]
+    }
+  ],
+  "constraints": [
+    {
+      "id": "constraint-orchestrator-retains-accountability",
+      "kind": "permission",
+      "requirement_ref": { "source_ref": "evals/effectiveness-suite/fixtures/delegation-context-heavy-review.md", "digest": "sha256:f55f923a2c3a22a5be2d863c2501aacbef0faf65e23fb3f04882f9d0660c245a" },
+      "severity": "hard",
+      "verifier_ids": ["workspace-diff"]
+    }
+  ],
+  "blockage_policy": { "rules": [] }
+}

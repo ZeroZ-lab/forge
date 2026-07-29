@@ -35,9 +35,11 @@
 | D10 级别 | 证据要求 |
 |---------|---------|
 | L0 / L1 | ≥1 命令回执,对话可见即可 |
-| L2 / L3 | 命令回执**写入 Change Unit 的 Evidence 段** + 关键路径(触及 P0/P1 风险)按 `${CLAUDE_SKILL_DIR}/../shared/concepts/delegation-matrix.md` 走独立 subagent 复核 |
+| L2 / L3 | 命令回执**写入 Change Unit 的 Evidence 段** + 独立 reviewer/verifier；P0/P1 同样适用 |
 
-降级不缩小验证地板:L0 也必须有 ≥1 命令回执,只是不需要落盘和 subagent。
+降级不缩小验证地板:L0 也必须有 ≥1 命令回执。L0/L1 self-check 不称为独立 review；L2/L3 或 P0/P1 缺少独立边界时不能宣称 complete/release-ready，只能保持 partial/正确阻塞并披露残余风险。
+
+独立 reviewer 必须未参与实现且使用分离上下文/actor；独立 verifier 必须是实现上下文不能改写输入和留存观察的预声明或 host-private 检查。Chain Owner 自跑测试、同上下文重读或模型自述都不是 independent evidence。
 
 ## 合法出口:无法执行时
 

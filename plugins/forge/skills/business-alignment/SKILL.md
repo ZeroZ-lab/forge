@@ -1,7 +1,7 @@
 ---
 name: business-alignment
-description: Aligns a product direction into project commitment by defining users, success metrics, resource constraints, and Go/No-Go decision.
-when_to_use: Use after brainstorm or when a project idea needs validation against users, success metrics, constraints, resources, and commitment before technical definition.
+description: Optional project-commitment gate for an explicit user/metric/resource Go/No-Go decision.
+when_to_use: Use when the user asks for business alignment or a real commitment decision cannot proceed without users, success metrics, resource constraints, and Go/No-Go evidence.
 ---
 
 # Business Alignment — 业务对齐

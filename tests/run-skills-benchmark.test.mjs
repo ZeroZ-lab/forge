@@ -305,11 +305,11 @@ test('forgePromptForCase is blind: no per-case oracle answers leak into the Forg
   // A case fully populated with oracle answers — the very shape that used to be
   // JSON.stringify'd verbatim into the prompt (run-skills-benchmark.mjs:171-179).
   const oracleTestCase = {
-    id: 'default-chain-small-feature',
-    title: '默认主链小功能迭代',
+    id: 'legacy-chain-small-feature',
+    title: '显式 Legacy chain 小功能兼容性',
     expected_skills: ['detail', 'codegen', 'review'],
     expected_artifacts: ['docs/features/task-archive/goal.md', 'src/', 'tests/', 'docs/change-units/CU-*.md'],
-    required_evidence: ['default chain', 'feature goal', 'verification command', '运行验证'],
+    required_evidence: ['legacy compatibility preset', 'feature goal', 'verification command', '运行验证'],
     forbidden_behaviors: [
       'escalated_clear_feature_to_define',
       'generated_plan_for_small_feature',
@@ -327,7 +327,7 @@ test('forgePromptForCase is blind: no per-case oracle answers leak into the Forg
     ],
   };
   const fixture = [
-    '# Fixture: 默认主链小功能迭代',
+    '# Fixture: Legacy chain 小功能兼容性',
     '',
     '> 给 task-management 增加 "archive completed tasks" 功能。',
     '',
@@ -366,7 +366,7 @@ test('forgePromptForCase is blind: no per-case oracle answers leak into the Forg
   assert.match(prompt, /安全停止、拒绝猜测或报告阻塞结论，最终 status 仍填 "pass"/);
   assert.match(prompt, /status 只能是 completed、pending 或 blocked，不能使用 skipped/);
   assert.match(prompt, /最后一条消息只输出一个 JSON object/);
-  assert.match(prompt, /"case_id": "default-chain-small-feature"/); // report schema
+  assert.match(prompt, /"case_id": "legacy-chain-small-feature"/); // report schema
   assert.equal(prompt.includes('oracle_checks'), false);
 });
 

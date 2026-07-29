@@ -1,7 +1,7 @@
 ---
 name: deploy
-description: Plans reversible releases, deployment environments, CI or CD flow, rollout strategy, rollback steps, monitoring, and release readiness.
-when_to_use: Use when preparing a release, choosing deployment architecture, defining rollout/rollback, configuring CI/CD, planning monitoring, or assessing release readiness.
+description: Optional release-governance capability for explicit rollout, migration, rollback, or release-readiness planning.
+when_to_use: Use when the user asks for a deploy/release plan or production rollout, migration, rollback, monitoring, or CI/CD risk needs an independently reviewable contract.
 ---
 
 # Deploy — 发布规划

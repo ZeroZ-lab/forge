@@ -97,4 +97,4 @@ preview、实现、验证和验收是四个不同事实：
 | `unverified_items` | 未覆盖或失败后仍未确认的内容；not_run/failed 时至少一项 |
 | `rollback` | 每次保留变更都提供的恢复方式 |
 
-回执不包含 `accepted` 或其派生布尔值。standalone 按共享历史契约写一个 Change Unit；child 只把本回执交给 orchestrator，由顶层统一持久化。开发服务器成功启动本身不能把 result 提升为 `verified`。
+回执不包含 `accepted` 或其派生布尔值。standalone 按共享历史契约写一个 Change Unit；child 只把本回执交给 Chain Owner，由其统一持久化。开发服务器成功启动本身不能把 result 提升为 `verified`。

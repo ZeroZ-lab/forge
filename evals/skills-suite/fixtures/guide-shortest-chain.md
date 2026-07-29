@@ -7,8 +7,8 @@
 要求：
 
 - 给出 D10 复杂度和调用深度。
-- 推荐最短 Forge skill 链。
-- 说明为什么跳过 define、detail、plan、test、deploy。
+- 先判断 direct action 是否已经足够；允许推荐零 Skill。
+- 说明为什么跳过 define、detail、codegen、plan、test、review、deploy。
+- 明确“零 Skill 合法”，不把 Skill 激活作为完成条件。
 - 只输出路由建议，不调用其他 Forge skill，不修改文件，不创建 Change Unit。
 - 最终输出 benchmark report JSON。
-

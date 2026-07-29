@@ -1,7 +1,8 @@
 # Forge skills-suite compliance/regression evaluation
 
-This directory makes the Forge skill suite verifiable as a fixed-scenario
-compliance/regression harness. It is not an independent quality or effectiveness
+This directory makes explicitly selected Forge capabilities verifiable as a
+fixed-scenario legacy compliance/regression harness. It does not define the
+Kernel-first production route and is not an independent quality or effectiveness
 benchmark for real-world delivery.
 
 Run the deterministic contract check:
@@ -23,15 +24,15 @@ The no-report mode does not claim the skills are behaviorally effective. It only
 To run an experimental Forge vs no-Forge comparison, run the same case set in both modes and score the uplift. No-Forge mode strips Forge scoring instructions from the fixture so the baseline sees the product task and acceptance criteria, not the oracle:
 
 ```bash
-node scripts/run-skills-benchmark.mjs --mode forge --case default-chain-small-feature --runs 2 --run-id forge-default-chain
-node scripts/run-skills-benchmark.mjs --mode no-forge --case default-chain-small-feature --runs 2 --run-id no-forge-default-chain
+node scripts/run-skills-benchmark.mjs --mode forge --case legacy-chain-small-feature --runs 2 --run-id forge-legacy-chain
+node scripts/run-skills-benchmark.mjs --mode no-forge --case legacy-chain-small-feature --runs 2 --run-id no-forge-legacy-chain
 node scripts/evaluate-skills.mjs \
   --allow-partial \
-  --report .eval-runs/skills-suite/forge-default-chain/report.json \
-  --baseline-report .eval-runs/skills-suite/no-forge-default-chain/report.json
+  --report .eval-runs/skills-suite/forge-legacy-chain/report.json \
+  --baseline-report .eval-runs/skills-suite/no-forge-legacy-chain/report.json
 ```
 
-The default comparison gate rejects single-run comparisons. Both arms need repeated samples with distinct `evidence_id` values; Forge's confidence interval lower bound must exceed the baseline upper bound, Forge's fair-comparison score must be at least 2.0x the no-Forge baseline fair-comparison score, and Forge must avoid a worse oracle-derived pass rate. The 2.0x threshold is currently calibrated from historical 2 selected n=1 cases (guide-shortest-chain, default-chain-small-feature), not a suite-level result; do not cite it as a suite-level effectiveness claim until a full 23-case multi-run comparison is published. Even then, this suite measures fixed-scenario compliance unless the cases are replaced or supplemented with held-out or externally reviewed effectiveness tasks.
+The default comparison gate rejects single-run comparisons. Both arms need repeated samples with distinct `evidence_id` values; Forge's confidence interval lower bound must exceed the baseline upper bound, Forge's fair-comparison score must be at least 2.0x the no-Forge baseline fair-comparison score, and Forge must avoid a worse oracle-derived pass rate. The 2.0x threshold is currently calibrated from historical 2 selected n=1 cases (guide-shortest-chain and the pre-rename default-chain-small-feature run), not a suite-level result; do not cite it as a suite-level effectiveness claim until a full 23-case multi-run comparison is published. Even then, this suite measures fixed-scenario compliance unless the cases are replaced or supplemented with held-out or externally reviewed effectiveness tasks.
 
 v2 reports must include:
 

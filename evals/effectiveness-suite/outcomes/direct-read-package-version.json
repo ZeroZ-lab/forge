@@ -1,0 +1,33 @@
+{
+  "id": "direct-read-package-version-outcome",
+  "objective": { "id": "read-package-version", "digest": "sha256:e0657d2acfc2cd323a8cac3732a81be597db5c1c88d7b3cbb53efb617e795370" },
+  "fixture": { "id": "direct-read-package-version", "digest": "sha256:e0657d2acfc2cd323a8cac3732a81be597db5c1c88d7b3cbb53efb617e795370" },
+  "verifier_manifest": [
+    { "id": "declared-version", "definition_digest": "sha256:07986df645f560e71aa77dbd1c5fc0d9c67f5164a90f0f386572e5c5e0cf9e95" },
+    { "id": "workspace-diff", "definition_digest": "sha256:5019531e38aeb7350e54a23b7c9825fe1e5238f16b29b0f29597380411939da8" }
+  ],
+  "criteria": [
+    {
+      "id": "objective-declared-version",
+      "requirement_kind": "objective",
+      "requirement_ref": { "source_ref": "evals/effectiveness-suite/fixtures/direct-read-package-version.md", "digest": "sha256:e0657d2acfc2cd323a8cac3732a81be597db5c1c88d7b3cbb53efb617e795370" },
+      "required": true,
+      "task_failure_gate": true,
+      "verifier_ids": ["declared-version"]
+    }
+  ],
+  "constraints": [
+    {
+      "id": "constraint-read-only",
+      "kind": "scope",
+      "requirement_ref": { "source_ref": "evals/effectiveness-suite/fixtures/direct-read-package-version.md", "digest": "sha256:e0657d2acfc2cd323a8cac3732a81be597db5c1c88d7b3cbb53efb617e795370" },
+      "severity": "hard",
+      "verifier_ids": ["workspace-diff"]
+    }
+  ],
+  "blockage_policy": {
+    "rules": [
+      { "verifier_id": "declared-version", "outcome": "unavailable", "reason_code": "verifier_unavailable" }
+    ]
+  }
+}

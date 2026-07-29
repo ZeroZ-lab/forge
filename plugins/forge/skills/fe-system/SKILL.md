@@ -1,6 +1,6 @@
 ---
 name: fe-system
-description: Designs or reviews project visual systems, DESIGN.md, tokens, color, typography, spacing, component states, and visual language. Use for lightweight design-system decisions or full fe-system execution.
+description: Designs or reviews DESIGN.md, visual tokens, component states, and shared visual language.
 when_to_use: Use when the user asks about design system, DESIGN.md, colors, typography, spacing, CSS tokens, component visual states, brand feel, visual direction, or updating shared frontend design rules.
 ---
 
@@ -75,13 +75,6 @@ when_to_use: Use when the user asks about design system, DESIGN.md, colors, typo
 
 **出口**：权威视觉约束已生成或更新；若人类未确认，`DESIGN.md` 必须清楚标注 `[NEEDS CONFIRMATION]`、选项和代价，后续 skill 只能消费已确认部分或继续请求确认。
 
-## 运行时信号
-
-- 输入：product tone、page archetype
-- 输出：design tokens、component patterns
-- 路由：详见本文件 frontmatter.signal_routes
-- 升级：视觉方向冲突 · 已有 DESIGN.md 冲突
-
 ## 何时不使用
 - 纯后端 API（无前端界面）
 - 已有完整的 DESIGN.md 且不需要更新
@@ -115,8 +108,8 @@ when_to_use: Use when the user asks about design system, DESIGN.md, colors, typo
 ```
 设计系统已完成：DESIGN.md 已生成或更新。
 
-下一步：
-  - 做技术详设
-  - 生成前端代码
-  - 做前端验收
+可选下一动作只交给 Chain Owner：
+  - 约束已足够时 direct action
+  - 仍有独特合同或独立验收缺口时再选对应能力
+选择本 Skill 不自动触发后继。
 ```

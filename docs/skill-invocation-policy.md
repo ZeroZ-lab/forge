@@ -1,6 +1,6 @@
 # Forge Skill 调用与路由策略
 
-> 验证日期：2026-06-18  
+> 验证日期：2026-07-29
 > 目标：在 Claude Code 和 Codex 中保持一致的用户体验，同时使用各平台真实支持的调用控制面。
 
 ## 已验证能力
@@ -35,13 +35,13 @@
 
 验证备注：Codex 的单平台 `quick_validate.py` 会拒绝 Claude 专属 frontmatter。Forge 因此使用仓库 validator 校验受控的跨平台字段超集，而不是把任一平台 validator 当作共同 schema。
 
-### IP2：保留生命周期 Skill 的隐式触发
+### IP2：保留生命周期 Skill 的隐式发现，但禁止默认级联
 
 选择：`detail`、`codegen`、`review` 及其他生命周期 skill 继续允许自然语言触发。
 
-理由：Forge 的默认入口是用户描述目标后自动选择最短链路。把编排 skill 全部改成显式调用会破坏 `detail → codegen → review` 默认主链。
+理由：领域能力仍需要渐进发现，但 production default 是 Kernel-first：模型可以直接行动，也可调用任意、多个或零个 Skill。description 只表达独特价值和 use/skip 信号；选中一个 Skill 不自动要求后继，Skill 命中不进入完成判定。
 
-拒绝：照搬“所有 orchestrator 都必须 user-invoked”的分类。
+拒绝：把全部能力改成显式而失去发现；继续把 `detail → codegen → review` 当生产默认；用模型名静态决定可用能力。
 
 ### IP3：只收紧无副作用的建议层与内部知识层
 
@@ -50,7 +50,15 @@
 | 显式建议层 | `guide` | Claude/Codex 均禁止隐式调用 |
 | 派生视图层 | `architecture-view` | Claude/Codex 均禁止隐式调用 |
 | 内部知识层 | `shared` | 不进入 Claude manifest；Codex 禁止隐式调用 |
-| 生命周期协议 | 其余正式 skill | 保留隐式调用，由 description/when_to_use 控制 |
+| 生命周期能力 | 其余正式 skill | 保留隐式发现，由 description/when_to_use 控制；零调用合法、无隐式级联 |
+
+### IP4：Kernel 不进入 Skill registry
+
+Kernel 必须由项目 `AGENTS.md` 或等价 always-loaded host policy 承担，只管理目标、权限、范围、状态、证据和完成条件。不得新增 mandatory `kernel` Skill，也不得把 Skill-only 安装描述为 host-enforced Kernel。
+
+### IP5：Legacy chain 只显式选择
+
+Forge 0.52.0 `detail → codegen → review` 作为兼容 preset 和 effectiveness `legacy-chain` 基线保留。只有用户明确要求 legacy/full lifecycle，或固定 capability benchmark 正在运行时才采用；不能从普通自然语言任务静默切换到 legacy。
 
 ## 描述与上下文预算
 

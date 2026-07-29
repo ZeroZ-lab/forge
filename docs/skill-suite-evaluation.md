@@ -1,8 +1,9 @@
 # Skill Suite Compliance/Regression Evaluation
 
-Forge skills-suite is a compliance/regression harness for fixed Forge scenarios.
-It evaluates whether runs follow the published routing, artifact, traceability,
-verification, and scope-control contracts. It is not an independent proof that
+Forge skills-suite is a legacy capability compliance/regression harness for
+explicitly selected Forge scenarios. It evaluates whether those capabilities
+follow their published artifact, traceability, verification, and scope-control
+contracts. It does not define the Kernel-first production action path and is not an independent proof that
 Forge improves real-world delivery; that requires held-out or externally reviewed
 tasks and a strong baseline.
 
@@ -12,7 +13,7 @@ The repository now separates two claims:
 
 1. **Benchmark contract is valid**: cases exist, cover every skill, fixtures exist, and oracle checks are machine-readable.
 2. **A run satisfies scenario compliance**: an actual agent run produced a report that passes the suite oracle for the fixed cases.
-3. **Runtime token footprint is bounded**: high-frequency skill chains stay under an explicit `SKILL.md` loading budget.
+3. **Named runtime/context surfaces are bounded**: generated Kernel template, current project AGENTS, registry and platform metadata, largest selected body, recursively linked capability bundle, and packaged Skill total stay under explicit character budgets.
 
 The first claim is checked locally by `node scripts/evaluate-skills.mjs`. The second claim requires a report from a real run:
 
@@ -58,27 +59,28 @@ for the same model and controlled task conditions; direct action, optional
 Skill use, skipping a Skill, and rejecting an irrelevant capability are all
 legal paths.
 
-## Token Footprint Gate
+## Runtime Footprint Gate
 
-Runtime token cost is measured on loaded `SKILL.md` files, not on every packaged reference file. The default high-frequency chain is:
-
-```text
-detail -> codegen -> review
-```
+Production cost is measured around Kernel-first loading. The pinned `detail -> codegen -> review` body total is reported only as a legacy compatibility reference, not as a production gate.
 
 Run:
 
 ```bash
 npm run metrics:chars
-npm run metrics:chars -- --max-default-chain-chars=4500 --max-total-chars=56000
+npm run metrics:chars -- --max-kernel-adapter-chars=3000 --max-project-agents-chars=6000 --max-metadata-chars=8500 --max-platform-metadata-chars=1500 --max-selected-skill-chars=4000 --max-selected-bundle-chars=20000 --max-total-chars=56000
 ```
 
-`node scripts/validate.mjs` enforces two budgets:
+`node scripts/validate.mjs` enforces seven budgets:
 
-- default chain `detail -> codegen -> review` <= 4,500 characters
+- generated AGENTS Kernel template <= 3,000 characters
+- current project AGENTS adapter <= 6,000 characters
+- initial registry metadata <= 8,500 characters
+- platform skill metadata adapters <= 1,500 characters
+- largest selected Skill body <= 4,000 characters
+- largest recursively linked capability bundle <= 20,000 characters (conservative upper bound)
 - all `SKILL.md` runtime files <= 56,000 characters
 
-This gate proves token footprint control, not behavior effectiveness. Scenario compliance still requires a real run report.
+This gate bounds named source surfaces, not exact provider tokenization or actual conditional reference loading. The bundle metric follows linked Markdown recursively as a conservative upper bound; behavior effectiveness still requires real runs.
 
 ## V2 Traceability Contract
 
@@ -138,7 +140,7 @@ V2 oracle checks include:
 
 The suite keeps a minimum representative case count in the manifest and covers all registered Forge skills.
 
-Cases should prefer complete adjacent chains over isolated single-stage prompts when the chain has a natural runtime handoff. For example, frontend design should continue through implementation acceptance, and implementation planning should continue through test cases and codegen. Keep standalone cases only when the skill is intentionally a sidecar, such as red-team thinking.
+Cases may pin adjacent chains to test legacy interoperability. Those fixtures deliberately request the capabilities they score; they are compatibility contracts, not recommendations for production routing. Standalone cases remain useful when a Skill has independent invocation value.
 
 ## Compliance Scenario Coverage
 
@@ -146,15 +148,15 @@ The suite maps product-value scenarios to measurable compliance signals. These c
 
 | Scenario | Benchmark Case | What It Checks |
 |----------------|----------------|----------------|
-| Clear small feature iteration | `default-chain-small-feature` | The high-frequency `detail -> codegen -> review` path creates a feature goal, implements code, runs `node --test`, reviews the result, and avoids project-doc scope creep. |
+| Explicit legacy small feature | `legacy-chain-small-feature` | The pinned Forge 0.52.0 `detail -> codegen -> review` preset remains executable without redefining the production default. |
 | Ambiguous requirement convergence | `requirements-research` | A vague feature with technical signal words is narrowed into PRD plus research options before implementation. |
 | Frontend experience delivery | `interaction-design-system` | Design, visual system, frontend artifact, and acceptance evidence stay connected through one chain. |
 | Deterministic regression bugfix | `bugfix-regression-change-unit` | The exact symptom goes red before the fix, is minimized, becomes a regression test, and is rechecked through the original scenario. |
 | Intermittent bugfix | `bugfix-flaky-reproduction-rate` | A low-rate failure is amplified into a measurable harness before root-cause work starts. |
 | Unreproducible production bug | `bugfix-unreproducible-blocked` | The agent stops instead of guessing when no red-capable signal can be built and requests the minimum missing evidence. |
 | Correct regression seam | `bugfix-correct-test-seam` | A shallow test that cannot reproduce the real multi-caller failure is rejected. |
-| Minimal routing advice | `guide-shortest-chain` | The explicit Router recommends L0 `codegen(patch)` and does not execute stages or create artifacts. |
-| Routing matrix | `guide-routing-matrix` | The Router distinguishes L3 project initialization, L1 production bug diagnosis, and L2 cross-module delivery without copying child methods. |
+| Minimal routing advice | `guide-shortest-chain` | The explicit Guide recommends L0 direct action with zero Skill and does not execute or create artifacts. |
+| Routing matrix | `guide-routing-matrix` | The Guide distinguishes direct action, optional capability value, and independent-review floors without copying child methods. |
 
 ## Report Contract
 
@@ -213,13 +215,13 @@ Forge-vs-baseline uplift is an experimental comparison over this compliance suit
 ```bash
 node scripts/run-skills-benchmark.mjs \
   --mode forge \
-  --case default-chain-small-feature \
+  --case legacy-chain-small-feature \
   --runs 2 \
   --run-id forge-default-chain
 
 node scripts/run-skills-benchmark.mjs \
   --mode no-forge \
-  --case default-chain-small-feature \
+  --case legacy-chain-small-feature \
   --runs 2 \
   --run-id no-forge-default-chain
 ```
@@ -244,7 +246,7 @@ The comparison passes only when:
 - Forge fair-comparison point-estimate score is at least `2.0x` the no-Forge baseline fair-comparison score, configurable with `--min-score-ratio`;
 - Forge oracle-derived pass rate is not worse than the baseline pass rate.
 
-The 2.0x threshold is currently calibrated from 2 selected n=1 cases (guide-shortest-chain, default-chain-small-feature), not a suite-level result. It must not be cited as a suite-level effectiveness claim until a full 23-case multi-run comparison with variance and confidence intervals is published.
+The 2.0x threshold is currently calibrated from 2 selected n=1 cases (guide-shortest-chain and the historical pre-rename default-chain-small-feature run, now `legacy-chain-small-feature`), not a suite-level result. It must not be cited as a suite-level effectiveness claim until a full 23-case multi-run comparison with variance and confidence intervals is published.
 
 Baseline reports are allowed to fail oracle checks because those failures are the measured comparison signal. They must still be valid v2 report shapes over the selected cases. Treat this comparison as a diagnostic until a held-out or externally reviewed effectiveness suite exists.
 

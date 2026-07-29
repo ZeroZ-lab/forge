@@ -1,7 +1,7 @@
 ---
 name: research
-description: Researches technical uncertainty by decomposing product goals into subproblems and comparing algorithm or implementation options with evidence, tradeoffs, and validation plans.
-when_to_use: Use when requirements include realtime/collaboration, search/ranking/recommendation, animation/physics/simulation, routing/optimization, encryption/auth/permissions, media processing, or any technical choice where current information may be stale.
+description: Optional evidence-backed research for explicit investigation or material technical uncertainty.
+when_to_use: Use when the user asks for research or current/stale facts, unfamiliar algorithms, security, optimization, search, media, or simulation uncertainty blocks a defensible decision.
 ---
 
 # Research — 技术探索
@@ -18,7 +18,7 @@ when_to_use: Use when requirements include realtime/collaboration, search/rankin
 
 ## 触发信号
 
-技术信号词包括：实时/协作、搜索/排序/推荐、动画/物理、路径/优化、加密/权限、图片/音频/视频、模型/算法选择、依赖版本可能过时。出现这些词时先做 research，先给算法菜单，再给最终技术选择。
+技术信号词包括：实时/协作、搜索/排序/推荐、动画/物理、路径/优化、加密/权限、图片/音频/视频、模型/算法选择、依赖版本可能过时。这些信号提高 research 的边际价值；Chain Owner 仍可根据已有权威事实、风险和时效性决定直接行动或调用本能力。
 
 运行时先输出非 JSON 证据行：`技术信号词: ...; algorithm menu before selection; research_recommendation pending.`。若给出研究建议，决策 ID 使用 `research_recommendation`，并在 Change Unit 的 Decisions 段和进度证据中原样出现。Feature 路径沿用 define 的主能力 slug，例如实时搜索和推荐排序写入 `docs/features/realtime-search/research-brief.md`。
 
@@ -68,7 +68,7 @@ when_to_use: Use when requirements include realtime/collaboration, search/rankin
 
 ## 入口/出口条件
 
-入口：PRD/goal 有技术信号或用户显式要求研究。出口：用户能基于菜单做决策，并知道下一步 POC 或 detail 写入哪些约束。
+入口：PRD/goal 有技术信号或用户显式要求研究。出口：用户能基于菜单做决策，并知道哪些约束应写回权威事实、哪些 POC 值得执行；不自动触发 detail。
 
 ## 何时不使用
 
@@ -92,4 +92,4 @@ when_to_use: Use when requirements include realtime/collaboration, search/rankin
 
 ## 历史维护（自动）
 
-遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。research 结论进入 `detail` 前必须被写成目标约束或明确拒绝；未形成持久变更时不写历史。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。实现依赖 research 结论前必须将其写成权威目标约束或明确拒绝；未形成持久变更时不写历史。

@@ -1,7 +1,7 @@
 ---
 name: think
-description: 结构化深度思考——Socratic 质疑、First Principles 分析、Red Team 攻击。可在任意阶段调用，提升决策质量。"先想想"、"分析一下"、"这个对吗"、"攻击这个方案"时触发。
-when_to_use: 用户说"想想"、"分析"、"这个对吗"、"质疑一下"、"攻击"、"Red Team"，或面对重大决策需要深度推理时。
+description: 显式结构化挑战、First Principles 或 Red Team 分析；不替代模型的普通推理。
+when_to_use: 仅在用户明确要求结构化质疑、First Principles、Premortem 或 Red Team 时使用。
 ---
 
 # Think — 结构化深度思考

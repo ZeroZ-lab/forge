@@ -1,14 +1,14 @@
 ---
 name: init
-description: Orchestrates project initialization across business alignment, technical design, optional design-system setup, and runtime agent instructions.
-when_to_use: Use when starting a new project, bootstrapping Forge docs, creating project-level technical/design decisions, or generating AGENTS.md/CLAUDE.md from project constraints.
+description: Optional Forge project bootstrap for explicit initialization of shared docs, decisions, and runtime instructions.
+when_to_use: Use when the user explicitly asks to initialize/adopt Forge, generate project AGENTS/CLAUDE instructions, or establish independently reviewed project-level contracts.
 ---
 
 # Init — 项目初始化编排
 
 ## 运行时角色
 
-`init` 创建项目级控制面：业务承诺、技术约束、设计系统和 agent 行为入口。已有项目只补缺失段落，不重写已有决策。
+`init` 创建项目级控制面：业务承诺、技术约束、设计系统和 always-on Kernel 行为入口。已有项目只补缺失段落，不重写已有决策。
 
 ## 执行纪律
 
@@ -25,7 +25,7 @@ when_to_use: Use when starting a new project, bootstrapping Forge docs, creating
 1. business-alignment：明确用户、指标、资源、Go/No-Go。
 2. technical-design：写技术约束和共享决策到 `docs/project.md`。
 3. fe-system：非后端新项目默认写 `DESIGN.md` seed；视觉未确认时写 2-3 个方向和 `[NEEDS CONFIRMATION]` token/模式，不固化成最终品牌；无前端跳过。
-4. 生成 `AGENTS.md`：从 project/DESIGN 投影执行纪律、路径、验证方式。
+4. 生成 `AGENTS.md`：从 project/DESIGN 投影 Kernel 边界、直接行动/零 Skill 合法性、Chain Owner、风险复核和验证方式。
 5. 生成 `CLAUDE.md`：指向 AGENTS 入口。
 6. 产物与历史：遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/artifact-policy.md` 和 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`，由 init 在所有项目级出口条件通过后汇总一个 Change Unit。
 
@@ -51,13 +51,13 @@ when_to_use: Use when starting a new project, bootstrapping Forge docs, creating
 
 ## 入口/出口条件
 
-入口：新项目、缺项目级文档或用户要求初始化。出口：项目级文件存在，冲突已解决，用户知道下一步 define/detail。
+入口：新项目、缺项目级文档或用户要求初始化。出口：项目级文件存在，冲突已解决，用户知道可直接行动或按信号使用 define/detail 等可选能力。
 
 ## 验证清单
 
 - [ ] project 决策是否含理由和被拒方案？
 - [ ] DESIGN 是否只在通过独立产物门时生成？
-- [ ] AGENTS 是否包含执行纪律、目标文件、验证方式？
+- [ ] AGENTS 是否包含 Kernel 非干扰边界、直接行动、Chain Owner、执行纪律、目标文件和验证方式？
 - [ ] CLAUDE 是否指向 AGENTS？
 - [ ] 有持久变更时 Change Unit 是否存在？
 
@@ -67,4 +67,4 @@ when_to_use: Use when starting a new project, bootstrapping Forge docs, creating
 
 ## 完成提示
 
-报告已生成/跳过的文件、冲突、假设、下一步 define/detail。
+报告已生成/跳过的文件、冲突、假设，以及可直接行动或按需加载的能力。

@@ -1,12 +1,16 @@
 ---
 name: detail
-description: Turns feature intent into goal.md and needed modules, from small feature goals to coordinated contracts.
-when_to_use: Use when a feature needs a goal before implementation, detail stage is requested, multiple domains must align, or goal/module inconsistency/deviation must be resolved.
+description: Clarifies unclear behavior or shared feature contracts into goal.md and only necessary modules.
+when_to_use: Use for unclear boundaries, cross-domain contracts, durable feature goals, or goal/module inconsistency; skip clear implementation-only patches.
 ---
 
 # Forge Detail — 详设阶段编排
 
-把需求/PRD + project + 既有 goal/modules/CU 转成可实现 `goal.md` + 必要 `modules/*.md`；下游暴露目标盲区时先复查目标并记录 downstream gap。Refs: `../shared/concepts/artifact-policy.md`, `../shared/concepts/history-maintenance.md`.
+把需求/PRD + project + 既有 goal/modules/CU 转成可实现 `goal.md` + 必要 `modules/*.md`；下游暴露目标盲区时先复查目标并记录 downstream gap。它是可选合同能力，不是实现前置门。Refs: `../shared/concepts/adaptive-runtime.md`, `../shared/concepts/artifact-policy.md`, `../shared/concepts/history-maintenance.md`.
+
+## Use / skip / no-op
+
+行为边界、跨域共享合同或 goal 偏离时使用；清晰 L0/L1 跳过。权威 goal/modules 已完整时返回 no-op 缺口检查，不重写文档或要求后继。
 
 ## 硬门
 
@@ -34,4 +38,4 @@ when_to_use: Use when a feature needs a goal before implementation, detail stage
 
 红旗：缺需求却完整生成；前端不明却加载 frontend-design；纯后端仍生成前端/设计合同；goal/module 重复不一致；静默否决 PRD 点名技术；范围不清却级联；看到偏差/复审信号却 fresh detail。
 
-出口：goal 首屏完整；必要 modules 完整；goal coverage 覆盖 `src/` / `tests/` / modules；下游依赖和 downstream gap 已记录；冲突已交用户。历史只汇总一次。
+出口：goal 首屏完整；必要 modules 完整；goal coverage 覆盖 `src/` / `tests/` / modules；下游依赖和 downstream gap 已记录；冲突已交用户。下一动作只是给 Chain Owner 的建议，不自动调用 codegen；历史只由 Chain Owner 汇总一次。

@@ -1,7 +1,7 @@
 ---
 name: api-design
-description: Reviews and designs API contracts, endpoints, schemas, error formats, auth, pagination, idempotency, and API boundaries.
-when_to_use: Use when creating or reviewing HTTP/RPC/resource contracts, endpoint behavior, request/response schemas, API errors, authorization behavior, pagination, idempotency, or concurrency semantics.
+description: Optional API-contract design/review for explicit requests or unresolved cross-consumer boundaries.
+when_to_use: Use when the user asks for API design/review or an unresolved contract, authorization, idempotency, pagination, or concurrency decision blocks safe implementation.
 ---
 
 # API Design — 接口详设
@@ -52,7 +52,7 @@ when_to_use: Use when creating or reviewing HTTP/RPC/resource contracts, endpoin
 
 ## 入口/出口条件
 
-入口：需要新接口或审查接口合约。出口：API1-API7 明确，前端和数据库能消费。缺权限/错误/幂等时不得进入 codegen。
+入口：用户明确要求接口设计/审查，或实现被未决接口合同阻塞。出口：API1-API7 明确，相关 consumer 能消费。缺权限/错误/幂等时，依赖这些事实的实现不得继续。
 
 ## 红旗清单
 
@@ -71,4 +71,4 @@ when_to_use: Use when creating or reviewing HTTP/RPC/resource contracts, endpoin
 
 ## 历史维护（自动）
 
-遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。standalone 且产生变更时持久化；作为 `detail` 子阶段时不单独写，由 orchestrator 汇总一次。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。standalone 且产生变更时持久化；作为 `detail` 子能力时不单独写，由当前用户目标的 Chain Owner 汇总一次。

@@ -1,7 +1,7 @@
 ---
 name: plan
-description: Converts goals and modules into an executable vertical-slice task sequence with dependencies, risks, and verification criteria.
-when_to_use: Use when work spans multiple modules, has ordering or parallelization constraints, needs risk-first sequencing, or must be split into independently executable tasks.
+description: Optional vertical-slice sequencing for explicit planning or unresolved multi-module dependencies and risks.
+when_to_use: Use when the user asks for a plan or ordering, parallelism, dependency, or risk uncertainty prevents safe direct execution across multiple modules.
 ---
 
 # Plan — 执行切片
@@ -17,7 +17,7 @@ when_to_use: Use when work spans multiple modules, has ordering or parallelizati
 - `docs/project.md` 和 gated optional artifacts（如存在）
 - 当前 issue / 对话中的交付约束
 
-缺少可验证完成标准时回到 define/detail，不用计划掩盖目标缺口。
+缺少可验证完成标准时交给 Chain Owner 重开目标；可按缺口选择 define/detail，不用计划掩盖目标缺口。
 
 ## 方法
 
@@ -25,7 +25,7 @@ when_to_use: Use when work spans multiple modules, has ordering or parallelizati
 2. 标出依赖、可并行任务、关键路径和最早风险验证点。
 3. 每个任务绑定来源 AC/FD、修改范围、完成证据和停止条件。
 4. 从 AC 推导测试场景类别，但不创建测试用例文档。
-5. 让 codegen 能逐片实现、验证和安全停止。
+5. 让 Chain Owner 可直接执行或选择实现能力逐片验证和安全停止。
 
 ## 产出
 
@@ -52,4 +52,4 @@ when_to_use: Use when work spans multiple modules, has ordering or parallelizati
 
 ## 出口
 
-codegen 能从当前执行上下文逐片实现；所有阻塞决策已显式列出。
+Chain Owner 能从当前执行上下文直接实现或选择能力逐片推进；所有阻塞决策已显式列出，plan 不自动触发 codegen。

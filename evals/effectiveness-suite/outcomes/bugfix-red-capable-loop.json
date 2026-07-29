@@ -1,0 +1,33 @@
+{
+  "id": "bugfix-red-capable-loop-outcome",
+  "objective": { "id": "bugfix-red-capable-loop", "digest": "sha256:f87faa5f42c4a5c205e3fac69767acfa0cd19645112d3c64dc5877d6437c07bc" },
+  "fixture": { "id": "bugfix-red-capable-loop", "digest": "sha256:f87faa5f42c4a5c205e3fac69767acfa0cd19645112d3c64dc5877d6437c07bc" },
+  "verifier_manifest": [
+    { "id": "goal-outcome", "definition_digest": "sha256:d701045cab7ccc4f424066edc1500e00d528fc98ab5900b2b02d0de4f30df06d" },
+    { "id": "workspace-diff", "definition_digest": "sha256:5019531e38aeb7350e54a23b7c9825fe1e5238f16b29b0f29597380411939da8" }
+  ],
+  "criteria": [
+    {
+      "id": "objective-red-capable-regression-loop",
+      "requirement_kind": "objective",
+      "requirement_ref": { "source_ref": "evals/effectiveness-suite/fixtures/bugfix-red-capable-loop.md", "digest": "sha256:f87faa5f42c4a5c205e3fac69767acfa0cd19645112d3c64dc5877d6437c07bc" },
+      "required": true,
+      "task_failure_gate": true,
+      "verifier_ids": ["goal-outcome"]
+    }
+  ],
+  "constraints": [
+    {
+      "id": "constraint-minimal-bugfix-scope",
+      "kind": "scope",
+      "requirement_ref": { "source_ref": "evals/effectiveness-suite/fixtures/bugfix-red-capable-loop.md", "digest": "sha256:f87faa5f42c4a5c205e3fac69767acfa0cd19645112d3c64dc5877d6437c07bc" },
+      "severity": "hard",
+      "verifier_ids": ["workspace-diff"]
+    }
+  ],
+  "blockage_policy": {
+    "rules": [
+      { "verifier_id": "goal-outcome", "outcome": "unavailable", "reason_code": "verifier_unavailable" }
+    ]
+  }
+}

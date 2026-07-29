@@ -17,6 +17,10 @@ import {
   parseEffectivenessVerifierObservation,
   parseEffectivenessVerifierResult,
 } from './effectiveness-verifier.mjs';
+import {
+  deriveEffectivenessOutcome,
+  parseEffectivenessOutcomeContract,
+} from './effectiveness-outcome.mjs';
 import { runIsolatedEffectivenessAttempt } from './effectiveness-runner.mjs';
 import { loadRegistry } from './registry.mjs';
 
@@ -90,6 +94,12 @@ function cloneData(value, label) {
       { cause: error },
     );
   }
+}
+
+function deepFreeze(value) {
+  if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;
+  for (const child of Object.values(value)) deepFreeze(child);
+  return Object.freeze(value);
 }
 
 function digestJson(value) {
@@ -261,16 +271,68 @@ function validRetainedReference(armDir, reference) {
   ) {
     return false;
   }
-  const artifactPath = path.join(armDir, reference.ref);
   try {
-    const stat = fs.lstatSync(artifactPath);
-    return stat.isFile() &&
-      pathIsWithin(fs.realpathSync(armDir), fs.realpathSync(artifactPath)) &&
-      stat.size === reference.bytes &&
-      digestFile(artifactPath) === reference.digest;
+    readRetainedReference(armDir, reference, Number.MAX_SAFE_INTEGER);
+    return true;
   } catch {
     return false;
   }
+}
+
+function readRegularFileSnapshot(filePath, containingDir, maxBytes) {
+  const flags = fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0);
+  const descriptor = fs.openSync(filePath, flags);
+  try {
+    const before = fs.fstatSync(descriptor, { bigint: true });
+    if (
+      !before.isFile() ||
+      before.nlink !== 1n ||
+      before.size > BigInt(maxBytes) ||
+      !pathIsWithin(fs.realpathSync(containingDir), fs.realpathSync(filePath))
+    ) {
+      throw new Error('retained file is not a bounded unique regular file');
+    }
+    const buffer = fs.readFileSync(descriptor);
+    const after = fs.fstatSync(descriptor, { bigint: true });
+    if (
+      before.dev !== after.dev ||
+      before.ino !== after.ino ||
+      before.size !== after.size ||
+      after.nlink !== 1n ||
+      before.mtimeNs !== after.mtimeNs ||
+      before.ctimeNs !== after.ctimeNs ||
+      BigInt(buffer.length) !== before.size
+    ) {
+      throw new Error('retained file changed while it was being read');
+    }
+    return { buffer, digest: digestBuffer(buffer), bytes: buffer.length };
+  } finally {
+    fs.closeSync(descriptor);
+  }
+}
+
+function readRetainedReference(armDir, reference, maxBytes) {
+  if (
+    !isPlainObject(reference) ||
+    !isDeepStrictEqual(Object.keys(reference).sort(compareText), ['bytes', 'digest', 'ref']) ||
+    typeof reference.ref !== 'string' ||
+    path.basename(reference.ref) !== reference.ref ||
+    !/^sha256:[0-9a-f]{64}$/.test(reference.digest) ||
+    !Number.isSafeInteger(reference.bytes) ||
+    reference.bytes < 0 ||
+    reference.bytes > maxBytes
+  ) {
+    throw new Error('invalid retained reference');
+  }
+  const snapshot = readRegularFileSnapshot(
+    path.join(armDir, reference.ref),
+    armDir,
+    maxBytes,
+  );
+  if (snapshot.bytes !== reference.bytes || snapshot.digest !== reference.digest) {
+    throw new Error('retained reference does not match opened bytes');
+  }
+  return snapshot;
 }
 
 function verifierManifest(runtime) {
@@ -281,6 +343,69 @@ function verifierManifest(runtime) {
       definition_digest: adapter.definition_digest,
     })),
   };
+}
+
+function inspectedOutcomeAttempt(report, armDir, validatedVerifierResults) {
+  const verifierResults = validatedVerifierResults ?? report.evidence
+    .filter((evidence) => evidence.source_kind === 'independent_verifier')
+    .map((evidence) => {
+      const result = parseEffectivenessVerifierResult(
+        fs.readFileSync(path.join(armDir, evidence.locator)),
+      );
+      const observation = result.evidence_refs.find((reference) =>
+        reference.role === 'host_observation');
+      if (observation === undefined) {
+        throw new EffectivenessExperimentError(
+          'INVALID_VERIFIER_EVIDENCE',
+          `verifier result has no host observation: ${result.verifier.id}`,
+        );
+      }
+      return {
+        verifier_id: result.verifier.id,
+        definition_digest: result.verifier.definition_digest,
+        outcome: result.outcome,
+        reason_code: result.reason_code,
+        evidence_id: evidence.id,
+        envelope_ref: evidence.envelope_ref,
+        result_ref: evidence.locator,
+        observation_ref: observation.ref,
+      };
+    });
+  return {
+    report_id: report.report_id,
+    arm_id: report.experiment.arm.id,
+    objective: {
+      id: report.experiment.objective.id,
+      digest: report.experiment.objective.digest,
+    },
+    fixture: {
+      id: report.experiment.fixture.id,
+      digest: report.experiment.fixture.digest,
+    },
+    workspace: {
+      isolation_id: report.experiment.workspace.isolation_id,
+      final_snapshot_digest: report.experiment.workspace.final_snapshot_digest,
+    },
+    submission_status: report.final_result.submission_status,
+    model_claim_state: report.final_result.model_claim?.state ?? null,
+    execution_termination: report.execution.termination,
+    verifier_results: verifierResults,
+  };
+}
+
+function retainedOutcomeReference(run, outcomeContract) {
+  const outcome = deriveEffectivenessOutcome({
+    outcomeContract,
+    inspectedAttempt: inspectedOutcomeAttempt(
+      run.report,
+      run.evidenceDir,
+      run.validatedVerifierResults,
+    ),
+  });
+  const contentDigest = digestJson(outcome).slice('sha256:'.length);
+  const outcomePath = path.join(run.evidenceDir, `outcome-${contentDigest}.json`);
+  atomicWriteJson(outcomePath, outcome);
+  return { outcome, reference: fileReference(outcomePath) };
 }
 
 function hasValidEvidenceEnvelopes(report, armDir, rootDir, options = {}) {
@@ -301,6 +426,7 @@ function hasValidEvidenceEnvelopes(report, armDir, rootDir, options = {}) {
       return false;
     }
     const observedVerifiers = [];
+    const validatedVerifierResults = [];
     for (const evidence of report.evidence.filter((item) => item.envelope_ref !== undefined)) {
       verifyEvidenceEnvelope(
         referenceEvidenceEnvelope(evidence.envelope_ref, { evidenceRoot: armDir }),
@@ -316,31 +442,38 @@ function hasValidEvidenceEnvelopes(report, armDir, rootDir, options = {}) {
         evidence.source_kind === 'independent_verifier'
       ) {
         const resultPath = path.join(armDir, evidence.locator);
-        const stat = fs.lstatSync(resultPath);
-        if (
-          path.basename(evidence.locator) !== evidence.locator ||
-          !stat.isFile() ||
-          stat.size > 1024 * 1024 ||
-          !pathIsWithin(fs.realpathSync(armDir), fs.realpathSync(resultPath))
-        ) {
+        if (path.basename(evidence.locator) !== evidence.locator) {
           return false;
         }
-        const result = parseEffectivenessVerifierResult(fs.readFileSync(resultPath));
-        if (
-          result.evidence_refs.some(({ role: _role, ...reference }) =>
-            !validRetainedReference(armDir, reference))
-        ) {
-          return false;
+        const result = parseEffectivenessVerifierResult(
+          readRegularFileSnapshot(resultPath, armDir, 1024 * 1024).buffer,
+        );
+        const retainedResultEvidence = new Map();
+        for (const { role, ...reference } of result.evidence_refs) {
+          retainedResultEvidence.set(
+            role,
+            readRetainedReference(armDir, reference, 1024 * 1024),
+          );
         }
         const observationReference = result.evidence_refs[0];
         parseEffectivenessVerifierObservation(
-          fs.readFileSync(path.join(armDir, observationReference.ref)),
+          retainedResultEvidence.get(observationReference.role).buffer,
           { result },
         );
         observedVerifiers.push({
           id: result.verifier.id,
           definition_digest: result.verifier.definition_digest,
           evidence_id: evidence.id,
+        });
+        validatedVerifierResults.push({
+          verifier_id: result.verifier.id,
+          definition_digest: result.verifier.definition_digest,
+          outcome: result.outcome,
+          reason_code: result.reason_code,
+          evidence_id: evidence.id,
+          envelope_ref: evidence.envelope_ref,
+          result_ref: evidence.locator,
+          observation_ref: observationReference.ref,
         });
         const event = report.events.find((item) => item.id === evidence.event_id);
         const diffPath = path.join(armDir, result.target.workspace.diff_ref);
@@ -386,6 +519,9 @@ function hasValidEvidenceEnvelopes(report, armDir, rootDir, options = {}) {
         return false;
       }
     }
+    if (options.snapshotCollector !== undefined) {
+      options.snapshotCollector.verifierResults = validatedVerifierResults;
+    }
     return true;
   } catch {
     return false;
@@ -398,11 +534,16 @@ function hasValidGroupSeal(
   rootDir,
   experimentPlan,
   expectedVerifierManifest,
+  expectedOutcomeContract,
+  snapshotCollector,
 ) {
   const sealPath = path.join(groupDir, 'group.json');
   try {
     if (!fs.lstatSync(groupDir).isDirectory() || !fs.lstatSync(sealPath).isFile()) return false;
-    const seal = JSON.parse(fs.readFileSync(sealPath, 'utf8'));
+    const seal = JSON.parse(
+      readRegularFileSnapshot(sealPath, groupDir, 1024 * 1024).buffer.toString('utf8'),
+    );
+    const capturedAttempts = [];
     if (
       !isPlainObject(seal) ||
       !isDeepStrictEqual(
@@ -414,11 +555,12 @@ function hasValidGroupSeal(
           'host_policy_digest',
           'reports',
           'version',
-          ...(seal.version === 3 ? ['verifier_manifest'] : []),
+          ...(seal.version >= 3 ? ['verifier_manifest'] : []),
+          ...(seal.version === 4 ? ['outcome_contract'] : []),
         ].sort(compareText),
       ) ||
       seal.contract !== 'forge-effectiveness-comparison-group' ||
-      ![1, 2, 3].includes(seal.version) ||
+      ![1, 2, 3, 4].includes(seal.version) ||
       seal.comparison_group_id !== comparisonGroupId ||
       !/^sha256:[0-9a-f]{64}$/.test(seal.common_context_digest) ||
       !/^sha256:[0-9a-f]{64}$/.test(seal.host_policy_digest) ||
@@ -428,8 +570,17 @@ function hasValidGroupSeal(
       return false;
     }
     if (
-      seal.version === 3 &&
+      seal.version >= 3 &&
       !isDeepStrictEqual(seal.verifier_manifest, expectedVerifierManifest)
+    ) {
+      return false;
+    }
+    if (
+      (seal.version === 4) !== (expectedOutcomeContract !== undefined) ||
+      (seal.version === 4 && !isDeepStrictEqual(seal.outcome_contract, {
+        id: expectedOutcomeContract.id,
+        digest: expectedOutcomeContract.digest,
+      }))
     ) {
       return false;
     }
@@ -449,10 +600,13 @@ function hasValidGroupSeal(
       }
       const reportPath = path.join(armDir, 'report.json');
       if (!fs.lstatSync(reportPath).isFile()) return false;
-      const report = parseEffectivenessReport(fs.readFileSync(reportPath, 'utf8'), {
+      const report = parseEffectivenessReport(
+        readRegularFileSnapshot(reportPath, armDir, 16 * 1024 * 1024).buffer.toString('utf8'),
+        {
         rootDir,
         experimentPlan,
-      });
+        },
+      );
       const requiresRuntime = report.experiment.model.availability === 'available';
       const expectedEntryFields = [
         'arm',
@@ -460,6 +614,7 @@ function hasValidGroupSeal(
         'host_enforcement',
         'report_id',
         ...(requiresRuntime ? ['runtime_receipt'] : []),
+        ...(seal.version === 4 ? ['outcome'] : []),
       ].sort(compareText);
       if (
         !isDeepStrictEqual(Object.keys(entry).sort(compareText), expectedEntryFields) ||
@@ -474,6 +629,7 @@ function hasValidGroupSeal(
       if (seal.version === 1 && report.evidence.some((evidence) => evidence.envelope_ref !== undefined)) {
         return false;
       }
+      const evidenceSnapshot = {};
       if (
         seal.version >= 2 &&
         !hasValidEvidenceEnvelopes(report, armDir, rootDir, {
@@ -481,10 +637,33 @@ function hasValidGroupSeal(
           ...(seal.version >= 3
             ? { verifierManifest: expectedVerifierManifest }
             : {}),
+          snapshotCollector: evidenceSnapshot,
         })
       ) {
         return false;
       }
+      if (seal.version === 4) {
+        const outcomeSnapshot = readRetainedReference(armDir, entry.outcome, 1024 * 1024);
+        const retainedOutcome = JSON.parse(
+          outcomeSnapshot.buffer.toString('utf8'),
+        );
+        const expectedOutcome = deriveEffectivenessOutcome({
+          outcomeContract: expectedOutcomeContract,
+          inspectedAttempt: inspectedOutcomeAttempt(
+            report,
+            armDir,
+            evidenceSnapshot.verifierResults,
+          ),
+        });
+        if (!isDeepStrictEqual(retainedOutcome, expectedOutcome)) return false;
+        capturedAttempts.push({ arm: armId, report, outcome: retainedOutcome });
+      } else {
+        capturedAttempts.push({ arm: armId, report });
+      }
+    }
+    if (snapshotCollector !== undefined) {
+      snapshotCollector.seal = seal;
+      snapshotCollector.attempts = capturedAttempts;
     }
     return true;
   } catch {
@@ -610,6 +789,80 @@ export function createEffectivenessExperimentPlan({ rootDir, baseCapabilities = 
       ]),
     ),
   };
+}
+
+export function openSealedEffectivenessComparisonGroup(spec) {
+  if (!isPlainObject(spec)) {
+    throw new EffectivenessExperimentError(
+      'INVALID_EXPERIMENT',
+      'sealed comparison group spec is required',
+    );
+  }
+  if (
+    typeof spec.rootDir !== 'string' ||
+    typeof spec.groupDir !== 'string' ||
+    typeof spec.comparisonGroupId !== 'string' ||
+    path.basename(spec.groupDir) !== spec.comparisonGroupId
+  ) {
+    throw new EffectivenessExperimentError(
+      'INVALID_EXPERIMENT',
+      'sealed comparison group location is invalid',
+    );
+  }
+  const experimentPlan = createEffectivenessExperimentPlan({
+    rootDir: spec.rootDir,
+    baseCapabilities: spec.baseCapabilities ?? [],
+  });
+  assertVerifierRuntime(spec.verifierRuntime, spec.verifierRuntime?.verifierSet);
+  let outcomeContract;
+  if (spec.outcomeContract !== undefined) {
+    try {
+      outcomeContract = parseEffectivenessOutcomeContract(spec.outcomeContract);
+    } catch (error) {
+      throw new EffectivenessExperimentError(
+        'INVALID_OUTCOME_CONTRACT',
+        `outcome contract is invalid: ${error.message}`,
+        { cause: error },
+      );
+    }
+    const trustedOutcome = loadEffectivenessContract(spec.rootDir)
+      .outcomeContracts.get(outcomeContract.fixture.id);
+    if (
+      trustedOutcome === undefined ||
+      trustedOutcome.digest !== outcomeContract.digest ||
+      !isDeepStrictEqual(
+        outcomeContract.verifier_manifest,
+        verifierManifest(spec.verifierRuntime).verifiers,
+      )
+    ) {
+      throw new EffectivenessExperimentError(
+        'INVALID_OUTCOME_CONTRACT',
+        'outcome contract is not pinned to this suite and verifier runtime',
+      );
+    }
+  }
+  const snapshot = {};
+  if (!hasValidGroupSeal(
+    spec.groupDir,
+    spec.comparisonGroupId,
+    spec.rootDir,
+    experimentPlan,
+    verifierManifest(spec.verifierRuntime),
+    outcomeContract,
+    snapshot,
+  )) {
+    throw new EffectivenessExperimentError(
+      'INVALID_GROUP_SEAL',
+      `comparison group is not a valid sealed evidence group: ${spec.comparisonGroupId}`,
+    );
+  }
+  return deepFreeze({
+    contract: 'forge-opened-effectiveness-comparison-group',
+    version: 1,
+    group_dir: fs.realpathSync(spec.groupDir),
+    seal: snapshot.seal,
+    attempts: snapshot.attempts,
+  });
 }
 
 function assertIdentity(identity, label) {
@@ -1159,7 +1412,10 @@ export async function runEffectivenessComparisonGroup(spec) {
     );
   }
   assertExperimentPlan(experimentPlan);
-  const { armDefinitions: manifestArmDefinitions } = loadEffectivenessContract(spec.rootDir);
+  const {
+    armDefinitions: manifestArmDefinitions,
+    outcomeContracts: manifestOutcomeContracts,
+  } = loadEffectivenessContract(spec.rootDir);
   const packageJson = JSON.parse(fs.readFileSync(path.join(spec.rootDir, 'package.json'), 'utf8'));
   const armDefinitions = effectiveArmDefinitions(
     spec.rootDir,
@@ -1171,6 +1427,55 @@ export async function runEffectivenessComparisonGroup(spec) {
   assertHostSandbox(spec.hostSandbox);
   assertGroupInputs(spec);
   assertVerifierRuntime(spec.verifierRuntime, spec.verifierSet);
+  let outcomeContract;
+  if (spec.outcomeContract !== undefined) {
+    try {
+      outcomeContract = parseEffectivenessOutcomeContract(spec.outcomeContract);
+    } catch (error) {
+      throw new EffectivenessExperimentError(
+        'INVALID_OUTCOME_CONTRACT',
+        `outcome contract is invalid: ${error.message}`,
+        { cause: error },
+      );
+    }
+    const trustedOutcomeContract = manifestOutcomeContracts.get(spec.fixture.id);
+    if (
+      trustedOutcomeContract === undefined ||
+      outcomeContract.digest !== trustedOutcomeContract.digest
+    ) {
+      throw new EffectivenessExperimentError(
+        'INVALID_OUTCOME_CONTRACT',
+        'outcome contract is not the suite-pinned contract for this fixture',
+      );
+    }
+    if (!isDeepStrictEqual(outcomeContract.objective, {
+      id: spec.objective.id,
+      digest: spec.objective.digest,
+    })) {
+      throw new EffectivenessExperimentError(
+        'OUTCOME_TARGET_MISMATCH',
+        'outcome contract objective does not match the comparison objective',
+      );
+    }
+    if (!isDeepStrictEqual(outcomeContract.fixture, {
+      id: spec.fixture.id,
+      digest: spec.fixture.digest,
+    })) {
+      throw new EffectivenessExperimentError(
+        'OUTCOME_TARGET_MISMATCH',
+        'outcome contract fixture does not match the comparison fixture',
+      );
+    }
+    if (!isDeepStrictEqual(
+      outcomeContract.verifier_manifest,
+      verifierManifest(spec.verifierRuntime).verifiers,
+    )) {
+      throw new EffectivenessExperimentError(
+        'INVALID_OUTCOME_CONTRACT',
+        'outcome contract verifier manifest does not match the controlled runtime',
+      );
+    }
+  }
   if (!Number.isInteger(spec.repeatIndex) || spec.repeatIndex < 0) {
     throw new EffectivenessExperimentError('INVALID_EXPERIMENT', 'repeatIndex must be a non-negative integer');
   }
@@ -1206,6 +1511,7 @@ export async function runEffectivenessComparisonGroup(spec) {
       spec.rootDir,
       experimentPlan,
       verifierManifest(spec.verifierRuntime),
+      outcomeContract,
     )) {
       throw new EffectivenessExperimentError(
         'EVIDENCE_COLLISION',
@@ -1259,6 +1565,9 @@ export async function runEffectivenessComparisonGroup(spec) {
     requested_model: cloneData(spec.requestedModel, 'requestedModel'),
     model_parameters_digest: parametersDigest,
     host_policy_digest: requiredHostPolicyDigest,
+    ...(outcomeContract === undefined ? {} : {
+      outcome_contract: { id: outcomeContract.id, digest: outcomeContract.digest },
+    }),
   };
   const commonContextDigest = digestJson(commonContext);
   const commonContextJson = JSON.stringify(canonicalValue(commonContext));
@@ -1606,23 +1915,7 @@ export async function runEffectivenessComparisonGroup(spec) {
         `comparison group is not controlled: ${issues.join(', ')}`,
       );
     }
-    const seal = {
-      contract: 'forge-effectiveness-comparison-group',
-      version: 3,
-      comparison_group_id: spec.comparisonGroupId,
-      common_context_digest: commonContextDigest,
-      host_policy_digest: requiredHostPolicyDigest,
-      verifier_manifest: verifierManifest(spec.verifierRuntime),
-      reports: runs.map((run) => ({
-        arm: run.report.experiment.arm.id,
-        report_id: run.report.report_id,
-        digest: digestJson(run.report),
-        ...(run.runtimeReceiptReference === undefined
-          ? {}
-          : { runtime_receipt: run.runtimeReceiptReference }),
-        host_enforcement: run.hostEnforcementReference,
-      })),
-    };
+    const expectedVerifierManifest = verifierManifest(spec.verifierRuntime);
     const cleanupFailures = await disposePrepared();
     if (cleanupFailures.length > 0) {
       throw new EffectivenessExperimentError(
@@ -1631,16 +1924,48 @@ export async function runEffectivenessComparisonGroup(spec) {
       );
     }
     for (const run of runs) {
+      const evidenceSnapshot = {};
       if (!hasValidEvidenceEnvelopes(run.report, run.evidenceDir, spec.rootDir, {
         requireVerifiers: true,
-        verifierManifest: seal.verifier_manifest,
+        verifierManifest: expectedVerifierManifest,
+        snapshotCollector: evidenceSnapshot,
       })) {
         throw new EffectivenessExperimentError(
           'INVALID_EVIDENCE_ENVELOPE',
           `comparison group has invalid retained Evidence Envelopes for ${run.report.experiment.arm.id}`,
         );
       }
+      run.validatedVerifierResults = evidenceSnapshot.verifierResults;
     }
+    if (outcomeContract !== undefined) {
+      for (const run of runs) {
+        const retained = retainedOutcomeReference(run, outcomeContract);
+        run.outcome = retained.outcome;
+        run.outcomeReference = retained.reference;
+      }
+    }
+    for (const run of runs) delete run.validatedVerifierResults;
+    const seal = {
+      contract: 'forge-effectiveness-comparison-group',
+      version: outcomeContract === undefined ? 3 : 4,
+      comparison_group_id: spec.comparisonGroupId,
+      common_context_digest: commonContextDigest,
+      host_policy_digest: requiredHostPolicyDigest,
+      verifier_manifest: expectedVerifierManifest,
+      ...(outcomeContract === undefined ? {} : {
+        outcome_contract: { id: outcomeContract.id, digest: outcomeContract.digest },
+      }),
+      reports: runs.map((run) => ({
+        arm: run.report.experiment.arm.id,
+        report_id: run.report.report_id,
+        digest: digestJson(run.report),
+        ...(run.runtimeReceiptReference === undefined
+          ? {}
+          : { runtime_receipt: run.runtimeReceiptReference }),
+        host_enforcement: run.hostEnforcementReference,
+        ...(run.outcomeReference === undefined ? {} : { outcome: run.outcomeReference }),
+      })),
+    };
     const sealPathInStaging = path.join(stagingRoot, 'group.json');
     atomicWriteJson(sealPathInStaging, seal);
     if (!hasValidGroupSeal(
@@ -1649,6 +1974,7 @@ export async function runEffectivenessComparisonGroup(spec) {
       spec.rootDir,
       experimentPlan,
       seal.verifier_manifest,
+      outcomeContract,
     )) {
       fs.rmSync(sealPathInStaging, { force: true });
       throw new EffectivenessExperimentError(

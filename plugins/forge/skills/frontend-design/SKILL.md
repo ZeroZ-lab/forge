@@ -1,7 +1,7 @@
 ---
 name: frontend-design
-description: Reviews and designs frontend component structure, page architecture, data flow, state boundaries, cache strategy, and API consumption. Use for lightweight frontend design review or full frontend-design stage execution.
-when_to_use: Use when the user asks how to split components, structure pages, manage UI state, consume APIs, cache or retry data requests, design frontend modules, or review whether frontend architecture is reasonable.
+description: Optional frontend-architecture design/review for explicit or unresolved component, state, data-flow, and API-consumption boundaries.
+when_to_use: Use when the user asks for frontend architecture or component/state/data-flow boundaries remain uncertain enough to block safe implementation.
 ---
 
 # Frontend Design — 前端详设

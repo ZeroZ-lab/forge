@@ -1,6 +1,6 @@
 ---
 name: design
-description: Orchestrates the design stage — coordinates interaction-design, fe-system, and frontend-design, and resolves conflicts between behavior, interaction, and visual-system constraints; persists separate design artifacts only when independently justified.
+description: Optionally coordinates interaction and visual design when their constraints need one review boundary.
 when_to_use: Use when the user asks for the design stage, coordinated interaction and visual decisions, or resolution of conflicts between behavior and visual-system constraints.
 ---
 
@@ -24,7 +24,7 @@ when_to_use: Use when the user asks for the design stage, coordinated interactio
 
 ## 分支与恢复
 
-- 纯后端 API → 跳过整个设计阶段，记录 `skip design` 决策；理由写明 pure backend / no user interface，并进入 detail。
+- 纯后端 API → 跳过整个设计能力，记录 `skip design` 决策；理由写明 pure backend / no user interface，下一动作交给 Chain Owner。
 - 已有权威交互约束 → Phase 1 只检查是否与目标对齐，不重复设计。
 - 已有 DESIGN.md → Phase 2 只处理 feature 相关增量和冲突。
 - 用户不确认视觉方向 → 停止生成 DESIGN.md，保留 2-3 个方向和代价供选择。
@@ -46,7 +46,7 @@ when_to_use: Use when the user asks for the design stage, coordinated interactio
 
 ## 跳过规则
 
-- 纯后端 API → 跳过整个阶段，直接进入 `detail 阶段`，且不创建 `interaction-spec.md` 或更新 `DESIGN.md`
+- 纯后端 API → 跳过整个能力，不创建 `interaction-spec.md` 或更新 `DESIGN.md`；不自动触发 detail
 - 已有 DESIGN.md → Phase 2 只更新 feature 相关的部分
 
 ## 何时不使用
@@ -57,7 +57,7 @@ when_to_use: Use when the user asks for the design stage, coordinated interactio
 
 ## 历史维护（自动）
 
-遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。本 orchestrator 在两个子 skill 的出口条件通过后只汇总一次；`interaction-design` 和 `fe-system` 不单独写。
+遵循 `${CLAUDE_SKILL_DIR}/../shared/concepts/history-maintenance.md`。本内部协调能力只向 Chain Owner 返回一次汇总证据；`interaction-design` 和 `fe-system` 不单独写。
 
 ## 红旗清单
 - 用户不确认视觉方向 → 停止生成 DESIGN.md，保留 2-3 个方向和代价
@@ -76,19 +76,12 @@ when_to_use: Use when the user asks for the design stage, coordinated interactio
 
 ## 入口/出口条件
 **入口**：有 PRD.md 或等价需求说明 · 项目需要交互和/或视觉设计
-**出口**：权威交互与视觉约束已生成/更新 · 独立产物门判断有记录 · 用户确认进入 detail 阶段
+**出口**：权威交互与视觉约束已生成/更新 · 独立产物门判断有记录 · 下一动作仅作为建议交给 Chain Owner
 
 **缺失处理**：
 - 无 PRD → 不开始设计，先要求补需求
 - 已有 interaction-spec → Phase 1 只检查对齐，不重复设计
 - 已有 DESIGN.md → Phase 2 只处理 feature 增量
-
-## 运行时信号
-
-- 输入：design needed、frontend absent
-- 输出：interaction spec ready、design tokens ready
-- 路由：详见本文件 frontmatter.signal_routes
-- 升级：用户不确认视觉方向 · 交互和视觉职责冲突
 
 ## 完成提示
 
@@ -97,7 +90,7 @@ when_to_use: Use when the user asks for the design stage, coordinated interactio
 ```
 设计阶段完成：权威交互与视觉约束已更新。
 
-下一步你可以：
-  detail 阶段  — 做技术详设（API + 数据库 + 前端）
-  自然语言       — 直接说"设计 API"或"设计数据库"单独进入某个领域
+可选下一动作：
+  direct action  — 约束已足够时直接实现并验证
+  detail         — 仍有共享技术合同缺口时按需使用
 ```

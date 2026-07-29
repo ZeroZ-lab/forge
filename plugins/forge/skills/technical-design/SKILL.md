@@ -1,7 +1,7 @@
 ---
 name: technical-design
-description: Reviews and makes architecture decisions, technical tradeoffs, stack choices, service boundaries, deployment shape, and engineering constraints for project.md.
-when_to_use: Use when choosing or reviewing architecture, tech stack, service boundaries, data/deployment architecture, performance/security constraints, or project-level engineering rules.
+description: Optional architecture decision/review for explicit, durable, hard-to-reverse project trade-offs.
+when_to_use: Use when the user asks for architecture review/design or an unresolved stack, service, deployment, performance, security, or project-level rule requires a durable decision.
 ---
 
 # Technical Design — 技术设计

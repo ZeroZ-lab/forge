@@ -1,6 +1,8 @@
-# Fixture: 默认主链小功能迭代
+# Fixture: Legacy chain 小功能兼容性
 
-当前临时工作目录可以是空项目。请完成一个需求明确的小功能，用默认主链处理：
+当前临时工作目录可以是空项目。此 case 专门验证 Forge 0.52.0 的显式 legacy compatibility preset，不代表生产默认。请完成一个需求明确的小功能，并明确使用：
+
+`detail → codegen → review`
 
 > 给 task-management 增加 "archive completed tasks" 功能。
 
@@ -26,6 +28,7 @@
 
 Expected behavior:
 
+- Explicitly select the legacy compatibility preset.
 - Produce a feature goal before implementation.
 - Generate executable code and tests from the goal.
 - Run runtime verification.

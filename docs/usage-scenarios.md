@@ -1,125 +1,125 @@
 # Forge Usage Scenarios
 
-> 默认先走最短链。只有当信息不够、任务变复杂、或需要治理时，才展开更多阶段。
+> 默认是 Kernel-first：先守住目标、权限、范围、状态、证据和完成条件；模型可直接行动，也可按边际价值调用任意、多个或零个 Skill。
 
 ## 一句话规则
 
-- 不清楚做什么：先 `define`
-- 不清楚怎么做：加 `research`
-- 清楚要做什么：进 `detail`
-- detail 写完：进 `codegen`
-- 实现出来：进 `review`
-- 任务很多或有依赖：加 `plan`
-- 风险高或要沉淀测试资产：加 `test`
-- 要发布、灰度、回滚、监控：加 `deploy`
-- 多个 feature 并行：使用 issue tracker / project board
-- 要追溯项目演进：读取 `docs/change-units/`
+- 目标清晰、低风险：direct action，完成最小实现、验证和 self-check。
+- 行为边界或共享合同不清：按需使用 `define` / `detail`。
+- 技术信息可能过时或存在高不确定性：按需使用 `research`。
+- 多模块、有依赖或需要并行：按需使用 `plan`。
+- 高风险测试治理：按需使用 `test`。
+- 发布、灰度、迁移、回滚：按需使用 `deploy`。
+- L0/L1：self-check 不称为独立 review。
+- L2/L3 或 P0/P1：complete/release-ready 前必须独立 reviewer/verifier。
+- 多个 feature 并行：状态放 issue tracker / project board。
+- 有保留修改：Chain Owner 汇总一个 Change Unit，child Skill 不重复写。
+
+选择一个 Skill 不自动要求下一个 Skill。Skill 命中、阶段完成和动作路径都不是 success 证据。
 
 ## 场景例子
 
-### 1. 新项目从 0 到 1
+### 1. 清晰的小功能
 
-例子：做一个团队任务管理 SaaS，产品范围、交互和技术栈都还没定。
+例子：任务详情页增加“复制任务链接”按钮，现有交互、组件和测试模式足够明确。
 
-推荐流程：
-`brainstorm -> init -> define -> research(按需) -> design -> detail -> plan -> codegen -> test -> review -> deploy`
+推荐：
 
-为什么：
+```text
+读取用户目标、现有代码和测试
+→ direct action
+→ 运行最窄验证
+→ L1 self-check
+```
 
-- 目标还模糊，要先发散和收敛
-- 项目级技术和设计规范还不存在
-- 后续会有多 feature、多轮迭代，前面的决策值得沉淀
+不为进入流程创建 PRD、plan 或 module；只有行为合同需要跨 consumer 持久共享时才补 goal。
 
-### 2. 已有项目，中等新功能
+### 2. 边界不清的功能
 
-例子：给现有任务系统加“标签 + 筛选 + 权限限制”。
+例子：增加“标签 + 筛选 + 权限限制”，但角色权限和空状态尚未定义。
 
-推荐流程：
-`define -> detail -> plan -> codegen -> review`
+可选能力：
 
-按需再加：
+```text
+define / detail（补目标和共享合同）
+→ Chain Owner 重新判断
+→ direct action 或按需 plan
+→ verification
+→ 独立 review（L2）
+```
 
-- `test`：测试要求高时
-- `deploy`：上线风险高时
+`define/detail` 的出口只是建议，不自动触发后继。
 
-为什么：
+### 3. 局部 bugfix
 
-- 需求本身还需要澄清
-- 会跨 API、前端、数据库，适合先拆任务
+例子：`dueDate` 为空时创建任务返回 500。
 
-### 3. 已有项目，小功能迭代
+推荐：
 
-例子：任务详情页增加“复制任务链接”按钮。
+```text
+建立 red-capable 复现
+→ 最小修复
+→ 修复后回归
+→ self-check 或按风险独立 review
+```
 
-推荐流程：
-`detail -> codegen -> review`
+若正确测试 seam 或合同边界不清，可选 `codegen` bugfix playbook、`detail` 或 `test-cases`。无法建立反馈循环时 safe stop，不猜根因制造代码变更。
 
-为什么：
+### 4. 新项目
 
-- 需求明确
-- 影响范围小
-- 不值得先写独立 `PRD.md`；任务序列留在对话/issue
+例子：产品、技术栈和交互都未定义。
 
-### 4. 加一个很小的端点或模块
+可选：
 
-例子：新增 `GET /tasks/:id/history` 接口。
+```text
+init（生成 project 与 always-on AGENTS Kernel）
+brainstorm / business-alignment / technical-design / design（按缺口）
+```
 
-推荐流程：
-`detail -> codegen`
+初始化完成后仍回到 adaptive runtime，不要求把每个 feature 走完整生命周期。
 
-为什么：
+### 5. 高风险发布
 
-- 主要是局部 contract 变更
-- 如果实现直接，review 可以保持轻量
+例子：支付、权限迁移或生产数据回填。
 
-### 5. Bugfix
+要求：
 
-例子：创建任务时报 500，原因是 `dueDate` 为空时 schema 崩了。
+- 明确权限、安全、迁移和回滚边界；
+- 可选 `technical-design` / `plan` / `test` / `deploy`；
+- 独立 reviewer/verifier 是 complete/release-ready 的硬门；
+- 无独立边界时保持 partial/正确阻塞并披露残余风险。
 
-推荐流程：
-`detail -> codegen -> review`
+### 6. 显式 Legacy compatibility
 
-判断重点：
+用户明确要求 Forge 0.52.0 行为，或运行固定 capability benchmark 时：
 
-- 如果是实现偏差：修 code
-- 如果是 contract 漏了边界：先补 `detail`，再修 code
+```text
+legacy-chain: detail → codegen → review
+```
 
-### 6. 高风险或治理场景
-
-例子：上线支付功能、做多 feature 协调、同类错误反复出现。
-
-默认从主链开始，再按需补：
-
-- 加 `plan`：任务复杂，需要切片、依赖、并行
-- 加 `test`：需要独立测试策略和测试用例
-- 加 `deploy`：需要灰度、回滚、监控
-- 多 feature 状态交给 issue tracker / project board
-- 项目级决策演进由 project/ADR + Change Units 承担
-- 进 `think`：需要深度推演
+它只用于兼容、教学和 effectiveness 对照，不是 production default，也不能证明 adaptive Skills 的真实效果。
 
 ## 决策表
 
-| 当前情况 | 进入哪一步 | 不进入哪一步 |
+| 当前情况 | 默认动作 | 可选 Skill |
 |---|---|---|
-| 需求已经很清楚，只差补实现 | `detail` | 不先开 `define` |
-| 需求描述还有明显歧义 | `define` | 不直接 `codegen` |
-| 技术方案不确定，比如实时、搜索、推荐、协作 | `research` | 不直接拍板进 `detail` |
-| 只是小功能迭代 | `detail -> codegen -> review` | 不默认开 `plan/test/deploy` |
-| 会跨前后端或数据库，且改动不止一个点 | `detail`，通常再加 `plan` | 不只改一个 module 就开工 |
-| 任务很多、存在依赖、要并行 | `plan` | 不直接让 `codegen` 自由展开 |
-| 只是局部 bugfix | `detail -> codegen -> review` | 不默认走完整生命周期 |
-| bug 暴露出需求或边界没写清 | 回到 `define` 或 `detail` | 不只补代码 |
-| 需要正式测试策略和测试用例沉淀 | `test` | 不把测试要求全塞进 `review` |
-| 需要发布、灰度、回滚、监控 | `deploy` | 不把上线动作混进 `codegen/review` |
-| 多个 feature 并行推进 | 使用 issue tracker / project board | 不创建项目内状态事实副本 |
-| 需要记录项目级演进或跨 feature 决策 | 更新 project/ADR，并写 Change Unit | CU 提供历史和验证证据 |
-| 同类偏差反复出现 2-3 次 | 重新审视 `define`/`detail` 目标定义 | 不一直局部打补丁 |
+| 目标和完成条件清晰 | direct action | 无，零调用合法 |
+| 用户可见行为或范围不清 | 先补合同 | `define` / `detail` |
+| 技术事实可能过时 | 先取当前证据 | `research` |
+| 多模块依赖复杂 | 切垂直片和关键路径 | `plan` |
+| 实现型 bugfix | red → fix → green | `codegen` bugfix lens |
+| 需要独立审查 | 独立上下文 findings-first | `review` |
+| 生产发布或迁移 | 风险、回滚、监控 | `deploy` |
+| 方法论偏差反复出现 | 重审目标或归档方法缺口 | `think` / `learn` |
 
 ## 最短记忆版
 
-- 新项目：全链路
-- 新功能：`define -> detail -> codegen -> review`
-- 小功能：`detail -> codegen -> review`
-- 小端点：`detail -> codegen`
-- bugfix：`detail -> codegen -> review`
-- 高风险上线：在上面基础上加 `plan/test/deploy`
+```text
+Kernel 永远在
+direct action 永远合法
+Skill 永远可选
+verification 永远需要
+高风险独立复核
+Chain Owner 只写一个 CU
+legacy chain 只在显式要求时使用
+```

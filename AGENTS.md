@@ -2,17 +2,20 @@
 
 > 文档定义目标、边界、完成标准和持久决策；代码定义当前实现。
 
-## 默认工作方式
+## 默认工作方式：Kernel-first
 
-Forge 默认服务已有项目上的小功能迭代：
+Forge 的始终加载控制面只管理目标、权限、范围、状态、证据和完成条件。模型可以直接行动，也可以按边际价值调用任意、多个或零个 Skill；未调用 Skill 不影响完成判定。
 
-| 场景 | 最短链路 |
+| 场景 | 默认动作 |
 |------|----------|
-| 明确的小功能 | `detail → codegen → review` |
-| 边界不清 | `define → detail → codegen → review` |
-| 局部 bugfix | 读 goal/代码 → 最小修复 → 回归验证 → review |
+| 目标清晰、低风险 | 读取权威事实 → 直接最小实现 → 运行验证 → self-check |
+| 边界或共享合同不清 | 按需使用 `define` / `detail`，确认后实现 |
+| 技术不确定或高风险 | 按信号使用 `research` / `plan` / `test` / `deploy` / 独立 review |
+| 局部 bugfix | 建立 red-capable 反馈 → 最小修复 → 回归验证；无反馈循环则 safe stop |
 
-`plan`、`test`、`deploy`、`research`、`think` 按风险启用，不因生命周期阶段存在就自动生成文档。
+Skill 是可选能力，不是生命周期门票。选择一个 Skill 不自动要求后继；固定 `detail → codegen → review` 仅保留为显式 legacy compatibility preset 和 effectiveness 对照。
+
+根代理是同一用户目标的唯一 Chain Owner：维护全局状态、review 独立性、最终交付和唯一 Change Unit；child Skill 只返回局部证据包。
 
 当前发布：24 个决策协议 + 1 个派生视图 skill + 1 个架构发现 skill + 1 个显式 guide。
 
@@ -42,9 +45,9 @@ project/
 └── tests/
 ```
 
-默认小功能只创建：
+行为变化或共享合同需要持久化时，默认只创建：
 
-- `docs/features/<feature>/goal.md`
+- 必要的 `docs/features/<feature>/goal.md`
 - 必要时 `modules/*.md`
 - `docs/change-units/CU-*.md`
 - 代码与测试
@@ -76,7 +79,7 @@ project/
 - **D7 验证**：每次变更执行最窄有效验证或说明不能验证的原因。
 - **D8 累积升级**：同类失败两次，复查 goal/约束，不继续盲修。
 - **D9 运行实证**：代码完成至少有测试、构建、类型检查或可运行证据之一。
-- **D10 复杂度分级**：L0 patch / L1 轻量链 / L2 标准链 / L3 完整链，可双向调整。
+- **D10 复杂度分级**：L0 局部 patch / L1 单 feature / L2 多模块中风险 / L3 新项目或高风险；级别决定验证和独立复核地板，不规定 Skill 链。
 
 ## Skill 产物职责
 
@@ -90,10 +93,10 @@ project/
 | technical-design | project 或 goal | 难逆项目决策时 ADR |
 | detail | goal + 必要 modules | 不创建阶段报告 |
 | plan | 对话/issue 中的任务序列 | 不创建 plan.md |
-| codegen | src + tests + CU | 不创建 Trace |
+| codegen | 可选实现/bugfix playbook → src + tests | 不创建 Trace；CU 由 Chain Owner 汇总 |
 | test-strategy | 对话中的风险策略 | 独立 QA/合规治理时 strategy |
 | test-cases | 场景矩阵/测试代码 | 不创建 test-cases.md |
-| review | 对话 findings | 只有权威文档变更才写 CU |
+| review | 独立对话 findings | self-check 不冒充独立审查；只有权威文档变更才写 CU |
 | deploy | 对话发布清单 | 生产/迁移/回滚交接时 deploy plan |
 | think | 对话分析 | 多决策复用且有失效条件时 thinking |
 | learn | 回写权威事实 | 用户确认后写 CU |
@@ -102,10 +105,14 @@ project/
 
 1. Observe：读相关 goal 首屏、必要 modules、project 和仓库状态。
 2. Orient：确认目标、非目标、假设、风险、验证方式和权威事实源。
-3. Decide：选择最短 skill 链；额外文档先过独立产物门。
+3. Decide：可直接行动；只有 Skill 的边际价值高于上下文、产物和协调成本时才加载。额外文档先过独立产物门。
 4. Act：实现最小完整变更。
 5. Verify：运行项目现有脚本中最窄有效的检查。
-6. Persist：同步权威文档，写一个 CU；不维护平行历史文件。
+6. Persist：Chain Owner 同步权威文档并汇总一个 CU；不维护平行历史文件。
+
+L0/L1 可由 Chain Owner 做 self-check，但不得称为独立 review。L2/L3 或 P0/P1 在宣称 complete/release-ready 前必须使用独立 reviewer/verifier；不可用时保持 partial/正确阻塞并披露残余风险。
+
+独立 reviewer 必须未参与本次实现并使用分离上下文/actor 返回基于目标和 diff 的证据；独立 verifier 必须是实现上下文不能改写输入和留存观察的预声明或 host-private 检查。Chain Owner 自己运行普通测试只算 verification，不能重标成 independent evidence。
 
 ## Change Unit
 
@@ -115,7 +122,7 @@ project/
 docs/change-units/CU-<YYYYMMDD>-<slug>.md
 ```
 
-CU 必须包含 intent、行为变化、影响面、风险、验证命令与结果、未验证项、回滚和权威文档同步结果。编排器只写一个汇总 CU；子 skill 不重复写。
+CU 必须包含 intent、行为变化、影响面、风险、验证命令与结果、未验证项、回滚和权威文档同步结果。Chain Owner 只写一个汇总 CU；child Skill 不重复写。CU 是执行后的 evidence sink，不控制模型采用哪条路径。
 
 ## 模块文档
 

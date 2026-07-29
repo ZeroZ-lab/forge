@@ -1,10 +1,10 @@
 # Forge Advanced
 
-> 默认入口先服务小功能迭代；这里收纳完整治理链和重文档。
+> 生产入口是 Kernel-first direct/adaptive action；这里收纳显式能力、legacy compatibility、完整治理和重文档。
 
 ## 什么时候进入 Advanced
 
-只有当默认主链 `define -> detail -> codegen -> review` 不够用时，再展开这里的内容：
+只有 direct action 与局部可选能力不足时，再展开这里的内容：
 
 - 你在跑完整生命周期，而不是日常 feature patch
 - 你需要多 feature 协调，而不是单 feature 局部迭代
@@ -40,18 +40,19 @@
 - [Archived Skill Audit Fix Plan](archive/skill-audit-fix-plan.md)
   2026-05-30 的旧修复计划，仅作历史参考，不作为当前执行入口。
 
-## 默认与 Advanced 的边界
+## Adaptive 与 Advanced 的边界
 
-默认入口关注：
+Adaptive 生产入口关注：
 
-- `goal.md`
-- `modules/*.md`
-- `detail -> codegen -> review`
+- 当前目标、权限、范围、状态和运行证据
+- direct action 或任意、多个、零个 Skill
+- 必要时才创建 `goal.md` / `modules/*.md`
 
 Advanced 入口关注：
 
 - `docs/change-units/CU-*.md`
 - `docs/project.md`、可选 ADR、Change Units
 - 完整阶段矩阵
+- 显式 Forge 0.52.0 `detail → codegen → review` legacy preset
 - 目标验证实践
 - 评测系统和方法论进化

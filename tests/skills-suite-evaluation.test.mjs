@@ -45,12 +45,12 @@ function reportEvidenceFor(testCase) {
   };
 }
 
-test('skills-suite includes a default-chain small feature value scenario', () => {
-  const testCase = manifest.cases.find((candidate) => candidate.id === 'default-chain-small-feature');
+test('skills-suite retains an explicit legacy-chain capability scenario', () => {
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'legacy-chain-small-feature');
 
-  assert.ok(testCase, 'default-chain-small-feature case is required');
+  assert.ok(testCase, 'legacy-chain-small-feature case is required');
   assert.deepEqual(testCase.expected_skills, ['detail', 'codegen', 'review']);
-  assert.equal(testCase.fixture, 'evals/skills-suite/fixtures/default-chain-small-feature.md');
+  assert.equal(testCase.fixture, 'evals/skills-suite/fixtures/legacy-chain-small-feature.md');
   assert.ok(testCase.expected_artifacts.includes('docs/features/task-archive/goal.md'));
   assert.ok(testCase.expected_artifacts.includes('src/'));
   assert.ok(testCase.expected_artifacts.includes('tests/'));
@@ -145,10 +145,12 @@ test('guide routing matrix covers project, bugfix, and cross-module paths', () =
   assert.ok(testCase, 'guide-routing-matrix case is required');
   for (const text of [
     'L3',
-    'init',
-    'bugfix protocol',
+    '可选 init',
+    'direct action',
+    '独立 review',
     'L2',
-    'detail(stage) -> plan(stage) -> codegen(stage) -> review(stage)',
+    '可选 detail / plan',
+    '零 Skill 合法',
   ]) {
     assert.ok(
       testCase.oracle_checks.some(
@@ -166,20 +168,47 @@ test('skills-suite evaluator runs without external dependencies', () => {
   assert.match(output, /behavioral effectiveness is not claimed/);
 });
 
-test('token footprint metric enforces the default runtime chain budget', () => {
+test('runtime footprint metric enforces the adaptive production budgets', () => {
   const output = execFileSync(
     process.execPath,
-    ['scripts/measure-char-footprint.mjs', '--max-default-chain-chars=4500', '--max-total-chars=56000'],
+    [
+      'scripts/measure-char-footprint.mjs',
+      '--max-kernel-adapter-chars=3000',
+      '--max-project-agents-chars=6000',
+      '--max-metadata-chars=8500',
+      '--max-platform-metadata-chars=1500',
+      '--max-selected-skill-chars=4000',
+      '--max-selected-bundle-chars=20000',
+      '--max-total-chars=56000',
+    ],
     { encoding: 'utf8' },
   );
   const json = JSON.parse(
     execFileSync(process.execPath, ['scripts/measure-char-footprint.mjs', '--json'], { encoding: 'utf8' }),
   );
 
-  assert.match(output, /Default chain \(detail -> codegen -> review\)/);
-  assert.ok(json.default_chain_total.chars <= 4500);
+  assert.match(output, /Generated AGENTS Kernel template/);
+  assert.match(output, /Current project AGENTS adapter/);
+  assert.match(output, /Largest selected capability bundle/);
+  assert.match(output, /Legacy compatibility chain \(detail -> codegen -> review\).*reference only/);
+  assert.ok(json.kernel_adapter.chars <= json.budgets.kernel_adapter_chars);
+  assert.ok(json.project_agents.chars <= json.budgets.project_agents_chars);
+  assert.ok(json.registry_metadata.chars <= json.budgets.registry_metadata_chars);
+  assert.ok(json.platform_metadata.chars <= json.budgets.platform_metadata_chars);
+  assert.ok(json.max_selected_skill.chars <= json.budgets.max_selected_skill_chars);
+  assert.ok(json.max_selected_bundle.chars <= json.budgets.max_selected_bundle_chars);
   assert.ok(json.total.chars <= 56000);
-  assert.deepEqual(json.default_chain, ['detail', 'codegen', 'review']);
+  assert.deepEqual(json.legacy_chain, ['detail', 'codegen', 'review']);
+});
+
+test('runtime footprint CLI rejects removed and unknown budget flags', () => {
+  for (const argument of ['--max-default-chain-chars=1', '--max-skill-chars=1', '--typo-budget=1']) {
+    const result = spawnSync(process.execPath, ['scripts/measure-char-footprint.mjs', argument], {
+      encoding: 'utf8',
+    });
+    assert.notEqual(result.status, 0, `${argument} must fail closed`);
+    assert.match(result.stderr, /removed|Unknown argument/);
+  }
 });
 
 test('skills-suite evaluator verifies change units on disk with --verify-disk', () => {
@@ -279,7 +308,7 @@ test('skills-suite evaluator verifies change units on disk with --verify-disk', 
 test('skills-suite evaluator --verify-disk requires a Verification section with command evidence', () => {
   const reportPath = path.join(os.tmpdir(), `forge-skills-verify-content-${process.pid}.json`);
   const tempCuAbs = path.join(root, 'docs/change-units', 'CU-zzz-verify-disk-no-evidence.md');
-  const testCase = manifest.cases.find((candidate) => candidate.id === 'default-chain-small-feature');
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'legacy-chain-small-feature');
   const buildRun = (cuPath) => ({
     case_id: testCase.id,
     status: 'pass',
@@ -498,7 +527,7 @@ test('skills-suite evaluator compares Forge against a no-Forge baseline', () => 
   const forgeReportPath = path.join(os.tmpdir(), `forge-skills-compare-forge-${process.pid}.json`);
   const baselineReportPath = path.join(os.tmpdir(), `forge-skills-compare-baseline-${process.pid}.json`);
   const comparePath = path.join(os.tmpdir(), `forge-skills-compare-output-${process.pid}.json`);
-  const testCase = manifest.cases.find((candidate) => candidate.id === 'default-chain-small-feature');
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'legacy-chain-small-feature');
   const forgeRun = {
     case_id: testCase.id,
     status: 'pass',
@@ -628,7 +657,7 @@ test('skills-suite evaluator fails when Forge does not clear the 100 percent com
 test('skills-suite evaluator rejects a zero-baseline comparison as not comparable (no Infinity auto-pass)', () => {
   const forgeReportPath = path.join(os.tmpdir(), `forge-skills-zero-base-forge-${process.pid}.json`);
   const baselineReportPath = path.join(os.tmpdir(), `forge-skills-zero-base-baseline-${process.pid}.json`);
-  const testCase = manifest.cases.find((candidate) => candidate.id === 'default-chain-small-feature');
+  const testCase = manifest.cases.find((candidate) => candidate.id === 'legacy-chain-small-feature');
   // Forge arm: full self-report answers (trusted) -> fair score 100.
   const forgeRun = {
     case_id: testCase.id,

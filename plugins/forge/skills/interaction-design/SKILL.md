@@ -1,7 +1,7 @@
 ---
 name: interaction-design
-description: Reviews and designs user flows, navigation, information architecture, wireframes, interaction patterns, feedback states, and edge flows before frontend implementation.
-when_to_use: Use when defining user flow, page structure, navigation, information architecture, interaction details, error/empty/loading states, or reviewing whether a UI flow is coherent.
+description: Optional interaction-flow design/review for explicit UX requests or unresolved navigation/state behavior.
+when_to_use: Use when the user asks for interaction/UX design or uncertain flows, navigation, information architecture, feedback, or edge states require a reviewable contract.
 ---
 
 # Interaction Design — 交互设计

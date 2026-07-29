@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "name": "forge-effectiveness-suite",
   "description": "Held-out real-task contract for comparing no-Forge, Kernel-only, adaptive Forge, and the pinned legacy chain without rewarding a fixed stage or skill path. Contract validation proves task coverage only; effectiveness requires real multi-run reports and external or human review.",
   "minimum_cases": 6,
@@ -80,6 +80,7 @@
       "controlled_dimensions": [
         "model",
         "fixture",
+        "outcome_contract",
         "workspace_revision",
         "budget",
         "verifier"
@@ -98,6 +99,7 @@
       "title": "Direct authoritative version read",
       "scenario": "direct-action",
       "fixture": "evals/effectiveness-suite/fixtures/direct-read-package-version.md",
+      "outcome_contract": { "ref": "evals/effectiveness-suite/outcomes/direct-read-package-version.json", "digest": "sha256:2c929994e449b1d7bddf6459f452fe2507f611a1f649cacda9cdeb4e8cf77b12" },
       "success_signals": [
         "reported value matches the authoritative package field",
         "successful read command and observed output are present",
@@ -118,6 +120,7 @@
       "title": "Small feature vertical slice",
       "scenario": "small-feature",
       "fixture": "evals/effectiveness-suite/fixtures/small-feature-vertical-slice.md",
+      "outcome_contract": { "ref": "evals/effectiveness-suite/outcomes/small-feature-vertical-slice.json", "digest": "sha256:e9c82df9e3a8669aea203ab3fd18422930e281ab80fd8f45b163cd2b922ccbb4" },
       "success_signals": [
         "feature delivered as one independently verifiable slice",
         "minimal authoritative docs only",
@@ -138,6 +141,7 @@
       "title": "Bugfix red-capable loop",
       "scenario": "bugfix",
       "fixture": "evals/effectiveness-suite/fixtures/bugfix-red-capable-loop.md",
+      "outcome_contract": { "ref": "evals/effectiveness-suite/outcomes/bugfix-red-capable-loop.json", "digest": "sha256:f7607a07810f464abe61336e080ef0b92ea8fe76af57910a4b9fe2e0c1d26dda" },
       "success_signals": [
         "reproduction fails before implementation change",
         "regression test targets the real seam",
@@ -158,6 +162,7 @@
       "title": "Frontend standard-piece choice",
       "scenario": "frontend-buy-vs-build",
       "fixture": "evals/effectiveness-suite/fixtures/frontend-standard-piece-choice.md",
+      "outcome_contract": { "ref": "evals/effectiveness-suite/outcomes/frontend-standard-piece-choice.json", "digest": "sha256:e0e50c68a4d03876aef4151988b27f16c6636b6c61ee74e0ad9d1f6ad4b044a1" },
       "success_signals": [
         "mature UI/form/auth/deploy options considered",
         "business-specific code is separated from commodity pieces",
@@ -178,6 +183,7 @@
       "title": "Delegation for context-heavy review",
       "scenario": "delegation",
       "fixture": "evals/effectiveness-suite/fixtures/delegation-context-heavy-review.md",
+      "outcome_contract": { "ref": "evals/effectiveness-suite/outcomes/delegation-context-heavy-review.json", "digest": "sha256:3f280ba4c3b7a6ce1c9f893ca8c58eb6ddff9677cc275daf8aba61ac4b3a01a9" },
       "success_signals": [
         "context-heavy search is delegated or explicitly kept local with reason",
         "subagent output is treated as evidence, not final judgment",
@@ -198,6 +204,7 @@
       "title": "Learn cross-project candidate",
       "scenario": "learn-boundary",
       "fixture": "evals/effectiveness-suite/fixtures/learn-cross-project-candidate.md",
+      "outcome_contract": { "ref": "evals/effectiveness-suite/outcomes/learn-cross-project-candidate.json", "digest": "sha256:683c3ef482a1fda16c20ff4803bd2a0f646068326560b0f09a31f763b9a19fe2" },
       "success_signals": [
         "current-project archive decisions are separated from cross-project candidates",
         "cross-project items stay suggestion-only",
